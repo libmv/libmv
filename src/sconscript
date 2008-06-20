@@ -1,0 +1,5 @@
+# Copyright 2008 Keir Mierle, all rights reserved.
+
+SConscript('testing/public/sconscript')
+SConscript('libmv/internal/sconscript')
+SConscript('ui/sconscript')

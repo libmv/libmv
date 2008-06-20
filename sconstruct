@@ -1,0 +1,77 @@
+###############################################################################
+# You may have to edit this section.
+
+# Update this boost path. Make sure you have at least boost 1.34.
+boost_dir = "/usr/local/include/boost-1_34"
+
+# This is the dir where QT4 headers are.
+qt_dir = "/usr"
+
+# This is the dir where QT4 headers are.
+vxl_dir = "/data1/wrk/vxl/vxl-1.10.0"
+
+###############################################################################
+# Don't change past here.
+
+import os
+options = dict(CPPPATH = [os.path.join(os.getcwd(), 'src'),
+                          boost_dir,
+                          os.path.join(vxl_dir, 'core'),
+                          os.path.join(vxl_dir, 'vcl'),
+                         ],
+               QTDIR = qt_dir,
+               tools = ['default'],
+               toolpath = [os.getcwd()],
+               topleveldir = os.getcwd())
+
+def add_options(options, entry, option):
+    options_list = options.setdefault(entry, [])
+    if type(option) == list:
+        options_list.extend(option)
+    else:
+        options_list.append(option)
+
+if ARGUMENTS.get('profile', 0):
+    add_options(options, 'CXXFLAGS', '-pg')
+    add_options(options, 'LINKFLAGS', '-pg')
+
+show_commands = ARGUMENTS.get('show_commands', 0)
+if not show_commands:
+    options.update(dict(CCCOMSTR           = '[ obj ] $TARGET',
+                        CXXCOMSTR          = '[ obj ] $TARGET',
+                        SHLIBCOMSTR        = '[ obj ] $TARGET',
+                        SHCXXCOMSTR        = '[ obj ] $TARGET',
+                        SHCCCOMSTR         = '[ obj ] $TARGET',
+                        SHLINKCOMSTR       = '[ dll ] $TARGET',
+                        ARCOMSTR           = '[ lib ] $TARGET',
+                        QT4_MOCFROMHCOMSTR = '[ moc ] $TARGET',
+                        RANLIBCOMSTR       = '[ idx ] $TARGET',
+                        LINKCOMSTR         = '        $TARGET'))
+
+# Force VXL to use native STL.
+add_options(options, 'CXXFLAGS', '-DVCL_USE_NATIVE_STL')
+
+# TODO(keir): Use scons configure mechanism to detect QT and Boost.
+# TODO(keir): Make this work with windows!
+optimized_options = options.copy()
+add_options(optimized_options, 'CXXFLAGS',
+            Split('-Wall -W -O2 -fomit-frame-pointer'))
+optimized_options['build_dir'] = os.getcwd() + '/' + 'bin-opt'
+
+debug_options = options.copy()
+add_options(optimized_options, 'CXXFLAGS',
+            Split('-Wall -W -Wfatal-errors -Werror -O0 -g'))
+debug_options['build_dir'] = os.getcwd() + '/' + 'bin-dbg'
+
+options = debug_options
+Export('options')
+SConscript('src/sconscript', build_dir='bin-dbg')
+
+options = optimized_options
+Export('options')
+SConscript('src/sconscript', build_dir='bin-opt')
+
+if not ARGUMENTS.get('optimized', 0):
+    Default('bin-dbg')
+else:
+    Default('bin-opt')

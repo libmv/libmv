@@ -1,0 +1,16 @@
+Libmv multiview reconstruction and tracking library
+===================================================
+
+Libmv is a simple multiview reconstruction library.
+
+It is not ready yet. If you're interested in contributing, see:
+
+  http://code.google.com/p/libmv
+
+Building
+--------
+
+Before building, make sure you have the following:
+
+* Headers for Boost 1.35. 
+* SCons 0.97 or newer.
