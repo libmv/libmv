@@ -2,13 +2,15 @@
 
 Import('options')
 env = Environment(**options)
-env.Program('lru_cache_test',
-           ['lru_cache_test.cc',
-            '../../testing/public/libtestrunner.a'])
 
-env.Program('image_test',
-           ['image.cc',
-            'image_test.cc',
-            #'../../testing/public/libtestrunner.a'],
-            '#bin-dbg/testing/public/libtestrunner.a'],
-           LIBS=['cv', 'highgui'])
+env.Program(
+    target = 'lru_cache_test',
+    source = ['lru_cache_test.cc',
+              '#bin-dbg/testing/public/libtestrunner.a'])
+
+env.Program(
+    target = 'image_test',
+    source = ['image.cc',
+              'image_test.cc',
+              '#bin-dbg/testing/public/libtestrunner.a'],
+    LIBS=['cv', 'highgui'])
