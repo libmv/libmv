@@ -1,9 +1,8 @@
 // Copyright 2008 Keir Mierle, all rights reserved.
 //
-// Concrete image classes.
-//
+// Concrete image classes. For now based on OpenCV.
+
 extern "C" {
-//#include "opencv/cv.h"
 #include "opencv/highgui.h"
 }
 
@@ -52,31 +51,4 @@ Image *LoadImage(const char *filename) {
 Image *LoadImage(const string &filename) {
   return LoadImage(filename.c_str());
 }
-
-// TESTING
-//#include <vil/vil_image_view.h>
-//#include <vil/vil_load.h>
-//#include <vil/vil_save.h>
-//#include <vil/vil_convert.h>
-
-/*
-typedef vil_image_view<float> Image;
-
-Image Image_load(const char *filename)
-{
-        vil_image_view<vxl_byte> tmp;
-        tmp = vil_load(filename);
-        Image res(tmp.ni(),tmp.nj(),1,tmp.nplanes());
-        vil_convert_cast(tmp,res);
-        return res;
-}
-void Image_save(const Image &im, const char *filename)
-{
-        vil_image_view<vxl_byte> tmp(im.ni(),im.nj(),1,im.nplanes());
-        vil_convert_cast(im,tmp);
-        vil_save(tmp,filename);
-}
-*/
-// END TESTING
-
 }  // namespace libmv
