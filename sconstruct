@@ -51,15 +51,17 @@ if not show_commands:
 # Force VXL to use native STL.
 add_options(options, 'CXXFLAGS', '-DVCL_USE_NATIVE_STL')
 
+import copy
+
 # TODO(keir): Use scons configure mechanism to detect QT and Boost.
 # TODO(keir): Make this work with windows!
-optimized_options = options.copy()
+optimized_options = copy.deepcopy(options)
 add_options(optimized_options, 'CXXFLAGS',
-            Split('-Wall -W -O2 -fomit-frame-pointer'))
+            Split('-Wall -W -O3 -funroll-loops -fomit-frame-pointer'))
 optimized_options['build_dir'] = os.getcwd() + '/' + 'bin-opt'
 
-debug_options = options.copy()
-add_options(optimized_options, 'CXXFLAGS',
+debug_options = copy.deepcopy(options)
+add_options(debug_options, 'CXXFLAGS',
             Split('-Wall -W -Wfatal-errors -Werror -O0 -g'))
 debug_options['build_dir'] = os.getcwd() + '/' + 'bin-dbg'
 
