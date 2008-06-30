@@ -7,17 +7,13 @@ boost_dir = "/usr/local/include/boost-1_34"
 # This is the dir where QT4 headers are.
 qt_dir = "/usr"
 
-# This is the dir where QT4 headers are.
-vxl_dir = "/data1/wrk/vxl/vxl-1.10.0"
-
 ###############################################################################
 # Don't change past here.
 
 import os
-options = dict(CPPPATH = [os.path.join(os.getcwd(), 'src'),
-                          boost_dir,
-                          os.path.join(vxl_dir, 'core'),
-                          os.path.join(vxl_dir, 'vcl'),
+options = dict(CPPPATH = [boost_dir,
+                          os.path.join(os.getcwd(), 'src'),
+                          os.path.join(os.getcwd(), 'src/third_party'),
                          ],
                QTDIR = qt_dir,
                tools = ['default'],

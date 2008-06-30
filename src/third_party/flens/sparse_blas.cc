@@ -58,6 +58,18 @@ csrmv(Transpose Trans, int m, int k, float alpha, char *matdescra,
                     values, columns, pointerB, pointerE,
                     x, &beta, y);
     #else
+        (void) Trans;
+        (void) m;
+        (void) k;
+        (void) alpha;
+        (void) matdescra;
+        (void) values;
+        (void) columns;
+        (void) pointerB;
+        (void) pointerE;
+        (void) x;
+        (void) beta;
+        (void) y;
         assert(0);
     #endif
 }
@@ -74,6 +86,18 @@ csrmv(Transpose Trans, int m, int k, double alpha, char *matdescra,
                     values, columns, pointerB, pointerE,
                     x, &beta, y);
     #else
+        (void) Trans;
+        (void) m;
+        (void) k;
+        (void) alpha;
+        (void) matdescra;
+        (void) values;
+        (void) columns;
+        (void) pointerB;
+        (void) pointerE;
+        (void) x;
+        (void) beta;
+        (void) y;
         assert(0);
     #endif
 }
@@ -96,6 +120,21 @@ csrmm(Transpose transA, int m, int n, int k, float alpha, char *matdescrA,
                    const_cast<float *>(B),
                    &ldb, &beta, C, &ldc);
     #else
+        (void) transA;
+        (void) m;
+        (void) n;
+        (void) k;
+        (void) alpha;
+        (void) matdescrA;
+        (void) values;
+        (void) columns;
+        (void) pointerB;
+        (void) pointerE;
+        (void) B;
+        (void) ldb;
+        (void) beta;
+        (void) C;
+        (void) ldc;
         assert(0); // NOT IMPLEMENTED (YET?)
     #endif
 }
@@ -118,6 +157,22 @@ csrmm(Transpose transA, int m, int n, int k, double alpha, char *matdescrA,
                    const_cast<double *>(B),
                    &ldb, &beta, C, &ldc);
     #else
+        // Fix compile warnings for those without MKL!
+        (void) transA;
+        (void) m;
+        (void) n;
+        (void) k;
+        (void) alpha;
+        (void) matdescrA;
+        (void) values;
+        (void) columns;
+        (void) pointerB;
+        (void) pointerE;
+        (void) B;
+        (void) ldb;
+        (void) beta;
+        (void) C;
+        (void) ldc;
         assert(0); // NOT IMPLEMENTED (YET?)
     #endif
 }
