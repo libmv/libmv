@@ -37,3 +37,8 @@ env.Program(
     target = 'tuple_test',
     source = ['tuple_test.cc',
               '#bin-dbg/testing/libtestrunner.a'])
+
+env.Program(
+    target = 'array_nd_test',
+    source = ['array_nd_test.cc',
+              '#bin-dbg/testing/libtestrunner.a'])

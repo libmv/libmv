@@ -31,6 +31,9 @@ class Tuple
 {
  public:
 
+  /// Custruct a tuple with unitialized data.
+  Tuple() {}
+
   /// Custruct and initialize the tuple to a constant value.
   Tuple(T initial_value) { Reset(initial_value); }
   
@@ -51,7 +54,7 @@ class Tuple
 
   /// Sets the tuple values from another tuple.
   template <typename D> 
-  void Reset(const Tuple<D,N>& b) { for(int i=0;i<N;i++) data_[i] = T(b[i]); }
+  void Reset(const Tuple<D,N>& b) { Reset(b.Data()); }
 
   /// Sets the tuple values from a pointer.
   template <typename D> 
@@ -63,6 +66,12 @@ class Tuple
   /// Swaps two tuples.
   void Swap( Tuple &b ) { for(int i=0;i<N;i++) std::swap(data_[i],b[i]); }
   
+  /// Pointer to the first element of the tuple.
+  T *Data() { return &data_[0]; }
+
+  /// Constant pointer to the first element of the tuple.
+  const T *Data() const { return &data_[0]; }
+
   /// Access the i's element of the tuple.
   T &operator()(int i) { return data_[i]; }
 
