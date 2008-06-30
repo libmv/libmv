@@ -1,0 +1,8 @@
+Project: FLENS
+URL: http://flens.sourceforge.net/
+License: New BSD
+Upstream version: CVS version at June 29th @18:12 PDT
+Local modifications: None
+
+Note: Only the flens/ subdirectory from the FLENS-lite CVS module is included
+here.
