@@ -1,6 +1,7 @@
 # Copyright 2008 Keir Mierle, all rights reserved.
 
 SConscript('libmv/image/sconscript')
+SConscript('libmv/numeric/sconscript')
 SConscript('testing/sconscript')
 SConscript('third_party/flens/sconscript')
 SConscript('ui/sconscript')
