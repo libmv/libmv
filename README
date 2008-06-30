@@ -15,8 +15,9 @@ Before building, make sure you have the following:
 * Headers for Boost 1.35. 
 * OpenCV
 * SCons 0.97 or newer.
+* atlas, lapack and blas development packages.  On ubuntu:
+    apt-get install lapack3-pic lapack-dev
 
-Note that the OpenCV dependency is temporary, and is not Apache compatible. It
-will be replaced soon.
+Note that the OpenCV dependency is temporary, and will be replaced soon.
 
-Then, edit the sconsctruct file and put correct locations for OpenCV, 
+Then, edit the sconsctruct file and put correct locations for OpenCV and Boost.
