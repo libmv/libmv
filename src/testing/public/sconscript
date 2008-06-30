@@ -1,5 +1,0 @@
-# Copyright 2008 Keir Mierle, all rights reserved.
-
-Import('options')
-env = Environment(**options)
-env.Library('testrunner', ['../internal/test_runner.cc'])
