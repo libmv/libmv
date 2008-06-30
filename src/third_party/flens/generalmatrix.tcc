@@ -312,6 +312,7 @@ typename GeMatrix<FS>::VectorView
 GeMatrix<FS>::operator()(int row, const Underscore &allCols,
                          int firstViewIndex)
 {
+    (void) allCols;
     return _fs.viewRow(row, firstViewIndex);
 }
 

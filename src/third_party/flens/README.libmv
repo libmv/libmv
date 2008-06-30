@@ -5,6 +5,8 @@ Upstream version: CVS version at June 29th @18:12 PDT
 Local modifications:
 
 Fixed compile warnings that happen when not linking MKL.
+Added support to copy between dense and tiny matrices and vectors.
+Made several changes for compiling without warnings.
 
 Note: Only the flens/ subdirectory from the FLENS-lite CVS module is included
 here.

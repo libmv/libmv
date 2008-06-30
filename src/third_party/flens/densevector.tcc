@@ -66,7 +66,8 @@ DenseVector<A>::DenseVector(const Range r)
 
 template <typename A>
 DenseVector<A>::DenseVector(const DenseVector<A> &rhs)
-    : _engine(rhs._engine)
+    : Vector<DenseVector<A> >(),
+      _engine(rhs._engine)
 {
 }
 
