@@ -1,6 +1,6 @@
 Index: ../../../../source/blender/src/buttons_editing.c
 ===================================================================
---- ../../../../source/blender/src/buttons_editing.c	(revision 15388)
+--- ../../../../source/blender/src/buttons_editing.c	(revision 15392)
 +++ ../../../../source/blender/src/buttons_editing.c	(working copy)
 @@ -74,6 +74,7 @@
  #include "DNA_view3d_types.h"
@@ -10,7 +10,7 @@ Index: ../../../../source/blender/src/buttons_editing.c
  
  #include "BKE_blender.h"
  #include "BKE_brush.h"
-@@ -3582,6 +3583,58 @@
+@@ -3582,6 +3583,63 @@
  	uiBlockEndAlign(block);
  }
  
@@ -34,9 +34,14 @@ Index: ../../../../source/blender/src/buttons_editing.c
 +
 +	if(uiNewPanel(curarea, block, "Visualization", "Editing", 0, 0, 320, 204)==0) return;
 +	
-+	uiDefButS(block, TOG|BIT|0, REDRAWVIEW3D, "Features",  10, 10, 100, 20, &libmv->flag, 0, 0, 0, 0, "Show features as 2D points");
-+	uiDefButS(block, TOG|BIT|1, REDRAWVIEW3D, "Tracks",   110, 10, 100, 20, &libmv->flag, 0, 0, 0, 0, "Show feature tracks");
++	//printf("debug: editing_panel_camera_visualization\n");
++	uiDefButS(block, TOG, REDRAWVIEW3D, "Features",  10, 10, 100, 20, &libmv->flag, 0, 0, 0, 0, "Show features as 2D points");
++	uiDefButS(block, TOG, REDRAWVIEW3D, "Tracks",   110, 10, 100, 20, &libmv->flag, 0, 0, 0, 0, "Show feature tracks");
++
 +	uiDefButI(block, NUM,REDRAWSEQ,           "Length:",  210, 10, 100, 20, &G.scene->r.sfra,1.0,MAXFRAMEF, 0, 0, "Fade track after X frames ");
++
++	//printf("debug: editing_panel_camera_visualization exit\n");
++
 +}
 +
 +static void editing_panel_camera_tracking(Object *ob, Camera *cam)
@@ -69,7 +74,7 @@ Index: ../../../../source/blender/src/buttons_editing.c
  /* yafray: extra camera panel to set Depth-of-Field parameters */
  static void editing_panel_camera_yafraydof(Object *ob, Camera *cam)
  {
-@@ -3622,9 +3675,18 @@
+@@ -3622,9 +3680,18 @@
  	cam= ob->data;
  
  	switch(event) {
@@ -91,7 +96,7 @@ Index: ../../../../source/blender/src/buttons_editing.c
  	}
  }
  
-@@ -6497,6 +6559,7 @@
+@@ -6497,6 +6564,7 @@
  	Lattice *lt;
  	bArmature *arm;
  	Camera *cam;
@@ -99,7 +104,7 @@ Index: ../../../../source/blender/src/buttons_editing.c
  
  	ob= OBACT;
  	if(ob==NULL) return;
-@@ -6593,6 +6656,9 @@
+@@ -6593,6 +6661,9 @@
  		cam= ob->data;
  		editing_panel_links(ob); // no editmode!
  		editing_panel_camera_type(ob, cam);
@@ -111,7 +116,7 @@ Index: ../../../../source/blender/src/buttons_editing.c
  		break;
 Index: ../../../../source/blender/include/butspace.h
 ===================================================================
---- ../../../../source/blender/include/butspace.h	(revision 15388)
+--- ../../../../source/blender/include/butspace.h	(revision 15392)
 +++ ../../../../source/blender/include/butspace.h	(working copy)
 @@ -546,6 +546,8 @@
  
@@ -126,7 +131,7 @@ Index: ../../../../source/blender/makesdna/DNA_libmv_types.h
 ===================================================================
 --- ../../../../source/blender/makesdna/DNA_libmv_types.h	(revision 0)
 +++ ../../../../source/blender/makesdna/DNA_libmv_types.h	(revision 0)
-@@ -0,0 +1,52 @@
+@@ -0,0 +1,43 @@
 +/**
 + * makesdna/DNA_libmv_types.h (jun-2008 db)
 + *
@@ -155,17 +160,12 @@ Index: ../../../../source/blender/makesdna/DNA_libmv_types.h
 + *
 + * ***** END GPL LICENSE BLOCK *****
 + */
++ 
 +#ifndef DNA_LIBMV_TYPES_H
 +#define DNA_LIBMV_TYPES_H
-+
-+#include "DNA_ID.h"
-+#include "DNA_scriptlink_types.h"
-+
-+#ifdef __cplusplus
-+extern "C" {
-+#endif
-+
++	
 +typedef struct libmvConfig {
++	char pad[2];
 +	short flag;
 +} libmvConfig;
 +
@@ -174,9 +174,46 @@ Index: ../../../../source/blender/makesdna/DNA_libmv_types.h
 +/* flag */
 +#define LIBMV_BUNDLE_ADJUST	1
 +
-+#ifdef __cplusplus
-+}
-+#endif
-+
 +#endif
 
+Property changes on: ../../../../source/blender/makesdna/DNA_libmv_types.h
+___________________________________________________________________
+Name: svn:executable
+   + *
+
+Index: ../../../../source/blender/makesdna/DNA_userdef_types.h
+===================================================================
+--- ../../../../source/blender/makesdna/DNA_userdef_types.h	(revision 15392)
++++ ../../../../source/blender/makesdna/DNA_userdef_types.h	(working copy)
+@@ -34,6 +34,7 @@
+ 
+ #include "DNA_listBase.h"
+ #include "DNA_texture_types.h"
++#include "DNA_libmv_types.h"
+ 
+ /* themes; defines in BIF_resource.h */
+ struct ColorBand;
+@@ -198,8 +199,9 @@
+ 	short smooth_viewtx;	/* miliseconds to spend spinning the view */
+ 	short glreslimit;
+ 	short ndof_pan, ndof_rotate;
+-	short pads[2];
+-//	char pad[8];
++	struct libmvConfig libmv;
++//	short pads[2];
++	char pad[4];
+ 	char versemaster[160];
+ 	char verseuser[160];
+ 	float glalphaclip;
+Index: ../../../../source/blender/makesdna/intern/makesdna.c
+===================================================================
+--- ../../../../source/blender/makesdna/intern/makesdna.c	(revision 15392)
++++ ../../../../source/blender/makesdna/intern/makesdna.c	(working copy)
+@@ -126,6 +126,7 @@
+ 	"DNA_customdata_types.h",
+ 	"DNA_particle_types.h",
+ 	"DNA_cloth_types.h",
++	"DNA_libmv_types.h",
+ 	// if you add files here, please add them at the end
+ 	// of makesdna.c (this file) as well
+ 
