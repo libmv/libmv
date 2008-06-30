@@ -63,7 +63,8 @@ GeMatrix<FS>::GeMatrix(const FS &fs)
 
 template <typename FS>
 GeMatrix<FS>::GeMatrix(const GeMatrix<FS> &rhs)
-    : _fs(rhs._fs)
+    : GeneralMatrix<GeMatrix<FS> >(),
+      _fs(rhs._fs)
 {
 }
 

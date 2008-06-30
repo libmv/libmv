@@ -99,6 +99,21 @@ class TinyVector
             return _data[index];
         }
 
+        int
+        length() const {
+          return N;
+        }
+
+        int
+        firstIndex() const {
+          return 0;
+        }
+
+        void
+        resize(int new_length) {
+          assert(length() == new_length);
+        }
+
         T _data[N];
 };
 
@@ -217,6 +232,26 @@ class TinyMatrix
             return _data[row][col];
         }
 
+        int
+        numRows() const {
+          return M;
+        }
+
+        int
+        numCols() const {
+          return N;
+        }
+
+        int
+        firstRow() const {
+          return 0;
+        }
+
+        int
+        firstCol() const {
+          return 0;
+        }
+
         // -- methods ----------------------------------------------------------
         int
         leadingDimension() const
@@ -243,6 +278,38 @@ copy(const TinyMatrix<XT,M,N> &x, TinyMatrix<YT,M,N> &y)
             y._data[i][j] = x._data[i][j];
         }
     }
+}
+
+template <typename XT, typename YT, int N>
+void
+copy(const XT &x, TinyVector<YT,N> &y) {
+    for (int i=0; i<N; ++i) {
+        y._data[i] = x(i+x.firstIndex());
+    }
+}
+
+template <typename XT, int N, int M, typename YT>
+void
+copy(const TinyMatrix<XT,N,M> &x, YT &y) {
+  assert (N == y.numRows());
+  assert (M == y.numCols());
+  for (int i=0; i<N; ++i) {
+    for (int j=0; j<M; ++j) {
+      y(i+y.firstRow(),j+y.firstCol())  = x(i,j);
+    }
+  }
+}
+
+template <typename XT, typename YT, int N, int M>
+void
+copy(const XT &x, TinyMatrix<YT,N,M> &y) {
+  assert (N == y.numRows());
+  assert (M == y.numCols());
+  for (int i=0; i<N; ++i) {
+    for (int j=0; j<M; ++j) {
+      y(i,j) = x(i+x.firstRow(),j+x.firstCol());
+    }
+  }
 }
 
 template <typename T, typename XT, typename YT, int M, int N>

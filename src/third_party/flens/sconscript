@@ -30,6 +30,10 @@ env.Library(target = 'flens',
                       'snapshot.cc',
                       'sparse_blas.cc',
                       'underscore.cc',
-                     ],
-            LIBS=['lapack','atlas'])
+                     ],)
 
+env.Program(target = 'tinyvector_test',
+            source = ['tinyvector_test.cc',
+                      'libflens.a',
+                      '#bin-dbg/testing/libtestrunner.a'],
+            LIBS=['lapack','atlas'])
