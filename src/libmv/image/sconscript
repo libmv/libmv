@@ -32,3 +32,8 @@ env.Program(
               'image_test.cc',
               '#bin-dbg/testing/libtestrunner.a'],
     LIBS=['cv', 'highgui'])
+
+env.Program(
+    target = 'tuple_test',
+    source = ['tuple_test.cc',
+              '#bin-dbg/testing/libtestrunner.a'])
