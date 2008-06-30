@@ -3,8 +3,8 @@
 // A generic cache interface.
 //
 
-#ifndef LIBMV_INTERNAL_CACHE_H_
-#define LIBMV_INTERNAL_CACHE_H_
+#ifndef LIBMV_IMAGE_CACHE_H_
+#define LIBMV_IMAGE_CACHE_H_
 
 namespace libmv {
 
@@ -29,4 +29,4 @@ class Cache {
 };
 }  // namespace libmv
 
-#endif  // LIBMV_INTERNAL_CACHE_H_
+#endif  // LIBMV_IMAGE_CACHE_H_

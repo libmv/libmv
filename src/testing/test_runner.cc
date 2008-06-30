@@ -6,7 +6,7 @@
 
 #include <iostream>
 
-#include "testing/public/base.h"
+#include "testing/testing.h"
 
 TEST_REGISTRY;
 

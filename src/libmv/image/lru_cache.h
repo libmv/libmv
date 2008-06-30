@@ -4,20 +4,19 @@
 // this to store many small items. Instead, use this for heavy-weight objects
 // like images.
 
-#ifndef SRC_LIBMV_INTERNAL_LRU_CACHE_H_
-#define SRC_LIBMV_INTERNAL_LRU_CACHE_H_
+#ifndef LIBMV_IMAGE_LRU_CACHE_H_
+#define LIBMV_IMAGE_LRU_CACHE_H_
 
 #include <map>
 #include <list>
 #include <cassert>
 
-#include "libmv/internal/cache.h"
+#include "libmv/image/cache.h"
 
 using std::map;
 using std::list;
 
 namespace libmv {
-
 namespace lru_cache {
 
 // A queue which stores unique keys. It allows removal of arbitrary items by
@@ -64,6 +63,7 @@ class SetQueue {
 
 template<typename K, typename V> class Cache;
 
+// TODO(keir): Document O(...) performance for operations.
 template<typename K, typename V>
 class LRUCache : public Cache<K, V> {
  public:
@@ -162,4 +162,4 @@ class LRUCache : public Cache<K, V> {
 
 }  // namespace libmv
 
-#endif  // SRC_LIBMV_INTERNAL_LRU_CACHE_H_
+#endif  // LIBMV_IMAGE_LRU_CACHE_H_

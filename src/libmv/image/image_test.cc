@@ -2,8 +2,8 @@
 //
 // Simple tests for the image wrapper class.
 
-#include "libmv/public/image.h"
-#include "testing/public/base.h"
+#include "libmv/image/image.h"
+#include "testing/testing.h"
 
 using libmv::Image;
 using libmv::LoadImage;
@@ -16,7 +16,7 @@ TEST(FailsOnNonexistantImage) {
 }
 
 TEST(Loads2x1Image) {
-  Image *image = LoadImage("src/libmv/internal/image_test_data.png");
+  Image *image = LoadImage("src/libmv/image/image_test_data.png");
   Check(image);
   Equals(2, image->Width());
   Equals(1, image->Height());

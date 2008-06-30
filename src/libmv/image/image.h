@@ -3,10 +3,11 @@
 // Image class and loading functions for libmv.
 //
 
-#ifndef SRC_LIBMV_PUBLIC_IMAGE_H
-#define SRC_LIBMV_PUBLIC_IMAGE_H
+#ifndef LIBMV_IMAGE_IMAGE_H
+#define LIBMV_IMAGE_IMAGE_H
 
-class string;
+#include <string>
+using std::string;
 
 namespace libmv {
 
@@ -24,4 +25,4 @@ Image *LoadImage(const string &filename);
 
 }  // namespace libmv
 
-#endif  // SRC_LIBMV_PUBLIC_IMAGE_H
+#endif  // LIBMV_IMAGE_H

@@ -5,6 +5,6 @@
 #ifndef TESTING_PUBLIC_BASE_H_
 #define TESTING_PUBLIC_BASE_H_
 
-#include "testing/internal/testsoon.h"
+#include "testing/testsoon.h"
 
 #endif  // TESTING_PUBLIC_BASE_H_

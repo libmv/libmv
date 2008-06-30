@@ -2,8 +2,8 @@
 //
 // Tests for the LRU cache.
 
-#include "libmv/internal/lru_cache.h"
-#include "testing/public/base.h"
+#include "libmv/image/lru_cache.h"
+#include "testing/testing.h"
 
 namespace {
 
