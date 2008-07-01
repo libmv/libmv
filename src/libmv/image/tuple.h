@@ -27,10 +27,8 @@ namespace libmv {
 
 /// A vector of elements with fixed lenght and deep copy semantics.
 template <typename T,int N>
-class Tuple
-{
+class Tuple {
  public:
-
   /// Custruct a tuple with unitialized data.
   Tuple() {}
 
@@ -58,13 +56,18 @@ class Tuple
 
   /// Sets the tuple values from a pointer.
   template <typename D> 
-  void Reset(D *values) { for(int i=0;i<N;i++) data_[i] = T(values[i]); }
+  void Reset(D *values) {
+    for(int i=0;i<N;i++) {
+      data_[i] = T(values[i]);
+    }
+  }
 
   /// Sets the tuple values to a constant value.
-  void Reset(T value) { for(int i=0;i<N;i++) data_[i] = value; }
-  
-  /// Swaps two tuples.
-  void Swap( Tuple &b ) { for(int i=0;i<N;i++) std::swap(data_[i],b[i]); }
+  void Reset(T value) {
+    for(int i=0;i<N;i++) {
+      data_[i] = value;
+    }
+  }
   
   /// Pointer to the first element of the tuple.
   T *Data() { return &data_[0]; }
@@ -75,17 +78,11 @@ class Tuple
   /// Access the i's element of the tuple.
   T &operator()(int i) { return data_[i]; }
 
-  /// Access the i's element of the tuple.
-  T &operator[](int i) { return data_[i]; }
-
   /// Access the i's element of the tuple as a constant value.
   const T &operator()(int i) const { return data_[i]; }
 
-  /// Access the i's element of the tuple as a constant value.
-  const T &operator[](int i) const { return data_[i]; }
-
  private:
-  /// the tuple of elements
+  /// The tuple of elements.
   T data_[N];
 };
 

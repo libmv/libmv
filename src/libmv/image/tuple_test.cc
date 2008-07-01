@@ -21,14 +21,17 @@
 #include "libmv/image/tuple.h"
 #include "testing/testing.h"
 
+#include <algorithm>
+
 using libmv::Tuple;
 
 namespace {
 
 TEST(InitConstantValue) {
   Tuple<int,3> t(5);
-  for(int i=0; i<3; i++)
-    Check(t(i) == 5);
+  Check(t(0) == 5);
+  Check(t(0) == 5);
+  Check(t(0) == 5);
 }
 
 TEST(InitFromPointer) {
@@ -39,8 +42,9 @@ TEST(InitFromPointer) {
     Check(t(i) == vals[i]);
 
   Tuple<int,3> b(t);
-  for(int i=0; i<3; i++)
-    Check(b(i) == int(vals[i]));
+  Check(b(0) == int(vals[0]));
+  Check(b(1) == int(vals[1]));
+  Check(b(2) == int(vals[2]));
 }
 
 TEST(Swap) {
@@ -50,12 +54,14 @@ TEST(Swap) {
   Tuple<unsigned char,3> a(vala);
   Tuple<unsigned char,3> b(valb);
 
-  a.Swap(b);
+  std::swap(a,b);
 
-  for(int i=0; i<3; i++)
-    Check(a[i] == int(valb[i]));
-  for(int i=0; i<3; i++)
-    Check(b(i) == int(vala[i]));
+  Check(a(0) == int(valb[0]));
+  Check(a(1) == int(valb[1]));
+  Check(a(2) == int(valb[2]));
+  Check(b(0) == int(vala[0]));
+  Check(b(1) == int(vala[1]));
+  Check(b(2) == int(vala[2]));
 }
 
 

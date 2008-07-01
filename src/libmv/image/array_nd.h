@@ -21,17 +21,18 @@
 #ifndef LIBMV_IMAGE_ARRAY_ND_H
 #define LIBMV_IMAGE_ARRAY_ND_H
 
-#include <boost/shared_array.hpp>
 #include "libmv/image/tuple.h"
+#include <boost/shared_array.hpp>
+#include <iostream>
 
+using namespace std;
 using libmv::Tuple;
 
 namespace libmv {
 
 /// A multidimensional array class with shallow copy semantics.
 template <typename T,int N>
-class ArrayND
-{
+class ArrayND {
  public:
   /// Type for the multidimensional indices.
   typedef Tuple<int,N> Index;
@@ -43,26 +44,26 @@ class ArrayND
   }
 
   /// Create an array of shape s.
-  ArrayND(const Index &s) {
-    Reset(s);
+  ArrayND(const Index &shape) {
+    Reset(shape);
   }
   
   /// Create an array of shape s.
-  ArrayND(int *s) {
-    Reset(s);
+  ArrayND(int *shape) {
+    Reset(shape);
   }
   
   /// Create an array of shape s.
-  void Reset(const Index &s) {
-    Reset(s.Data());
+  void Reset(const Index &shape) {
+    Reset(shape.Data());
   }
 
   /// Resets the array to shape s.  All data is lost.
-  void Reset(int *s) {
-    shape_.reset(s);
-    strides_[N-1] = 1;
+  void Reset(const int *shape) {
+    shape_.Reset(shape);
+    strides_(N-1) = 1;
     for(int i=N-1; i>0; i--)
-      strides_[i-1] = strides_[i] * shape_[i];
+      strides_(i-1) = strides_(i) * shape_(i);
 
     if(Size()>0)
       data_ = new T[Size()];
@@ -76,13 +77,6 @@ class ArrayND
     reset(b.shape_);
   }
 
-  /// Efficiently swap two arrays.  No data copies are done.
-  void Swap( ArrayND &im ) {
-    ArrayND tmp = im;
-    im = *this;
-    *this = tmp;
-  }
-  
   /// Return a conversion of this array to type D.
   /// Assumes *this is contiguous.
   template<typename D>
@@ -97,21 +91,21 @@ class ArrayND
   ArrayND DeepCopy() { return AsType<T>(); }
   
   /// Return the lenght of an axis.
-  int Shape(int axis) {
-    return shape_[axis];
+  int Shape(int axis) const {
+    return shape_(axis);
   }
 
   /// Return the distance between neighboring elements along axis.
-  int Stride(int axis) {
+  int Stride(int axis) const {
     return strides_[axis];
   }
 
   /// Return the number of elements of the array.
   int Size() const {
-    int s = 1;
+    int size = 1;
     for(int i=0; i<N; i++)
-      s *= Shape(i);
-    return s;
+      size *= Shape(i);
+    return size;
   }
 
   /// Pointer to the first element of the array.
@@ -122,10 +116,10 @@ class ArrayND
 
   /// Distance between the first element and the element at position index.
   int Offset(const Index &index) const {
-    int o = 0;
+    int offset = 0;
     for(int i=0; i<N; i++)
-      o += index[i] * Stride(i);
-    return o;
+      offset += index[i] * Stride(i);
+    return offset;
   }
   
   /// Return a reference to the element at position index.
@@ -138,7 +132,7 @@ class ArrayND
     return *( Data() + Offset(index) );
   }
   
-  /// Check whether index is inside the array.
+  /// True if index is inside array.
   bool contains(const Index &index) const {
     for(int i=0; i<N; i++)
       if(index[i] < 0 || index[i] >= Shape(i))
