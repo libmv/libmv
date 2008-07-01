@@ -39,48 +39,68 @@ class ArrayND {
 
 
   /// Create an empty array.
-  ArrayND() {
-    Reset(Index(0));
+  ArrayND() : data_(NULL), own_data_(true) {
+    Resize(Index(0));
   }
 
   /// Create an array of shape s.
-  ArrayND(const Index &shape) {
-    Reset(shape);
+  ArrayND(const Index &shape) : data_(NULL), own_data_(true) {
+    Resize(shape);
   }
   
   /// Create an array of shape s.
-  ArrayND(int *shape) {
-    Reset(shape);
-  }
-  
-  /// Create an array of shape s.
-  void Reset(const Index &shape) {
-    Reset(shape.Data());
+  ArrayND(int *shape) : data_(NULL), own_data_(true) {
+    Resize(shape);
   }
 
-  /// Resets the array to shape s.  All data is lost.
-  void Reset(const int *shape) {
+  /// Destructor deletes the data if the array owns it.
+  ~ArrayND() {
+    if(own_data_) {
+      delete [] data_;
+    }
+  }
+ 
+  /// Return a view of these array's data.
+  ArrayND View() {
+    ArrayND view;
+    view.shape_ = shape_;
+    view.strides_ = strides_;
+    view.data_ = data_;
+    view.own_data_ = false;
+    return view;
+  } 
+
+  /// Create an array of shape s.
+  void Resize(const Index &shape) {
+    Resize(shape.Data());
+  }
+
+  /// Resizes the array to shape s.  All data is lost.
+  void Resize(const int *shape) {
+    assert(own_data_);
+
     shape_.Reset(shape);
     strides_(N-1) = 1;
-    for(int i = N - 1; i > 0; --i)
+    for (int i = N - 1; i > 0; --i)
       strides_(i-1) = strides_(i) * shape_(i);
 
+    delete [] data_;
     if (Size()>0)
       data_ = new T[Size()];
     else
       data_ = NULL;
-    data_buffer_.reset(data_);
   }
 
   /// Return a conversion of this array to type D.
   /// Assumes *this is contiguous.
-  template<typename D>
-  ArrayND<D,N> AsType() const {
-    ArrayND<D,N> res(shape_);
-    for(int i = 0; i < Size(); ++i)
-      res[i] = D((*this)[i]);
-    return res;
-  }
+  // TODO test this
+//  template<typename D>
+//  ArrayND<D,N> AsType() const {
+//    ArrayND<D,N> res(shape_);
+//    for (int i = 0; i < Size(); ++i)
+//      res[i] = D((*this)[i]);
+//    return res;
+//  }
 
   /// Return the lenght of an axis.
   int Shape(int axis) const {
@@ -89,13 +109,13 @@ class ArrayND {
 
   /// Return the distance between neighboring elements along axis.
   int Stride(int axis) const {
-    return strides_[axis];
+    return strides_(axis);
   }
 
   /// Return the number of elements of the array.
   int Size() const {
     int size = 1;
-    for(int i = 0; i < N; ++i)
+    for (int i = 0; i < N; ++i)
       size *= Shape(i);
     return size;
   }
@@ -106,11 +126,16 @@ class ArrayND {
   /// Constant pointer to the first element of the array.
   const T *Data() const { return data_; }
 
+  /// True if the arrays own its data.
+  bool OwnData() const {
+    return own_data_;
+  }
+
   /// Distance between the first element and the element at position index.
   int Offset(const Index &index) const {
     int offset = 0;
-    for(int i = 0; i < N; ++i)
-      offset += index[i] * Stride(i);
+    for (int i = 0; i < N; ++i)
+      offset += index(i) * Stride(i);
     return offset;
   }
   
@@ -126,13 +151,13 @@ class ArrayND {
   
   /// True if index is inside array.
   bool Contains(const Index &index) const {
-    for(int i = 0; i < N; ++i)
-      if (index[i] < 0 || index[i] >= Shape(i))
+    for (int i = 0; i < N; ++i)
+      if (index(i) < 0 || index(i) >= Shape(i))
         return false;
     return true;
   }
   
- private:
+ protected:
   /// The number of element in each dimension.
   Tuple<int,N> shape_;
 
@@ -142,9 +167,8 @@ class ArrayND {
   /// Pointer to the first element of the array.
   T *data_;
 
-  /// A shared pointer to the data.
-  /// Data will be deleted when last array using it is deleted.
-  boost::shared_array<T> data_buffer_;
+  /// data_ will be deleted on destruction if own_data_ is true
+  bool own_data_;
 };
 
 }  // namespace libmv

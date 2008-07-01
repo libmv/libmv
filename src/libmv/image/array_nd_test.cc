@@ -25,11 +25,69 @@ using libmv::ArrayND;
 
 namespace {
 
-TEST(ArrayNDResetEmpty) {
-  ArrayND<int,3> a;
+TEST(ArrayNDEmptyConstructor) {
+  ArrayND<int,2> a;
 
-  for(int i=0; i<3; i++)
-    Check(a.Shape(i) == 0);
+  Check(a.Shape(0) == 0);
+  Check(a.Shape(1) == 0);
+}
+
+TEST(ArrayNDIndexConstructor) {
+  int s[] = {1, 2, 3};
+  ArrayND<int,3>::Index shape(s);
+  ArrayND<int,3> a(shape);
+
+  Check(a.Shape(0) == 1);
+  Check(a.Shape(1) == 2);
+  Check(a.Shape(2) == 3);
+}
+
+TEST(ArrayNDPointerConstructor) {
+  int s[] = {1, 2, 3};
+  ArrayND<int,3> a(s);
+
+  Check(a.Shape(0) == 1);
+  Check(a.Shape(1) == 2);
+  Check(a.Shape(2) == 3);
+}
+
+TEST(ArrayNDView) {
+  int s[] = {3};
+  ArrayND<int,1> a(s);
+  ArrayND<int,1> b = a.View();
+
+  Check(a.Shape(0) == b.Shape(0));
+  Check(a.Stride(0) == b.Stride(0));
+  Check(a.Data() == b.Data());
+  Check(!b.OwnData());
+}
+
+TEST(ArrayNDSize) {
+  int s[] = {1, 2, 3};
+  ArrayND<int,3>::Index shape(s);
+  ArrayND<int,3> a(shape);
+
+  int l[] = {0, 1, 2};
+  ArrayND<int,3>::Index last(l);
+
+  Check(a.Size() == a.Offset(last)+1);
+  Check(a.Contains(last));
+  Check(!a.Contains(shape));
+}
+
+TEST(ArrayNDParenthesis) {
+  typedef ArrayND<int, 2>::Index Index;
+
+  int s[] = {3, 3};
+  ArrayND<int,2> a(s);
+
+  *(a.Data()+0) = 0;
+  *(a.Data()+5) = 5;
+
+  int i1[] = {0, 0};
+  Check(a(Index(i1)) == 0);
+  int i2[] = {1, 2};
+  Check(a(Index(i2)) == 5);
 }
 
 }  // namespace
