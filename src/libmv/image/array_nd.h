@@ -62,19 +62,14 @@ class ArrayND {
   void Reset(const int *shape) {
     shape_.Reset(shape);
     strides_(N-1) = 1;
-    for(int i=N-1; i>0; i--)
+    for(int i = N - 1; i > 0; --i)
       strides_(i-1) = strides_(i) * shape_(i);
 
-    if(Size()>0)
+    if (Size()>0)
       data_ = new T[Size()];
     else
       data_ = NULL;
     data_buffer_.reset(data_);
-  }
-
-  /// Resets an array to have the same shape as another.  All data is lost.
-  void ResetLike(const ArrayND &b) {
-    reset(b.shape_);
   }
 
   /// Return a conversion of this array to type D.
@@ -82,14 +77,11 @@ class ArrayND {
   template<typename D>
   ArrayND<D,N> AsType() const {
     ArrayND<D,N> res(shape_);
-    for(int i=0; i<Size(); i++)
+    for(int i = 0; i < Size(); ++i)
       res[i] = D((*this)[i]);
     return res;
   }
 
-  /// Return a deep copy of the array.  Data is copied.
-  ArrayND DeepCopy() { return AsType<T>(); }
-  
   /// Return the lenght of an axis.
   int Shape(int axis) const {
     return shape_(axis);
@@ -103,7 +95,7 @@ class ArrayND {
   /// Return the number of elements of the array.
   int Size() const {
     int size = 1;
-    for(int i=0; i<N; i++)
+    for(int i = 0; i < N; ++i)
       size *= Shape(i);
     return size;
   }
@@ -117,7 +109,7 @@ class ArrayND {
   /// Distance between the first element and the element at position index.
   int Offset(const Index &index) const {
     int offset = 0;
-    for(int i=0; i<N; i++)
+    for(int i = 0; i < N; ++i)
       offset += index[i] * Stride(i);
     return offset;
   }
@@ -133,9 +125,9 @@ class ArrayND {
   }
   
   /// True if index is inside array.
-  bool contains(const Index &index) const {
-    for(int i=0; i<N; i++)
-      if(index[i] < 0 || index[i] >= Shape(i))
+  bool Contains(const Index &index) const {
+    for(int i = 0; i < N; ++i)
+      if (index[i] < 0 || index[i] >= Shape(i))
         return false;
     return true;
   }
