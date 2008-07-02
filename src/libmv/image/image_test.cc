@@ -22,6 +22,7 @@
 #include "testing/testing.h"
 
 using libmv::Image;
+using libmv::ReadPgm;
 
 namespace {
 
@@ -40,6 +41,16 @@ TEST(ImageParenthesis) {
   im(0,1,0) = 3;
 
   Check(im(0,1) == 3);
+}
+
+TEST(ReadPgm) {
+  Image<unsigned char> im;
+  Check(ReadPgm(&im, "src/libmv/image/image_test/two_pixels.pgm"));
+  Check(im(0,0) == (unsigned char)255);
+  Check(im(0,1) == (unsigned char)0);
+
+  Check(!ReadPgm(&im, "src/libmv/image/image_test/two_pixels.png"));
+  Check(!ReadPgm(&im, "hopefully_unexisting_file"));
 }
 
 }  // namespace

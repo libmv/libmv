@@ -60,6 +60,46 @@ class Image : public ArrayND<T, 3> {
   }
 };
 
+
+
+int ReadPgm(Image<unsigned char> *im, const char *filename)
+{
+  FILE *file = fopen(filename,"r");
+  if (!file) {
+    return 0;
+  }
+
+  int magicnumber, width, height, maxval;
+  int res;
+
+  // Check magic number.
+  res = fscanf(file, "P%d", &magicnumber); 
+  if (res != 1 || magicnumber != 5) {
+    fclose(file);
+    return 0;
+  }
+
+  // Read sizes
+  res = fscanf(file, "%d %d %d", &width, &height, &maxval);
+  if (res != 3 || maxval > 255) {
+    fclose(file);
+    return 0;
+  }
+
+  // Read last white space
+  fseek(file, 1, SEEK_CUR);
+
+  // Reed pixels
+  im->Resize(height,width,1);
+  res = fread(im->Data(), 1, im->Size(), file);
+  if (res != im->Size()) {
+    fclose(file);
+    return 0;
+  }
+
+  return 1;
+}
+
 }  // namespace libmv
 
 #endif  // LIBMV_IMAGE_IMAGE_PAU_ND_H
