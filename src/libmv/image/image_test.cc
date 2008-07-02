@@ -43,6 +43,29 @@ TEST(ImageParenthesis) {
   Check(im(0,1) == 3);
 }
 
+TEST(ImageNearest) {
+  Image<int> im(2,2);
+  im(0,0) = 0;
+  im(0,1) = 1;
+  im(1,0) = 2;
+  im(1,1) = 3;
+
+  Check(im.Nearest(-0.4,-0.4) == 0);
+  Check(im.Nearest(0.4,0.4) == 0);
+  Check(im.Nearest(0.6,0.6) == 3);
+  Check(im.Nearest(1.4,1.4) == 3);
+}
+
+TEST(ImageLinear) {
+  Image<int> im(2,2);
+  im(0,0) = 0;
+  im(0,1) = 1;
+  im(1,0) = 2;
+  im(1,1) = 3;
+
+  Check(im.Linear(0.5,0.5) == 1.5);
+}
+
 TEST(ReadPgm) {
   Image<unsigned char> im;
   Check(ReadPgm(&im, "src/libmv/image/image_test/two_pixels.pgm"));

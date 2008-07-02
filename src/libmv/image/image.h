@@ -24,6 +24,7 @@
 #include "libmv/image/array_nd.h"
 #include <boost/shared_array.hpp>
 #include <iostream>
+#include <math.h>
 
 using namespace std;
 using libmv::ArrayND;
@@ -41,13 +42,13 @@ class Image : public ArrayND<T, 3> {
     : ArrayND<T,3>(height,width,depth) {
   }
 
-  int Height() {
+  int Height() const {
     return ArrayND<T, 3>::Shape(0);
   }
-  int Width() {
+  int Width() const {
     return ArrayND<T, 3>::Shape(1);
   }
-  int Depth() {
+  int Depth() const {
     return ArrayND<T, 3>::Shape(2);
   }
 
@@ -56,8 +57,56 @@ class Image : public ArrayND<T, 3> {
     return ArrayND<T, 3>::operator()(i0,i1,i2);
   }
   const T &operator()(int i0, int i1, int i2 = 0) const {
-    return ArrayND<T, 3>::operaton()(i0,i1,i2);
+    return ArrayND<T, 3>::operator()(i0,i1,i2);
   }
+
+  /// Nearest neighbor interpolation.
+  T Nearest(float y, float x, int v = 0) const {
+    const int i = int(round(y));
+    const int j = int(round(x));
+    return operator()(i, j, v);
+  }
+
+  /// Linear interpolation.
+  float Linear(float y, float x, int v = 0) const {
+    int x1, y1, x2, y2;
+    float dx1, dy1, dx2, dy2;
+
+    LinearInitAxis(&y1, &y2, &dy1, &dy2, y, Height());
+    LinearInitAxis(&x1, &x2, &dx1, &dx2, x, Width());
+
+    const T im11 = operator()(y1,x1,v);
+    const T im12 = operator()(y1,x2,v);
+    const T im21 = operator()(y2,x1,v);
+    const T im22 = operator()(y2,x2,v);
+
+    return dy1 * ( dx1 * im11 + dx2 * im12 )
+         + dy2 * ( dx1 * im21 + dx2 * im22 );
+  }
+ private:
+  static void LinearInitAxis(int *x1, int *x2, float *dx1, float *dx2,
+                             float fx, int width) {
+    const int ix = int(fx);
+    if(ix < 0) {
+      *x1 = 0;
+      *x2 = 0;
+      *dx1 = 1;
+      *dx2 = 0;
+    } 
+    else if(ix > width-2) {
+      *x1 = width-1;
+      *x2 = width-1;
+      *dx1 = 1;
+      *dx2 = 0;
+    }
+    else {
+      *x1 = ix;
+      *x2 = *x1 + 1;
+      *dx1 = *x2 - fx;
+      *dx2 = 1 - *dx1;
+    }
+  }
+
 };
 
 int ReadPgm(Image<unsigned char> *im, const char *filename);
