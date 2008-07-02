@@ -18,53 +18,51 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
-#ifndef LIBMV_IMAGE_IMAGE_PAU_ND_H
-#define LIBMV_IMAGE_IMAGE_PAU_ND_H
 
-#include "libmv/image/array_nd.h"
-#include <boost/shared_array.hpp>
 #include <iostream>
-
-using namespace std;
-using libmv::ArrayND;
 
 namespace libmv {
 
-/// Image class storing the values in a 3D array (row,column,channel).
-template <typename T>
-class Image : public ArrayND<T, 3> {
- public:
-  Image()
-    : ArrayND<T,3>() {
+int ReadPgm(Image<unsigned char> *im, const char *filename)
+{
+  FILE *file = fopen(filename,"r");
+  if (!file) {
+    return 0;
   }
-  Image(int height, int width, int depth=1)
-    : ArrayND<T,3>(height,width,depth) {
+  int res = ReadPgm(im,file);
+  fclose(file);
+  return res;
+}
+
+int ReadPgm(Image<unsigned char> *im, FILE *file)
+{
+  int magicnumber, width, height, maxval;
+  int res;
+
+  // Check magic number.
+  res = fscanf(file, "P%d", &magicnumber); 
+  if (res != 1 || magicnumber != 5) {
+    return 0;
   }
 
-  int Height() {
-    return ArrayND<T, 3>::Shape(0);
-  }
-  int Width() {
-    return ArrayND<T, 3>::Shape(1);
-  }
-  int Depth() {
-    return ArrayND<T, 3>::Shape(2);
+  // Read sizes
+  res = fscanf(file, "%d %d %d", &width, &height, &maxval);
+  if (res != 3 || maxval > 255) {
+    return 0;
   }
 
-  /// Enable accessing with 2 indices for grayscale images.
-  T &operator()(int i0, int i1, int i2 = 0) {
-    return ArrayND<T, 3>::operator()(i0,i1,i2);
-  }
-  const T &operator()(int i0, int i1, int i2 = 0) const {
-    return ArrayND<T, 3>::operaton()(i0,i1,i2);
-  }
-};
+  // Read last white space
+  fseek(file, 1, SEEK_CUR);
 
-int ReadPgm(Image<unsigned char> *im, const char *filename);
-int ReadPgm(Image<unsigned char> *im, FILE *file);
+  // Reed pixels
+  im->Resize(height,width,1);
+  res = fread(im->Data(), 1, im->Size(), file);
+  if (res != im->Size()) {
+    return 0;
+  }
+
+  return 1;
+}
 
 }  // namespace libmv
 
-#include "image.tcc"
-
-#endif  // LIBMV_IMAGE_IMAGE_PAU_ND_H
