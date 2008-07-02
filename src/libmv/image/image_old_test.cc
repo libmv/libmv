@@ -22,24 +22,21 @@
 #include "testing/testing.h"
 
 using libmv::Image;
+using libmv::LoadImage;
 
 namespace {
 
-TEST(ImageSizes) {
-  Image<int> im;
-
-  Check(im.Height() == 0);
-  Check(im.Width() == 0);
-  Check(im.Depth() == 0);
-
-  Check(im.Shape(0) == 0);
+TEST(FailsOnNonexistantImage) {
+  Image *image = LoadImage("non-existant-file");
+  Check(!image);
 }
 
-TEST(ImageParenthesis) {
-  Image<int> im(1,2,3);
-  im(0,1,0) = 3;
-
-  Check(im(0,1) == 3);
+TEST(Loads2x1Image) {
+  Image *image = LoadImage("src/libmv/image/image_test_data.png");
+  Check(image);
+  Equals(2, image->Width());
+  Equals(1, image->Height());
+  Equals(8, image->Depth());
 }
 
 }  // namespace

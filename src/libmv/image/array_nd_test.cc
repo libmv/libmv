@@ -90,4 +90,58 @@ TEST(ArrayNDParenthesis) {
   Check(a(Index(i2)) == 5);
 }
 
+TEST(ArrayND1DConstructor) {
+  ArrayND<int,1> a(3);
+
+  Check(a.Shape(0) == 3);
+}
+
+TEST(ArrayND2DConstructor) {
+  ArrayND<int,2> a(1,2);
+
+  Check(a.Shape(0) == 1);
+  Check(a.Shape(1) == 2);
+}
+
+TEST(ArrayND3DConstructor) {
+  ArrayND<int,3> a(1,2,3);
+
+  Check(a.Shape(0) == 1);
+  Check(a.Shape(1) == 2);
+  Check(a.Shape(2) == 3);
+}
+
+TEST(ArrayND1DAccessor) {
+  ArrayND<int,1> a(3);
+  a(0) = 1;
+  a(1) = 2;
+
+  Check(a(0) == 1);
+  Check(a(1) == 2);
+  Check(*(a.Data()) == 1);
+  Check(*(a.Data() + a.Stride(0)) == 2);
+}
+
+TEST(ArrayND2DAccessor) {
+  ArrayND<int,2> a(3,3);
+  a(0,0) = 1;
+  a(1,1) = 2;
+
+  Check(a(0,0) == 1);
+  Check(a(1,1) == 2);
+  Check(*(a.Data()) == 1);
+  Check(*(a.Data() + a.Stride(0) + a.Stride(1)) == 2);
+}
+
+TEST(ArrayND2DAccessor) {
+  ArrayND<int,3> a(3,3,3);
+  a(0,0,0) = 1;
+  a(1,1,1) = 2;
+
+  Check(a(0,0,0) == 1);
+  Check(a(1,1,1) == 2);
+  Check(*(a.Data()) == 1);
+  Check(*(a.Data() + a.Stride(0) + a.Stride(1) + a.Stride(2)) == 2);
+}
+
 }  // namespace

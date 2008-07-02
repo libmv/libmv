@@ -28,10 +28,8 @@ env.Program(
 
 env.Program(
     target = 'image_test',
-    source = ['image.cc',
-              'image_test.cc',
-              '#bin-dbg/testing/libtestrunner.a'],
-    LIBS=['cv', 'highgui'])
+    source = ['image_test.cc',
+              '#bin-dbg/testing/libtestrunner.a'])
 
 env.Program(
     target = 'tuple_test',
@@ -42,3 +40,4 @@ env.Program(
     target = 'array_nd_test',
     source = ['array_nd_test.cc',
               '#bin-dbg/testing/libtestrunner.a'])
+

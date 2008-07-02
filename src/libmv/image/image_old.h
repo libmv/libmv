@@ -18,28 +18,28 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
-#include "libmv/image/image.h"
-#include "testing/testing.h"
+#ifndef LIBMV_IMAGE_IMAGE_H
+#define LIBMV_IMAGE_IMAGE_H
 
-using libmv::Image;
+// Image class and loading functions for libmv.
 
-namespace {
+#include <string>
+using std::string;
 
-TEST(ImageSizes) {
-  Image<int> im;
+namespace libmv {
 
-  Check(im.Height() == 0);
-  Check(im.Width() == 0);
-  Check(im.Depth() == 0);
+class Image {
+ public:
+  virtual ~Image() {}
+  virtual char *Pixels() = 0;
+  virtual int Width() = 0;
+  virtual int Height() = 0;
+  virtual int Depth() = 0;
+};
 
-  Check(im.Shape(0) == 0);
-}
+Image *LoadImage(const char *filename);
+Image *LoadImage(const string &filename);
 
-TEST(ImageParenthesis) {
-  Image<int> im(1,2,3);
-  im(0,1,0) = 3;
+}  // namespace libmv
 
-  Check(im(0,1) == 3);
-}
-
-}  // namespace
+#endif  // LIBMV_IMAGE_H

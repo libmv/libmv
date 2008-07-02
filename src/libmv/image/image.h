@@ -18,28 +18,48 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
-#ifndef LIBMV_IMAGE_IMAGE_H
-#define LIBMV_IMAGE_IMAGE_H
+#ifndef LIBMV_IMAGE_IMAGE_PAU_ND_H
+#define LIBMV_IMAGE_IMAGE_PAU_ND_H
 
-// Image class and loading functions for libmv.
+#include "libmv/image/array_nd.h"
+#include <boost/shared_array.hpp>
+#include <iostream>
 
-#include <string>
-using std::string;
+using namespace std;
+using libmv::ArrayND;
 
 namespace libmv {
 
-class Image {
+/// Image class storing the values in a 3D array (row,column,channel).
+template <typename T>
+class Image : public ArrayND<T, 3> {
  public:
-  virtual ~Image() {}
-  virtual char *Pixels() = 0;
-  virtual int Width() = 0;
-  virtual int Height() = 0;
-  virtual int Depth() = 0;
-};
+  Image()
+    : ArrayND<T,3>() {
+  }
+  Image(int height, int width, int depth=1)
+    : ArrayND<T,3>(height,width,depth) {
+  }
 
-Image *LoadImage(const char *filename);
-Image *LoadImage(const string &filename);
+  int Height() {
+    return ArrayND<T, 3>::Shape(0);
+  }
+  int Width() {
+    return ArrayND<T, 3>::Shape(1);
+  }
+  int Depth() {
+    return ArrayND<T, 3>::Shape(2);
+  }
+
+  /// Enable accessing with 2 indices for grayscale images.
+  T &operator()(int i0, int i1, int i2 = 0) {
+    return ArrayND<T, 3>::operator()(i0,i1,i2);
+  }
+  const T &operator()(int i0, int i1, int i2 = 0) const {
+    return ArrayND<T, 3>::operaton()(i0,i1,i2);
+  }
+};
 
 }  // namespace libmv
 
-#endif  // LIBMV_IMAGE_H
+#endif  // LIBMV_IMAGE_IMAGE_PAU_ND_H
