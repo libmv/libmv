@@ -76,4 +76,18 @@ TEST(ReadPgm) {
   Check(!ReadPgm(&im, "hopefully_unexisting_file"));
 }
 
+TEST(WritePgm) {
+  Image<unsigned char> im(1,2);
+  im(0,0) = 255;
+  im(0,1) = 0;
+
+  Check(WritePgm("src/libmv/image/image_test/test_write_pgm.pgm", im));
+
+  Image<unsigned char> read_image;
+  Check(ReadPgm(&read_image, "src/libmv/image/image_test/test_write_pgm.pgm"));
+
+  Check(read_image(0,0) == im(0,0));
+  Check(read_image(0,1) == im(0,1));
+}
+
 }  // namespace

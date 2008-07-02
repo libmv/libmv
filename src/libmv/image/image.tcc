@@ -29,7 +29,7 @@ int ReadPgm(Image<unsigned char> *im, const char *filename)
   if (!file) {
     return 0;
   }
-  int res = ReadPgm(im,file);
+  int res = ReadPgm(im, file);
   fclose(file);
   return res;
 }
@@ -45,19 +45,47 @@ int ReadPgm(Image<unsigned char> *im, FILE *file)
     return 0;
   }
 
-  // Read sizes
+  // Read sizes.
   res = fscanf(file, "%d %d %d", &width, &height, &maxval);
   if (res != 3 || maxval > 255) {
     return 0;
   }
 
-  // Read last white space
+  // Read last white space.
   fseek(file, 1, SEEK_CUR);
 
-  // Reed pixels
+  // Read pixels.
   im->Resize(height,width,1);
   res = fread(im->Data(), 1, im->Size(), file);
   if (res != im->Size()) {
+    return 0;
+  }
+
+  return 1;
+}
+
+int WritePgm(const char *filename, const Image<unsigned char> &im) {
+  FILE *file = fopen(filename,"w");
+  if (!file) {
+    return 0;
+  }
+  int res = WritePgm(file, im);
+  fclose(file);
+  return res;
+}
+
+int WritePgm(FILE *file, const Image<unsigned char> &im) {
+  int res;
+
+  // Write magic number.
+  fprintf(file, "P5\n"); 
+
+  // Write sizes.
+  fprintf(file, "%d %d %d\n", im.Width(), im.Height(), 255);
+
+  // Write pixels.
+  res = fwrite(im.Data(), 1, im.Size(), file);
+  if (res != im.Size()) {
     return 0;
   }
 

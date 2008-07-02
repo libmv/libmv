@@ -87,13 +87,13 @@ class Image : public ArrayND<T, 3> {
   static void LinearInitAxis(int *x1, int *x2, float *dx1, float *dx2,
                              float fx, int width) {
     const int ix = int(fx);
-    if(ix < 0) {
+    if (ix < 0) {
       *x1 = 0;
       *x2 = 0;
       *dx1 = 1;
       *dx2 = 0;
     } 
-    else if(ix > width-2) {
+    else if (ix > width-2) {
       *x1 = width-1;
       *x2 = width-1;
       *dx1 = 1;
@@ -111,6 +111,8 @@ class Image : public ArrayND<T, 3> {
 
 int ReadPgm(Image<unsigned char> *im, const char *filename);
 int ReadPgm(Image<unsigned char> *im, FILE *file);
+int WritePgm(const char *filename, const Image<unsigned char> &im);
+int WritePgm(FILE *file, const Image<unsigned char> &im);
 
 }  // namespace libmv
 
