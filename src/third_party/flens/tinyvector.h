@@ -37,6 +37,23 @@
 
 namespace flens {
 
+// Make initialization via the comma operator possible; for example:
+//
+//   Vector<double, 3> x = 1.0, 2.0, 3.0;
+//
+// Note: This does not do bounds checking.
+template<class T, class Iterator>
+class TinyListInitializer {
+ public:
+  TinyListInitializer(Iterator next) : next_(next) {}
+  TinyListInitializer<T, Iterator> operator,(T value) {
+    *next_ = value;
+    return TinyListInitializer<T, Iterator>(next_ + 1);
+  }
+ private:
+  Iterator next_;
+};
+
 // == TinyVector ==============================================================
 
 template <typename T, int N>
@@ -49,6 +66,17 @@ class TinyVector
         }
 
         // -- operators --------------------------------------------------------
+        //
+        TinyListInitializer<T, T*> operator=(T value) {
+            // Force scalar initialization. Without this, scalar assignment would
+            // simply assign to the first element of the vector, not every
+            // element.  Note that the optimizer eliminates the extra
+            // assignments in the case of list initializations.
+            for (int i = 0; i < N; ++i) {
+                (*this)(i) = value;
+            }
+            return TinyListInitializer<T, T*>(_data + 1);
+        }
 
         TinyVector<T, N> &
         operator=(const TinyVector<T, N> &rhs)
@@ -167,6 +195,20 @@ class TinyMatrix
         }
 
         // -- operators --------------------------------------------------------
+        //
+        TinyListInitializer<T, T*> operator=(T value) {
+            // Force scalar initialization. Without this, scalar assignment would
+            // simply assign to the first element of the vector, not every
+            // element.  Note that the optimizer eliminates the extra
+            // assignments in the case of list initializations.
+            for (int i = 0; i < M; ++i) {
+                for (int j = 0; j < N; ++j) {
+                    (*this)(i, j) = value;
+                }
+            }
+            return TinyListInitializer<T, T*>(&(_data[0][1]));
+        }
+
         TinyMatrix<T,M,N> &
         operator=(const TinyMatrix<T,M,N> &rhs)
         {

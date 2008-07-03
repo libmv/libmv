@@ -30,13 +30,18 @@ using flens::_;
 typedef flens::DenseVector<flens::Array<double> > Vec;
 typedef flens::GeMatrix<flens::FullStorage<double, flens::ColMajor> > Mat;
 
+typedef TinyVector<double, 2> Vec2;
+typedef TinyVector<double, 4> Vec4;
+typedef TinyMatrix<double, 2, 2> Mat2;
+typedef TinyMatrix<double, 3, 4> Mat34;
+
 namespace {
 
 // TinyMatrix / TinyVector didn't obey the matrix / vector protocol set out by
 // the rest of FLENS. These tests cover the added functionality necessary to
 // make the tiny vectors and matrices compliant.
 TEST(DimensionsMatchNormalProtocol) {
-  TinyVector<double, 4> x;
+  Vec4 x;
   Equals(x.length(), 4);
   TinyMatrix<double, 3,4> A;
   Equals(A.numRows(), 3);
@@ -44,14 +49,14 @@ TEST(DimensionsMatchNormalProtocol) {
 }
 
 TEST(ResizeMatchesDenseAPI) {
-  TinyVector<double, 4> x;
+  Vec4 x;
   x.resize(4);  // Does nothing, but should compile.
 }
 
 TEST(FirstRowAndColumnIsZero) {
-  TinyVector<double, 4> x;
+  Vec4 x;
   Equals(x.firstIndex(), 0);
-  TinyMatrix<double, 3,4> A;
+  Mat34 A;
   Equals(A.firstRow(), 0);
   Equals(A.firstCol(), 0);
 }
@@ -59,13 +64,14 @@ TEST(FirstRowAndColumnIsZero) {
 // Copying between views and tiny matrices.
 
 TEST(CopyFromDenseVectorToTinyVector) {
-  Vec x(3);
-  x = 1.0, 2.0, 3.0;
-  TinyVector<double, 3> y;
+  Vec x(4);
+  x = 1.0, 2.0, 3.0, 4.0;
+  Vec4 y;
   y = x;
   Equals(y(0), 1.0);
   Equals(y(1), 2.0);
   Equals(y(2), 3.0);
+  Equals(y(3), 4.0);
 }
 
 // For some reason I had to add an initialization to generalmatrix.tcc before 
@@ -77,7 +83,7 @@ TEST(MatrixViewsCompileWithoutWarning) {
 }
 
 TEST(CopyFromTinyMatrixToDenseMatrixView) {
-  TinyMatrix<double, 2,2> A;
+  Mat2 A;
   A(0, 0) = 1.0;
   A(0, 1) = 2.0;
   A(1, 0) = 3.0;
@@ -105,8 +111,42 @@ TEST(CopyFromDenseMatrixViewToTinyMatrix) {
   B(1, 2) = 2.0;
   B(2, 1) = 3.0;
   B(2, 2) = 4.0;
-  TinyMatrix<double, 2,2> A;
+  Mat2 A;
   A = B(_(1,2),_(1,2));
+  Equals(A(0, 0), 1.0);
+  Equals(A(0, 1), 2.0);
+  Equals(A(1, 0), 3.0);
+  Equals(A(1, 1), 4.0);
+}
+
+TEST(TinyVectorScalarInitialization) {
+  Vec2 x;
+  x = 4.0;
+  Equals(x(0), 4.0);
+  Equals(x(1), 4.0);
+}
+
+TEST(TinyMatrixScalarInitialization) {
+  Mat2 A;
+  A = 4.0;
+  Equals(A(0, 0), 4.0);
+  Equals(A(0, 1), 4.0);
+  Equals(A(1, 0), 4.0);
+  Equals(A(1, 1), 4.0);
+}
+
+TEST(TinyVectorListInitialization) {
+  Vec4 x;
+  x = 1.0, 2.0, 3.0;
+  Equals(x(0), 1.0);
+  Equals(x(1), 2.0);
+  Equals(x(2), 3.0);
+}
+
+TEST(TinyMatrixListInitialization) {
+  Mat2 A;
+  A = 1.0, 2.0,
+      3.0, 4.0;
   Equals(A(0, 0), 1.0);
   Equals(A(0, 1), 2.0);
   Equals(A(1, 0), 3.0);

@@ -7,6 +7,7 @@ Local modifications:
 Fixed compile warnings that happen when not linking MKL.
 Added support to copy between dense and tiny matrices and vectors.
 Made several changes for compiling without warnings.
+Added list and scalar initializers to tiny matrices and vectors
 
 Note: Only the flens/ subdirectory from the FLENS-lite CVS module is included
 here.
