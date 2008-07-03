@@ -22,9 +22,11 @@
 #include "testing/testing.h"
 
 using libmv::Mat;
+using libmv::Mat2;
 using libmv::Mat34;
 using libmv::Vec;
 using libmv::Nullspace;
+using libmv::Transpose;
 
 namespace {
 
@@ -54,6 +56,16 @@ TEST(TinyMatrixNullspace) {
   Close(x(2),  0.21822937);
   Close(x(3), -0.80258116);
   Close(x(4),  0.55248805);
+}
+
+TEST(TinyMatrixSquareTranspose) {
+  Mat2 A;
+  A = 1.0, 2.0, 3.0, 4.0;
+  libmv::Transpose(&A);
+  Equals(A(0, 0), 1.0);
+  Equals(A(0, 1), 3.0);
+  Equals(A(1, 0), 2.0);
+  Equals(A(1, 1), 4.0);
 }
 
 }  // namespace

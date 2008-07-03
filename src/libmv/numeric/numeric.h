@@ -83,6 +83,16 @@ double Nullspace(TMat *A, TVec *x)
 	return s(std::min(n,m));
 }
 
+// In place transpose for square matrices.
+template<class T, int N>
+void Transpose(flens::TinyMatrix<T, N, N> *A) {
+  for (int i = 0; i < N; ++i) {
+    for (int j = i+1; j < N; ++j) {
+      std::swap((*A)(i,j), (*A)(j,i));
+    }
+  }
+}
+
 }  // namespace mv
 
 #endif  // LIBMV_NUMERIC_NUMERIC_H
