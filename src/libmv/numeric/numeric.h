@@ -64,6 +64,17 @@ double Nullspace(TMat *A, TVec *x)
 	return s(std::min(n,m));
 }
 
+// Specialization for tiny matrices.
+template<class T, int M, int N, class TVec>
+double Nullspace(flens::TinyMatrix<T, M, N> *A, TVec *x)
+{
+  // TODO(keir): It's possible to eliminate this copying by pushing SVD support
+  // for tiny matrices and vectors into FLENS.
+  Mat Ap(M,N);
+  Ap = *A;
+  return Nullspace(&Ap, x);
+}
+
 }  // namespace mv
 
 #endif  // LIBMV_NUMERIC_NUMERIC_H
