@@ -46,6 +46,25 @@ typedef flens::TinyMatrix<double, 4, 4>  Mat4;
 // of A, that can be manipulated (changes underlying A).
 using flens::_;
 
+// Find U, s, and VT such that 
+//   
+//   A = U * diag(s) * VT
+// 
+// Destroys A.
+void SVD(Mat *A, Vec *s, Mat *U, Mat *VT) {
+  svd(*A, *s, *U, *VT);
+}
+
+// Specialization for tiny matrices.
+template<class T, int M, int N>
+void SVD(flens::TinyMatrix<T, M, N> *A, Vec *s, Mat *U, Mat *VT) {
+  // TODO(keir): It's possible to eliminate this copying by pushing SVD support
+  // for tiny matrices and vectors into FLENS.
+  Mat Ap(M,N);
+  Ap = *A;
+  svd(Ap, *s, *U, *VT);
+}
+
 // Solve the linear system Ax = 0 via SVD. Store the solution in x, such that
 // ||x|| = 1.0. Return the singluar value corresponding to the solution.
 // Destroys A and resizes x if necessary.
@@ -54,25 +73,14 @@ double Nullspace(TMat *A, TVec *x)
 {
 	int m = A->numRows();
 	int n = A->numCols();
-  Mat U(m,m), VT(n,n);
-  Vec s(std::min(m,n));
+  Mat U, VT;
+  Vec s;
 
-  svd(*A, s, U, VT);
+  SVD(A, &s, &U, &VT);
 
   x->resize(n);
   *x = VT(n, _);
 	return s(std::min(n,m));
-}
-
-// Specialization for tiny matrices.
-template<class T, int M, int N, class TVec>
-double Nullspace(flens::TinyMatrix<T, M, N> *A, TVec *x)
-{
-  // TODO(keir): It's possible to eliminate this copying by pushing SVD support
-  // for tiny matrices and vectors into FLENS.
-  Mat Ap(M,N);
-  Ap = *A;
-  return Nullspace(&Ap, x);
 }
 
 }  // namespace mv
