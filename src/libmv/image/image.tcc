@@ -23,19 +23,17 @@
 
 namespace libmv {
 
-int ReadPgm(Image<unsigned char> *im, const char *filename)
-{
+int ReadPgm(const char *filename, Image<unsigned char> *im) {
   FILE *file = fopen(filename,"r");
   if (!file) {
     return 0;
   }
-  int res = ReadPgm(im, file);
+  int res = ReadPgmStream(file, im);
   fclose(file);
   return res;
 }
 
-int ReadPgm(Image<unsigned char> *im, FILE *file)
-{
+int ReadPgmStream(FILE *file, Image<unsigned char> *im) {
   int magicnumber, width, height, maxval;
   int res;
 
@@ -64,17 +62,17 @@ int ReadPgm(Image<unsigned char> *im, FILE *file)
   return 1;
 }
 
-int WritePgm(const char *filename, const Image<unsigned char> &im) {
+int WritePgm(const Image<unsigned char> &im, const char *filename) {
   FILE *file = fopen(filename,"w");
   if (!file) {
     return 0;
   }
-  int res = WritePgm(file, im);
+  int res = WritePgmStream(im, file);
   fclose(file);
   return res;
 }
 
-int WritePgm(FILE *file, const Image<unsigned char> &im) {
+int WritePgmStream(const Image<unsigned char> &im, FILE *file) {
   int res;
 
   // Write magic number.

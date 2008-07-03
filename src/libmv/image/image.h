@@ -109,10 +109,10 @@ class Image : public ArrayND<T, 3> {
 
 };
 
-int ReadPgm(Image<unsigned char> *im, const char *filename);
-int ReadPgm(Image<unsigned char> *im, FILE *file);
-int WritePgm(const char *filename, const Image<unsigned char> &im);
-int WritePgm(FILE *file, const Image<unsigned char> &im);
+int ReadPgm(const char *filename, Image<unsigned char> *im);
+int ReadPgmStream(FILE *file, Image<unsigned char> *im);
+int WritePgm(const Image<unsigned char> &im, const char *filename);
+int WritePgmStream(const Image<unsigned char> &im, FILE *file);
 
 }  // namespace libmv
 

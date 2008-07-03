@@ -28,18 +28,15 @@ namespace {
 
 TEST(ImageSizes) {
   Image<int> im;
-
   Check(im.Height() == 0);
   Check(im.Width() == 0);
   Check(im.Depth() == 0);
-
   Check(im.Shape(0) == 0);
 }
 
 TEST(ImageParenthesis) {
   Image<int> im(1,2,3);
   im(0,1,0) = 3;
-
   Check(im(0,1) == 3);
 }
 
@@ -49,7 +46,6 @@ TEST(ImageNearest) {
   im(0,1) = 1;
   im(1,0) = 2;
   im(1,1) = 3;
-
   Check(im.Nearest(-0.4,-0.4) == 0);
   Check(im.Nearest(0.4,0.4) == 0);
   Check(im.Nearest(0.6,0.6) == 3);
@@ -62,30 +58,26 @@ TEST(ImageLinear) {
   im(0,1) = 1;
   im(1,0) = 2;
   im(1,1) = 3;
-
   Check(im.Linear(0.5,0.5) == 1.5);
 }
 
 TEST(ReadPgm) {
   Image<unsigned char> im;
-  Check(ReadPgm(&im, "src/libmv/image/image_test/two_pixels.pgm"));
+  Check(ReadPgm("src/libmv/image/image_test/two_pixels.pgm", &im));
   Check(im(0,0) == (unsigned char)255);
   Check(im(0,1) == (unsigned char)0);
-
-  Check(!ReadPgm(&im, "src/libmv/image/image_test/two_pixels.png"));
-  Check(!ReadPgm(&im, "hopefully_unexisting_file"));
+  Check(!ReadPgm("src/libmv/image/image_test/two_pixels.png", &im));
+  Check(!ReadPgm("hopefully_unexisting_file", &im));
 }
 
 TEST(WritePgm) {
   Image<unsigned char> im(1,2);
   im(0,0) = 255;
   im(0,1) = 0;
-
-  Check(WritePgm("src/libmv/image/image_test/test_write_pgm.pgm", im));
+  Check(WritePgm(im, "src/libmv/image/image_test/test_write_pgm.pgm"));
 
   Image<unsigned char> read_image;
-  Check(ReadPgm(&read_image, "src/libmv/image/image_test/test_write_pgm.pgm"));
-
+  Check(ReadPgm("src/libmv/image/image_test/test_write_pgm.pgm", &read_image));
   Check(read_image(0,0) == im(0,0));
   Check(read_image(0,1) == im(0,1));
 }
