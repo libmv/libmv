@@ -18,9 +18,12 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 # IN THE SOFTWARE.
 
-SConscript('libmv/image/sconscript')
-SConscript('libmv/numeric/sconscript')
-SConscript('testing/sconscript')
-SConscript('third_party/flens/sconscript')
-SConscript('third_party/gtest/sconscript')
-SConscript('ui/sconscript')
+Import('options')
+env = Environment(**options)
+env.Library(target = 'gtest',
+            source = ['src/gtest.cc',
+                      'src/gtest-death-test.cc',
+                      'src/gtest-filepath.cc',
+                      'src/gtest_main.cc',
+                      'src/gtest-port.cc',
+                     ],)

@@ -115,7 +115,7 @@ bool FilePath::FileOrDirectoryExists() const {
   struct _stat file_stat = {};
   return _stat(pathname_.c_str(), &file_stat) == 0;
 #else
-  struct stat file_stat = {};
+  struct stat file_stat;
   return stat(pathname_.c_str(), &file_stat) == 0;
 #endif  // GTEST_OS_WINDOWS
 }
@@ -130,7 +130,7 @@ bool FilePath::DirectoryExists() const {
   result = _stat(removed_sep.c_str(), &file_stat) == 0 &&
       (_S_IFDIR & file_stat.st_mode) != 0;
 #else
-  struct stat file_stat = {};
+  struct stat file_stat;
   result = stat(pathname_.c_str(), &file_stat) == 0 &&
       S_ISDIR(file_stat.st_mode);
 #endif  // _WIN32

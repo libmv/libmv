@@ -685,6 +685,7 @@ bool DefaultDeathTestFactory::Create(const char* statement, const RE* regex,
 // ::std::string, so we can use it here.
 static void SplitString(const ::std::string& str, char delimiter,
                         ::std::vector< ::std::string>* dest) {
+  (void) delimiter;
   ::std::vector< ::std::string> parsed;
   ::std::string::size_type pos = 0;
   while (true) {
