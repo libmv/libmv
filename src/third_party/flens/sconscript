@@ -35,5 +35,5 @@ env.Library(target = 'flens',
 env.Program(target = 'tinyvector_test',
             source = ['tinyvector_test.cc',
                       'libflens.a',
-                      '#bin-dbg/testing/libtestrunner.a'],
+                      '#bin-dbg/third_party/gtest/libgtest.a'],
             LIBS=['lapack','atlas'])

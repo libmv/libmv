@@ -20,4 +20,3 @@
 
 Import('options')
 env = Environment(**options)
-env.Library('testrunner', ['test_runner.cc'])

@@ -24,6 +24,6 @@
 // The base testing interface, used by the libmv unit tests. Currently it is
 // based on testsoon (from http://testsoon.sf.net)
 
-#include "testing/testsoon.h"
+#include "third_party/gtest/include/gtest/gtest.h"
 
 #endif  // TESTING_TESTING_H_

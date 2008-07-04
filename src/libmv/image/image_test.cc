@@ -26,60 +26,69 @@ using libmv::ReadPgm;
 
 namespace {
 
-TEST(ImageSizes) {
-  Image<int> im;
-  Check(im.Height() == 0);
-  Check(im.Width() == 0);
-  Check(im.Depth() == 0);
-  Check(im.Shape(0) == 0);
+TEST(Image, Sizes) {
+  Image<int> image;
+  EXPECT_EQ(image.Height(), 0);
+  EXPECT_EQ(image.Width(), 0);
+  EXPECT_EQ(image.Depth(), 0);
+  EXPECT_EQ(image.Shape(0), 0);
 }
 
-TEST(ImageParenthesis) {
-  Image<int> im(1,2,3);
-  im(0,1,0) = 3;
-  Check(im(0,1) == 3);
+TEST(Image, Parenthesis) {
+  Image<int> image(1,2,3);
+  image(0,1,0) = 3;
+  EXPECT_EQ(image(0,1), 3);
 }
 
-TEST(ImageNearest) {
-  Image<int> im(2,2);
-  im(0,0) = 0;
-  im(0,1) = 1;
-  im(1,0) = 2;
-  im(1,1) = 3;
-  Check(im.Nearest(-0.4,-0.4) == 0);
-  Check(im.Nearest(0.4,0.4) == 0);
-  Check(im.Nearest(0.6,0.6) == 3);
-  Check(im.Nearest(1.4,1.4) == 3);
+TEST(Image, Nearest) {
+  Image<int> image(2,2);
+  image(0,0) = 0;
+  image(0,1) = 1;
+  image(1,0) = 2;
+  image(1,1) = 3;
+  EXPECT_EQ(image.Nearest(-0.4,-0.4), 0);
+  EXPECT_EQ(image.Nearest(0.4,0.4), 0);
+  EXPECT_EQ(image.Nearest(0.6,0.6), 3);
+  EXPECT_EQ(image.Nearest(1.4,1.4), 3);
 }
 
-TEST(ImageLinear) {
-  Image<int> im(2,2);
-  im(0,0) = 0;
-  im(0,1) = 1;
-  im(1,0) = 2;
-  im(1,1) = 3;
-  Check(im.Linear(0.5,0.5) == 1.5);
+TEST(Image, Linear) {
+  Image<int> image(2,2);
+  image(0,0) = 0;
+  image(0,1) = 1;
+  image(1,0) = 2;
+  image(1,1) = 3;
+  EXPECT_EQ(image.Linear(0.5,0.5), 1.5);
 }
 
-TEST(ReadPgm) {
-  Image<unsigned char> im;
-  Check(ReadPgm("src/libmv/image/image_test/two_pixels.pgm", &im));
-  Check(im(0,0) == (unsigned char)255);
-  Check(im(0,1) == (unsigned char)0);
-  Check(!ReadPgm("src/libmv/image/image_test/two_pixels.png", &im));
-  Check(!ReadPgm("hopefully_unexisting_file", &im));
+TEST(ReadPgm, TwoPixels) {
+  Image<unsigned char> image;
+  EXPECT_TRUE(ReadPgm("src/libmv/image/image_test/two_pixels.pgm", &image));
+  EXPECT_EQ(image(0,0), (unsigned char)255);
+  EXPECT_EQ(image(0,1), (unsigned char)0);
+  EXPECT_EQ(2, image.Width());
+  EXPECT_EQ(1, image.Height());
 }
 
-TEST(WritePgm) {
-  Image<unsigned char> im(1,2);
-  im(0,0) = 255;
-  im(0,1) = 0;
-  Check(WritePgm(im, "src/libmv/image/image_test/test_write_pgm.pgm"));
+TEST(ReadPgm, InvalidFiles) {
+  Image<unsigned char> image;
+  EXPECT_FALSE(ReadPgm("src/libmv/image/image_test/two_pixels.png", &image));
+  EXPECT_FALSE(ReadPgm("hopefully_unexisting_file", &image));
+}
+
+TEST(Image, WritePgm) {
+  Image<unsigned char> image(1,2);
+  image(0,0) = 255;
+  image(0,1) = 0;
+  EXPECT_TRUE(WritePgm(image, "src/libmv/image/image_test/test_write_pgm.pgm"));
 
   Image<unsigned char> read_image;
-  Check(ReadPgm("src/libmv/image/image_test/test_write_pgm.pgm", &read_image));
-  Check(read_image(0,0) == im(0,0));
-  Check(read_image(0,1) == im(0,1));
+  EXPECT_TRUE(
+      ReadPgm("src/libmv/image/image_test/test_write_pgm.pgm", &read_image));
+  EXPECT_EQ(read_image(0,0), image(0,0));
+  EXPECT_EQ(read_image(0,1), image(0,1));
+  EXPECT_EQ(2, read_image.Width()); 
+  EXPECT_EQ(1, read_image.Height());
 }
 
 }  // namespace

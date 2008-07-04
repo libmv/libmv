@@ -27,27 +27,27 @@ using libmv::Tuple;
 
 namespace {
 
-TEST(InitConstantValue) {
+TEST(Tuple, InitConstantValue) {
   Tuple<int,3> t(5);
-  Check(t(0) == 5);
-  Check(t(0) == 5);
-  Check(t(0) == 5);
+  EXPECT_EQ(t(0), 5);
+  EXPECT_EQ(t(0), 5);
+  EXPECT_EQ(t(0), 5);
 }
 
-TEST(InitFromPointer) {
+TEST(Tuple, InitFromPointer) {
   float vals[3] = {1.0f, 2.0f, 3.0f};
 
   Tuple<float,3> t(vals);
   for(int i=0; i<3; i++)
-    Check(t(i) == vals[i]);
+    EXPECT_EQ(t(i), vals[i]);
 
   Tuple<int,3> b(t);
-  Check(b(0) == int(vals[0]));
-  Check(b(1) == int(vals[1]));
-  Check(b(2) == int(vals[2]));
+  EXPECT_EQ(b(0), int(vals[0]));
+  EXPECT_EQ(b(1), int(vals[1]));
+  EXPECT_EQ(b(2), int(vals[2]));
 }
 
-TEST(Swap) {
+TEST(Tuple, Swap) {
   unsigned char vala[3] = {1,2,3};
   unsigned char valb[3] = {4,5,6};
 
@@ -56,12 +56,12 @@ TEST(Swap) {
 
   std::swap(a,b);
 
-  Check(a(0) == int(valb[0]));
-  Check(a(1) == int(valb[1]));
-  Check(a(2) == int(valb[2]));
-  Check(b(0) == int(vala[0]));
-  Check(b(1) == int(vala[1]));
-  Check(b(2) == int(vala[2]));
+  EXPECT_EQ(a(0), int(valb[0]));
+  EXPECT_EQ(a(1), int(valb[1]));
+  EXPECT_EQ(a(2), int(valb[2]));
+  EXPECT_EQ(b(0), int(vala[0]));
+  EXPECT_EQ(b(1), int(vala[1]));
+  EXPECT_EQ(b(2), int(vala[2]));
 }
 
 

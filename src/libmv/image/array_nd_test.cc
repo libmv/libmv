@@ -25,44 +25,44 @@ using libmv::ArrayND;
 
 namespace {
 
-TEST(ArrayNDEmptyConstructor) {
+TEST(ArrayND, EmptyConstructor) {
   ArrayND<int,2> a;
 
-  Check(a.Shape(0) == 0);
-  Check(a.Shape(1) == 0);
+  EXPECT_EQ(0, a.Shape(0));
+  EXPECT_EQ(0, a.Shape(1));
 }
 
-TEST(ArrayNDIndexConstructor) {
+TEST(ArrayND, IndexConstructor) {
   int s[] = {1, 2, 3};
   ArrayND<int,3>::Index shape(s);
   ArrayND<int,3> a(shape);
 
-  Check(a.Shape(0) == 1);
-  Check(a.Shape(1) == 2);
-  Check(a.Shape(2) == 3);
+  EXPECT_EQ(1, a.Shape(0));
+  EXPECT_EQ(2, a.Shape(1));
+  EXPECT_EQ(3, a.Shape(2));
 }
 
-TEST(ArrayNDPointerConstructor) {
+TEST(ArrayND, PointerConstructor) {
   int s[] = {1, 2, 3};
   ArrayND<int,3> a(s);
 
-  Check(a.Shape(0) == 1);
-  Check(a.Shape(1) == 2);
-  Check(a.Shape(2) == 3);
+  EXPECT_EQ(1, a.Shape(0));
+  EXPECT_EQ(2, a.Shape(1));
+  EXPECT_EQ(3, a.Shape(2));
 }
 
-TEST(ArrayNDView) {
+TEST(ArrayND, View) {
   int s[] = {3};
   ArrayND<int,1> a(s);
   ArrayND<int,1> b = a.View();
 
-  Check(a.Shape(0) == b.Shape(0));
-  Check(a.Stride(0) == b.Stride(0));
-  Check(a.Data() == b.Data());
-  Check(!b.OwnData());
+  EXPECT_EQ(a.Shape(0), b.Shape(0));
+  EXPECT_EQ(a.Stride(0), b.Stride(0));
+  EXPECT_EQ(a.Data(), b.Data());
+  EXPECT_FALSE(b.OwnData());
 }
 
-TEST(ArrayNDSize) {
+TEST(ArrayND, Size) {
   int s[] = {1, 2, 3};
   ArrayND<int,3>::Index shape(s);
   ArrayND<int,3> a(shape);
@@ -70,12 +70,12 @@ TEST(ArrayNDSize) {
   int l[] = {0, 1, 2};
   ArrayND<int,3>::Index last(l);
 
-  Check(a.Size() == a.Offset(last)+1);
-  Check(a.Contains(last));
-  Check(!a.Contains(shape));
+  EXPECT_EQ(a.Size(), a.Offset(last)+1);
+  EXPECT_TRUE(a.Contains(last));
+  EXPECT_FALSE(a.Contains(shape));
 }
 
-TEST(ArrayNDParenthesis) {
+TEST(ArrayND, Parenthesis) {
   typedef ArrayND<int, 2>::Index Index;
 
   int s[] = {3, 3};
@@ -85,63 +85,63 @@ TEST(ArrayNDParenthesis) {
   *(a.Data()+5) = 5;
 
   int i1[] = {0, 0};
-  Check(a(Index(i1)) == 0);
+  EXPECT_EQ(0, a(Index(i1)));
   int i2[] = {1, 2};
-  Check(a(Index(i2)) == 5);
+  EXPECT_EQ(5, a(Index(i2)));
 }
 
-TEST(ArrayND1DConstructor) {
+TEST(ArrayND, 1DConstructor) {
   ArrayND<int,1> a(3);
 
-  Check(a.Shape(0) == 3);
+  EXPECT_EQ(3, a.Shape(0));
 }
 
-TEST(ArrayND2DConstructor) {
+TEST(ArrayND, 2DConstructor) {
   ArrayND<int,2> a(1,2);
 
-  Check(a.Shape(0) == 1);
-  Check(a.Shape(1) == 2);
+  EXPECT_EQ(1, a.Shape(0));
+  EXPECT_EQ(2, a.Shape(1));
 }
 
-TEST(ArrayND3DConstructor) {
+TEST(ArrayND, 3DConstructor) {
   ArrayND<int,3> a(1,2,3);
 
-  Check(a.Shape(0) == 1);
-  Check(a.Shape(1) == 2);
-  Check(a.Shape(2) == 3);
+  EXPECT_EQ(1, a.Shape(0));
+  EXPECT_EQ(2, a.Shape(1));
+  EXPECT_EQ(3, a.Shape(2));
 }
 
-TEST(ArrayND1DAccessor) {
+TEST(ArrayND, 1DAccessor) {
   ArrayND<int,1> a(3);
   a(0) = 1;
   a(1) = 2;
 
-  Check(a(0) == 1);
-  Check(a(1) == 2);
-  Check(*(a.Data()) == 1);
-  Check(*(a.Data() + a.Stride(0)) == 2);
+  EXPECT_EQ(1, a(0));
+  EXPECT_EQ(2, a(1));
+  EXPECT_EQ(1, *(a.Data()));
+  EXPECT_EQ(2, *(a.Data() + a.Stride(0)));
 }
 
-TEST(ArrayND2DAccessor) {
+TEST(ArrayND, 2DAccessor) {
   ArrayND<int,2> a(3,3);
   a(0,0) = 1;
   a(1,1) = 2;
 
-  Check(a(0,0) == 1);
-  Check(a(1,1) == 2);
-  Check(*(a.Data()) == 1);
-  Check(*(a.Data() + a.Stride(0) + a.Stride(1)) == 2);
+  EXPECT_EQ(1, a(0,0));
+  EXPECT_EQ(2, a(1,1));
+  EXPECT_EQ(1, *(a.Data()));
+  EXPECT_EQ(2, *(a.Data() + a.Stride(0) + a.Stride(1)));
 }
 
-TEST(ArrayND2DAccessor) {
+TEST(ArrayND, 3DAccessor) {
   ArrayND<int,3> a(3,3,3);
   a(0,0,0) = 1;
   a(1,1,1) = 2;
 
-  Check(a(0,0,0) == 1);
-  Check(a(1,1,1) == 2);
-  Check(*(a.Data()) == 1);
-  Check(*(a.Data() + a.Stride(0) + a.Stride(1) + a.Stride(2)) == 2);
+  EXPECT_EQ(1, a(0,0,0));
+  EXPECT_EQ(2, a(1,1,1));
+  EXPECT_EQ(1, *(a.Data()));
+  EXPECT_EQ(2, *(a.Data() + a.Stride(0) + a.Stride(1) + a.Stride(2)));
 }
 
 }  // namespace

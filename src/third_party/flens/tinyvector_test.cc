@@ -41,49 +41,55 @@ namespace {
 // TinyMatrix / TinyVector didn't obey the matrix / vector protocol set out by
 // the rest of FLENS. These tests cover the added functionality necessary to
 // make the tiny vectors and matrices compliant.
-TEST(DimensionsMatchNormalProtocol) {
+TEST(TinyVector, DimensionsMatchNormalProtocol) {
   Vec4 x;
-  Equals(x.length(), 4);
-  TinyMatrix<double, 3,4> A;
-  Equals(A.numRows(), 3);
-  Equals(A.numCols(), 4);
+  EXPECT_EQ(x.length(), 4);
 }
 
-TEST(ResizeMatchesDenseAPI) {
+TEST(TinyMatrix, DimensionsMatchNormalProtocol) {
+  Mat34 A;
+  EXPECT_EQ(A.numRows(), 3);
+  EXPECT_EQ(A.numCols(), 4);
+}
+
+TEST(TinyVector, ResizeMatchesDenseAPI) {
   Vec4 x;
   x.resize(4);  // Does nothing, but should compile.
 }
 
-TEST(FirstRowAndColumnIsZero) {
+TEST(TinyVector, FirstRowAndColumnIsZero) {
   Vec4 x;
-  Equals(x.firstIndex(), 0);
+  EXPECT_EQ(x.firstIndex(), 0);
+}
+
+TEST(TinyMatrix, FirstRowAndColumnIsZero) {
   Mat34 A;
-  Equals(A.firstRow(), 0);
-  Equals(A.firstCol(), 0);
+  EXPECT_EQ(A.firstRow(), 0);
+  EXPECT_EQ(A.firstCol(), 0);
 }
 
 // Copying between views and tiny matrices.
 
-TEST(CopyFromDenseVectorToTinyVector) {
+TEST(TinyVector, CopyFromDenseVector) {
   Vec x(4);
   x = 1.0, 2.0, 3.0, 4.0;
   Vec4 y;
   y = x;
-  Equals(y(0), 1.0);
-  Equals(y(1), 2.0);
-  Equals(y(2), 3.0);
-  Equals(y(3), 4.0);
+  EXPECT_EQ(y(0), 1.0);
+  EXPECT_EQ(y(1), 2.0);
+  EXPECT_EQ(y(2), 3.0);
+  EXPECT_EQ(y(3), 4.0);
 }
 
 // For some reason I had to add an initialization to generalmatrix.tcc before 
 // the following code would compile. This remains to be sure it compiles!
-TEST(MatrixViewsCompileWithoutWarning) {
+TEST(TinyMatrix, MatrixViewsCompileWithoutWarning) {
   Mat B(3,3);
   Mat::View vv = B(_(1,3), _(1,3));
-  Equals(vv.numRows(), 3);
+  EXPECT_EQ(vv.numRows(), 3);
 }
 
-TEST(CopyFromTinyMatrixToDenseMatrixView) {
+TEST(TinyMatrix, CopyToDenseMatrixView) {
   Mat2 A;
   A(0, 0) = 1.0;
   A(0, 1) = 2.0;
@@ -94,18 +100,18 @@ TEST(CopyFromTinyMatrixToDenseMatrixView) {
   Mat B(3,3);
   B = 0;
   B(_(1,2),_(1,2)) = A;
-  Equals(B(1, 1), 1.0);
-  Equals(B(1, 2), 2.0);
-  Equals(B(1, 3), 0.0);
-  Equals(B(2, 1), 3.0);
-  Equals(B(2, 2), 4.0);
-  Equals(B(2, 3), 0.0);
-  Equals(B(3, 1), 0.0);
-  Equals(B(3, 2), 0.0);
-  Equals(B(3, 3), 0.0);
+  EXPECT_EQ(B(1, 1), 1.0);
+  EXPECT_EQ(B(1, 2), 2.0);
+  EXPECT_EQ(B(1, 3), 0.0);
+  EXPECT_EQ(B(2, 1), 3.0);
+  EXPECT_EQ(B(2, 2), 4.0);
+  EXPECT_EQ(B(2, 3), 0.0);
+  EXPECT_EQ(B(3, 1), 0.0);
+  EXPECT_EQ(B(3, 2), 0.0);
+  EXPECT_EQ(B(3, 3), 0.0);
 }
 
-TEST(CopyFromDenseMatrixViewToTinyMatrix) {
+TEST(TinyMatrix, CopyFromDenseMatrixView) {
   Mat B(3,3);
   B = 0;
   B(1, 1) = 1.0;
@@ -114,73 +120,73 @@ TEST(CopyFromDenseMatrixViewToTinyMatrix) {
   B(2, 2) = 4.0;
   Mat2 A;
   A = B(_(1,2),_(1,2));
-  Equals(A(0, 0), 1.0);
-  Equals(A(0, 1), 2.0);
-  Equals(A(1, 0), 3.0);
-  Equals(A(1, 1), 4.0);
+  EXPECT_EQ(A(0, 0), 1.0);
+  EXPECT_EQ(A(0, 1), 2.0);
+  EXPECT_EQ(A(1, 0), 3.0);
+  EXPECT_EQ(A(1, 1), 4.0);
 }
 
-TEST(TinyVectorScalarInitialization) {
+TEST(TinyVector, ScalarInitialization) {
   Vec2 x;
   x = 4.0;
-  Equals(x(0), 4.0);
-  Equals(x(1), 4.0);
+  EXPECT_EQ(x(0), 4.0);
+  EXPECT_EQ(x(1), 4.0);
 }
 
-TEST(TinyMatrixScalarInitialization) {
+TEST(TinyMatrix, ScalarInitialization) {
   Mat2 A;
   A = 4.0;
-  Equals(A(0, 0), 4.0);
-  Equals(A(0, 1), 4.0);
-  Equals(A(1, 0), 4.0);
-  Equals(A(1, 1), 4.0);
+  EXPECT_EQ(A(0, 0), 4.0);
+  EXPECT_EQ(A(0, 1), 4.0);
+  EXPECT_EQ(A(1, 0), 4.0);
+  EXPECT_EQ(A(1, 1), 4.0);
 }
 
-TEST(TinyVectorListInitialization) {
+TEST(TinyVector, ListInitialization) {
   Vec4 x;
   x = 1.0, 2.0, 3.0;
-  Equals(x(0), 1.0);
-  Equals(x(1), 2.0);
-  Equals(x(2), 3.0);
+  EXPECT_EQ(x(0), 1.0);
+  EXPECT_EQ(x(1), 2.0);
+  EXPECT_EQ(x(2), 3.0);
 }
 
-TEST(TinyMatrixListInitialization) {
+TEST(TinyMatrix, ListInitialization) {
   Mat2 A;
   A = 1.0, 2.0,
       3.0, 4.0;
-  Equals(A(0, 0), 1.0);
-  Equals(A(0, 1), 2.0);
-  Equals(A(1, 0), 3.0);
-  Equals(A(1, 1), 4.0);
+  EXPECT_EQ(A(0, 0), 1.0);
+  EXPECT_EQ(A(0, 1), 2.0);
+  EXPECT_EQ(A(1, 0), 3.0);
+  EXPECT_EQ(A(1, 1), 4.0);
 }
 
-TEST(TinyMatrixGEMMSimpleCase) {
+TEST(TinyMatrix, GEMMSimpleCase) {
   Mat2 A, B, C;
   A = 1.0, 2.0,
       3.0, 4.0;
   B = 4.0, 5.0,
       6.0, 7.0;
   C = A * B;
-  Equals(C(0, 0), 16.0);
-  Equals(C(0, 1), 19.0);
-  Equals(C(1, 0), 36.0);
-  Equals(C(1, 1), 43.0);
+  EXPECT_EQ(C(0, 0), 16.0);
+  EXPECT_EQ(C(0, 1), 19.0);
+  EXPECT_EQ(C(1, 0), 36.0);
+  EXPECT_EQ(C(1, 1), 43.0);
 }
 
-TEST(TinyMatrixGEMMTransposeA) {
+TEST(TinyMatrix, GEMMTransposeA) {
   Mat2 A, B, C;
   A = 1.0, 2.0,
       3.0, 4.0;
   B = 4.0, 5.0,
       6.0, 7.0;
   C = transpose(A) * B;
-  Equals(C(0, 0), 22.0);
-  Equals(C(0, 1), 26.0);
-  Equals(C(1, 0), 32.0);
-  Equals(C(1, 1), 38.0);
+  EXPECT_EQ(C(0, 0), 22.0);
+  EXPECT_EQ(C(0, 1), 26.0);
+  EXPECT_EQ(C(1, 0), 32.0);
+  EXPECT_EQ(C(1, 1), 38.0);
 }
 
-TEST(TinyMatrixGEMMTransposeB) {
+TEST(TinyMatrix, GEMMTransposeB) {
   Mat34 A, B;
   Mat3 C;
   A = 0,  1,  2,  3,
@@ -191,15 +197,15 @@ TEST(TinyMatrixGEMMTransposeB) {
       9, 10, 11, 12;
   C = A * transpose(B);
 
-  Equals(C(0, 0),  20);
-  Equals(C(0, 1),  44);
-  Equals(C(0, 2),  68);
-  Equals(C(1, 0),  60);
-  Equals(C(1, 1), 148);
-  Equals(C(1, 2), 236);
-  Equals(C(2, 0), 100);
-  Equals(C(2, 1), 252);
-  Equals(C(2, 2), 404);
+  EXPECT_EQ(C(0, 0),  20);
+  EXPECT_EQ(C(0, 1),  44);
+  EXPECT_EQ(C(0, 2),  68);
+  EXPECT_EQ(C(1, 0),  60);
+  EXPECT_EQ(C(1, 1), 148);
+  EXPECT_EQ(C(1, 2), 236);
+  EXPECT_EQ(C(2, 0), 100);
+  EXPECT_EQ(C(2, 1), 252);
+  EXPECT_EQ(C(2, 2), 404);
 }
 
 }  // namespace

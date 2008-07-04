@@ -30,42 +30,42 @@ using libmv::Transpose;
 
 namespace {
 
-TEST(Nullspace) {
+TEST(Numeric, Nullspace) {
   Mat A(3, 4);
   A = 0.76026643, 0.01799744, 0.55192142, 0.8699745 ,
       0.42016166, 0.97863392, 0.33711682, 0.14479271,
       0.51016811, 0.66528302, 0.54395496, 0.57794893;
   Vec x;
   double s = Nullspace(&A, &x);
-  Close(s, 0.122287);
-  Close(x(1), -0.05473917);
-  Close(x(2),  0.21822937);
-  Close(x(3), -0.80258116);
-  Close(x(4),  0.55248805);
+  EXPECT_NEAR(s, 0.122287, 1e-7);
+  EXPECT_NEAR(x(1), -0.05473917, 1e-7);
+  EXPECT_NEAR(x(2),  0.21822937, 1e-7);
+  EXPECT_NEAR(x(3), -0.80258116, 1e-7);
+  EXPECT_NEAR(x(4),  0.55248805, 1e-7);
 }
 
-TEST(TinyMatrixNullspace) {
+TEST(Numeric, TinyMatrixNullspace) {
   Mat34 A;
   A = 0.76026643, 0.01799744, 0.55192142, 0.8699745 ,
       0.42016166, 0.97863392, 0.33711682, 0.14479271,
       0.51016811, 0.66528302, 0.54395496, 0.57794893;
   Vec x;
   double s = Nullspace(&A, &x);
-  Close(s, 0.122287);
-  Close(x(1), -0.05473917);
-  Close(x(2),  0.21822937);
-  Close(x(3), -0.80258116);
-  Close(x(4),  0.55248805);
+  EXPECT_NEAR(s, 0.122287, 1e-7);
+  EXPECT_NEAR(x(1), -0.05473917, 1e-7);
+  EXPECT_NEAR(x(2),  0.21822937, 1e-7);
+  EXPECT_NEAR(x(3), -0.80258116, 1e-7);
+  EXPECT_NEAR(x(4),  0.55248805, 1e-7);
 }
 
-TEST(TinyMatrixSquareTranspose) {
+TEST(Numeric, TinyMatrixSquareTranspose) {
   Mat2 A;
   A = 1.0, 2.0, 3.0, 4.0;
   libmv::Transpose(&A);
-  Equals(A(0, 0), 1.0);
-  Equals(A(0, 1), 3.0);
-  Equals(A(1, 0), 2.0);
-  Equals(A(1, 1), 4.0);
+  EXPECT_EQ(1.0, A(0, 0));
+  EXPECT_EQ(3.0, A(0, 1));
+  EXPECT_EQ(2.0, A(1, 0));
+  EXPECT_EQ(4.0, A(1, 1));
 }
 
 }  // namespace
