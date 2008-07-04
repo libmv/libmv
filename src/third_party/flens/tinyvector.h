@@ -332,7 +332,7 @@ copy(const XT &x, TinyVector<YT,N> &y) {
 
 template <typename XT, int N, int M, typename YT>
 void
-copy(const TinyMatrix<XT,N,M> &x, YT &y) {
+copy(const TinyMatrix<XT,N,M> &x, GeMatrix<YT> &y) {
   assert (N == y.numRows());
   assert (M == y.numCols());
   for (int i=0; i<N; ++i) {
@@ -344,7 +344,7 @@ copy(const TinyMatrix<XT,N,M> &x, YT &y) {
 
 template <typename XT, typename YT, int N, int M>
 void
-copy(const XT &x, TinyMatrix<YT,N,M> &y) {
+copy(const GeMatrix<XT> &x, TinyMatrix<YT,N,M> &y) {
   assert (N == y.numRows());
   assert (M == y.numCols());
   for (int i=0; i<N; ++i) {
@@ -393,6 +393,61 @@ mv(Transpose trans,
             y._data[j] = sum;
         }
     }
+}
+
+template <typename T, int M, int N>
+static inline T TransposedAccess(Transpose trans,
+                                 const TinyMatrix<T, M, N> &A,
+                                 int i, int j) {
+  if (trans == NoTrans) {
+    return A(i,j);
+  } else if (trans == Trans) {
+    return A(j,i);
+  } else {
+    bool not_implemented_yet = 0;
+    assert(not_implemented_yet);
+  }
+  return T(0);
+}
+
+// GEMM
+// C = alpha *A'*B' + beta*C
+template <typename ALPHA, typename BETA,
+          typename TA, int MA, int NA,
+          typename TB, int MB, int NB,
+          typename TC, int MC, int NC>
+void
+mm(Transpose transA, Transpose transB,
+   ALPHA alpha,
+   const TinyMatrix<TA, MA, NA> &A,
+   const TinyMatrix<TB, MB, NB> &B,
+   BETA beta, TinyMatrix<TC, MC, NC> &C) {
+  // Conjugates not implemented yet.
+  assert(transA == NoTrans || transA == Trans);
+  assert(transB == NoTrans || transB == Trans); 
+  // A mxn x B nxp = C mxp
+  const int M = MC;
+  const int N = (transA == NoTrans) ? NA : MA;
+  if (transB == NoTrans) {
+    assert(N == MB);
+  } else {
+    assert(N == NB);
+  }
+  const int P = NC;
+
+#define loop(x, n) for (int x = 0; x < n; ++x)
+  loop (i, M) {
+    loop (j, P) {
+      TC AikBkj = TC(0);
+      loop (k, N) { 
+        TA Axx = TransposedAccess(transA, A, i, k);
+        TB Bxx = TransposedAccess(transB, B, k, j);
+        AikBkj += Axx * Bxx;
+      }
+      C(i, j) = alpha*AikBkj + beta*C(i, j);
+    }
+  }
+#undef loop
 }
 
 } // namespace flens

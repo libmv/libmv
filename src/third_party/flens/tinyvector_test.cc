@@ -33,6 +33,7 @@ typedef flens::GeMatrix<flens::FullStorage<double, flens::ColMajor> > Mat;
 typedef TinyVector<double, 2> Vec2;
 typedef TinyVector<double, 4> Vec4;
 typedef TinyMatrix<double, 2, 2> Mat2;
+typedef TinyMatrix<double, 3, 3> Mat3;
 typedef TinyMatrix<double, 3, 4> Mat34;
 
 namespace {
@@ -151,6 +152,54 @@ TEST(TinyMatrixListInitialization) {
   Equals(A(0, 1), 2.0);
   Equals(A(1, 0), 3.0);
   Equals(A(1, 1), 4.0);
+}
+
+TEST(TinyMatrixGEMMSimpleCase) {
+  Mat2 A, B, C;
+  A = 1.0, 2.0,
+      3.0, 4.0;
+  B = 4.0, 5.0,
+      6.0, 7.0;
+  C = A * B;
+  Equals(C(0, 0), 16.0);
+  Equals(C(0, 1), 19.0);
+  Equals(C(1, 0), 36.0);
+  Equals(C(1, 1), 43.0);
+}
+
+TEST(TinyMatrixGEMMTransposeA) {
+  Mat2 A, B, C;
+  A = 1.0, 2.0,
+      3.0, 4.0;
+  B = 4.0, 5.0,
+      6.0, 7.0;
+  C = transpose(A) * B;
+  Equals(C(0, 0), 22.0);
+  Equals(C(0, 1), 26.0);
+  Equals(C(1, 0), 32.0);
+  Equals(C(1, 1), 38.0);
+}
+
+TEST(TinyMatrixGEMMTransposeB) {
+  Mat34 A, B;
+  Mat3 C;
+  A = 0,  1,  2,  3,
+      4,  5,  6,  7,
+      8,  9, 10, 11;
+  B = 1,  2,  3,  4,
+      5,  6,  7,  8,
+      9, 10, 11, 12;
+  C = A * transpose(B);
+
+  Equals(C(0, 0),  20);
+  Equals(C(0, 1),  44);
+  Equals(C(0, 2),  68);
+  Equals(C(1, 0),  60);
+  Equals(C(1, 1), 148);
+  Equals(C(1, 2), 236);
+  Equals(C(2, 0), 100);
+  Equals(C(2, 1), 252);
+  Equals(C(2, 2), 404);
 }
 
 }  // namespace
