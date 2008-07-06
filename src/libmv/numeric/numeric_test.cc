@@ -21,12 +21,16 @@
 #include "libmv/numeric/numeric.h"
 #include "testing/testing.h"
 
-using libmv::Mat;
+using namespace libmv;
+/*
+//using libmv::Mat;
 using libmv::Mat2;
 using libmv::Mat34;
 using libmv::Vec;
+using libmv::Vec2;
 using libmv::Nullspace;
 using libmv::Transpose;
+*/
 
 namespace {
 
@@ -66,6 +70,24 @@ TEST(Numeric, TinyMatrixSquareTranspose) {
   EXPECT_EQ(3.0, A(0, 1));
   EXPECT_EQ(2.0, A(1, 0));
   EXPECT_EQ(4.0, A(1, 1));
+}
+
+TEST(Numeric, NormalizeL1) {
+  Vec2 x;
+  x = 1, 2;
+  double l1 = NormalizeL1(&x);
+  EXPECT_DOUBLE_EQ(3., l1);
+  EXPECT_DOUBLE_EQ(1./3., x(0));
+  EXPECT_DOUBLE_EQ(2./3., x(1));
+}
+
+TEST(Numeric, NormalizeL2) {
+  Vec2 x;
+  x = 1, 2;
+  double l2 = NormalizeL2(&x);
+  EXPECT_DOUBLE_EQ(sqrt(5.0), l2);
+  EXPECT_DOUBLE_EQ(1./sqrt(5.), x(0));
+  EXPECT_DOUBLE_EQ(2./sqrt(5.), x(1));
 }
 
 }  // namespace

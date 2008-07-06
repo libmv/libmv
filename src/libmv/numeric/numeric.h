@@ -51,13 +51,13 @@ using flens::_;
 //   A = U * diag(s) * VT
 // 
 // Destroys A.
-void SVD(Mat *A, Vec *s, Mat *U, Mat *VT) {
+inline void SVD(Mat *A, Vec *s, Mat *U, Mat *VT) {
   svd(*A, *s, *U, *VT);
 }
 
 // Specialization for tiny matrices.
 template<class T, int M, int N>
-void SVD(flens::TinyMatrix<T, M, N> *A, Vec *s, Mat *U, Mat *VT) {
+inline void SVD(flens::TinyMatrix<T, M, N> *A, Vec *s, Mat *U, Mat *VT) {
   // TODO(keir): It's possible to eliminate this copying by pushing SVD support
   // for tiny matrices and vectors into FLENS.
   Mat Ap(M,N);
@@ -69,7 +69,7 @@ void SVD(flens::TinyMatrix<T, M, N> *A, Vec *s, Mat *U, Mat *VT) {
 // ||x|| = 1.0. Return the singluar value corresponding to the solution.
 // Destroys A and resizes x if necessary.
 template<class TMat, class TVec>
-double Nullspace(TMat *A, TVec *x)
+inline double Nullspace(TMat *A, TVec *x)
 {
 	int m = A->numRows();
 	int n = A->numCols();
@@ -85,12 +85,37 @@ double Nullspace(TMat *A, TVec *x)
 
 // In place transpose for square matrices.
 template<class T, int N>
-void Transpose(flens::TinyMatrix<T, N, N> *A) {
+inline void Transpose(flens::TinyMatrix<T, N, N> *A) {
   for (int i = 0; i < N; ++i) {
     for (int j = i+1; j < N; ++j) {
       std::swap((*A)(i,j), (*A)(j,i));
     }
   }
+}
+
+// Normalize a vector with the L1 norm, and return the norm before it was
+// normalized.
+template<typename TVec>
+inline double NormalizeL1(TVec *x) {
+  double sum = 0;
+  for (int i = x->firstIndex(); i <= x->lastIndex(); ++i) {
+    sum += fabs((*x)(i));
+  }
+  *x /= sum;
+  return sum;
+}
+
+// Normalize a vector with the L2 norm, and return the norm before it was
+// normalized.
+template<typename TVec>
+inline double NormalizeL2(TVec *x) {
+  double sum = 0;
+  for (int i = x->firstIndex(); i <= x->lastIndex(); ++i) {
+    sum += (*x)(i)*(*x)(i);
+  }
+  double l2 = sqrt(sum);
+  *x /= l2;
+  return l2;
 }
 
 }  // namespace mv
