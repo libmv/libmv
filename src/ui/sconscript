@@ -6,4 +6,9 @@ options['toolpath'] += ['.']
 
 env = Environment(**options)
 env.EnableQt4Modules(["QtGui","QtCore","QtSvg"])
-env.Program('imageviewer', source=['main.cc', 'imageviewer.cc', 'scrubber.cc'])
+env.Program(
+    target = 'imageviewer',
+    source = ['main.cc',
+              'imageviewer.cc',
+              'scrubber.cc',
+              '#bin-dbg/libmv/image/libimage.a'],)

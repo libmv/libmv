@@ -42,24 +42,12 @@ void ImageViewer::open()
 
     libmv::Image<unsigned char> mv_image;
     assert(libmv::ReadPgm(fileName.toStdString().c_str(), &mv_image));
-    for (int i = 0; i < 10; ++i) {
-      for (int j = 0; j < 10; ++j) {
-        printf("i=%2d,j=%2d,image=%3d\n",i,j,mv_image(i,j));
-      }
-    }
     QImage image(mv_image.Data(), mv_image.Width(), mv_image.Height(),
                  QImage::Format_Indexed8);
-    //QVector<QRgb> rgb;
-    //rgb.resize(256);
     image.setNumColors(256);
     for (int i = 0, count = image.numColors(); i < count; ++i) {
       image.setColor(i, qRgb(i,i,i));
-      //rgb[i] = qRgb(i,i,i);
     }
-    //image.setColorTable(rgb);
-
-
-
 
     if (image.isNull()) {
       QMessageBox::information(this, tr("Image Viewer"),
