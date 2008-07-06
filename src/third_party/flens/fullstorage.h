@@ -63,7 +63,7 @@ class ConstFullStorageView
                              const T *data,
                              int numRows, int numCols,
                              int leadingDimension,
-                             int firstRow=1, int firstCol=1);
+                             int firstRow=0, int firstCol=0);
 
         ConstFullStorageView(const ConstFullStorageView<T, Order> &rhs);
 
@@ -117,19 +117,19 @@ class ConstFullStorageView
 
         ConstFullStorageView<T, Order>
         view(int fromRow, int fromCol, int toRow, int toCol,
-             int firstViewRow=1, int firstViewCol=1) const;
+             int firstViewRow=0, int firstViewCol=0) const;
 
         ConstArrayView<T>
-        viewRow(int row, int firstViewIndex=1) const;
+        viewRow(int row, int firstViewIndex=0) const;
 
         ConstArrayView<T>
-        viewCol(int col, int firstViewIndex=1) const;
+        viewCol(int col, int firstViewIndex=0) const;
 
         ConstArrayView<T>
-        viewRow(int row, int fromCol, int toCol, int firstViewIndex=1) const;
+        viewRow(int row, int fromCol, int toCol, int firstViewIndex=0) const;
 
         ConstArrayView<T>
-        viewCol(int col, int fromRow, int toRow, int firstViewIndex=1) const;
+        viewCol(int col, int fromRow, int toRow, int firstViewIndex=0) const;
 
     private:
 
@@ -161,7 +161,7 @@ class FullStorageView
                         T *data,
                         int numRows, int numCols,
                         int leadingDimension,
-                        int firstRow=1, int firstCol=1);
+                        int firstRow=0, int firstCol=0);
 
         FullStorageView(const FullStorageView<T, Order> &rhs);
 
@@ -232,35 +232,35 @@ class FullStorageView
 
         ConstFullStorageView<T, Order>
         view(int fromRow, int fromCol, int toRow, int toCol,
-             int firstViewRow=1, int firstViewCol=1) const;
+             int firstViewRow=0, int firstViewCol=0) const;
 
         FullStorageView<T, Order>
         view(int fromRow, int fromCol, int toRow, int toCol,
-             int firstViewRow=1, int firstViewCol=1);
+             int firstViewRow=0, int firstViewCol=0);
 
         ConstArrayView<T>
-        viewRow(int row, int firstViewIndex=1) const;
+        viewRow(int row, int firstViewIndex=0) const;
 
         ArrayView<T>
-        viewRow(int row, int firstViewIndex=1);
+        viewRow(int row, int firstViewIndex=0);
 
         ConstArrayView<T>
-        viewCol(int col, int firstViewIndex=1) const;
+        viewCol(int col, int firstViewIndex=0) const;
 
         ArrayView<T>
-        viewCol(int col, int firstViewIndex=1);
+        viewCol(int col, int firstViewIndex=0);
 
         ConstArrayView<T>
-        viewRow(int row, int fromCol, int toCol, int firstViewIndex=1) const;
+        viewRow(int row, int fromCol, int toCol, int firstViewIndex=0) const;
 
         ArrayView<T>
-        viewRow(int row, int fromCol, int toCol, int firstViewIndex=1);
+        viewRow(int row, int fromCol, int toCol, int firstViewIndex=0);
 
         ConstArrayView<T>
-        viewCol(int col, int fromRow, int toRow, int firstViewIndex=1) const;
+        viewCol(int col, int fromRow, int toRow, int firstViewIndex=0) const;
 
         ArrayView<T>
-        viewCol(int col, int fromRow, int toRow, int firstViewIndex=1);
+        viewCol(int col, int fromRow, int toRow, int firstViewIndex=0);
 
                 ArrayView<T>
                 viewDiag(int d);
@@ -269,7 +269,7 @@ class FullStorageView
                 viewDiag(int d) const;
 
         void
-        resize(int numRows, int numCols, int firstRow=1, int firstCol=1);
+        resize(int numRows, int numCols, int firstRow=0, int firstCol=0);
 
     private:
 
@@ -298,7 +298,7 @@ class FullStorage
 
         FullStorage();
 
-        FullStorage(int numRows, int numCols, int firstRow=1, int firstCol=1);
+        FullStorage(int numRows, int numCols, int firstRow=0, int firstCol=0);
 
         FullStorage(const FullStorage<T, Order> &rhs);
 
@@ -363,45 +363,45 @@ class FullStorage
         leadingDimensionStorage();
 
         void
-        resize(int numRows, int numCols, int firstRow=1, int firstCol=1);
+        resize(int numRows, int numCols, int firstRow=0, int firstCol=0);
 
         void
-        resizeOrClear(int numRows, int numCols, int firstRow=1, int firstCol=1);
+        resizeOrClear(int numRows, int numCols, int firstRow=0, int firstCol=0);
 
         void
         shiftIndexTo(int firstRow, int firstCol);
 
         ConstFullStorageView<T, Order>
         view(int fromRow, int fromCol, int toRow, int toCol,
-             int firstViewRow=1, int firstViewCol=1) const;
+             int firstViewRow=0, int firstViewCol=0) const;
 
         FullStorageView<T, Order>
         view(int fromRow, int fromCol, int toRow, int toCol,
-             int firstViewRow=1, int firstViewCol=1);
+             int firstViewRow=0, int firstViewCol=0);
 
         ConstArrayView<T>
-        viewRow(int row, int firstViewIndex=1) const;
+        viewRow(int row, int firstViewIndex=0) const;
 
         ArrayView<T>
-        viewRow(int row, int firstViewIndex=1);
+        viewRow(int row, int firstViewIndex=0);
 
         ConstArrayView<T>
-        viewCol(int col, int firstViewIndex=1) const;
+        viewCol(int col, int firstViewIndex=0) const;
 
         ArrayView<T>
-        viewCol(int col, int firstViewIndex=1);
+        viewCol(int col, int firstViewIndex=0);
 
         ConstArrayView<T>
-        viewRow(int row, int fromCol, int toCol, int firstViewIndex=1) const;
+        viewRow(int row, int fromCol, int toCol, int firstViewIndex=0) const;
 
         ArrayView<T>
-        viewRow(int row, int fromCol, int toCol, int firstViewIndex=1);
+        viewRow(int row, int fromCol, int toCol, int firstViewIndex=0);
 
         ConstArrayView<T>
-        viewCol(int col, int fromRow, int toRow, int firstViewIndex=1) const;
+        viewCol(int col, int fromRow, int toRow, int firstViewIndex=0) const;
 
         ArrayView<T>
-        viewCol(int col, int fromRow, int toRow, int firstViewIndex=1);
+        viewCol(int col, int fromRow, int toRow, int firstViewIndex=0);
 
         ArrayView<T>
         viewDiag(int d);

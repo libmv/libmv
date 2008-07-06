@@ -61,7 +61,7 @@ class DenseVector
 
         DenseVector(const A &engine);
 
-        DenseVector(int length, int firstIndex = 1);
+        DenseVector(int length, int firstIndex = 0);
 
         explicit
         DenseVector(const Range r);
@@ -180,7 +180,7 @@ class DenseVector
         engine();
 
         void
-        resize(int length, int firstIndex=1);
+        resize(int length, int firstIndex=0);
 
         void
         resize(const Range &r);
@@ -189,7 +189,7 @@ class DenseVector
         resizeOrClear(const Range &r);
 
         void
-        resizeOrClear(int length, int firstIndex=1);
+        resizeOrClear(int length, int firstIndex=0);
 
         void
         shiftIndexTo(int firstIndex);

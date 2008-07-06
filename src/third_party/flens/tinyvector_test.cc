@@ -60,6 +60,7 @@ TEST(TinyVector, ResizeMatchesDenseAPI) {
 TEST(TinyVector, FirstRowAndColumnIsZero) {
   Vec4 x;
   EXPECT_EQ(x.firstIndex(), 0);
+  EXPECT_EQ(x.lastIndex(), 3);
 }
 
 TEST(TinyMatrix, FirstRowAndColumnIsZero) {
@@ -85,7 +86,7 @@ TEST(TinyVector, CopyFromDenseVector) {
 // the following code would compile. This remains to be sure it compiles!
 TEST(TinyMatrix, MatrixViewsCompileWithoutWarning) {
   Mat B(3,3);
-  Mat::View vv = B(_(1,3), _(1,3));
+  Mat::View vv = B(_(0,2), _(0,2));
   EXPECT_EQ(vv.numRows(), 3);
 }
 
@@ -99,27 +100,27 @@ TEST(TinyMatrix, CopyToDenseMatrixView) {
   // Confusingly, matrices are 1-indexed by default, and use inclusive slices.
   Mat B(3,3);
   B = 0;
-  B(_(1,2),_(1,2)) = A;
-  EXPECT_EQ(B(1, 1), 1.0);
-  EXPECT_EQ(B(1, 2), 2.0);
-  EXPECT_EQ(B(1, 3), 0.0);
-  EXPECT_EQ(B(2, 1), 3.0);
-  EXPECT_EQ(B(2, 2), 4.0);
-  EXPECT_EQ(B(2, 3), 0.0);
-  EXPECT_EQ(B(3, 1), 0.0);
-  EXPECT_EQ(B(3, 2), 0.0);
-  EXPECT_EQ(B(3, 3), 0.0);
+  B(_(0,1),_(0,1)) = A;
+  EXPECT_EQ(B(0, 0), 1.0);
+  EXPECT_EQ(B(0, 1), 2.0);
+  EXPECT_EQ(B(0, 2), 0.0);
+  EXPECT_EQ(B(1, 0), 3.0);
+  EXPECT_EQ(B(1, 1), 4.0);
+  EXPECT_EQ(B(1, 2), 0.0);
+  EXPECT_EQ(B(2, 0), 0.0);
+  EXPECT_EQ(B(2, 1), 0.0);
+  EXPECT_EQ(B(2, 2), 0.0);
 }
 
 TEST(TinyMatrix, CopyFromDenseMatrixView) {
   Mat B(3,3);
   B = 0;
-  B(1, 1) = 1.0;
-  B(1, 2) = 2.0;
-  B(2, 1) = 3.0;
-  B(2, 2) = 4.0;
+  B(0, 0) = 1.0;
+  B(0, 1) = 2.0;
+  B(1, 0) = 3.0;
+  B(1, 1) = 4.0;
   Mat2 A;
-  A = B(_(1,2),_(1,2));
+  A = B(_(0,1),_(0,1));
   EXPECT_EQ(A(0, 0), 1.0);
   EXPECT_EQ(A(0, 1), 2.0);
   EXPECT_EQ(A(1, 0), 3.0);
