@@ -118,6 +118,15 @@ class TinyVector
             return _data[index];
         }
 
+        TinyVector<T, N> &
+        operator/=(T value)
+        {
+            for (int i = 0; i < N; ++i) {
+                (*this)(i) /= value;
+            }
+            return *this;
+        }
+
         T &
         operator()(int index)
         {
@@ -127,6 +136,8 @@ class TinyVector
             return _data[index];
         }
 
+        // Other stuff.
+
         int
         length() const {
           return N;
@@ -135,6 +146,11 @@ class TinyVector
         int
         firstIndex() const {
           return 0;
+        }
+
+        int
+        lastIndex() const {
+          return N-1;
         }
 
         void
