@@ -347,7 +347,7 @@ ArrayView<T>::shiftIndexTo(int firstIndex)
 
 template <typename T>
 Array<T>::Array()
-    : _length(0), _data(0)
+    : _length(0), _firstIndex(0), _data(0)
 {
 }
 

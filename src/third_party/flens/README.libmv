@@ -10,6 +10,7 @@ Made several changes for compiling without warnings.
 Added list and scalar initializers to tiny matrices and vectors
 Switched default first index to 0 instead of 1, so that both normal and tiny
 vectors and matrices have the same behaviour by default.
+Made array storage initialize firstIndex to zero for default constructor.
 
 Note: Only the flens/ subdirectory from the FLENS-lite CVS module is included
 here.
