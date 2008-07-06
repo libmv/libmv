@@ -18,12 +18,13 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
-
 #include <iostream>
+
+#include "libmv/image/image.h"
 
 namespace libmv {
 
-int ReadPgm(const char *filename, Image<unsigned char> *im) {
+int ReadPgm(const char *filename, ByteImage *im) {
   FILE *file = fopen(filename,"r");
   if (!file) {
     return 0;
@@ -33,7 +34,7 @@ int ReadPgm(const char *filename, Image<unsigned char> *im) {
   return res;
 }
 
-int ReadPgmStream(FILE *file, Image<unsigned char> *im) {
+int ReadPgmStream(FILE *file, ByteImage *im) {
   int magicnumber, width, height, maxval;
   int res;
 
@@ -58,11 +59,10 @@ int ReadPgmStream(FILE *file, Image<unsigned char> *im) {
   if (res != im->Size()) {
     return 0;
   }
-
   return 1;
 }
 
-int WritePgm(const Image<unsigned char> &im, const char *filename) {
+int WritePgm(const ByteImage &im, const char *filename) {
   FILE *file = fopen(filename,"w");
   if (!file) {
     return 0;
@@ -72,7 +72,7 @@ int WritePgm(const Image<unsigned char> &im, const char *filename) {
   return res;
 }
 
-int WritePgmStream(const Image<unsigned char> &im, FILE *file) {
+int WritePgmStream(const ByteImage &im, FILE *file) {
   int res;
 
   // Write magic number.
@@ -86,9 +86,7 @@ int WritePgmStream(const Image<unsigned char> &im, FILE *file) {
   if (res != im.Size()) {
     return 0;
   }
-
   return 1;
 }
 
 }  // namespace libmv
-

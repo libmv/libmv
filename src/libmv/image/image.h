@@ -18,8 +18,8 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
-#ifndef LIBMV_IMAGE_IMAGE_PAU_ND_H
-#define LIBMV_IMAGE_IMAGE_PAU_ND_H
+#ifndef LIBMV_IMAGE_IMAGE_IMAGE_H
+#define LIBMV_IMAGE_IMAGE_IMAGE_H
 
 #include "libmv/image/array_nd.h"
 #include <boost/shared_array.hpp>
@@ -106,16 +106,16 @@ class Image : public ArrayND<T, 3> {
       *dx2 = 1 - *dx1;
     }
   }
-
 };
 
-int ReadPgm(const char *filename, Image<unsigned char> *im);
-int ReadPgmStream(FILE *file, Image<unsigned char> *im);
-int WritePgm(const Image<unsigned char> &im, const char *filename);
-int WritePgmStream(const Image<unsigned char> &im, FILE *file);
+typedef Image<unsigned char> ByteImage;
+typedef Image<float> FloatImage;
+
+int ReadPgm(const char *filename, ByteImage *im);
+int ReadPgmStream(FILE *file, ByteImage *im);
+int WritePgm(const ByteImage &im, const char *filename);
+int WritePgmStream(const ByteImage &im, FILE *file);
 
 }  // namespace libmv
 
-#include "image.tcc"
-
-#endif  // LIBMV_IMAGE_IMAGE_PAU_ND_H
+#endif  // LIBMV_IMAGE_IMAGE_IMAGE_H
