@@ -144,4 +144,18 @@ TEST(ArrayND, 3DAccessor) {
   EXPECT_EQ(2, *(a.Data() + a.Stride(0) + a.Stride(1) + a.Stride(2)));
 }
 
+TEST(ArrayND, CopyFrom) {
+  ArrayND<int,3> a(2,2,1);
+  a(0,0, 0) = 1;
+  a(0,1, 0) = 2;
+  a(1,0, 0) = 3;
+  a(1,1, 0) = 4;
+  ArrayND<float,3> b;
+  b.CopyFrom(a);
+  EXPECT_FLOAT_EQ(1.f, b(0,0, 0));
+  EXPECT_FLOAT_EQ(2.f, b(0,1, 0));
+  EXPECT_FLOAT_EQ(3.f, b(1,0, 0));
+  EXPECT_FLOAT_EQ(4.f, b(1,1, 0));
+}
+
 }  // namespace

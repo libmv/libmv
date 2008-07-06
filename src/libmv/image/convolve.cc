@@ -24,12 +24,6 @@
 
 namespace libmv {
 
-void ConvertByteImageToFloatImage(const ByteImage &byte_image,
-                                  const FloatImage &float_image) {
-(void)byte_image;
-(void)float_image;
-}
-
 // Zero mean Gaussian.
 double Gaussian(double x, double sigma) {
   return 1/sqrt(2*M_PI*sigma*sigma) * exp(-(x*x/2/sigma/sigma));
@@ -71,6 +65,61 @@ void ComputeGaussianKernel(double sigma, Vec *kernel, Vec *derivative) {
     factor -= i*(*derivative)(i+halfwidth);
   }
   *derivative /= factor;
+}
+
+void ConvolveHorizontal(const FloatImage &in,
+                        const Vec &kernel,
+                        FloatImage *out_pointer) {
+  int halfwidth = kernel.length() / 2;
+  int num_columns = in.Width();
+  int num_rows = in.Height();
+  FloatImage &out = *out_pointer;
+  out.ResizeLike(in);
+
+  assert(kernel.length() % 2 == 1);
+  assert(&in != out_pointer);
+
+  for (int j = 0; j < num_rows; ++j)  {
+    for (int i = 0; i < num_columns; ++i)  {
+      double sum = 0.0;
+      int l = 0;
+      for (int k = kernel.length()-1; k >= 0; --k, ++l) {
+        int ii = i - halfwidth + l;
+        if (0 <= ii && ii < num_columns) {
+          sum += in(j, ii) * kernel(k);
+        }
+      }
+      out(j, i) = sum;
+    }
+  }
+}
+
+// This could certainly be accelerated.
+void ConvolveVertical(const FloatImage &in,
+                      const Vec &kernel,
+                      FloatImage *out_pointer) {
+  int halfwidth = kernel.length() / 2;
+  int num_columns = in.Width();
+  int num_rows = in.Height();
+  FloatImage &out = *out_pointer;
+  out.ResizeLike(in);
+
+  assert(kernel.length() % 2 == 1);
+  assert(&in != out_pointer);
+
+  for (int i = 0; i < num_columns; ++i)  {
+    for (int j = 0; j < num_rows - halfwidth; ++j)  {
+      double sum = 0.0;
+      int l = 0;
+      for (int k = kernel.length()-1; k >= 0; --k, ++l) {
+        int jj = j - halfwidth + l;
+        if (0 <= jj && jj < num_rows) {
+          sum += in(jj, i) * kernel(k);
+        }
+      }
+      out(j, i) = sum;
+    }
+  }
 }
 
 }  // namespace libmv

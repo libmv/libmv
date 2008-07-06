@@ -89,4 +89,22 @@ int WritePgmStream(const ByteImage &im, FILE *file) {
   return 1;
 }
 
+void ConvertFloatImageToByteImage(const FloatImage &float_image,
+                                  ByteImage *byte_image) {
+  byte_image->ResizeLike(float_image);
+  float minval=HUGE_VAL, maxval=-HUGE_VAL;
+  for (int i = 0; i < float_image.Height(); ++i) {
+    for (int j = 0; j < float_image.Width(); ++j) {
+      minval = std::min(minval, float_image(i,j));
+      maxval = std::max(maxval, float_image(i,j));
+    }
+  }
+  for (int i = 0; i < float_image.Height(); ++i) {
+    for (int j = 0; j < float_image.Width(); ++j) {
+      float unscaled = (float_image(i,j) - minval) / (maxval - minval);
+      (*byte_image)(i,j) = (unsigned char)(255 * unscaled);
+    }
+  }
+}
+
 }  // namespace libmv

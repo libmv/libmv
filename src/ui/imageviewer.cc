@@ -1,10 +1,17 @@
 #include <QColor>
 #include <QtGui>
 #include <stdio.h>
+#include <iostream>
+using namespace std;
 
+#include "libmv/numeric/numeric.h"
 #include "libmv/image/image.h"
+#include "libmv/image/convolve.h"
+#include "third_party/flens/flens.h"
 #include "ui/imageviewer.h"
 #include "ui/scrubber.h"
+
+using libmv::_;
 
 ImageViewer::ImageViewer()
 {
@@ -40,8 +47,28 @@ void ImageViewer::open()
       tr("Open File"), QDir::currentPath());
   if (!fileName.isEmpty()) {
 
-    libmv::Image<unsigned char> mv_image;
+    libmv::ByteImage mv_image;
     assert(libmv::ReadPgm(fileName.toStdString().c_str(), &mv_image));
+    libmv::FloatImage float_mv_image;
+    float_mv_image.CopyFrom(mv_image);
+    libmv::FloatImage blurred_mv_image;
+    libmv::Vec gauss, dgauss;
+    libmv::ComputeGaussianKernel(5, &gauss, &dgauss);
+    libmv::ConvolveHorizontal(float_mv_image,
+                              gauss,
+                              &blurred_mv_image);
+//    libmv::ConvolveVertical(blurred_mv_image,
+//                              gauss,
+//                              &float_mv_image);
+//    libmv::ConvolveVertical(float_mv_image,
+//                              gauss,
+//                              &blurred_mv_image);
+//    mv_image.CopyFrom(blurred_mv_image);
+    libmv::ConvertFloatImageToByteImage(blurred_mv_image, &mv_image);
+//    mv_image.CopyFrom(float_mv_image);
+
+    printf("w=%d,h=%d\n", mv_image.Width(), mv_image.Height());
+
     QImage image(mv_image.Data(), mv_image.Width(), mv_image.Height(),
                  QImage::Format_Indexed8);
     image.setNumColors(256);

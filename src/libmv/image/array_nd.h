@@ -38,18 +38,17 @@ class ArrayND {
   /// Type for the multidimensional indices.
   typedef Tuple<int,N> Index;
 
-
   /// Create an empty array.
   ArrayND() : data_(NULL), own_data_(true) {
     Resize(Index(0));
   }
 
-  /// Create an array of shape s.
+  /// Create an array with the shape.
   ArrayND(const Index &shape) : data_(NULL), own_data_(true) {
     Resize(shape);
   }
   
-  /// Create an array of shape s.
+  /// Create an array with the shape.
   ArrayND(int *shape) : data_(NULL), own_data_(true) {
     Resize(shape);
   }
@@ -86,14 +85,36 @@ class ArrayND {
     return view;
   } 
 
+  const Index &Shapes() const {
+    return shape_;
+  }
+
+  const Index &Strides() const {
+    return strides_;
+  }
+
   /// Create an array of shape s.
   void Resize(const Index &shape) {
     Resize(shape.Data());
   }
 
+  template<typename D>
+  void ResizeLike(const ArrayND<D,N> &other) {
+    // TODO(keir): Don't reallocate memory if sizes don't change.
+
+    shape_.Reset(other.Shapes());
+    strides_ = other.Strides();
+    delete [] data_;
+    if (Size()>0)
+      data_ = new T[Size()];
+    else
+      data_ = NULL;
+  }
+
   /// Resizes the array to shape s.  All data is lost.
   void Resize(const int *shape) {
     assert(own_data_);
+    // TODO(keir): Don't reallocate memory if sizes don't change.
 
     shape_.Reset(shape);
     strides_(N-1) = 1;
@@ -106,6 +127,7 @@ class ArrayND {
     else
       data_ = NULL;
   }
+
 
   /// Resize a 1D array to lenght s0.
   void Resize(int s0) {
@@ -128,16 +150,15 @@ class ArrayND {
     Resize(shape);
   }
 
-  /// Return a conversion of this array to type D.
-  /// Assumes *this is contiguous.
-  // TODO test this
-//  template<typename D>
-//  ArrayND<D,N> AsType() const {
-//    ArrayND<D,N> res(shape_);
-//    for (int i = 0; i < Size(); ++i)
-//      res[i] = D((*this)[i]);
-//    return res;
-//  }
+  template<typename D>
+  void CopyFrom(const ArrayND<D,N> &other) {
+    ResizeLike(other);
+    T *data = Data();
+    const D *other_data = other.Data();
+    for (int i = 0; i < Size(); ++i) {
+      data[i] = T(other_data[i]);
+    }
+  }
 
   /// Return the lenght of an axis.
   int Shape(int axis) const {
@@ -234,7 +255,6 @@ class ArrayND {
     return *( Data() + Offset(i0,i1,i2) );
   }
 
-  
   /// True if index is inside array.
   bool Contains(const Index &index) const {
     for (int i = 0; i < N; ++i)
@@ -245,10 +265,10 @@ class ArrayND {
   
  protected:
   /// The number of element in each dimension.
-  Tuple<int,N> shape_;
+  Index shape_;
 
   /// How to jump to neighbors in each dimension.
-  Tuple<int,N> strides_;
+  Index strides_;
 
   /// Pointer to the first element of the array.
   T *data_;
@@ -256,9 +276,6 @@ class ArrayND {
   /// data_ will be deleted on destruction if own_data_ is true
   bool own_data_;
 };
-
-
-
 
 }  // namespace libmv
 

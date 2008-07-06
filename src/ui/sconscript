@@ -3,6 +3,9 @@
 Import('options')
 options['tools'] = ['default','qt4']
 options['toolpath'] += ['.']
+options['LIBS']=['lapack','atlas', 'flens', 'image']
+options['LIBPATH']=['#bin-dbg/third_party/flens',
+                    '#bin-dbg/libmv/image']
 
 env = Environment(**options)
 env.EnableQt4Modules(["QtGui","QtCore","QtSvg"])
@@ -11,4 +14,6 @@ env.Program(
     source = ['main.cc',
               'imageviewer.cc',
               'scrubber.cc',
-              '#bin-dbg/libmv/image/libimage.a'],)
+              '#bin-dbg/third_party/flens/libflens.a',
+              '#bin-dbg/libmv/image/libimage.a'],
+)

@@ -115,6 +115,10 @@ int ReadPgm(const char *filename, ByteImage *im);
 int ReadPgmStream(FILE *file, ByteImage *im);
 int WritePgm(const ByteImage &im, const char *filename);
 int WritePgmStream(const ByteImage &im, FILE *file);
+void ConvertByteImageToFloatImage(const ByteImage &byte_image,
+                                  FloatImage *float_image);
+void ConvertFloatImageToByteImage(const FloatImage &float_image,
+                                  ByteImage *byte_image);
 
 }  // namespace libmv
 

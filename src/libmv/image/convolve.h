@@ -27,6 +27,12 @@
 namespace libmv {
 
 void ComputeGaussianKernel(double sigma, Vec *kernel, Vec *derivative);
+void ConvolveHorizontal(const FloatImage &in,
+                        const Vec &kernel,
+                        FloatImage *out_pointer);
+void ConvolveVertical(const FloatImage &in,
+                      const Vec &kernel,
+                      FloatImage *out_pointer);
 
 }  // namespace libmv
 
