@@ -21,7 +21,6 @@
 #ifndef LIBMV_IMAGE_ARRAY_ND_H
 #define LIBMV_IMAGE_ARRAY_ND_H
 
-#include <boost/shared_array.hpp>
 #include <iostream>
 
 #include "libmv/image/tuple.h"

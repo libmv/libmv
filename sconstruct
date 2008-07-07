@@ -21,9 +21,6 @@
 ###############################################################################
 # You may have to edit this section.
 
-# Update this boost path. Make sure you have at least boost 1.34.
-boost_dir = "/usr/local/include/boost-1_34"
-
 # This is the dir where QT4 headers are.
 qt_dir = "/usr"
 
@@ -31,8 +28,9 @@ qt_dir = "/usr"
 # Don't change past here.
 
 import os
-options = dict(CPPPATH = [boost_dir,
-                          os.path.join(os.getcwd(), 'src'),
+import sys
+
+options = dict(CPPPATH = [os.path.join(os.getcwd(), 'src'),
                           os.path.join(os.getcwd(), 'src/third_party'),
                           os.path.join(os.getcwd(),
                                        'src/third_party/gtest/include'),
@@ -68,13 +66,19 @@ if not show_commands:
                         RANLIBCOMSTR       = '[ idx ] $TARGET',
                         LINKCOMSTR         = '        $TARGET'))
 
-# Force VXL to use native STL.
-add_options(options, 'CXXFLAGS', '-DVCL_USE_NATIVE_STL')
+# Mac specific things.
+if sys.platform == 'darwin':
+    # Tell gtest not to use mac framworks.
+    add_options(options, 'CXXFLAGS', '-DGTEST_NOT_MAC_FRAMEWORK_MODE')
+
+    # Tell FLENS to use Veclib.
+    add_options(options, 'CXXFLAGS', '-DVECLIB')
 
 import copy
 
 # TODO(keir): Use scons configure mechanism to detect QT and Boost.
 # TODO(keir): Make this work with windows!
+
 optimized_options = copy.deepcopy(options)
 add_options(optimized_options, 'CXXFLAGS',
             Split('-Wall -W -O3 -funroll-loops -fomit-frame-pointer'))

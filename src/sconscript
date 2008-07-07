@@ -18,9 +18,12 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 # IN THE SOFTWARE.
 
+import sys
+
 SConscript('libmv/image/sconscript')
 SConscript('libmv/numeric/sconscript')
 SConscript('testing/sconscript')
 SConscript('third_party/flens/sconscript')
 SConscript('third_party/gtest/sconscript')
-SConscript('ui/sconscript')
+if sys.platform != 'darwin':
+    SConscript('ui/sconscript')
