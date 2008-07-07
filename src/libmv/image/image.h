@@ -22,8 +22,6 @@
 #define LIBMV_IMAGE_IMAGE_IMAGE_H
 
 #include "libmv/image/array_nd.h"
-#include <boost/shared_array.hpp>
-#include <iostream>
 #include <math.h>
 
 using namespace std;

@@ -34,6 +34,33 @@ TEST(Image, Sizes) {
   EXPECT_EQ(image.Shape(0), 0);
 }
 
+TEST(Image, CopyConstructor) {
+  Image<int> image(10,10);
+  image(0,0) = 1;
+  image(0,1) = 1;
+  Image<int> copy(image);
+  EXPECT_EQ(copy.Height(), 10);
+  EXPECT_EQ(copy.Width(), 10);
+  EXPECT_EQ(copy.Depth(), 1);
+  EXPECT_EQ(copy(0,0), 1);
+  copy(0,1) = 2;
+  EXPECT_EQ(image(0,1), 1);
+}
+
+TEST(Image, Assignation) {
+  Image<int> image(10,10);
+  image(0,0) = 1;
+  image(0,1) = 1;
+  Image<int> copy;
+  copy = image;
+  EXPECT_EQ(copy.Height(), 10);
+  EXPECT_EQ(copy.Width(), 10);
+  EXPECT_EQ(copy.Depth(), 1);
+  EXPECT_EQ(copy(0,0), 1);
+  copy(0,1) = 2;
+  EXPECT_EQ(image(0,1), 1);
+}
+
 TEST(Image, Parenthesis) {
   Image<int> image(1,2,3);
   image(0,1,0) = 3;

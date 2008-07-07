@@ -33,6 +33,9 @@ void ConvolveHorizontal(const FloatImage &in,
 void ConvolveVertical(const FloatImage &in,
                       const Vec &kernel,
                       FloatImage *out_pointer);
+void ConvolveGaussian(const FloatImage &in,
+                      double sigma,
+                      FloatImage *out_pointer);
 
 }  // namespace libmv
 

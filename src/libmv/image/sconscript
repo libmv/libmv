@@ -45,6 +45,14 @@ env.Program(
     source = ['image_test.cc',
               'libimage.a',
               '#bin-dbg/third_party/gtest/libgtest.a'])
+              
+env.Program(
+    target = 'image_pyramid_test',
+    source = ['image_pyramid_test.cc',
+              'libimage.a',
+              '#bin-dbg/third_party/flens/libflens.a',
+              '#bin-dbg/third_party/gtest/libgtest.a'],
+    LIBS=['lapack','atlas'])
 
 env.Program(
     target = 'lru_cache_test',

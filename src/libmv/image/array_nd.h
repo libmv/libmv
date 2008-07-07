@@ -39,51 +39,52 @@ class ArrayND {
   typedef Tuple<int,N> Index;
 
   /// Create an empty array.
-  ArrayND() : data_(NULL), own_data_(true) {
+  ArrayND() : data_(NULL) {
     Resize(Index(0));
   }
 
   /// Create an array with the shape.
-  ArrayND(const Index &shape) : data_(NULL), own_data_(true) {
+  ArrayND(const Index &shape) : data_(NULL) {
     Resize(shape);
   }
   
   /// Create an array with the shape.
-  ArrayND(int *shape) : data_(NULL), own_data_(true) {
+  ArrayND(int *shape) : data_(NULL) {
     Resize(shape);
+  }
+  
+  /// Copy constructor copies pixel data.
+  ArrayND(const ArrayND<T, N> &b) : data_(NULL) {
+    ResizeLike(b);
+    memcpy(Data(), b.Data(), sizeof(T) * Size());
   }
 
   /// Crate a 1D array of lenght s0.
-  ArrayND(int s0) : data_(NULL), own_data_(true) {
+  ArrayND(int s0) : data_(NULL) {
     Resize(s0);
   }
 
   /// Crate a 2D array of shape (s0,s1).
-  ArrayND(int s0, int s1) : data_(NULL), own_data_(true) {
+  ArrayND(int s0, int s1) : data_(NULL) {
     Resize(s0,s1);
   }
 
   /// Crate a 3D array of shape (s0,s1,s2).
-  ArrayND(int s0, int s1, int s2) : data_(NULL), own_data_(true) {
+  ArrayND(int s0, int s1, int s2) : data_(NULL) {
     Resize(s0,s1,s2);
   }
 
-  /// Destructor deletes the data if the array owns it.
+  /// Destructor deletes pixel data.
   ~ArrayND() {
-    if(own_data_) {
-      delete [] data_;
-    }
+    delete [] data_;
   }
  
-  /// Return a view of these array's data.
-  ArrayND View() {
-    ArrayND view;
-    view.shape_ = shape_;
-    view.strides_ = strides_;
-    view.data_ = data_;
-    view.own_data_ = false;
-    return view;
-  } 
+  /// Assignation copies pixel data.
+  ArrayND &operator=(const ArrayND<T, N> &b) {
+    ResizeLike(b);
+    memcpy(Data(), b.Data(), sizeof(T) * Size());
+    return *this;
+  }
 
   const Index &Shapes() const {
     return shape_;
@@ -113,7 +114,6 @@ class ArrayND {
 
   /// Resizes the array to shape s.  All data is lost.
   void Resize(const int *shape) {
-    assert(own_data_);
     // TODO(keir): Don't reallocate memory if sizes don't change.
 
     shape_.Reset(shape);
@@ -160,6 +160,12 @@ class ArrayND {
     }
   }
 
+  void Fill(T value) {
+    for (int i = 0; i < Size(); ++i) {
+      Data()[i] = value;
+    }
+  }
+
   /// Return the lenght of an axis.
   int Shape(int axis) const {
     return shape_(axis);
@@ -183,11 +189,6 @@ class ArrayND {
 
   /// Constant pointer to the first element of the array.
   const T *Data() const { return data_; }
-
-  /// True if the arrays own its data.
-  bool OwnData() const {
-    return own_data_;
-  }
 
   /// Distance between the first element and the element at position index.
   int Offset(const Index &index) const {
@@ -217,6 +218,7 @@ class ArrayND {
   
   /// Return a reference to the element at position index.
   T &operator()(const Index &index) {
+    // TODO(pau) Boundary checking in debug mode.
     return *( Data() + Offset(index) );
   }
 
@@ -272,9 +274,6 @@ class ArrayND {
 
   /// Pointer to the first element of the array.
   T *data_;
-
-  /// data_ will be deleted on destruction if own_data_ is true
-  bool own_data_;
 };
 
 }  // namespace libmv

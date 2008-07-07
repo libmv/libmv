@@ -122,4 +122,17 @@ void ConvolveVertical(const FloatImage &in,
   }
 }
 
+
+void ConvolveGaussian(const FloatImage &in,
+                      double sigma,
+                      FloatImage *out_pointer) {
+  Vec kernel, derivative;
+  ComputeGaussianKernel(sigma, &kernel, &derivative);
+
+  FloatImage tmp;
+  ConvolveVertical(in, kernel, &tmp);
+  ConvolveHorizontal(tmp, kernel, out_pointer);
+}
+
+
 }  // namespace libmv

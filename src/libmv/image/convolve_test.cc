@@ -35,4 +35,12 @@ TEST(Convolve, ComputeGaussianKernel) {
   // TODO(keir): Put in a more thorough test here!
 }
 
+TEST(Convolve, ConvolveGaussian) {
+  FloatImage im(10,10);
+  im.Fill(1);
+  FloatImage blured;
+  ConvolveGaussian(im, 3, &blured);
+  EXPECT_NEAR(im(5,5), 1, 1e-7);
+}
+
 }  // namespace

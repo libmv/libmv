@@ -51,15 +51,43 @@ TEST(ArrayND, PointerConstructor) {
   EXPECT_EQ(3, a.Shape(2));
 }
 
-TEST(ArrayND, View) {
-  int s[] = {3};
-  ArrayND<int,1> a(s);
-  ArrayND<int,1> b = a.View();
+TEST(ArrayND, CopyConstructor) {
+  int s[] = {1, 2, 3};
+  ArrayND<int,3> a(s);
+  a(0,1,1) = 3;
+  a(0,1,2) = 3;
+  ArrayND<int,3> b(a);
+  EXPECT_EQ(1, b.Shape(0));
+  EXPECT_EQ(2, b.Shape(1));
+  EXPECT_EQ(3, b.Shape(2));
+  EXPECT_EQ(3, b(0,1,1));
+  b(0,1,2) = 2;
+  EXPECT_EQ(3, a(0,1,2));
+}
 
-  EXPECT_EQ(a.Shape(0), b.Shape(0));
-  EXPECT_EQ(a.Stride(0), b.Stride(0));
-  EXPECT_EQ(a.Data(), b.Data());
-  EXPECT_FALSE(b.OwnData());
+TEST(ArrayND, Assignation) {
+  int s[] = {1, 2, 3};
+  ArrayND<int,3> a(s);
+  a(0,1,1) = 3;
+  a(0,1,2) = 3;
+  ArrayND<int,3> b;
+  b = a;
+  EXPECT_EQ(1, b.Shape(0));
+  EXPECT_EQ(2, b.Shape(1));
+  EXPECT_EQ(3, b.Shape(2));
+  EXPECT_EQ(3, b(0,1,1));
+  b(0,1,2) = 2;
+  EXPECT_EQ(3, a(0,1,2));
+}
+
+TEST(ArrayND, Fill) {
+  int s[] = {2,2};
+  ArrayND<int, 2> a(s);
+  a.Fill(42);
+  EXPECT_EQ(42, a(0,0));
+  EXPECT_EQ(42, a(0,1));
+  EXPECT_EQ(42, a(1,0));
+  EXPECT_EQ(42, a(1,1));
 }
 
 TEST(ArrayND, Size) {
