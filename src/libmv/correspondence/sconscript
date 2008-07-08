@@ -31,7 +31,7 @@ env.Program(
     source = ['klt_test.cc',
               'libcorrespondence.a',
               '../image/libimage.a',
-              '#bin-dbg/third_party/flens/libflens.a',
-              '#bin-dbg/third_party/gtest/libgtest.a'],
+              '../../third_party/flens/libflens.a',
+              '../../third_party/gtest/libgtest.a'],
     LIBS=['lapack', 'atlas'])
 

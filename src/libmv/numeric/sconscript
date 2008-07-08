@@ -23,6 +23,6 @@ env = Environment(**options)
 
 env.Program(target = 'numeric_test',
             source = ['numeric_test.cc',
-                      '#bin-dbg/third_party/flens/libflens.a',
-                      '#bin-dbg/third_party/gtest/libgtest.a'],
+                      '../../third_party/flens/libflens.a',
+                      '../../third_party/gtest/libgtest.a'],
             LIBS=['lapack','atlas'])
