@@ -21,9 +21,11 @@
 #ifndef LIBMV_IMAGE_IMAGE_PYRAMID_H
 #define LIBMV_IMAGE_IMAGE_PYRAMID_H
 
-#include "libmv/image/image.h"
-#include "libmv/image/convolve.h"
 #include <vector>
+
+#include "libmv/image/convolve.h"
+#include "libmv/image/image.h"
+#include "libmv/image/sample.h"
 
 using namespace std;
 using namespace libmv;
@@ -74,7 +76,7 @@ class ImagePyramid {
     levels_[l].Resize(new_height, new_width, 1);
     for (int i = 0; i < new_height; ++i) {
       for (int j = 0; j < new_width; ++j) {
-        levels_[l-1](i,j) = levels_[l].Linear(2*i + .5, 2*j + .5);
+        levels_[l-1](i,j) = SampleLinear(levels_[l], 2*i + .5, 2*j + .5);
       }
     }
   }

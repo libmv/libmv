@@ -64,3 +64,8 @@ env.Program(
     source = ['tuple_test.cc',
               '#bin-dbg/third_party/gtest/libgtest.a'])
 
+env.Program(
+    target = 'sample_test',
+    source = ['sample_test.cc',
+              '#bin-dbg/third_party/gtest/libgtest.a'])
+

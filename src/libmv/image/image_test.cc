@@ -67,27 +67,6 @@ TEST(Image, Parenthesis) {
   EXPECT_EQ(image(0,1), 3);
 }
 
-TEST(Image, Nearest) {
-  Image<int> image(2,2);
-  image(0,0) = 0;
-  image(0,1) = 1;
-  image(1,0) = 2;
-  image(1,1) = 3;
-  EXPECT_EQ(image.Nearest(-0.4,-0.4), 0);
-  EXPECT_EQ(image.Nearest(0.4,0.4), 0);
-  EXPECT_EQ(image.Nearest(0.6,0.6), 3);
-  EXPECT_EQ(image.Nearest(1.4,1.4), 3);
-}
-
-TEST(Image, Linear) {
-  Image<int> image(2,2);
-  image(0,0) = 0;
-  image(0,1) = 1;
-  image(1,0) = 2;
-  image(1,1) = 3;
-  EXPECT_EQ(image.Linear(0.5,0.5), 1.5);
-}
-
 TEST(ReadPgm, TwoPixels) {
   Image<unsigned char> image;
   EXPECT_TRUE(ReadPgm("src/libmv/image/image_test/two_pixels.pgm", &image));

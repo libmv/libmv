@@ -21,11 +21,9 @@
 #ifndef LIBMV_IMAGE_IMAGE_IMAGE_H
 #define LIBMV_IMAGE_IMAGE_IMAGE_H
 
-#include "libmv/image/array_nd.h"
 #include <math.h>
 
-using namespace std;
-using libmv::ArrayND;
+#include "libmv/image/array_nd.h"
 
 namespace libmv {
 
@@ -49,60 +47,12 @@ class Image : public ArrayND<T, 3> {
   int Depth() const {
     return ArrayND<T, 3>::Shape(2);
   }
-
   /// Enable accessing with 2 indices for grayscale images.
   T &operator()(int i0, int i1, int i2 = 0) {
     return ArrayND<T, 3>::operator()(i0,i1,i2);
   }
   const T &operator()(int i0, int i1, int i2 = 0) const {
     return ArrayND<T, 3>::operator()(i0,i1,i2);
-  }
-
-  /// Nearest neighbor interpolation.
-  T Nearest(float y, float x, int v = 0) const {
-    const int i = int(round(y));
-    const int j = int(round(x));
-    return operator()(i, j, v);
-  }
-
-  /// Linear interpolation.
-  float Linear(float y, float x, int v = 0) const {
-    int x1, y1, x2, y2;
-    float dx1, dy1, dx2, dy2;
-
-    LinearInitAxis(&y1, &y2, &dy1, &dy2, y, Height());
-    LinearInitAxis(&x1, &x2, &dx1, &dx2, x, Width());
-
-    const T im11 = operator()(y1,x1,v);
-    const T im12 = operator()(y1,x2,v);
-    const T im21 = operator()(y2,x1,v);
-    const T im22 = operator()(y2,x2,v);
-
-    return dy1 * ( dx1 * im11 + dx2 * im12 )
-         + dy2 * ( dx1 * im21 + dx2 * im22 );
-  }
- private:
-  static void LinearInitAxis(int *x1, int *x2, float *dx1, float *dx2,
-                             float fx, int width) {
-    const int ix = int(fx);
-    if (ix < 0) {
-      *x1 = 0;
-      *x2 = 0;
-      *dx1 = 1;
-      *dx2 = 0;
-    } 
-    else if (ix > width-2) {
-      *x1 = width-1;
-      *x2 = width-1;
-      *dx1 = 1;
-      *dx2 = 0;
-    }
-    else {
-      *x1 = ix;
-      *x2 = *x1 + 1;
-      *dx1 = *x2 - fx;
-      *dx2 = 1 - *dx1;
-    }
   }
 };
 
@@ -113,8 +63,6 @@ int ReadPgm(const char *filename, ByteImage *im);
 int ReadPgmStream(FILE *file, ByteImage *im);
 int WritePgm(const ByteImage &im, const char *filename);
 int WritePgmStream(const ByteImage &im, FILE *file);
-void ConvertByteImageToFloatImage(const ByteImage &byte_image,
-                                  FloatImage *float_image);
 void ConvertFloatImageToByteImage(const FloatImage &float_image,
                                   ByteImage *byte_image);
 
