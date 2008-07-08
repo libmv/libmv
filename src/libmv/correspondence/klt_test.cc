@@ -18,36 +18,34 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
-#ifndef LIBMV_IMAGE_CONVOLVE_H_
-#define LIBMV_IMAGE_CONVOLVE_H_
+#include "libmv/correspondence/klt.h"
+#include "testing/testing.h"
 
-#include "libmv/image/image.h"
-#include "libmv/numeric/numeric.h"
+using libmv::KltContext;
 
-namespace libmv {
+namespace {
 
-void ComputeGaussianKernel(double sigma, Vec *kernel, Vec *derivative);
-void ConvolveHorizontal(const FloatImage &in,
-                        const Vec &kernel,
-                        FloatImage *out_pointer);
-void ConvolveVertical(const FloatImage &in,
-                      const Vec &kernel,
-                      FloatImage *out_pointer);
-void ConvolveGaussian(const FloatImage &in,
-                      double sigma,
-                      FloatImage *out_pointer);
+TEST(KltContext, ComputeGradientMatrix) {
+  FloatImage im(200,100);
+  KltContext klt;
+  FloatImage gxx, gxy, gyy;
+  klt.ComputeGradientMatrix(im, &gxx, &gxy, &gyy);
+}
 
-void IntegralImageHorizontal(const FloatImage &in,
-		             int window_size,
-			     FloatImage *out_pointer);
-void IntegralImageVerrtical(const FloatImage &in,
-		            int window_size,
-			    FloatImage *out_pointer);
-void IntegralImage(const FloatImage &in,
-		   int window_size,
-                   FloatImage *out_pointer);
+TEST(KltContext, DetectGoodFeatures) {
+  FloatImage im(200,100);
+  KltContext klt;
+  klt.DetectGoodFeatures(im);
+}
 
-}  // namespace libmv
+TEST(KltContext, DetectGoodFeaturesLenna) {
+  ByteImage uim;
+  FloatImage im;
+  EXPECT_NE(0, ReadPgm("src/libmv/correspondence/klt_test/Lenna.pgm", &uim));
+  ConvertByteImageToFloatImage(uim,&im);
 
-#endif  // LIBMV_IMAGE_CONVOLVE_H_
+  KltContext klt;
+  klt.DetectGoodFeatures(im);
+}
 
+}  // namespace

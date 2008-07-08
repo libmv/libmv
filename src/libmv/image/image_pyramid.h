@@ -68,7 +68,7 @@ class ImagePyramid {
     int width = Level(l-1).Width();
     int new_height = height / 2;
     int new_width = width / 2;
-    double sigma = 1;
+    double sigma = 0.9;  // this is kind of magic
 
     FloatImage blured(height, width);
     ConvolveGaussian(Level(l-1), sigma, &blured);

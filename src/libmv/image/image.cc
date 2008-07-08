@@ -95,14 +95,30 @@ void ConvertFloatImageToByteImage(const FloatImage &float_image,
   float minval=HUGE_VAL, maxval=-HUGE_VAL;
   for (int i = 0; i < float_image.Height(); ++i) {
     for (int j = 0; j < float_image.Width(); ++j) {
-      minval = std::min(minval, float_image(i,j));
-      maxval = std::max(maxval, float_image(i,j));
+      for (int k = 0; k < float_image.Depth(); ++k) {
+        minval = std::min(minval, float_image(i,j,k));
+        maxval = std::max(maxval, float_image(i,j,k));
+      }
     }
   }
   for (int i = 0; i < float_image.Height(); ++i) {
     for (int j = 0; j < float_image.Width(); ++j) {
-      float unscaled = (float_image(i,j) - minval) / (maxval - minval);
-      (*byte_image)(i,j) = (unsigned char)(255 * unscaled);
+      for (int k = 0; k < float_image.Depth(); ++k) {
+        float unscaled = (float_image(i,j,k) - minval) / (maxval - minval);
+        (*byte_image)(i,j,k) = (unsigned char)(255 * unscaled);
+      }
+    }
+  }
+}
+
+void ConvertByteImageToFloatImage(const ByteImage &byte_image,
+                                  FloatImage *float_image) {
+  float_image->ResizeLike(byte_image);
+  for (int i = 0; i < byte_image.Height(); ++i) {
+    for (int j = 0; j < byte_image.Width(); ++j) {
+      for (int k = 0; k < byte_image.Depth(); ++k) {
+	      (*float_image)(i,j,k) = float(byte_image(i,j,k)) / 255.0f;
+      }
     }
   }
 }

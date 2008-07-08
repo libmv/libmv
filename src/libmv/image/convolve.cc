@@ -122,7 +122,6 @@ void ConvolveVertical(const FloatImage &in,
   }
 }
 
-
 void ConvolveGaussian(const FloatImage &in,
                       double sigma,
                       FloatImage *out_pointer) {
@@ -134,5 +133,31 @@ void ConvolveGaussian(const FloatImage &in,
   ConvolveHorizontal(tmp, kernel, out_pointer);
 }
 
+
+void IntegralImageHorizontal(const FloatImage &in,
+		             int window_size,
+			     FloatImage *out_pointer) {
+  // TODO(pau) this should be done faster without calling Convolve.
+  Vec kernel(window_size);
+  for (int i = 0; i < window_size; ++i) kernel(i) = 1;
+  ConvolveHorizontal(in, kernel, out_pointer);
+}
+
+void IntegralImageVerrtical(const FloatImage &in,
+		            int window_size,
+			    FloatImage *out_pointer) {
+  // TODO(pau) this should be done faster without calling Convolve.
+  Vec kernel(window_size);
+  for (int i = 0; i < window_size; ++i) kernel(i) = 1;
+  ConvolveVertical(in, kernel, out_pointer);
+}
+
+void IntegralImage(const FloatImage &in,
+		   int window_size,
+                   FloatImage *out_pointer) {
+  FloatImage tmp;
+  IntegralImageHorizontal(in, window_size, &tmp);
+  IntegralImageVerrtical(tmp, window_size, out_pointer);
+};
 
 }  // namespace libmv

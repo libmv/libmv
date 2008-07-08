@@ -30,29 +30,35 @@ namespace libmv {
 /// Image class storing the values in a 3D array (row,column,channel).
 template <typename T>
 class Image : public ArrayND<T, 3> {
+  typedef ArrayND<T, 3> Base;
  public:
   Image()
-    : ArrayND<T,3>() {
+    : Base() {
   }
   Image(int height, int width, int depth=1)
-    : ArrayND<T,3>(height,width,depth) {
+    : Base(height,width,depth) {
+  }
+
+  void Resize(int height, int width, int depth=1) {
+    Base::Resize(height, width, depth);
   }
 
   int Height() const {
-    return ArrayND<T, 3>::Shape(0);
+    return Base::Shape(0);
   }
   int Width() const {
-    return ArrayND<T, 3>::Shape(1);
+    return Base::Shape(1);
   }
   int Depth() const {
-    return ArrayND<T, 3>::Shape(2);
+    return Base::Shape(2);
   }
+
   /// Enable accessing with 2 indices for grayscale images.
   T &operator()(int i0, int i1, int i2 = 0) {
-    return ArrayND<T, 3>::operator()(i0,i1,i2);
+    return Base::operator()(i0,i1,i2);
   }
   const T &operator()(int i0, int i1, int i2 = 0) const {
-    return ArrayND<T, 3>::operator()(i0,i1,i2);
+    return Base::operator()(i0,i1,i2);
   }
 };
 
@@ -65,6 +71,8 @@ int WritePgm(const ByteImage &im, const char *filename);
 int WritePgmStream(const ByteImage &im, FILE *file);
 void ConvertFloatImageToByteImage(const FloatImage &float_image,
                                   ByteImage *byte_image);
+void ConvertByteImageToFloatImage(const ByteImage &byte_image,
+                                  FloatImage *float_image);
 
 }  // namespace libmv
 

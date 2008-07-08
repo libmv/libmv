@@ -18,13 +18,20 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 # IN THE SOFTWARE.
 
-import sys
+Import('options')
+env = Environment(**options)
 
-SConscript('libmv/image/sconscript')
-SConscript('libmv/numeric/sconscript')
-SConscript('libmv/correspondence/sconscript')
-SConscript('testing/sconscript')
-SConscript('third_party/flens/sconscript')
-SConscript('third_party/gtest/sconscript')
-if sys.platform != 'darwin':
-    SConscript('ui/sconscript')
+env.Library(
+    target = 'correspondence',
+    source = ['klt.cc',],
+    LIBS=['lapack', 'atlas'])
+
+env.Program(
+    target = 'klt_test',
+    source = ['klt_test.cc',
+              'libcorrespondence.a',
+              '../image/libimage.a',
+              '#bin-dbg/third_party/flens/libflens.a',
+              '#bin-dbg/third_party/gtest/libgtest.a'],
+    LIBS=['lapack', 'atlas'])
+
