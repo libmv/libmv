@@ -27,7 +27,8 @@ using namespace libmv;
 
 namespace libmv {
 
-void KltContext::DetectGoodFeatures(const FloatImage &im) {
+void KltContext::DetectGoodFeatures(const FloatImage &im,
+		std::vector<DetectedFeature> *features) {
   assert(im.Depth() == 1);
 
   FloatImage gxx, gxy, gyy;
@@ -37,8 +38,7 @@ void KltContext::DetectGoodFeatures(const FloatImage &im) {
   ComputeTrackness(gxx, gxy, gyy, &trackness);
 
   // Non-maxima suppresion.
-  std::vector<DetectedPoint> points;
-  FindLocalMaxima(trackness, &points);
+  FindLocalMaxima(trackness, features);
 }
 
 void KltContext::ComputeGradientMatrix(const FloatImage &im,
@@ -97,21 +97,22 @@ void KltContext::ComputeTrackness(const FloatImage &gxx,
 }
 
 void KltContext::FindLocalMaxima(const FloatImage &trackness,
-		                 std::vector<DetectedPoint> *points) {
+		                 std::vector<DetectedFeature> *points) {
   for (int i = 1; i < trackness.Height()-1; ++i) {
     for (int j = 1; j < trackness.Width()-1; ++j) {
-      if(   trackness(i,j) > trackness(i-1,j-1)
+      if (  trackness(i,j) > trackness(i-1,j-1)
 	 && trackness(i,j) > trackness(i-1,j  )
-	 &&  trackness(i,j) > trackness(i-1,j+1)
-	 &&  trackness(i,j) > trackness(i  ,j-1)
-	 &&  trackness(i,j) > trackness(i  ,j+1)
-	 &&  trackness(i,j) > trackness(i+1,j-1)
-	 &&  trackness(i,j) > trackness(i+1,j  )
-	 &&  trackness(i,j) > trackness(i+1,j+1) )
+	 && trackness(i,j) > trackness(i-1,j+1)
+	 && trackness(i,j) > trackness(i  ,j-1)
+	 && trackness(i,j) > trackness(i  ,j+1)
+	 && trackness(i,j) > trackness(i+1,j-1)
+	 && trackness(i,j) > trackness(i+1,j  )
+	 && trackness(i,j) > trackness(i+1,j+1) )
       {
-	DetectedPoint p;
+	DetectedFeature p;
 	p.int_y = i;
 	p.int_x = j;
+	p.trackness = trackness(i,j);
         points->push_back(p);
       }
     }

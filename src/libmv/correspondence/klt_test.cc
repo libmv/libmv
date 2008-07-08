@@ -35,7 +35,8 @@ TEST(KltContext, ComputeGradientMatrix) {
 TEST(KltContext, DetectGoodFeatures) {
   FloatImage im(200,100);
   KltContext klt;
-  klt.DetectGoodFeatures(im);
+  std::vector<KltContext::DetectedFeature> features;
+  klt.DetectGoodFeatures(im, &features);
 }
 
 TEST(KltContext, DetectGoodFeaturesLenna) {
@@ -45,7 +46,8 @@ TEST(KltContext, DetectGoodFeaturesLenna) {
   ConvertByteImageToFloatImage(uim,&im);
 
   KltContext klt;
-  klt.DetectGoodFeatures(im);
+  std::vector<KltContext::DetectedFeature> features;
+  klt.DetectGoodFeatures(im, &features);
 }
 
 }  // namespace

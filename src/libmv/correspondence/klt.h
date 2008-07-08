@@ -32,15 +32,17 @@ namespace libmv {
 
 class KltContext {
  public:
-  struct DetectedPoint {
+  struct DetectedFeature {
     int int_x, int_y;
     float real_x, real_y;
+    float trackness;
   };
 
   KltContext(int window_size=7) : window_size_(window_size) {
   }
 
-  void DetectGoodFeatures(const FloatImage &im);
+  void DetectGoodFeatures(const FloatImage &im,
+		          std::vector<DetectedFeature> *features);
 
   void ComputeGradientMatrix(const FloatImage &im,
 		             FloatImage *gxx_pointer,
@@ -54,7 +56,7 @@ class KltContext {
 			FloatImage *trackness_pointer);
 
   void FindLocalMaxima(const FloatImage &trackness,
-		       std::vector<DetectedPoint> *points);
+		       std::vector<DetectedFeature> *points);
 
   // Given the three distinct elements of the symmetric 2x2 matrix
   //                     [gxx gxy]
