@@ -41,7 +41,7 @@ void KltContext::DetectGoodFeatures(const FloatImage &image,
   WritePgm(gradient_x, "gradient_x.pgm");
   WritePgm(gradient_y, "gradient_y.pgm");
 
-  // Compute second derivatives.
+  // Compute the gradient matrix.
   FloatImage gradient_xx, gradient_xy, gradient_yy;
   MultiplyElements(gradient_x, gradient_y, &gradient_xy);
   MultiplyElements(gradient_x, gradient_x, &gradient_xx);
@@ -50,7 +50,7 @@ void KltContext::DetectGoodFeatures(const FloatImage &image,
   WritePgm(gradient_xy, "gradient_xy.pgm");
   WritePgm(gradient_yy, "gradient_yy.pgm");
 
-  // Sum the second derivatives over tracking window for each pixel.
+  // Sum the gradient matrix over tracking window for each pixel.
   FloatImage gxx, gxy, gyy;
   BoxFilter(gradient_xx, 7, &gxx);
   BoxFilter(gradient_xy, 7, &gxy);
