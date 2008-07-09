@@ -1,4 +1,8 @@
 
+ADD_DEFINITIONS(
+  -DTHIS_SOURCE_DIR=\\"${LIBMV_SOURCE_DIR}/libmv/correspondence\\"
+)
+
 ADD_LIBRARY(correspondence klt.cc)
 TARGET_LINK_LIBRARIES(correspondence lapack atlas)
 

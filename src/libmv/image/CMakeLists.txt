@@ -1,3 +1,4 @@
+ADD_DEFINITIONS(-DTHIS_SOURCE_DIR=\\"${LIBMV_SOURCE_DIR}/libmv/image\\")
 
 ADD_LIBRARY(image image.cc convolve.cc)
 TARGET_LINK_LIBRARIES(image lapack atlas)

@@ -42,10 +42,10 @@ TEST(Numeric, Nullspace) {
   Vec x;
   double s = Nullspace(&A, &x);
   EXPECT_NEAR(s, 0.122287, 1e-7);
-  EXPECT_NEAR(x(1), -0.05473917, 1e-7);
-  EXPECT_NEAR(x(2),  0.21822937, 1e-7);
-  EXPECT_NEAR(x(3), -0.80258116, 1e-7);
-  EXPECT_NEAR(x(4),  0.55248805, 1e-7);
+  EXPECT_NEAR(x(0), -0.05473917, 1e-7);
+  EXPECT_NEAR(x(1),  0.21822937, 1e-7);
+  EXPECT_NEAR(x(2), -0.80258116, 1e-7);
+  EXPECT_NEAR(x(3),  0.55248805, 1e-7);
 }
 
 TEST(Numeric, TinyMatrixNullspace) {
@@ -56,10 +56,10 @@ TEST(Numeric, TinyMatrixNullspace) {
   Vec x;
   double s = Nullspace(&A, &x);
   EXPECT_NEAR(s, 0.122287, 1e-7);
-  EXPECT_NEAR(x(1), -0.05473917, 1e-7);
-  EXPECT_NEAR(x(2),  0.21822937, 1e-7);
-  EXPECT_NEAR(x(3), -0.80258116, 1e-7);
-  EXPECT_NEAR(x(4),  0.55248805, 1e-7);
+  EXPECT_NEAR(x(0), -0.05473917, 1e-7);
+  EXPECT_NEAR(x(1),  0.21822937, 1e-7);
+  EXPECT_NEAR(x(2), -0.80258116, 1e-7);
+  EXPECT_NEAR(x(3),  0.55248805, 1e-7);
 }
 
 TEST(Numeric, TinyMatrixSquareTranspose) {

@@ -18,6 +18,8 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
+#include <iostream>
+
 #include "libmv/image/image.h"
 #include "testing/testing.h"
 
@@ -69,7 +71,8 @@ TEST(Image, Parenthesis) {
 
 TEST(ReadPgm, TwoPixels) {
   Image<unsigned char> image;
-  EXPECT_TRUE(ReadPgm("src/libmv/image/image_test/two_pixels.pgm", &image));
+  string pgm_filename = string(THIS_SOURCE_DIR) + "/image_test/two_pixels.pgm";
+  EXPECT_TRUE(ReadPgm(pgm_filename.c_str(), &image));
   EXPECT_EQ(image(0,0), (unsigned char)255);
   EXPECT_EQ(image(0,1), (unsigned char)0);
   EXPECT_EQ(2, image.Width());
@@ -78,7 +81,8 @@ TEST(ReadPgm, TwoPixels) {
 
 TEST(ReadPgm, InvalidFiles) {
   Image<unsigned char> image;
-  EXPECT_FALSE(ReadPgm("src/libmv/image/image_test/two_pixels.png", &image));
+  string png_filename = string(THIS_SOURCE_DIR) + "/image_test/two_pixels.png";
+  EXPECT_FALSE(ReadPgm(png_filename.c_str(), &image));
   EXPECT_FALSE(ReadPgm("hopefully_unexisting_file", &image));
 }
 
@@ -86,15 +90,17 @@ TEST(Image, WritePgm) {
   Image<unsigned char> image(1,2);
   image(0,0) = 255;
   image(0,1) = 0;
-  EXPECT_TRUE(WritePgm(image, "src/libmv/image/image_test/test_write_pgm.pgm"));
+  string out_filename = string(THIS_SOURCE_DIR)
+	              + "/image_test/test_write_pgm.pgm";
+  EXPECT_TRUE(WritePgm(image, out_filename.c_str()));
 
   Image<unsigned char> read_image;
-  EXPECT_TRUE(
-      ReadPgm("src/libmv/image/image_test/test_write_pgm.pgm", &read_image));
+  EXPECT_TRUE(ReadPgm(out_filename.c_str(), &read_image));
   EXPECT_EQ(read_image(0,0), image(0,0));
   EXPECT_EQ(read_image(0,1), image(0,1));
   EXPECT_EQ(2, read_image.Width()); 
   EXPECT_EQ(1, read_image.Height());
 }
+
 
 }  // namespace

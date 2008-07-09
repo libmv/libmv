@@ -43,8 +43,8 @@ TEST(KltContext, DetectGoodFeatures) {
 TEST(KltContext, DetectGoodFeaturesLenna) {
   ByteImage byte_image;
   FloatImage float_image;
-  EXPECT_NE(0, ReadPgm("src/libmv/correspondence/klt_test/Lenna.pgm",
-                       &byte_image));
+  string lenna_filename = string(THIS_SOURCE_DIR) + "/klt_test/Lenna.pgm";
+  EXPECT_NE(0, ReadPgm(lenna_filename.c_str(), &byte_image));
   ConvertByteImageToFloatImage(byte_image, &float_image);
 
   KltContext klt;

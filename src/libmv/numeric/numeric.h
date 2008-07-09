@@ -71,16 +71,16 @@ inline void SVD(flens::TinyMatrix<T, M, N> *A, Vec *s, Mat *U, Mat *VT) {
 template<class TMat, class TVec>
 inline double Nullspace(TMat *A, TVec *x)
 {
-	int m = A->numRows();
-	int n = A->numCols();
+  int m = A->numRows();
+  int n = A->numCols();
   Mat U, VT;
   Vec s;
 
   SVD(A, &s, &U, &VT);
 
   x->resize(n);
-  *x = VT(n, _);
-	return s(std::min(n,m));
+  *x = VT(n-1, _);
+  return s(std::min(n-1,m-1));
 }
 
 // In place transpose for square matrices.
