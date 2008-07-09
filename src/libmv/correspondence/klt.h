@@ -18,15 +18,15 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
-#ifndef LIBMV_CORRESPONDENCE_KLT_H
-#define LIBMV_CORRESPONDENCE_KLT_H
+#ifndef LIBMV_CORRESPONDENCE_KLT_H_
+#define LIBMV_CORRESPONDENCE_KLT_H_
+
+#include <cassert>
+#include <vector>
 
 #include "libmv/image/image.h"
-#include "libmv/image/convolve.h"
-#include <cassert>
 
-using namespace std;
-using namespace libmv;
+using std::vector;
 
 namespace libmv {
 
@@ -38,30 +38,31 @@ class KltContext {
     float trackness;
   };
 
-  KltContext(int window_size=7) : window_size_(window_size) {
-  }
+  KltContext(int window_size=7) : window_size_(window_size) {}
 
-  void DetectGoodFeatures(const FloatImage &im,
-		          std::vector<DetectedFeature> *features);
+  void DetectGoodFeatures(const FloatImage &image,
+                          vector<DetectedFeature> *features);
 
-  void ComputeGradientMatrix(const FloatImage &im,
-		             FloatImage *gxx_pointer,
-			     FloatImage *gxy_pointer,
-			     FloatImage *gyy_pointer);
+  void ComputeGradientMatrix(const FloatImage &image,
+                             FloatImage *gxx_pointer,
+                             FloatImage *gxy_pointer,
+                             FloatImage *gyy_pointer);
 
   // Compute trackness of every pixel given the gradient matrix.
   void ComputeTrackness(const FloatImage &gxx,
-	                const FloatImage &gxy,
-			const FloatImage &gyy,
-			FloatImage *trackness_pointer);
+                        const FloatImage &gxy,
+                        const FloatImage &gyy,
+                        FloatImage *trackness_pointer);
 
   void FindLocalMaxima(const FloatImage &trackness,
-		       std::vector<DetectedFeature> *points);
+                       vector<DetectedFeature> *points);
 
   // Given the three distinct elements of the symmetric 2x2 matrix
+  //
   //                     [gxx gxy]
   //                     [gxy gyy],
-  // returns the minimum eigenvalue of the matrix.  
+  //
+  // return the minimum eigenvalue of the matrix.  
   // Borrowed from Stan Birchfield's KLT implementation.
   static float MinEigenValue(float gxx, float gxy, float gyy) {
     return (gxx + gyy - sqrt((gxx - gyy) * (gxx - gyy) + 4 * gxy * gxy)) / 2.0f;
@@ -75,4 +76,4 @@ class KltContext {
 
 }  // namespace libmv
 
-#endif  // LIBMV_CORRESPONDENCE_KLT_H
+#endif  // LIBMV_CORRESPONDENCE_KLT_H_

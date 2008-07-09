@@ -18,36 +18,40 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
+#include "libmv/image/image.h"
 #include "libmv/correspondence/klt.h"
 #include "testing/testing.h"
 
 using libmv::KltContext;
+using libmv::FloatImage;
+using libmv::ByteImage;
 
 namespace {
 
 TEST(KltContext, ComputeGradientMatrix) {
-  FloatImage im(200,100);
+  FloatImage image(200, 100);
   KltContext klt;
   FloatImage gxx, gxy, gyy;
-  klt.ComputeGradientMatrix(im, &gxx, &gxy, &gyy);
+  klt.ComputeGradientMatrix(image, &gxx, &gxy, &gyy);
 }
 
 TEST(KltContext, DetectGoodFeatures) {
-  FloatImage im(200,100);
+  FloatImage image(200, 100);
   KltContext klt;
   std::vector<KltContext::DetectedFeature> features;
-  klt.DetectGoodFeatures(im, &features);
+  klt.DetectGoodFeatures(image, &features);
 }
 
 TEST(KltContext, DetectGoodFeaturesLenna) {
-  ByteImage uim;
-  FloatImage im;
-  EXPECT_NE(0, ReadPgm("src/libmv/correspondence/klt_test/Lenna.pgm", &uim));
-  ConvertByteImageToFloatImage(uim,&im);
+  ByteImage byte_image;
+  FloatImage float_image;
+  EXPECT_NE(0, ReadPgm("src/libmv/correspondence/klt_test/Lenna.pgm",
+                       &byte_image));
+  ConvertByteImageToFloatImage(byte_image, &float_image);
 
   KltContext klt;
   std::vector<KltContext::DetectedFeature> features;
-  klt.DetectGoodFeatures(im, &features);
+  klt.DetectGoodFeatures(float_image, &features);
 }
 
 }  // namespace
