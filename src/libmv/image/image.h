@@ -55,9 +55,13 @@ class Image : public ArrayND<T, 3> {
 
   /// Enable accessing with 2 indices for grayscale images.
   T &operator()(int i0, int i1, int i2 = 0) {
+    assert(0 <= i0 && i0 < Height());
+    assert(0 <= i1 && i1 < Width());
     return Base::operator()(i0,i1,i2);
   }
   const T &operator()(int i0, int i1, int i2 = 0) const {
+    assert(0 <= i0 && i0 < Height());
+    assert(0 <= i1 && i1 < Width());
     return Base::operator()(i0,i1,i2);
   }
 };
@@ -68,6 +72,7 @@ typedef Image<float> FloatImage;
 int ReadPgm(const char *filename, ByteImage *im);
 int ReadPgmStream(FILE *file, ByteImage *im);
 int WritePgm(const ByteImage &im, const char *filename);
+int WritePgm(const FloatImage &im, const char *filename);
 int WritePgmStream(const ByteImage &im, FILE *file);
 void ConvertFloatImageToByteImage(const FloatImage &float_image,
                                   ByteImage *byte_image);

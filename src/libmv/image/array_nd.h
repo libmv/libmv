@@ -228,6 +228,8 @@ class ArrayND {
 
   /// 2D specialization.
   T &operator()(int i0, int i1) {
+    assert(0 <= i0 && i0 < Shape(0));
+    assert(0 <= i1 && i1 < Shape(1));
     return *( Data() + Offset(i0,i1) );
   }
 
@@ -248,6 +250,8 @@ class ArrayND {
 
   /// 2D specialization.
   const T &operator()(int i0, int i1) const {
+    assert(0 <= i0 && i0 < Shape(0));
+    assert(0 <= i1 && i1 < Shape(1));
     return *( Data() + Offset(i0,i1) );
   }
 
@@ -274,6 +278,25 @@ class ArrayND {
   /// Pointer to the first element of the array.
   T *data_;
 };
+
+// TODO(keir): make this work for N != 3.
+template <typename TA, typename TB, typename TC>
+void MultiplyElements(const ArrayND<TA, 3> a,
+                      const ArrayND<TB, 3> b,
+                      ArrayND<TC, 3> *c) {
+  c->ResizeLike(a);
+  assert(a.Shape(0) == b.Shape(0));
+  assert(a.Shape(1) == b.Shape(1));
+  assert(a.Shape(2) == b.Shape(2));
+  for (int i = 0; i < a.Shape(0); ++i) {
+    for (int j = 0; j < a.Shape(1); ++j) {
+      for (int k = 0; k < a.Shape(2); ++k) {
+        (*c)(i, j, k) = TC(a(i, j, k) * b(i, j, k));
+      }
+    }
+  }
+}
+
 
 }  // namespace libmv
 

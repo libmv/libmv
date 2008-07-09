@@ -20,6 +20,7 @@
 
 #include <cmath>
 
+#include "libmv/image/image.h"
 #include "libmv/image/convolve.h"
 
 namespace libmv {
@@ -36,6 +37,9 @@ double GaussianInversePositive(double y, double sigma) {
   return sqrt(-2 * sigma * sigma * log(y * sigma * sqrt(2*M_PI)));
 }
 
+// Compute a Gaussian kernel and derivative, such that you can take the
+// derivitave of an image by convolving with the kernel horizontally then the
+// derivative vertically to get (eg) the y derivative.
 void ComputeGaussianKernel(double sigma, Vec *kernel, Vec *derivative) {
   assert(sigma >= 0.0);
 
@@ -51,6 +55,8 @@ void ComputeGaussianKernel(double sigma, Vec *kernel, Vec *derivative) {
   // Calculate the gaussian kernel and its derivative.
   kernel->resize(width);
   derivative->resize(width);
+  *kernel = 0.0;
+  *derivative = 0.0;
   int halfwidth = width / 2;
   for (int i = -halfwidth; i <= halfwidth; ++i)  {
     (*kernel)(i + halfwidth) = Gaussian(i, sigma);
@@ -108,7 +114,7 @@ void ConvolveVertical(const FloatImage &in,
   assert(&in != out_pointer);
 
   for (int i = 0; i < num_columns; ++i)  {
-    for (int j = 0; j < num_rows - halfwidth; ++j)  {
+    for (int j = 0; j < num_rows; ++j)  {
       double sum = 0.0;
       int l = 0;
       for (int k = kernel.length()-1; k >= 0; --k, ++l) {
@@ -133,13 +139,33 @@ void ConvolveGaussian(const FloatImage &in,
   ConvolveHorizontal(tmp, kernel, out_pointer);
 }
 
+void ImageDerivatives(const FloatImage &image,
+                      double sigma,
+                      FloatImage *gradient_x,
+                      FloatImage *gradient_y) {
+  Vec kernel, derivative;
+  ComputeGaussianKernel(sigma, &kernel, &derivative);
+
+  // Compute first derivative in x.
+  FloatImage tmp;
+  ConvolveHorizontal(image, derivative, &tmp);
+  WritePgm(tmp, "horiz_derivative_x.pgm");
+  ConvolveVertical(tmp, kernel, gradient_x);
+  WritePgm(*gradient_x, "vert_kernel_x.pgm");
+
+  // Compute first derivative in y.
+  ConvolveHorizontal(image, kernel, &tmp);
+  WritePgm(tmp, "horiz_kernel_y.pgm");
+  ConvolveVertical(tmp, derivative, gradient_y);
+  WritePgm(*gradient_y, "vert_derivative_y.pgm");
+}
 
 void IntegralImageHorizontal(const FloatImage &in,
-		             int window_size,
-			     FloatImage *out_pointer) {
+                             int window_size,
+                             FloatImage *out_pointer) {
   // TODO(pau) this should be done faster without calling Convolve.
   Vec kernel(window_size);
-  for (int i = 0; i < window_size; ++i) kernel(i) = 1;
+  kernel = 1.;
   ConvolveHorizontal(in, kernel, out_pointer);
 }
 
@@ -152,12 +178,14 @@ void IntegralImageVerrtical(const FloatImage &in,
   ConvolveVertical(in, kernel, out_pointer);
 }
 
-void IntegralImage(const FloatImage &in,
-		   int window_size,
-                   FloatImage *out_pointer) {
+void BoxFilter(const FloatImage &in,
+               int box_width,
+               FloatImage *out) {
   FloatImage tmp;
-  IntegralImageHorizontal(in, window_size, &tmp);
-  IntegralImageVerrtical(tmp, window_size, out_pointer);
+  Vec kernel(box_width);
+  kernel = 1.;
+  ConvolveHorizontal(in, kernel, &tmp);
+  ConvolveVertical(tmp, kernel, out);
 };
 
 }  // namespace libmv

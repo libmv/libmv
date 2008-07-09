@@ -21,7 +21,9 @@
 #include <cassert>
 #include <vector>
 
+#include "libmv/numeric/numeric.h"
 #include "libmv/correspondence/klt.h"
+#include "libmv/image/image.h"
 #include "libmv/image/convolve.h"
 
 using std::vector;
@@ -32,73 +34,60 @@ void KltContext::DetectGoodFeatures(const FloatImage &image,
                                     vector<DetectedFeature> *features) {
   assert(image.Depth() == 1);
 
+  // TODO(keir): These should probably be passed in, because the image
+  // derivatives are needed by many other functions.
+  FloatImage gradient_x, gradient_y;
+  ImageDerivatives(image, 0.9, &gradient_x, &gradient_y);
+  WritePgm(gradient_x, "gradient_x.pgm");
+  WritePgm(gradient_y, "gradient_y.pgm");
+
+  // Compute second derivatives.
+  FloatImage gradient_xx, gradient_xy, gradient_yy;
+  MultiplyElements(gradient_x, gradient_y, &gradient_xy);
+  MultiplyElements(gradient_x, gradient_x, &gradient_xx);
+  MultiplyElements(gradient_y, gradient_y, &gradient_yy);
+  WritePgm(gradient_xx, "gradient_xx.pgm");
+  WritePgm(gradient_xy, "gradient_xy.pgm");
+  WritePgm(gradient_yy, "gradient_yy.pgm");
+
+  // Sum the second derivatives over tracking window for each pixel.
   FloatImage gxx, gxy, gyy;
-  ComputeGradientMatrix(image, &gxx, &gxy, &gyy);
+  BoxFilter(gradient_xx, 7, &gxx);
+  BoxFilter(gradient_xy, 7, &gxy);
+  BoxFilter(gradient_yy, 7, &gyy);
+
+  WritePgm(gradient_xx, "gxx.pgm");
+  WritePgm(gradient_xy, "gxy.pgm");
+  WritePgm(gradient_yy, "gyy.pgm");
 
   FloatImage trackness;
   ComputeTrackness(gxx, gxy, gyy, &trackness);
+
+  WritePgm(trackness, "trackerness.pgm");
 
   // Non-maxima suppresion.
   FindLocalMaxima(trackness, features);
 }
 
-void KltContext::ComputeGradientMatrix(const FloatImage &image,
-                                       FloatImage *gxx_pointer,
-                                       FloatImage *gxy_pointer,
-                                       FloatImage *gyy_pointer) {
-  int height = image.Height();
-  int width = image.Width();
-  FloatImage gxx(height,width);
-  FloatImage gxy(height,width);
-  FloatImage gyy(height,width);
-
-  for (int j = 0; j < width; ++j) {
-    gxx(0,j) = 0;
-    gxy(0,j) = 0;
-    gyy(0,j) = 0;
-  }
-  for (int i = 1; i < height-1; ++i) {
-    gxx(i,0) = 0;
-    gxy(i,0) = 0;
-    gyy(i,0) = 0;
-    for (int j = 1; j < width-1; ++j) {
-      float gx = image(i + 1, j) - image(i - 1, j); // No need to divide by two.
-      float gy = image(i, j + 1) - image(i, j - 1);
-      gxx(i,j) = gx * gx;
-      gxy(i,j) = gx * gy;
-      gyy(i,j) = gy * gy;
-    }
-    gxx(i,width-1) = 0;
-    gxy(i,width-1) = 0;
-    gyy(i,width-1) = 0;
-  }
-  for (int j = 0; j < width; ++j) {
-    gxx(height-1,j) = 0;
-    gxy(height-1,j) = 0;
-    gyy(height-1,j) = 0;
-  }
-
-  IntegralImage(gxx, WindowSize(), gxx_pointer);
-  IntegralImage(gxy, WindowSize(), gxy_pointer);
-  IntegralImage(gyy, WindowSize(), gyy_pointer);
-}
-
 // Compute trackness of every pixel given the gradient matrix.
 void KltContext::ComputeTrackness(const FloatImage &gxx,
-      	                          const FloatImage &gxy,
-				  const FloatImage &gyy,
-				  FloatImage *trackness_pointer) {
+                                  const FloatImage &gxy,
+                                  const FloatImage &gyy,
+                                  FloatImage *trackness_pointer) {
   FloatImage &trackness = *trackness_pointer;
   trackness.ResizeLike(gxx);
   for (int i = 0; i < trackness.Height(); ++i) {
     for (int j = 0; j < trackness.Width(); ++j) {
-      trackness(i,j) = MinEigenValue(gxx(i,j), gxy(i,j), gyy(i,j));
+      trackness(i,j) = MinEigenValue(gxx(i, j), gxy(i, j), gyy(i, j));
     }
   }
 }
 
+// TODO(keir): Add option to drop found features that are to close. Also drop
+// features that are below a certain threshold in 'distinctiveness' regardless
+// if they are a local maxima.
 void KltContext::FindLocalMaxima(const FloatImage &trackness,
-		                 vector<DetectedFeature> *points) {
+                                 vector<DetectedFeature> *points) {
   for (int i = 1; i < trackness.Height()-1; ++i) {
     for (int j = 1; j < trackness.Width()-1; ++j) {
       if (   trackness(i,j) > trackness(i-1, j-1)
@@ -119,7 +108,4 @@ void KltContext::FindLocalMaxima(const FloatImage &trackness,
   }
 }
 
-
-
 }  // namespace libmv
-

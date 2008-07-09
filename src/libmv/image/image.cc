@@ -72,6 +72,12 @@ int WritePgm(const ByteImage &im, const char *filename) {
   return res;
 }
 
+int WritePgm(const FloatImage &image, const char *filename) {
+  ByteImage byte_image;
+  ConvertFloatImageToByteImage(image, &byte_image);
+  return WritePgm(byte_image, filename);
+}
+
 int WritePgmStream(const ByteImage &im, FILE *file) {
   int res;
 

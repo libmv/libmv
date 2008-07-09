@@ -37,15 +37,22 @@ void ConvolveGaussian(const FloatImage &in,
                       double sigma,
                       FloatImage *out_pointer);
 
+void ImageDerivatives(const FloatImage &in,
+                      double sigma,
+                      FloatImage *gradient_x,
+                      FloatImage *gradient_y);
+
 void IntegralImageHorizontal(const FloatImage &in,
-		             int window_size,
-			     FloatImage *out_pointer);
+                             int window_size,
+                             FloatImage *out_pointer);
+
 void IntegralImageVerrtical(const FloatImage &in,
-		            int window_size,
-			    FloatImage *out_pointer);
-void IntegralImage(const FloatImage &in,
-		   int window_size,
-                   FloatImage *out_pointer);
+                            int window_size,
+                            FloatImage *out_pointer);
+
+void BoxFilter(const FloatImage &in,
+               int box_width,
+               FloatImage *out);
 
 }  // namespace libmv
 

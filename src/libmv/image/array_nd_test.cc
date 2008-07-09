@@ -186,4 +186,23 @@ TEST(ArrayND, CopyFrom) {
   EXPECT_FLOAT_EQ(4.f, b(1,1, 0));
 }
 
+TEST(ArrayND, MultiplyElements) {
+  ArrayND<int, 3> a(2,2,1);
+  a(0,0, 0) = 1;
+  a(0,1, 0) = 2;
+  a(1,0, 0) = 3;
+  a(1,1, 0) = 4;
+  ArrayND<int, 3> b(2,2,1);
+  b(0,0, 0) = 6;
+  b(0,1, 0) = 5;
+  b(1,0, 0) = 4;
+  b(1,1, 0) = 3;
+  ArrayND<int, 3> c;
+  MultiplyElements(a, b, &c);
+  EXPECT_FLOAT_EQ(6,  c(0,0, 0));
+  EXPECT_FLOAT_EQ(10, c(0,1, 0));
+  EXPECT_FLOAT_EQ(12, c(1,0, 0));
+  EXPECT_FLOAT_EQ(12, c(1,1, 0));
+}
+
 }  // namespace

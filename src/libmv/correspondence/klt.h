@@ -43,15 +43,10 @@ class KltContext {
   void DetectGoodFeatures(const FloatImage &image,
                           vector<DetectedFeature> *features);
 
-  void ComputeGradientMatrix(const FloatImage &image,
-                             FloatImage *gxx_pointer,
-                             FloatImage *gxy_pointer,
-                             FloatImage *gyy_pointer);
-
-  // Compute trackness of every pixel given the gradient matrix.
-  void ComputeTrackness(const FloatImage &gxx,
-                        const FloatImage &gxy,
-                        const FloatImage &gyy,
+  // Compute trackness of every pixel given the image gradients.
+  void ComputeTrackness(const FloatImage &gradient_xx,
+                        const FloatImage &gradient_xy,
+                        const FloatImage &gradient_yy,
                         FloatImage *trackness_pointer);
 
   void FindLocalMaxima(const FloatImage &trackness,

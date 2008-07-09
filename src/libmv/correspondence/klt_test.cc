@@ -18,23 +18,20 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
+#include <cstdio>
+
 #include "libmv/image/image.h"
 #include "libmv/correspondence/klt.h"
 #include "testing/testing.h"
 
+using std::vector;
 using libmv::KltContext;
 using libmv::FloatImage;
 using libmv::ByteImage;
 
 namespace {
 
-TEST(KltContext, ComputeGradientMatrix) {
-  FloatImage image(200, 100);
-  KltContext klt;
-  FloatImage gxx, gxy, gyy;
-  klt.ComputeGradientMatrix(image, &gxx, &gxy, &gyy);
-}
-
+/*
 TEST(KltContext, DetectGoodFeatures) {
   FloatImage image(200, 100);
   KltContext klt;
@@ -42,6 +39,7 @@ TEST(KltContext, DetectGoodFeatures) {
   klt.DetectGoodFeatures(image, &features);
 }
 
+*/
 TEST(KltContext, DetectGoodFeaturesLenna) {
   ByteImage byte_image;
   FloatImage float_image;
@@ -50,8 +48,32 @@ TEST(KltContext, DetectGoodFeaturesLenna) {
   ConvertByteImageToFloatImage(byte_image, &float_image);
 
   KltContext klt;
-  std::vector<KltContext::DetectedFeature> features;
+  vector<KltContext::DetectedFeature> features;
   klt.DetectGoodFeatures(float_image, &features);
+
+  printf("found %d features\n", features.size());
 }
+
+/*
+TEST(KltContext, DetectGoodFeaturesSimple) {
+  FloatImage image(51, 51);
+  for (int i = 0; i < 51; ++i) {
+    for (int j = 0; j < 51; ++j) {
+      image(i,j) = 0;
+    }
+  }
+
+  image(25, 25) = 1.f;
+
+  KltContext klt;
+  vector<KltContext::DetectedFeature> features;
+  klt.DetectGoodFeatures(image, &features);
+
+  printf("found %d features\n", features.size());
+  for (size_t i = 0; i < features.size(); ++i) {
+    printf("%d,%d\n", features[i].int_x, features[i].int_y);
+  }
+}
+*/
 
 }  // namespace
