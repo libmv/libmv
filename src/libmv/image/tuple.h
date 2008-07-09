@@ -1,15 +1,15 @@
 // Copyright (c) 2007, 2008 libmv authors.
-// 
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
 // deal in the Software without restriction, including without limitation the
 // rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
 // sell copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -34,7 +34,7 @@ class Tuple {
 
   /// Custruct and initialize the tuple to a constant value.
   Tuple(T initial_value) { Reset(initial_value); }
-  
+
   /// Custruct and initialize the tuple from an array of values.
   template <typename D>
   Tuple(D *values) { Reset(values); }
@@ -44,18 +44,18 @@ class Tuple {
   Tuple(const Tuple<D,N> &b) { Reset(b); }
 
   /// Assign operator.  Does a deep copy.
-  template <typename D> 
+  template <typename D>
   Tuple& operator=(const Tuple<D,N>& b) {
     Reset(b);
     return *this;
   }
 
   /// Sets the tuple values from another tuple.
-  template <typename D> 
+  template <typename D>
   void Reset(const Tuple<D,N>& b) { Reset(b.Data()); }
 
   /// Sets the tuple values from a pointer.
-  template <typename D> 
+  template <typename D>
   void Reset(D *values) {
     for(int i=0;i<N;i++) {
       data_[i] = T(values[i]);
@@ -68,7 +68,7 @@ class Tuple {
       data_[i] = value;
     }
   }
-  
+
   /// Pointer to the first element of the tuple.
   T *Data() { return &data_[0]; }
 
@@ -80,6 +80,18 @@ class Tuple {
 
   /// Access the i's element of the tuple as a constant value.
   const T &operator()(int i) const { return data_[i]; }
+
+  bool operator==(const Tuple<T, N> &other) const {
+    for (int i = 0; i < N; ++i) {
+      if ((*this)(i) != other(i))
+        return false;
+    }
+    return true;
+  }
+  bool operator!=(const Tuple<T, N> &other) const {
+    return !(*this == other);
+  }
+
 
  private:
   /// The tuple of elements.

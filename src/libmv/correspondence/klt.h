@@ -43,7 +43,7 @@ class KltContext {
   void DetectGoodFeatures(const FloatImage &image,
                           vector<DetectedFeature> *features);
 
-  // Compute trackness of every pixel given the image gradients.
+  // Compute trackness of every pixel given the gradient matrix.
   void ComputeTrackness(const FloatImage &gradient_xx,
                         const FloatImage &gradient_xy,
                         const FloatImage &gradient_yy,

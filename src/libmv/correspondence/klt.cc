@@ -52,9 +52,9 @@ void KltContext::DetectGoodFeatures(const FloatImage &image,
 
   // Sum the gradient matrix over tracking window for each pixel.
   FloatImage gxx, gxy, gyy;
-  BoxFilter(gradient_xx, 7, &gxx);
-  BoxFilter(gradient_xy, 7, &gxy);
-  BoxFilter(gradient_yy, 7, &gyy);
+  BoxFilter(gradient_xx, WindowSize(), &gxx);
+  BoxFilter(gradient_xy, WindowSize(), &gxy);
+  BoxFilter(gradient_yy, WindowSize(), &gyy);
 
   WritePgm(gradient_xx, "gxx.pgm");
   WritePgm(gradient_xy, "gxy.pgm");

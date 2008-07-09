@@ -1,15 +1,15 @@
 // Copyright (c) 2007, 2008 libmv authors.
-// 
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
 // deal in the Software without restriction, including without limitation the
 // rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
 // sell copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -160,18 +160,43 @@ void ImageDerivatives(const FloatImage &image,
   WritePgm(*gradient_y, "vert_derivative_y.pgm");
 }
 
-void IntegralImageHorizontal(const FloatImage &in,
-                             int window_size,
-                             FloatImage *out_pointer) {
-  // TODO(pau) this should be done faster without calling Convolve.
-  Vec kernel(window_size);
-  kernel = 1.;
-  ConvolveHorizontal(in, kernel, out_pointer);
+void BoxFilterHorizontal(const FloatImage &in,
+                         int window_size,
+                         FloatImage *out_pointer) {
+  assert(in.Depth() == 1);
+
+  FloatImage &out = *out_pointer;
+  out.ResizeLike(in);
+  int half_width = (window_size - 1) / 2;
+
+  for (int i=0; i<in.Height(); ++i) {
+    float sum = 0;
+    // init sum
+    for (int j=0; j<half_width; ++j) {
+      sum += in(i,j);
+    }
+    // fill left border
+    for (int j=0; j < half_width + 1; ++j) {
+      sum += in(i, j + half_width);
+      out(i,j) = sum;
+    }
+    // fill interior
+    for (int j = half_width + 1; j<in.Width()-half_width; ++j) {
+      sum -= in(i, j - half_width - 1);
+      sum += in(i, j + half_width);
+      out(i,j) = sum;
+    }
+    // fill right border
+    for (int j = in.Width() - half_width; j<in.Width(); ++j) {
+      sum -= in(i, j - half_width - 1);
+      out(i,j) = sum;
+    }
+  }
 }
 
-void IntegralImageVerrtical(const FloatImage &in,
-		            int window_size,
-			    FloatImage *out_pointer) {
+void BoxFilterVertical(const FloatImage &in,
+                       int window_size,
+                       FloatImage *out_pointer) {
   // TODO(pau) this should be done faster without calling Convolve.
   Vec kernel(window_size);
   for (int i = 0; i < window_size; ++i) kernel(i) = 1;
@@ -182,10 +207,8 @@ void BoxFilter(const FloatImage &in,
                int box_width,
                FloatImage *out) {
   FloatImage tmp;
-  Vec kernel(box_width);
-  kernel = 1.;
-  ConvolveHorizontal(in, kernel, &tmp);
-  ConvolveVertical(tmp, kernel, out);
+  BoxFilterHorizontal(in, box_width, &tmp);
+  BoxFilterVertical(tmp, box_width, out);
 };
 
 }  // namespace libmv

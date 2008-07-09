@@ -1,15 +1,15 @@
 // Copyright (c) 2007, 2008 libmv authors.
-// 
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
 // deal in the Software without restriction, including without limitation the
 // rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
 // sell copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -46,12 +46,12 @@ class ArrayND {
   ArrayND(const Index &shape) : data_(NULL) {
     Resize(shape);
   }
-  
+
   /// Create an array with the shape.
   ArrayND(int *shape) : data_(NULL) {
     Resize(shape);
   }
-  
+
   /// Copy constructor copies pixel data.
   ArrayND(const ArrayND<T, N> &b) : data_(NULL) {
     ResizeLike(b);
@@ -77,7 +77,7 @@ class ArrayND {
   ~ArrayND() {
     delete [] data_;
   }
- 
+
   /// Assignation copies pixel data.
   ArrayND &operator=(const ArrayND<T, N> &b) {
     ResizeLike(b);
@@ -202,19 +202,19 @@ class ArrayND {
     assert(N == 1);
     return i0 * Stride(0);
   }
-  
+
   /// 2D specialization.
   int Offset(int i0, int i1) const {
     assert(N == 2);
     return i0 * Stride(0) + i1 * Stride(1);
   }
-  
+
   /// 3D specialization.
   int Offset(int i0, int i1, int i2) const {
     assert(N == 3);
     return i0 * Stride(0) + i1 * Stride(1) + i2 * Stride(2);
   }
-  
+
   /// Return a reference to the element at position index.
   T &operator()(const Index &index) {
     // TODO(pau) Boundary checking in debug mode.
@@ -267,7 +267,21 @@ class ArrayND {
         return false;
     return true;
   }
-  
+
+  bool operator==(const ArrayND<T, N> &other) const {
+    if (shape_ != other.shape_) return false;
+    if (strides_ != other.strides_) return false;
+    for (int i = 0; i < Size(); ++i) {
+      if (this->Data()[i] != other.Data()[i])
+        return false;
+    }
+    return true;
+  }
+
+  bool operator!=(const ArrayND<T, N> &other) const {
+    return !(*this == other);
+  }
+
  protected:
   /// The number of element in each dimension.
   Index shape_;
