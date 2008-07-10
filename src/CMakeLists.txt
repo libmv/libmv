@@ -11,6 +11,16 @@ INCLUDE_DIRECTORIES(third_party/gtest
 		    .
 )
 
+# Mac specific things.
+IF(APPLE)
+    # Tell gtest not to use mac framworks.
+    ADD_DEFINITIONS('-DGTEST_NOT_MAC_FRAMEWORK_MODE')
+
+    # Tell FLENS to use Veclib.
+    ADD_DEFINITIONS('-DVECLIB')
+ENDIF(APPLE)
+
+
 ADD_SUBDIRECTORY(libmv)
 ADD_SUBDIRECTORY(testing)
 ADD_SUBDIRECTORY(third_party)
