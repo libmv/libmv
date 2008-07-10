@@ -165,6 +165,11 @@ class ArrayND {
     }
   }
 
+  /// Return a tuple containing the lenght of each axis.
+  const Index &Shape() const {
+    return shape_;
+  }
+
   /// Return the lenght of an axis.
   int Shape(int axis) const {
     return shape_(axis);
@@ -280,6 +285,16 @@ class ArrayND {
 
   bool operator!=(const ArrayND<T, N> &other) const {
     return !(*this == other);
+  }
+
+  ArrayND<T, N> operator*(const ArrayND<T, N> &other) const {
+    assert(Shape() = other.Shape());
+    ArrayND<T, N> res;
+    res.ResizeLike(*this);
+    for (int i = 0; i < res.Size(); ++i) {
+      res.Data()[i] = Data()[i] * other.Data()[i];
+    }
+    return res;
   }
 
  protected:

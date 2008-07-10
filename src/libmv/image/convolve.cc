@@ -171,22 +171,22 @@ void BoxFilterHorizontal(const FloatImage &in,
 
   for (int i=0; i<in.Height(); ++i) {
     float sum = 0;
-    // init sum
+    // Init sum.
     for (int j=0; j<half_width; ++j) {
       sum += in(i,j);
     }
-    // fill left border
+    // Fill left border.
     for (int j=0; j < half_width + 1; ++j) {
       sum += in(i, j + half_width);
       out(i,j) = sum;
     }
-    // fill interior
+    // Fill interior.
     for (int j = half_width + 1; j<in.Width()-half_width; ++j) {
       sum -= in(i, j - half_width - 1);
       sum += in(i, j + half_width);
       out(i,j) = sum;
     }
-    // fill right border
+    // Fill right border.
     for (int j = in.Width() - half_width; j<in.Width(); ++j) {
       sum -= in(i, j - half_width - 1);
       out(i,j) = sum;

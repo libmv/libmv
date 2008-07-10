@@ -1,0 +1,79 @@
+\documentclass[a4paper,10pt]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+
+\title{Yet another derivation of the KLT update rule}
+\author{}
+
+
+\begin{document}
+\maketitle
+
+We want to optimize this function with respect to the displacement d,
+\begin{equation}
+ E(d) = \sum_{(x,y)\in W} (I(x,y) - J(x+d_x,y+d_y))^2 \ .
+\end{equation}
+We will do this iterativelly.
+
+Assume that we have a previous guess $\tilde d$ of the displacement, and we only want to compute the update $\delta d$ such that
+\begin{equation}
+ d = \tilde d + \delta d \ .
+\end{equation}
+Using the notation
+\begin{equation}
+ \tilde J(x,y) = J(x + \tilde d_x, y + \tilde d_y) \ ,
+\end{equation}
+the functional to be optimized at each iteration is
+\begin{equation}
+ E(\delta d) = \sum_{(x,y)\in W} (I(x,y) - \tilde J(x + \delta d_x, y + \delta d_y))^2 \ .
+\end{equation}
+The first order approximation of $\tilde J$ with respect to  $\delta d$ is
+\begin{equation}
+\begin{split}
+ \tilde J(x + \delta d_x, y + \delta d_y)
+   & = \tilde J(x,y) + \partial_x \tilde J(x,y) \delta d_x + \partial_y \tilde J(x,y) \delta d_y
+\\ & = \tilde J(x,y) + \nabla \tilde J(x,y)^T \delta d
+\end{split}
+\end{equation}
+Inserting this into the functional gives
+\begin{equation}
+ E(\delta d) \approx \sum_{(x,y)\in W} (I(x,y) - \tilde J(x,y) - \nabla \tilde J(x,y)^T \delta d)^2 \ .
+\end{equation}
+Deriving with respect to $\delta d$ and equalling to 0 gives
+\begin{equation}
+ 0 =
+ \sum_{(x,y)\in W} (I(x,y) - \tilde J(x,y)
+          - \nabla \tilde J(x,y)^T \delta d)
+        \nabla \tilde J(x,y) \ ,
+\end{equation}
+which is a 2-vector equallity.  Factorizing $\delta d$,
+\begin{equation}
+ \sum_{(x,y)\in W} \nabla \tilde J(x,y) \nabla \tilde J(x,y)^T \  \delta d
+ = \sum_{(x,y)\in W} (I(x,y) - \tilde J(x,y)) \nabla \tilde J(x,y)
+\end{equation}
+which is a set of 2 linear equations on $\delta d$.
+
+We define now the gradient matrix as
+\begin{equation}
+ Z = \sum_{(x,y)\in W} \nabla \tilde J(x,y) \nabla \tilde J(x,y)^T
+= \sum_{(x,y)\in W}
+  \begin{pmatrix}
+   (\partial_x \tilde J)^2
+&  \partial_x \tilde J \partial_y\tilde J
+\\ \partial_x \tilde J \partial_y\tilde J
+&  (\partial_y \tilde J)^2
+  \end{pmatrix}
+\end{equation}
+and error vector as
+\begin{equation}
+ \mathbf e = \sum_{(x,y)\in W} (I(x,y) - \tilde J(x,y)) \nabla \tilde J(x,y) \ .
+\end{equation}
+The system to solve at each iteration is
+\begin{equation}
+ Z \delta d = \mathbf e
+\end{equation}
+
+
+
+\end{document}
