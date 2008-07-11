@@ -35,46 +35,46 @@ class BipartiteGraph {
   typedef std::pair<LeftNode, RightNode> LeftToRight;
   typedef std::pair<RightNode, LeftNode> RightToLeft;
   typedef LeftToRight EdgeKey;
-	typedef std::map<EdgeKey, Edge> EdgeMap;
+  typedef std::map<EdgeKey, Edge> EdgeMap;
 
-	int NumEdges() {
-		return edges_.size();
-	}
-	int NumLeftNodes() {
-		return CountMultiMapKeys(left_to_right_);
-	}
-	int NumRightNodes() {
-		return CountMultiMapKeys(right_to_left_);
-	}
-	void Insert(const LeftNode left, const RightNode right, const Edge edge) {
-		edges_[EdgeKey(left, right)] = edge;
-		left_to_right_.insert(LeftToRight(left, right));
-		right_to_left_.insert(RightToLeft(right, left));
-	}
-	Edge GetEdge(const LeftNode left, const RightNode right) {
-		EdgeKey key(left, right);
-		assert(edges_.count(key) == 1);
-		return edges_[key];
-	}
+  int NumEdges() {
+    return edges_.size();
+  }
+  int NumLeftNodes() {
+    return CountMultiMapKeys(left_to_right_);
+  }
+  int NumRightNodes() {
+    return CountMultiMapKeys(right_to_left_);
+  }
+  void Insert(const LeftNode left, const RightNode right, const Edge edge) {
+    edges_[EdgeKey(left, right)] = edge;
+    left_to_right_.insert(LeftToRight(left, right));
+    right_to_left_.insert(RightToLeft(right, left));
+  }
+  Edge GetEdge(const LeftNode left, const RightNode right) {
+    EdgeKey key(left, right);
+    assert(edges_.count(key) == 1);
+    return edges_[key];
+  }
   // TODO(keir): Write iterator over edges.
   // TODO(keir): Write iterator over left nodes
   // TODO(keir): Write iterator over right nodes
   // TODO(keir): Write iterator over left-nodes-for-one-right-node.
   // TODO(keir): Write iterator over right-nodes-for-one-left-node.
-private:
-	template<typename Z,typename X>
-	int CountMultiMapKeys(std::multimap<Z,X> &ZtoX) {
+ private:
+  template<typename Z,typename X>
+  int CountMultiMapKeys(std::multimap<Z,X> &ZtoX) {
     // TODO(keir): Fix this painfully stupid implementation which I shamefully
-    // wrote..
-		std::set<Z> tmp;
-		typename std::multimap<Z,X>::iterator p;
-		for (p = ZtoX.begin(); p != ZtoX.end(); ++p) {
-			tmp.insert(p->first);
-		}
-		return tmp.size();
-	}
+    // wrote.
+    std::set<Z> tmp;
+    typename std::multimap<Z,X>::iterator p;
+    for (p = ZtoX.begin(); p != ZtoX.end(); ++p) {
+      tmp.insert(p->first);
+    }
+    return tmp.size();
+  }
 
-	EdgeMap edges_;
+  EdgeMap edges_;
   std::multimap<LeftNode, RightNode> left_to_right_;
   std::multimap<RightNode, LeftNode> right_to_left_;
 };

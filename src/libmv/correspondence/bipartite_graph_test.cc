@@ -26,46 +26,46 @@
 using libmv::BipartiteGraph;
 
 namespace {
-  
+
 TEST(BipartiteGraph, Empty) {
-	BipartiteGraph<int, int, int> x;
-	EXPECT_EQ(x.NumEdges(), 0);
-	EXPECT_EQ(x.NumLeftNodes(), 0);
-	EXPECT_EQ(x.NumRightNodes(), 0);
+  BipartiteGraph<int, int, int> x;
+  EXPECT_EQ(x.NumEdges(), 0);
+  EXPECT_EQ(x.NumLeftNodes(), 0);
+  EXPECT_EQ(x.NumRightNodes(), 0);
 }
 
 TEST(BipartiteGraph, InsertEdges) {
-	BipartiteGraph<int, int, int> x;
-	x.Insert(1, 2, 3);
-	EXPECT_EQ(x.NumEdges(), 1);
-	x.Insert(1, 2, 3);
-	EXPECT_EQ(x.NumEdges(), 1);
-	x.Insert(2, 2, 3);
-	EXPECT_EQ(x.NumEdges(), 2);
+  BipartiteGraph<int, int, int> x;
+  x.Insert(1, 2, 3);
+  EXPECT_EQ(x.NumEdges(), 1);
+  x.Insert(1, 2, 3);
+  EXPECT_EQ(x.NumEdges(), 1);
+  x.Insert(2, 2, 3);
+  EXPECT_EQ(x.NumEdges(), 2);
 }
 
 TEST(BipartiteGraph, NumLeftRight) {
-	BipartiteGraph<int, int, int> x;
-	x.Insert(1, 2, 3);
-	EXPECT_EQ(x.NumLeftNodes(), 1);
-	EXPECT_EQ(x.NumRightNodes(), 1);
-	EXPECT_EQ(x.NumEdges(), 1);
-	x.Insert(2, 2, 3);
-	EXPECT_EQ(x.NumLeftNodes(), 2);
-	EXPECT_EQ(x.NumRightNodes(), 1);
-	EXPECT_EQ(x.NumEdges(), 2);
+  BipartiteGraph<int, int, int> x;
+  x.Insert(1, 2, 3);
+  EXPECT_EQ(x.NumLeftNodes(), 1);
+  EXPECT_EQ(x.NumRightNodes(), 1);
+  EXPECT_EQ(x.NumEdges(), 1);
+  x.Insert(2, 2, 3);
+  EXPECT_EQ(x.NumLeftNodes(), 2);
+  EXPECT_EQ(x.NumRightNodes(), 1);
+  EXPECT_EQ(x.NumEdges(), 2);
 }
 
 TEST(BipartiteGraph, MultipleInsertions) {
-	BipartiteGraph<int, int, int> x;
-	x.Insert(1, 2, 10);
-	x.Insert(2, 2, 20);
-	x.Insert(1, 4, 30);
-	x.Insert(2, 3, 40);
-	EXPECT_EQ(x.GetEdge(1, 2), 10);
-	EXPECT_EQ(x.GetEdge(2, 2), 20);
-	EXPECT_EQ(x.GetEdge(1, 4), 30);
-	EXPECT_EQ(x.GetEdge(2, 3), 40);
+  BipartiteGraph<int, int, int> x;
+  x.Insert(1, 2, 10);
+  x.Insert(2, 2, 20);
+  x.Insert(1, 4, 30);
+  x.Insert(2, 3, 40);
+  EXPECT_EQ(x.GetEdge(1, 2), 10);
+  EXPECT_EQ(x.GetEdge(2, 2), 20);
+  EXPECT_EQ(x.GetEdge(1, 4), 30);
+  EXPECT_EQ(x.GetEdge(2, 3), 40);
 }
 
 }  // namespace
