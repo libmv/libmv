@@ -47,8 +47,9 @@ class KltContext {
   void DetectGoodFeatures(const FloatImage &image,
                           FeatureList *features);
 
-  // Compute trackness of every pixel given the gradient matrix.
-  // This is done as described in the Good Features to Track paper.
+  // Compute the gradient matrix noted by Z in Good Features to Track.
+  // Z = [gxx gxy; gxy gyy]
+  // This function computes the matrix for every pixel.
   void ComputeGradientMatrix(const FloatImage &gradient_x,
                              const FloatImage &gradient_y,
                              FloatImage *gxx,
@@ -56,9 +57,10 @@ class KltContext {
                              FloatImage *gyy);
 
   // Compute trackness of every pixel given the gradient matrix.
-  void ComputeTrackness(const FloatImage &gradient_xx,
-                        const FloatImage &gradient_xy,
-                        const FloatImage &gradient_yy,
+  // This is done as described in the Good Features to Track paper.
+  void ComputeTrackness(const FloatImage &gxx,
+                        const FloatImage &gxy,
+                        const FloatImage &gyy,
                         FloatImage *trackness_pointer,
                         double *trackness_mean);
 
@@ -70,22 +72,50 @@ class KltContext {
   void TrackFeature(const ImagePyramid &pyramid1,
                     const Feature &feature1,
                     const ImagePyramid &pyramid2,
+                    const ImagePyramid &pyramid2_gx,
+                    const ImagePyramid &pyramid2_gy,
                     Feature *feature2_pointer);
+
   void TrackFeatureOneLevel(const FloatImage &image1,
                             const Feature &feature1,
                             const FloatImage &image2,
+                            const FloatImage &image2_gx,
+                            const FloatImage &image2_gy,
                             Feature *feature2_pointer);
+
+  // Compute the gradient matrix noted by Z and the error vector e.
+  // See Good Features to Track.
+  void ComputeTrackingEquation(const FloatImage &image1,
+                               const FloatImage &image2,
+                               const FloatImage &image2_gx,
+                               const FloatImage &image2_gy,
+                               const Vec2 &position1,
+                               const Vec2 &position2,
+                               float *gxx,
+                               float *gxy,
+                               float *gyy,
+                               float *ex,
+                               float *ey);
+
   // Given the three distinct elements of the symmetric 2x2 matrix
-  //
   //                     [gxx gxy]
   //                     [gxy gyy],
-  //
   // return the minimum eigenvalue of the matrix.
   // Borrowed from Stan Birchfield's KLT implementation.
   static float MinEigenValue(float gxx, float gxy, float gyy) {
     return (gxx + gyy - sqrt((gxx - gyy) * (gxx - gyy) + 4 * gxy * gxy)) / 2.0f;
   }
-
+  
+  // Solve the tracking equation
+  //  [gxx gxy] [dx] = [ex]
+  //  [gxy gyy] [dy] = [ey]
+  // for dx and dy.
+  // Borrowed from Stan Birchfield's KLT implementation.
+  static bool SolveTrackingEquation(float gxx, float gxy, float gyy,
+                                    float ex, float ey,
+                                    float small_determinant_threshold,
+                                    float *dx, float *dy);
+                                    
   int WindowSize() { return window_size_; }
 
  protected:

@@ -33,12 +33,7 @@ namespace {
 
 TEST(KltContext, DetectGoodFeaturesSimple) {
   FloatImage image(51, 51);
-  for (int i = 0; i < 51; ++i) {
-    for (int j = 0; j < 51; ++j) {
-      image(i,j) = 0;
-    }
-  }
-
+  image.Fill(0);
   image(25, 25) = 1.f;
 
   KltContext klt;
@@ -50,19 +45,56 @@ TEST(KltContext, DetectGoodFeaturesSimple) {
   EXPECT_EQ(features.back().position(1), 25);
 }
 
+TEST(KltContext, TrackFeatureOneLevel) {
+  FloatImage image1(51, 51);
+  image1.Fill(0);
+  image1(25, 25) = 1.f;
+  FloatImage image2(51, 51), image2_gx, image2_gy;
+  image2.Fill(0);
+  image2(27, 27) = 1.f;
+  ImageDerivatives(image2, 0.9, &image2_gx, &image2_gy);
+  
+  KltContext klt;
+  KltContext::Feature feature1, feature2;
+  feature1.position = 25, 25;
+  feature2.position = 25, 25;
+  klt.TrackFeatureOneLevel(image1, feature1, image2,
+                           image2_gx, image2_gy, &feature2);
+  
+  EXPECT_NEAR(feature2.position(0), 27, 1);
+  EXPECT_NEAR(feature2.position(1), 27, 1);
+}
+
 /*
 TEST(KltContext, DetectGoodFeaturesLenna) {
   ByteImage byte_image;
-  FloatImage float_image;
+  FloatImage image1;
   string lenna_filename = string(THIS_SOURCE_DIR) + "/klt_test/Lenna.pgm";
   EXPECT_NE(0, ReadPgm(lenna_filename.c_str(), &byte_image));
-  ConvertByteImageToFloatImage(byte_image, &float_image);
+  ConvertByteImageToFloatImage(byte_image, &image1);
 
   KltContext klt;
   KltContext::FeatureList features;
-  klt.DetectGoodFeatures(float_image, &features);
-
-  printf("found %d features\n", features.size());
+  klt.DetectGoodFeatures(image1, &features);
+  
+  FloatImage image2, image2_gx, image2_gy;
+  image2.ResizeLike(image1);
+  for (int i = 1; i < image2.Height(); ++i) {
+    for (int j = 1; j < image2.Width(); ++j) {
+      image2(i,j) = image1(i - 1, j - 1);
+    }
+  }
+  ImageDerivatives(image2, 0.9, &image2_gx, &image2_gy);
+  for (KltContext::FeatureList::iterator i = features.begin();
+       i != features.end(); ++i ) {
+    KltContext::Feature &feature1 = *i;
+    KltContext::Feature feature2;
+    feature2.position = feature1.position;
+    klt.TrackFeatureOneLevel(image1, feature1, image2, image2_gx, image2_gy, &feature2);
+    float dx = feature2.position(0) - feature1.position(0);
+    float dy = feature2.position(1) - feature1.position(1);
+    printf("%g, %g\n", dx, dy);
+  }
 }
 */
 

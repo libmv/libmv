@@ -159,31 +159,93 @@ void KltContext::RemoveTooCloseFeatures(FeatureList *features) {
 void KltContext::TrackFeature(const ImagePyramid &pyramid1,
                               const Feature &feature1,
                               const ImagePyramid &pyramid2,
+                              const ImagePyramid &pyramid2_gx,
+                              const ImagePyramid &pyramid2_gy,
                               Feature *feature2_pointer) {
-  *feature2_pointer = feature1;
+  feature2_pointer->position = feature1.position;
   for (int i = pyramid1.NumLevels(); i >= 0; --i) {
     TrackFeatureOneLevel(pyramid1.Level(i), feature1,
-                         pyramid2.Level(i), feature2_pointer);
+                         pyramid2.Level(i),
+                         pyramid2_gx.Level(i),
+                         pyramid2_gy.Level(i),
+                         feature2_pointer);
   }
 }
 
 void KltContext::TrackFeatureOneLevel(const FloatImage &image1,
                                       const Feature &feature1,
                                       const FloatImage &image2,
+                                      const FloatImage &image2_gx,
+                                      const FloatImage &image2_gy,
                                       Feature *feature2_pointer) {
-
-(void)image1;
-(void)feature1;
-(void)image2;
-(void)feature2_pointer;
+  Feature &feature2 = *feature2_pointer;
 
   const int max_iteration_ = 10;
   for (int i = 0; i < max_iteration_; ++i) {
-    // Compute gradient matrix.
-    // Compute error vector.
+    // Compute gradient matrix and error vector.
+    float gxx, gxy, gyy, ex, ey;
+    ComputeTrackingEquation(image1, image2, image2_gx, image2_gy,
+                            feature1.position, feature2.position,
+                            &gxx, &gxy, &gyy, &ex, &ey);
     // Solve the linear system for deltad.
+    float dx, dy;
+    SolveTrackingEquation(gxx, gxy, gyy, ex, ey, 1e-6, &dx, &dy);
     // Update feature2 position.
+    feature2.position(0) += dx;
+    feature2.position(1) += dy;
   }
 }
 
+void KltContext::ComputeTrackingEquation(const FloatImage &image1,
+                                         const FloatImage &image2,
+                                         const FloatImage &image2_gx,
+                                         const FloatImage &image2_gy,
+                                         const Vec2 &position1,
+                                         const Vec2 &position2,
+                                         float *gxx,
+                                         float *gxy,
+                                         float *gyy,
+                                         float *ex,
+                                         float *ey) {
+  int half_width = WindowSize() / 2;
+  *gxx = 0;
+  *gxy = 0;
+  *gyy = 0;
+  *ex = 0;
+  *ey = 0;
+  for (int i = -half_width; i <= half_width; ++i) {
+    for (int j = -half_width; j <= half_width; ++j) {
+      float x1 = position1(0) + j;
+      float y1 = position1(1) + i;
+      float x2 = position2(0) + j;
+      float y2 = position2(1) + i;
+      // TODO(pau): should call an interpolation method with boundary checking.
+      float I = SampleLinear(image1, y1, x1);
+      float J = SampleLinear(image2, y2, x2);
+      float gx = SampleLinear(image2_gx, y2, x2);
+      float gy = SampleLinear(image2_gy, y2, x2);
+      *gxx += gx * gx;
+      *gxy += gx * gy;
+      *gyy += gy * gy;
+      *ex += (I - J) * gx;
+      *ey += (I - J) * gy;
+    }
+  }
+}
+  
+bool KltContext::SolveTrackingEquation(float gxx, float gxy, float gyy,
+                                       float ex, float ey,
+                                       float small_determinant_threshold,
+                                       float *dx, float *dy) {
+  float det = gxx * gyy - gxy * gxy;
+  if (det < small_determinant_threshold) {
+    return false;
+  }
+  *dx = (gyy * ex - gxy * ey) / det;
+  *dy = (gxx * ey - gxy * ex) / det;
+  return true;
+}
+
+
+        
 }  // namespace libmv
