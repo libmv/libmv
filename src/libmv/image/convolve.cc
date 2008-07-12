@@ -149,15 +149,15 @@ void ImageDerivatives(const FloatImage &image,
   // Compute first derivative in x.
   FloatImage tmp;
   ConvolveHorizontal(image, derivative, &tmp);
-  WritePgm(tmp, "horiz_derivative_x.pgm");
+//  WritePgm(tmp, "horiz_derivative_x.pgm");
   ConvolveVertical(tmp, kernel, gradient_x);
-  WritePgm(*gradient_x, "vert_kernel_x.pgm");
+//  WritePgm(*gradient_x, "vert_kernel_x.pgm");
 
   // Compute first derivative in y.
   ConvolveHorizontal(image, kernel, &tmp);
-  WritePgm(tmp, "horiz_kernel_y.pgm");
+//  WritePgm(tmp, "horiz_kernel_y.pgm");
   ConvolveVertical(tmp, derivative, gradient_y);
-  WritePgm(*gradient_y, "vert_derivative_y.pgm");
+//  WritePgm(*gradient_y, "vert_derivative_y.pgm");
 }
 
 void BoxFilterHorizontal(const FloatImage &in,

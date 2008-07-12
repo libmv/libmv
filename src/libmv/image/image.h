@@ -69,11 +69,6 @@ class Image : public ArrayND<T, 3> {
 typedef Image<unsigned char> ByteImage;
 typedef Image<float> FloatImage;
 
-int ReadPgm(const char *filename, ByteImage *im);
-int ReadPgmStream(FILE *file, ByteImage *im);
-int WritePgm(const ByteImage &im, const char *filename);
-int WritePgm(const FloatImage &im, const char *filename);
-int WritePgmStream(const ByteImage &im, FILE *file);
 void ConvertFloatImageToByteImage(const FloatImage &float_image,
                                   ByteImage *byte_image);
 void ConvertByteImageToFloatImage(const ByteImage &byte_image,

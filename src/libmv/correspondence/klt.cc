@@ -24,6 +24,7 @@
 #include "libmv/numeric/numeric.h"
 #include "libmv/correspondence/klt.h"
 #include "libmv/image/image.h"
+#include "libmv/image/image_io.h"
 #include "libmv/image/convolve.h"
 
 using std::vector;

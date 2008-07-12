@@ -1,6 +1,6 @@
 ADD_DEFINITIONS(-DTHIS_SOURCE_DIR=\\"${LIBMV_SOURCE_DIR}/libmv/image\\")
 
-ADD_LIBRARY(image image.cc convolve.cc)
+ADD_LIBRARY(image image.cc image_io.cc convolve.cc)
 
 ADD_EXECUTABLE(tuple_test tuple_test.cc)
 TARGET_LINK_LIBRARIES(tuple_test gtest)
