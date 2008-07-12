@@ -4,11 +4,13 @@ License: New BSD
 Upstream version: CVS version at June 29th @18:12 PDT
 Local modifications:
 
+Switched default first index to 0 instead of 1, so that both normal and tiny
+Added list and scalar initializers to tiny matrices and vectors
+
+Changes incorporated or fixed by upstream:
 Fixed compile warnings that happen when not linking MKL.
 Added support to copy between dense and tiny matrices and vectors.
 Made several changes for compiling without warnings.
-Added list and scalar initializers to tiny matrices and vectors
-Switched default first index to 0 instead of 1, so that both normal and tiny
 vectors and matrices have the same behaviour by default.
 Made array storage initialize firstIndex to zero for default constructor.
 
