@@ -49,7 +49,7 @@ void ImageViewer::open()
   if (!fileName.isEmpty()) {
 
     libmv::ByteImage mv_image;
-    assert(libmv::ReadPgm(fileName.toStdString().c_str(), &mv_image));
+    assert(libmv::ReadPnm(fileName.toStdString().c_str(), &mv_image));
     libmv::FloatImage float_mv_image;
     float_mv_image.CopyFrom(mv_image);
     libmv::FloatImage blurred_mv_image;

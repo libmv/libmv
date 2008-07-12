@@ -39,8 +39,8 @@ void KltContext::DetectGoodFeatures(const FloatImage &image,
   // derivatives are needed by many other functions.
   FloatImage gradient_x, gradient_y;
   ImageDerivatives(image, 0.9, &gradient_x, &gradient_y);
-  WritePgm(gradient_x, "gradient_x.pgm");
-  WritePgm(gradient_y, "gradient_y.pgm");
+  WritePnm(gradient_x, "gradient_x.pgm");
+  WritePnm(gradient_y, "gradient_y.pgm");
 
   FloatImage gxx, gxy, gyy;
   ComputeGradientMatrix(gradient_x, gradient_y, &gxx, &gxy, &gyy);
@@ -49,7 +49,7 @@ void KltContext::DetectGoodFeatures(const FloatImage &image,
   double trackness_mean;
   ComputeTrackness(gxx, gxy, gyy, &trackness, &trackness_mean);
   min_trackness_ = trackness_mean;
-  WritePgm(trackness, "trackerness.pgm");
+  WritePnm(trackness, "trackerness.pgm");
 
   FindLocalMaxima(trackness, features);
 
@@ -66,18 +66,18 @@ void KltContext::ComputeGradientMatrix(const FloatImage &gradient_x,
   MultiplyElements(gradient_x, gradient_x, &gradient_xx);
   MultiplyElements(gradient_y, gradient_y, &gradient_yy);
 
-  WritePgm(gradient_xx, "gradient_xx.pgm");
-  WritePgm(gradient_xy, "gradient_xy.pgm");
-  WritePgm(gradient_yy, "gradient_yy.pgm");
+  WritePnm(gradient_xx, "gradient_xx.pgm");
+  WritePnm(gradient_xy, "gradient_xy.pgm");
+  WritePnm(gradient_yy, "gradient_yy.pgm");
 
   // Sum the gradient matrix over tracking window for each pixel.
   BoxFilter(gradient_xx, WindowSize(), gxx);
   BoxFilter(gradient_xy, WindowSize(), gxy);
   BoxFilter(gradient_yy, WindowSize(), gyy);
 
-  WritePgm(*gxx, "gxx.pgm");
-  WritePgm(*gxy, "gxy.pgm");
-  WritePgm(*gyy, "gyy.pgm");
+  WritePnm(*gxx, "gxx.pgm");
+  WritePnm(*gxy, "gxy.pgm");
+  WritePnm(*gyy, "gyy.pgm");
 }
 
 void KltContext::ComputeTrackness(const FloatImage &gxx,

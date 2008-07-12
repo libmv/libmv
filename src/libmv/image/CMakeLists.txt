@@ -14,6 +14,10 @@ ADD_EXECUTABLE(image_test image_test.cc)
 TARGET_LINK_LIBRARIES(image_test image gtest)
 ADD_TEST(image_test image_test)
 
+ADD_EXECUTABLE(image_io_test image_io_test.cc)
+TARGET_LINK_LIBRARIES(image_io_test image gtest)
+ADD_TEST(image_io_test image_io_test)
+
 ADD_EXECUTABLE(convolve_test convolve_test.cc)
 TARGET_LINK_LIBRARIES(convolve_test image flens gtest lapack atlas)
 ADD_TEST(convolve_test convolve_test)
