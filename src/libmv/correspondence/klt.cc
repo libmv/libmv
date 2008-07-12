@@ -263,8 +263,8 @@ void KltContext::DrawFeature(const Feature &feature,
   assert(image->Depth() == 3);
   
   const int cross_width = 5;
-  int x = round(feature.position(0));
-  int y = round(feature.position(1));
+  int x = lround(feature.position(0));
+  int y = lround(feature.position(1));
   if (!image->Contains(y,x)) {
     return;
   }
