@@ -45,6 +45,9 @@ template <typename A>
 ListInitializer<A>
 TinyVector<A>::operator=(const T &value)
 {
+    for (int i = 0; i < length() ; i++) {
+      (*this)(i) = value;
+    }
     return ListInitializer<A>(_engine._data, value);
 }
 

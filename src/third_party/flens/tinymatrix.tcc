@@ -45,6 +45,11 @@ template <typename A>
 ListInitializer<A>
 TinyGeMatrix<A>::operator=(const T &value)
 {
+    for (int i = 0; i < numRows(); i++) {
+      for (int j = 0; j < numCols(); j++) {
+        (*this)(i, j) = value;
+      }
+    }
     return ListInitializer<A>(0, 0, _engine, value);
 }
 
