@@ -97,15 +97,6 @@ class KltContext {
                                float *gyy,
                                float *ex,
                                float *ey);
-
-  // Given the three distinct elements of the symmetric 2x2 matrix
-  //                     [gxx gxy]
-  //                     [gxy gyy],
-  // return the minimum eigenvalue of the matrix.
-  // Borrowed from Stan Birchfield's KLT implementation.
-  static float MinEigenValue(float gxx, float gxy, float gyy) {
-    return (gxx + gyy - sqrt((gxx - gyy) * (gxx - gyy) + 4 * gxy * gxy)) / 2.0f;
-  }
   
   // Solve the tracking equation
   //  [gxx gxy] [dx] = [ex]
@@ -116,6 +107,15 @@ class KltContext {
                                     float ex, float ey,
                                     float small_determinant_threshold,
                                     float *dx, float *dy);
+                                    
+  // Given the three distinct elements of the symmetric 2x2 matrix
+  //                     [gxx gxy]
+  //                     [gxy gyy],
+  // return the minimum eigenvalue of the matrix.
+  // Borrowed from Stan Birchfield's KLT implementation.
+  static float MinEigenValue(float gxx, float gxy, float gyy) {
+    return (gxx + gyy - sqrt((gxx - gyy) * (gxx - gyy) + 4 * gxy * gxy)) / 2.0f;
+  }
                                     
   void DrawFeatureList(const FeatureList &features,
                        const Vec3 &color,

@@ -220,7 +220,8 @@ void KltContext::ComputeTrackingEquation(const FloatImage &image1,
       float y1 = position1(1) + i;
       float x2 = position2(0) + j;
       float y2 = position2(1) + i;
-      // TODO(pau): should call an interpolation method with boundary checking.
+      // TODO(pau): should do boundary checking outside this loop, and call here
+      // a sampler that does not boundary checking.
       float I = SampleLinear(image1, y1, x1);
       float J = SampleLinear(image2, y2, x2);
       float gx = SampleLinear(image2_gx, y2, x2);

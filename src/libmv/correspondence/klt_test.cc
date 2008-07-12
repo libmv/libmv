@@ -49,21 +49,32 @@ TEST(KltContext, DetectGoodFeaturesSimple) {
 TEST(KltContext, TrackFeatureOneLevel) {
   FloatImage image1(51, 51);
   image1.Fill(0);
-  image1(25, 25) = 1.f;
-  FloatImage image2(51, 51), image2_gx, image2_gy;
+  image1(25, 25) = 1.0f;
+  
+  FloatImage image2;
+  image2.ResizeLike(image1);
   image2.Fill(0);
-  image2(27, 27) = 1.f;
+  int d = 2;
+  for (int i = d; i < image2.Height(); ++i) {
+    for (int j = d; j < image2.Width(); ++j) {
+      image2(i,j) = image1(i - d, j - d);
+    }
+  }
+  FloatImage image1blur, image2blur, image2_gx, image2_gy;
+  ConvolveGaussian(image1, 0.9, &image1blur);
+  ConvolveGaussian(image2, 0.9, &image2blur);
   ImageDerivatives(image2, 0.9, &image2_gx, &image2_gy);
+
   
   KltContext klt;
   KltContext::Feature feature1, feature2;
   feature1.position = 25, 25;
   feature2.position = 25, 25;
-  klt.TrackFeatureOneLevel(image1, feature1, image2,
+  klt.TrackFeatureOneLevel(image1blur, feature1, image2blur,
                            image2_gx, image2_gy, &feature2);
   
-  EXPECT_NEAR(feature2.position(0), 27, 1);
-  EXPECT_NEAR(feature2.position(1), 27, 1);
+  EXPECT_NEAR(feature2.position(0), 25 + d, 0.01);
+  EXPECT_NEAR(feature2.position(1), 25 + d, 0.01);
 }
 
 TEST(KltContext, DetectGoodFeaturesLenna) {
@@ -86,7 +97,7 @@ TEST(KltContext, DetectGoodFeaturesLenna) {
     }
   }
  
-  FloatImage image2, image2_gx, image2_gy;
+  FloatImage image2;
   image2.ResizeLike(image1);
   int d = 2;
   for (int i = d; i < image2.Height(); ++i) {
@@ -94,6 +105,11 @@ TEST(KltContext, DetectGoodFeaturesLenna) {
       image2(i,j) = image1(i - d, j - d);
     }
   }
+  
+  // Prepare images for tracking.
+  FloatImage image1blur, image2blur, image2_gx, image2_gy;
+  ConvolveGaussian(image1, 0.9, &image1blur);
+  ConvolveGaussian(image2, 0.9, &image2blur);
   ImageDerivatives(image2, 0.9, &image2_gx, &image2_gy);
   KltContext::FeatureList features2;
   for (KltContext::FeatureList::iterator i = features.begin();
@@ -101,7 +117,8 @@ TEST(KltContext, DetectGoodFeaturesLenna) {
     KltContext::Feature &feature1 = *i;
     KltContext::Feature feature2;
     feature2.position = feature1.position;
-    klt.TrackFeatureOneLevel(image1, feature1, image2, image2_gx, image2_gy, &feature2);
+    klt.TrackFeatureOneLevel(image1blur, feature1, image2blur,
+                             image2_gx, image2_gy, &feature2);
     features2.push_back(feature2);
     float dx = feature2.position(0) - feature1.position(0);
     float dy = feature2.position(1) - feature1.position(1);
@@ -115,5 +132,6 @@ TEST(KltContext, DetectGoodFeaturesLenna) {
   klt.DrawFeatureList(features2, green, &output_image);
   WritePnm(output_image, "detected_features.ppm");
 }
+
 
 }  // namespace

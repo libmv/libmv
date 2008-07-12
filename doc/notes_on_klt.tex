@@ -33,7 +33,7 @@ The first order approximation of $\tilde J$ with respect to  $\delta d$ is
 \begin{split}
  \tilde J(x + \delta d_x, y + \delta d_y)
    & = \tilde J(x,y) + \partial_x \tilde J(x,y) \delta d_x + \partial_y \tilde J(x,y) \delta d_y
-\\ & = \tilde J(x,y) + \nabla \tilde J(x,y)^T \delta d
+\\ & = \tilde J(x,y) + \nabla \tilde J(x,y)^T \delta d \ .
 \end{split}
 \end{equation}
 Inserting this into the functional gives
@@ -71,9 +71,29 @@ and error vector as
 \end{equation}
 The system to solve at each iteration is
 \begin{equation}
- Z \delta d = \mathbf e
+ Z \delta d = \mathbf e \ .
 \end{equation}
 
+
+\section{Implementation Details}
+\subsection{Smoothing the Images}
+Before tracking images should be slightly smoothed.  There are two reasons for this:
+\begin{enumerate}
+ \item The linearization of $J$ only makes sense if $J$ is smooth.
+ \item The tracking equations require to compute the gradient of $J$.  Given sampling of $J$ at a certain scale, there is no way to get its gradient at the same scale with an accurate precision.  We can however compute the gradient at a smoother scale by convolving $J$ with the derivatives of a Gaussian kernel.  This is
+ \begin{equation}
+  \bar J = G \star J  \quad \text{and} \quad \nabla\bar J = \nabla G \star J \ .
+ \end{equation}
+When doing this, we are computing the derivatives of the smooth version $\bar J$, not the derivatives of $J$.  Therefore, we have to use the smooth version $\bar J$ in all the equations instead of $J$, if we want the derivatives to be coherent with the image.
+\end{enumerate}
+Since we smooth $J$, it seems reasonable to also smooth $I$ so that they are at the same scale.
+
+To sum up, given the two images $I$ and $J$, tracking has to be done over their smoothed versions
+\begin{equation}
+  \bar I = G \star I \ , \quad 
+  \bar J = G \star J  \quad \text{and} \quad
+  \nabla\bar J = \nabla G \star J \ .
+\end{equation}
 
 
 \end{document}
