@@ -29,19 +29,19 @@ namespace {
 
 TEST(BipartiteGraph, Empty) {
   BipartiteGraph<int, int, int> x;
-  EXPECT_EQ(x.NumEdges(), 0);
-  EXPECT_EQ(x.NumLeftNodes(), 0);
-  EXPECT_EQ(x.NumRightNodes(), 0);
+  EXPECT_EQ(0, x.NumEdges());
+  EXPECT_EQ(0, x.NumLeftNodes());
+  EXPECT_EQ(0, x.NumRightNodes());
 }
 
 TEST(BipartiteGraph, InsertEdges) {
   BipartiteGraph<int, int, int> x;
   x.Insert(1, 2, 3);
-  EXPECT_EQ(x.NumEdges(), 1);
+  EXPECT_EQ(1, x.NumEdges());
   x.Insert(1, 2, 3);
-  EXPECT_EQ(x.NumEdges(), 1);
+  EXPECT_EQ(1, x.NumEdges());
   x.Insert(2, 2, 3);
-  EXPECT_EQ(x.NumEdges(), 2);
+  EXPECT_EQ(2, x.NumEdges());
 }
 
 TEST(BipartiteGraph, NumLeftRight) {
@@ -66,6 +66,34 @@ TEST(BipartiteGraph, MultipleInsertions) {
   EXPECT_EQ(x.GetEdge(2, 2), 20);
   EXPECT_EQ(x.GetEdge(1, 4), 30);
   EXPECT_EQ(x.GetEdge(2, 3), 40);
+}
+
+TEST(BipartiteGraph, EdgeIterator) {
+  BipartiteGraph<int, int, int> x;
+  x.Insert(1, 2, 10);
+  x.Insert(1, 4, 30);
+  x.Insert(2, 2, 20);
+
+  BipartiteGraph<int, int, int>::EdgeIterator it = x.EdgesIterator();
+  ASSERT_FALSE(it.Done());
+  EXPECT_EQ(1, it.left());
+  EXPECT_EQ(2, it.right());
+  EXPECT_EQ(10, it.edge());
+  it.Next();
+
+  ASSERT_FALSE(it.Done());
+  EXPECT_EQ(1, it.left());
+  EXPECT_EQ(4, it.right());
+  EXPECT_EQ(30, it.edge());
+  it.Next();
+
+  ASSERT_FALSE(it.Done());
+  EXPECT_EQ(2, it.left());
+  EXPECT_EQ(2, it.right());
+  EXPECT_EQ(20, it.edge());
+  it.Next();
+
+  ASSERT_TRUE(it.Done());
 }
 
 }  // namespace
