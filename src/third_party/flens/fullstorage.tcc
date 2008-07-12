@@ -772,7 +772,7 @@ FullStorageView<T, Order>::_allocate(T *data)
 
 template <typename T, StorageOrder Order>
 FullStorage<T, Order>::FullStorage()
-    : _numRows(0), _numCols(0), _firstRow(1), _firstCol(1), _data(0)
+    : _numRows(0), _numCols(0), _firstRow(0), _firstCol(0), _data(0)
 {
 }
 

@@ -37,7 +37,7 @@
 namespace flens {
 
 Range::Range()
-    : _firstIndex(1), _stride(1), _lastIndex(0), _length(0)
+    : _firstIndex(0), _stride(1), _lastIndex(0), _length(0)
 {
 }
 

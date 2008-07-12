@@ -84,7 +84,7 @@ class GeMatrix
         // -- constructors -----------------------------------------------------
         GeMatrix();
 
-        GeMatrix(int numRows, int numCols, int firstRow=1, int firstCol=1);
+        GeMatrix(int numRows, int numCols, int firstRow=0, int firstCol=0);
 
         GeMatrix(const Range &rows, const Range &cols);
 
@@ -147,61 +147,61 @@ class GeMatrix
         // rectangular view
         const ConstView
         operator()(const Range &rows, const Range &cols,
-                        int firstViewRow=1, int firstViewCol=1) const;
+                        int firstViewRow=0, int firstViewCol=0) const;
 
         View
         operator()(const Range &rows, const Range &cols,
-                   int firstViewRow=1, int firstViewCol=1);
+                   int firstViewRow=0, int firstViewCol=0);
 
         const ConstView
         operator()(const Range &rows, const Underscore &allCols,
-                   int firstViewRow=1, int firstViewCol=1) const;
+                   int firstViewRow=0, int firstViewCol=0) const;
 
         View
         operator()(const Range &rows, const Underscore &allCols,
-                   int firstViewRow=1, int firstViewCol=1);
+                   int firstViewRow=0, int firstViewCol=0);
 
         const ConstView
         operator()(const Underscore &allRows, const Range &cols,
-                   int firstViewRow=1, int firstViewCol=1) const;
+                   int firstViewRow=0, int firstViewCol=0) const;
 
         View
         operator()(const Underscore &allRows, const Range &cols,
-                   int firstViewRow=1, int firstViewCol=1);
+                   int firstViewRow=0, int firstViewCol=0);
 
         // row views
         const ConstVectorView
         operator()(int row, const Range &cols,
-                   int firstViewIndex=1) const;
+                   int firstViewIndex=0) const;
 
         VectorView
         operator()(int row, const Range &cols,
-                   int firstViewIndex=1);
+                   int firstViewIndex=0);
 
         const ConstVectorView
         operator()(int row, const Underscore &allCols,
-                   int firstViewIndex=1) const;
+                   int firstViewIndex=0) const;
 
         VectorView
         operator()(int row, const Underscore &allCols,
-                   int firstViewIndex=1);
+                   int firstViewIndex=0);
 
         // col views
         const ConstVectorView
         operator()(const Range &rows, int col,
-                   int firstViewIndex=1) const;
+                   int firstViewIndex=0) const;
 
         VectorView
         operator()(const Range &rows, int col,
-                   int firstViewIndex=1);
+                   int firstViewIndex=0);
 
         const ConstVectorView
         operator()(const Underscore &allRows, int col,
-                   int firstViewIndex=1) const;
+                   int firstViewIndex=0) const;
 
         VectorView
         operator()(const Underscore &allRows, int col,
-                   int firstViewIndex=1);
+                   int firstViewIndex=0);
 
         // diag views
         const ConstVectorView
@@ -212,28 +212,28 @@ class GeMatrix
 
         // triangular views
         ConstTriangularView
-        upper(int firstViewRow=1, int firstViewCol=1) const;
+        upper(int firstViewRow=0, int firstViewCol=0) const;
 
         TriangularView
-        upper(int firstViewRow=1, int firstViewCol=1);
+        upper(int firstViewRow=0, int firstViewCol=0);
 
         ConstTriangularView
-        upperUnit(int firstViewRow=1, int firstViewCol=1) const;
+        upperUnit(int firstViewRow=0, int firstViewCol=0) const;
 
         TriangularView
-        upperUnit(int firstViewRow=1, int firstViewCol=1);
+        upperUnit(int firstViewRow=0, int firstViewCol=0);
 
         ConstTriangularView
-        lower(int firstViewRow=1, int firstViewCol=1) const;
+        lower(int firstViewRow=0, int firstViewCol=0) const;
 
         TriangularView
-        lower(int firstViewRow=1, int firstViewCol=1);
+        lower(int firstViewRow=0, int firstViewCol=0);
 
         ConstTriangularView
-        lowerUnit(int firstViewRow=1, int firstViewCol=1) const;
+        lowerUnit(int firstViewRow=0, int firstViewCol=0) const;
 
         TriangularView
-        lowerUnit(int firstViewRow=1, int firstViewCol=1);
+        lowerUnit(int firstViewRow=0, int firstViewCol=0);
 
         // -- methods ----------------------------------------------------------
 
@@ -282,7 +282,7 @@ class GeMatrix
         resize(const Range &rows, const Range &cols);
 
         void
-        resizeOrClear(int numRows, int numCols, int firstRow=1, int firstCol=1);
+        resizeOrClear(int numRows, int numCols, int firstRow=0, int firstCol=0);
 
     	void
     	shiftIndex(int rowAmount, int colAmount);

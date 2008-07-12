@@ -55,7 +55,7 @@ class ConstArrayView
         typedef Array<T>        NoView;
 
         ConstArrayView(const void *storage, const T *data,
-                       int length, int stride=1, int firstIndex=1);
+                       int length, int stride=1, int firstIndex=0);
 
         ConstArrayView(const NoView &rhs);
 
@@ -91,7 +91,7 @@ class ConstArrayView
         storage() const;
 
         ConstArrayView<T>
-        view(int from, int to, int stride=1, int firstViewIndex=1) const;
+        view(int from, int to, int stride=1, int firstViewIndex=0) const;
 
     private:
         ConstArrayView<T> &
@@ -112,7 +112,7 @@ class ArrayView
         typedef Array<T>          NoView;
 
         ArrayView(void *storage, T *data,
-                  int length, int stride=1, int firstIndex=1);
+                  int length, int stride=1, int firstIndex=0);
 
         ArrayView(const ArrayView &rhs);
 
@@ -162,16 +162,16 @@ class ArrayView
         storage() const;
 
         void
-        resize(int length, int firstIndex=1);
+        resize(int length, int firstIndex=0);
         
         void
-        resizeOrClear(int length, int firstIndex=1);
+        resizeOrClear(int length, int firstIndex=0);
 
         ConstArrayView<T>
-        view(int from, int to, int stride=1, int firstViewIndex=1) const;
+        view(int from, int to, int stride=1, int firstViewIndex=0) const;
 
         ArrayView<T>
-        view(int from, int to, int stride=1, int firstViewIndex=1);
+        view(int from, int to, int stride=1, int firstViewIndex=0);
         
         void
         shiftIndexTo(int firstIndex);
@@ -194,7 +194,7 @@ class Array
 
         Array();
 
-        Array(int length, int firstIndex=1);
+        Array(int length, int firstIndex=0);
 
         Array(const Array<T> &rhs);
 
@@ -245,16 +245,16 @@ class Array
         data();
 
         void
-        resize(int length, int firstIndex=1);
+        resize(int length, int firstIndex=0);
 
         void
-        resizeOrClear(int length, int firstIndex=1);
+        resizeOrClear(int length, int firstIndex=0);
 
         ConstArrayView<T>
-        view(int from, int to, int stride=1, int firstViewIndex=1) const;
+        view(int from, int to, int stride=1, int firstViewIndex=0) const;
 
         ArrayView<T>
-        view(int from, int to, int stride=1, int firstViewIndex=1);
+        view(int from, int to, int stride=1, int firstViewIndex=0);
 
         void
         shiftIndexTo(int firstIndex);
