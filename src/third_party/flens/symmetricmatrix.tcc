@@ -53,7 +53,8 @@ SyMatrix<FS>::SyMatrix(const FS &fs, StorageUpLo upLo)
 
 template <typename FS>
 SyMatrix<FS>::SyMatrix(const SyMatrix<FS> &rhs)
-    : _fs(rhs.engine()), _upLo(rhs.upLo())
+    : SymmetricMatrix<SyMatrix<FS> >(),
+      _fs(rhs.engine()), _upLo(rhs.upLo())
 {
 }
 
@@ -249,7 +250,8 @@ SbMatrix<BS>::SbMatrix(const BS &bs, StorageUpLo upLo)
 
 template <typename BS>
 SbMatrix<BS>::SbMatrix(const SbMatrix<BS> &rhs)
-    : _bs(rhs.engine()), _upLo(rhs.upLo())
+    : SymmetricMatrix<SbMatrix<BS> >(),
+      _bs(rhs.engine()), _upLo(rhs.upLo())
 {
 }
 

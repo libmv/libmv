@@ -35,6 +35,8 @@
 
 namespace flens {
 
+//== Array =====================================================================
+
 template <typename T>
 ListInitializer<Array<T> >::ListInitializer(T *begin, int length, T value)
     : _it(begin), _end(begin+length)
@@ -59,6 +61,8 @@ ListInitializer<Array<T> >::operator,(T value)
     assert(_it<_end);
     return ListInitializer<Array<T> >(_it, _end, value);
 }
+
+//== DenseVector ===============================================================
 
 template <typename Engine>
 ListInitializer<DenseVector<Engine> >::ListInitializer(T *begin, int stride,
@@ -87,22 +91,7 @@ ListInitializer<DenseVector<Engine> >::operator,(T value)
     return ListInitializer<DenseVector<Engine> >(_it, _stride, _end, value);
 }
 
-template <typename Engine>
-ListInitializer<GeMatrix<Engine> >::ListInitializer(GeMatrix<Engine> &A,
-                                                    int row, int col, T value)
-    : _A(A), _row(row), _col(col)
-{
-    _A(row,col) = value;
-}
-
-template <typename Engine>
-ListInitializer<GeMatrix<Engine> >
-ListInitializer<GeMatrix<Engine> >::operator,(T value)
-{
-    (_col<_A.lastCol()) ? ++_col
-                        : (_col=_A.firstCol(), ++_row);
-    return ListInitializer<GeMatrix<Engine> >(_A, _row, _col, value);
-}
+//------------------------------------------------------------------------------
 
 template <typename I>
 ListInitializerSwitch<DenseVector<I> >::ListInitializerSwitch(
@@ -145,6 +134,27 @@ ListInitializerSwitch<DenseVector<I> >::operator,(T x)
     return ListInitializer<DenseVector<I> >(_it+=_stride, _stride, _end, x);
 }
 
+//== GeMatrix ==================================================================
+
+template <typename Engine>
+ListInitializer<GeMatrix<Engine> >::ListInitializer(GeMatrix<Engine> &A,
+                                                    int row, int col, T value)
+    : _A(A), _row(row), _col(col)
+{
+    _A(row,col) = value;
+}
+
+template <typename Engine>
+ListInitializer<GeMatrix<Engine> >
+ListInitializer<GeMatrix<Engine> >::operator,(T value)
+{
+    (_col<_A.lastCol()) ? ++_col
+                        : (_col=_A.firstCol(), ++_row);
+    return ListInitializer<GeMatrix<Engine> >(_A, _row, _col, value);
+}
+
+//------------------------------------------------------------------------------
+
 template <typename I>
 ListInitializerSwitch<GeMatrix<I> >::ListInitializerSwitch(
                                       GeMatrix<I> &A, int row, int col, T value)
@@ -181,6 +191,60 @@ ListInitializerSwitch<GeMatrix<I> >::operator,(T x)
     _wipeOnDestruct = false;
     _A(_row,_col) = _value;
     return ListInitializer<GeMatrix<I> >(_A, _row, ++_col, x);
+}
+
+//== FixedSizeArray1D ==========================================================
+
+template <typename T, int N>
+ListInitializer<FixedSizeArray1D<T,N> >::ListInitializer(T *begin, T value)
+    : _it(begin), _end(begin+N)
+{
+    assert(_it!=_end);
+    *_it = value;
+}
+
+template <typename T, int N>
+ListInitializer<FixedSizeArray1D<T,N> >::ListInitializer(T *begin,
+                                                         T *end,
+                                                         T value)
+    : _it(begin), _end(end)
+{
+    assert(_it!=_end);
+    *_it = value;
+}
+
+template <typename T, int N>
+ListInitializer<FixedSizeArray1D<T,N> >
+ListInitializer<FixedSizeArray1D<T,N> >::operator,(T value)
+{
+    ++_it;
+    assert(_it<_end);
+    return ListInitializer<FixedSizeArray1D<T,N> >(_it, _end, value);
+}
+
+//== FixedSizeArray2D ==========================================================
+
+template <typename T, int M, int N>
+ListInitializer<FixedSizeArray2D<T,M,N> >::ListInitializer(int _i, int _j,
+                                                           Data &_data,
+                                                           T value)
+    : i(_i), j(_j), data(_data)
+{
+    data(i,j) = value;
+}
+
+template <typename T, int M, int N>
+ListInitializer<FixedSizeArray2D<T,M,N> >
+ListInitializer<FixedSizeArray2D<T,M,N> >::operator,(T value)
+{
+    assert((i<M)&&(j<N));
+
+    ++j;
+    if (j==N) {
+        j=0;
+        ++i;
+    }
+    return ListInitializer<FixedSizeArray2D<T,M,N> >(i, j, data, value);
 }
 
 } // namespace flens

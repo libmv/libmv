@@ -52,7 +52,7 @@ class SyMatrix
 
         SyMatrix();
 
-        SyMatrix(int dim, StorageUpLo upLo, int firstIndex=0);
+        SyMatrix(int dim, StorageUpLo upLo, int firstIndex=1);
 
         SyMatrix(const FS &fs, StorageUpLo upLo);
 
@@ -167,7 +167,7 @@ class SbMatrix
 
         SbMatrix();
 
-        SbMatrix(int dim, StorageUpLo upLo, int numOffDiags, int firstIndex=0);
+        SbMatrix(int dim, StorageUpLo upLo, int numOffDiags, int firstIndex=1);
 
         SbMatrix(const BS &bs, StorageUpLo upLo);
 
@@ -268,7 +268,7 @@ class SpMatrix
 
         SpMatrix();
 
-        SpMatrix(int dim, int firstIndex=0);
+        SpMatrix(int dim, int firstIndex=1);
 
         SpMatrix(const PS &ps);
 

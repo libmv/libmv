@@ -728,8 +728,14 @@ template <typename T, StorageOrder Order>
 void
 FullStorageView<T, Order>::resize(int numRows, int numCols, int firstRow, int firstCol)
 {
-//  PERHAPS: resize should not change the size!
-//    assert(0); // you can not resize a view
+    // It does not make sense to resize a view, but as long as the size is not
+    // changed then calling this is no problem.
+    assert(_numRows == numRows);
+    assert(_numCols == numCols);
+
+    // Changing first row/col is not really a good idea either.
+    assert(_firstRow == firstRow);
+    assert(_firstCol == firstCol);
 }
 
 template <typename T, StorageOrder Order>
@@ -766,7 +772,7 @@ FullStorageView<T, Order>::_allocate(T *data)
 
 template <typename T, StorageOrder Order>
 FullStorage<T, Order>::FullStorage()
-    : _numRows(0), _numCols(0), _data(0)
+    : _numRows(0), _numCols(0), _firstRow(1), _firstCol(1), _data(0)
 {
 }
 

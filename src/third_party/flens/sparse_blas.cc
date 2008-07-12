@@ -46,32 +46,17 @@ namespace flens {
 
 //-- csr - compressed sparse row - (the Intel variant for crs) -----------------
 
+#ifdef MKL_SCS
 void
 csrmv(Transpose Trans, int m, int k, float alpha, char *matdescra,
       float  *values, int *columns,  int *pointerB, int *pointerE,
       float *x, float beta, float *y)
 {
-    #ifdef MKL
         char trans = (Trans==NoTrans) ? 'N' : 'T';
 
         mkl_scsrmv (&trans, &m, &k, &alpha, matdescra,
                     values, columns, pointerB, pointerE,
                     x, &beta, y);
-    #else
-        (void) Trans;
-        (void) m;
-        (void) k;
-        (void) alpha;
-        (void) matdescra;
-        (void) values;
-        (void) columns;
-        (void) pointerB;
-        (void) pointerE;
-        (void) x;
-        (void) beta;
-        (void) y;
-        assert(0);
-    #endif
 }
 
 void
@@ -79,27 +64,11 @@ csrmv(Transpose Trans, int m, int k, double alpha, char *matdescra,
       double  *values, int *columns,  int *pointerB, int *pointerE,
       double *x, double beta, double *y)
 {
-    #ifdef MKL
         char trans = (Trans==NoTrans) ? 'N' : 'T';
 
         mkl_dcsrmv (&trans, &m, &k, &alpha, matdescra,
                     values, columns, pointerB, pointerE,
                     x, &beta, y);
-    #else
-        (void) Trans;
-        (void) m;
-        (void) k;
-        (void) alpha;
-        (void) matdescra;
-        (void) values;
-        (void) columns;
-        (void) pointerB;
-        (void) pointerE;
-        (void) x;
-        (void) beta;
-        (void) y;
-        assert(0);
-    #endif
 }
 
 void
@@ -108,7 +77,6 @@ csrmm(Transpose transA, int m, int n, int k, float alpha, char *matdescrA,
       const int *pointerE, const float *B, int ldb,
       float beta, float *C, int ldc)
 {
-    #ifdef MKL
         char trans = (transA==NoTrans) ? 'N' : 'T';
 
         // TODO: what about constness?
@@ -119,24 +87,6 @@ csrmm(Transpose transA, int m, int n, int k, float alpha, char *matdescrA,
                    const_cast<int *>(pointerE),
                    const_cast<float *>(B),
                    &ldb, &beta, C, &ldc);
-    #else
-        (void) transA;
-        (void) m;
-        (void) n;
-        (void) k;
-        (void) alpha;
-        (void) matdescrA;
-        (void) values;
-        (void) columns;
-        (void) pointerB;
-        (void) pointerE;
-        (void) B;
-        (void) ldb;
-        (void) beta;
-        (void) C;
-        (void) ldc;
-        assert(0); // NOT IMPLEMENTED (YET?)
-    #endif
 }
 
 void
@@ -145,36 +95,17 @@ csrmm(Transpose transA, int m, int n, int k, double alpha, char *matdescrA,
       const int *pointerE, const double *B, int ldb,
       double beta, double *C, int ldc)
 {
-    #ifdef MKL
-        char trans = (transA==NoTrans) ? 'N' : 'T';
+    char trans = (transA==NoTrans) ? 'N' : 'T';
 
-        // TODO: what about constness?
-        mkl_dcsrmm(&trans, &m, &n, &k, &alpha, matdescrA,
-                   const_cast<double *>(values),
-                   const_cast<int *>(columns),
-                   const_cast<int *>(pointerB),
-                   const_cast<int *>(pointerE),
-                   const_cast<double *>(B),
-                   &ldb, &beta, C, &ldc);
-    #else
-        // Fix compile warnings for those without MKL!
-        (void) transA;
-        (void) m;
-        (void) n;
-        (void) k;
-        (void) alpha;
-        (void) matdescrA;
-        (void) values;
-        (void) columns;
-        (void) pointerB;
-        (void) pointerE;
-        (void) B;
-        (void) ldb;
-        (void) beta;
-        (void) C;
-        (void) ldc;
-        assert(0); // NOT IMPLEMENTED (YET?)
-    #endif
+    // TODO: what about constness?
+    mkl_dcsrmm(&trans, &m, &n, &k, &alpha, matdescrA,
+               const_cast<double *>(values),
+               const_cast<int *>(columns),
+               const_cast<int *>(pointerB),
+               const_cast<int *>(pointerE),
+               const_cast<double *>(B),
+               &ldb, &beta, C, &ldc);
 }
+#endif // MKL
 
 } // namespace flens

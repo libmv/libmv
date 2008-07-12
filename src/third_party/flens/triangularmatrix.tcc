@@ -56,7 +56,8 @@ TrMatrix<FS>::TrMatrix(const FS &fs, StorageUpLo upLo, UnitDiag unitDiag)
 
 template <typename FS>
 TrMatrix<FS>::TrMatrix(const TrMatrix<FS> &rhs)
-    : _fs(rhs.engine()), _upLo(rhs.upLo()), _unitDiag(rhs.unitDiag())
+    : TriangularMatrix<TrMatrix<FS> >(),
+      _fs(rhs.engine()), _upLo(rhs.upLo()), _unitDiag(rhs.unitDiag())
 {
 }
 
@@ -219,7 +220,8 @@ TbMatrix<BS>::TbMatrix(const BS &bs, StorageUpLo upLo, UnitDiag unitDiag)
 
 template <typename BS>
 TbMatrix<BS>::TbMatrix(const TbMatrix<BS> &rhs)
-    : _bs(rhs.engine()), _upLo(rhs.upLo()), _unitDiag(rhs.unitDiag())
+    : TriangularMatrix<TbMatrix<BS> >(),
+      _bs(rhs.engine()), _upLo(rhs.upLo()), _unitDiag(rhs.unitDiag())
 {
 }
 

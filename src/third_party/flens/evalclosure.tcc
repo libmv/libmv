@@ -111,6 +111,7 @@ mv(Transpose trans, ALPHA alpha,
    const SymmetricMatrix<MA> &A, const Vector<VX> &x,
    BETA beta, Vector<VY> &y)
 {
+    assert(trans==NoTrans);
     mv(alpha, A.impl(), x.impl(), beta, y.impl());
 }
 
@@ -125,6 +126,9 @@ mv(Transpose trans, ALPHA alpha,
    const TriangularMatrix<MA> &A, const Vector<VX> &x,
    BETA beta, Vector<VY> &y)
 {
+    assert(alpha==ALPHA(1));
+    assert(beta==BETA(0));
+    assert(ADDRESS(x)==ADDRESS(y));
     mv(trans, A.impl(), y.impl());
 }
 

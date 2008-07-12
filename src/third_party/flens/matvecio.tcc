@@ -78,10 +78,11 @@ operator<<(std::ostream &out, const Vector<I> &x)
     return out;
 }
 
-template <typename T, int N>
+template <typename A>
 std::ostream &
-operator<<(std::ostream &out, const TinyVector<T,N> &x)
+operator<<(std::ostream &out, const TinyVector<A> &x)
 {
+    const int N = x.length();
     out << "[0.." << N-1 << "]" << std::endl;
     out.setf(std::ios::fixed);
     for (int i=0; i<N; ++i) {
@@ -112,6 +113,23 @@ operator<<(std::ostream &out, const DenseVector<I> &x)
 
 template <typename I>
 std::ostream &
+operator<<(std::ostream &out, const TinyGeMatrix<I> &A)
+{
+    out << "[" << A.numRows() << ", " << A.numCols() << "]" << std::endl;
+    out.setf(std::ios::fixed);
+    for (int i=0; i<A.numRows(); ++i) {
+        for (int j=0; j<A.numCols(); ++j) {
+            out.width(11);
+            out << A(i,j) << " ";
+        }
+        out << ";" << std::endl;
+    }
+    return out;
+}
+
+
+template <typename I>
+std::ostream &
 operator<<(std::ostream &out, const GeMatrix<I> &A)
 {
     out << "[";
@@ -125,7 +143,7 @@ operator<<(std::ostream &out, const GeMatrix<I> &A)
     out.setf(std::ios::fixed);
     for (int i=A.firstRow(); i<=A.lastRow(); ++i) {
         for (int j=A.firstCol(); j<=A.lastCol(); ++j) {
-//            out.width(11);
+            out.width(11);
             out << A(i,j) << " ";
         }
         out << ";" << std::endl;

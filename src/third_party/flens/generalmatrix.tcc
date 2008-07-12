@@ -232,7 +232,7 @@ GeMatrix<FS>::operator()(const Range &rows, const Range &cols,
 
 template <typename FS>
 const typename GeMatrix<FS>::ConstView
-GeMatrix<FS>::operator()(const Range &rows, const Underscore &allCols,
+GeMatrix<FS>::operator()(const Range &rows, const Underscore &,
                          int firstViewRow, int firstViewCol) const
 {
     assert(rows.stride()==1);
@@ -244,7 +244,7 @@ GeMatrix<FS>::operator()(const Range &rows, const Underscore &allCols,
 
 template <typename FS>
 typename GeMatrix<FS>::View
-GeMatrix<FS>::operator()(const Range &rows, const Underscore &allCols,
+GeMatrix<FS>::operator()(const Range &rows, const Underscore &,
                          int firstViewRow, int firstViewCol)
 {
     assert(rows.stride()==1);
@@ -256,7 +256,7 @@ GeMatrix<FS>::operator()(const Range &rows, const Underscore &allCols,
 
 template <typename FS>
 const typename GeMatrix<FS>::ConstView
-GeMatrix<FS>::operator()(const Underscore &allRows, const Range &cols,
+GeMatrix<FS>::operator()(const Underscore &, const Range &cols,
                          int firstViewRow, int firstViewCol) const
 {
     assert(cols.stride()==1);
@@ -268,7 +268,7 @@ GeMatrix<FS>::operator()(const Underscore &allRows, const Range &cols,
 
 template <typename FS>
 typename GeMatrix<FS>::View
-GeMatrix<FS>::operator()(const Underscore &allRows, const Range &cols,
+GeMatrix<FS>::operator()(const Underscore &, const Range &cols,
                          int firstViewRow, int firstViewCol)
 {
     assert(cols.stride()==1);
@@ -301,7 +301,7 @@ GeMatrix<FS>::operator()(int row, const Range &cols,
 
 template <typename FS>
 const typename GeMatrix<FS>::ConstVectorView
-GeMatrix<FS>::operator()(int row, const Underscore &allCols,
+GeMatrix<FS>::operator()(int row, const Underscore &,
                          int firstViewIndex) const
 {
     return _fs.viewRow(row, firstViewIndex);
@@ -309,10 +309,9 @@ GeMatrix<FS>::operator()(int row, const Underscore &allCols,
 
 template <typename FS>
 typename GeMatrix<FS>::VectorView
-GeMatrix<FS>::operator()(int row, const Underscore &allCols,
+GeMatrix<FS>::operator()(int row, const Underscore &,
                          int firstViewIndex)
 {
-    (void) allCols;
     return _fs.viewRow(row, firstViewIndex);
 }
 
@@ -339,7 +338,7 @@ GeMatrix<FS>::operator()(const Range &rows, int col,
 
 template <typename FS>
 const typename GeMatrix<FS>::ConstVectorView
-GeMatrix<FS>::operator()(const Underscore &allRows, int col,
+GeMatrix<FS>::operator()(const Underscore &, int col,
                          int firstViewIndex) const
 {
     return _fs.viewCol(col, firstViewIndex);
@@ -347,7 +346,7 @@ GeMatrix<FS>::operator()(const Underscore &allRows, int col,
 
 template <typename FS>
 typename GeMatrix<FS>::VectorView
-GeMatrix<FS>::operator()(const Underscore &allRows, int col,
+GeMatrix<FS>::operator()(const Underscore &, int col,
                          int firstViewIndex)
 {
     return _fs.viewCol(col, firstViewIndex);
@@ -544,6 +543,13 @@ Range
 GeMatrix<FS>::cols() const
 {
     return _(firstCol(), lastCol());
+}
+
+template <typename FS>
+void
+GeMatrix<FS>::resize(int numRows, int numCols)
+{
+    _fs.resize(numRows, numCols, firstRow(), firstCol());
 }
 
 template <typename FS>

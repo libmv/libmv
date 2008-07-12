@@ -41,6 +41,7 @@ mm(Transpose transA, Transpose transB, ALPHA alpha,
     assert(alpha==ALPHA(1));
     assert(beta==BETA(0));
     assert(transB==NoTrans);
+    assert(ADDRESS(X)==ADDRESS(B));
 
     ormqr(Left, transA, A.QR, A.tau, B);
 }

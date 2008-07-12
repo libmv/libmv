@@ -50,7 +50,7 @@ class TrMatrix
         TrMatrix();
 
         TrMatrix(int dim, StorageUpLo upLo, UnitDiag unitDiag=NonUnit,
-                 int firstIndex=0);
+                 int firstIndex=1);
 
         TrMatrix(const FS &fs, StorageUpLo upLo, UnitDiag unitDiag=NonUnit);
 
@@ -152,7 +152,7 @@ class TbMatrix
         TbMatrix();
 
         TbMatrix(int dim, StorageUpLo upLo, int numDiags,
-                 UnitDiag unitDiag=NonUnit, int firstIndex=0);
+                 UnitDiag unitDiag=NonUnit, int firstIndex=1);
 
         TbMatrix(const BS &bs, StorageUpLo upLo, UnitDiag unitDiag=NonUnit);
 
@@ -243,7 +243,7 @@ class TpMatrix
 
         TpMatrix();
 
-        TpMatrix(int dim, UnitDiag unitDiag=NonUnit, int firstIndex=0);
+        TpMatrix(int dim, UnitDiag unitDiag=NonUnit, int firstIndex=1);
 
         TpMatrix(const PS &ps, UnitDiag unitDiag=NonUnit);
 

@@ -41,6 +41,7 @@
 #include <flens/matvec.h>
 #include <flens/sparsematrix.h>
 #include <flens/symmetricmatrix.h>
+#include <flens/tinymatrix.h>
 #include <flens/tinyvector.h>
 #include <flens/triangularmatrix.h>
 
@@ -54,9 +55,13 @@ template <typename I>
     std::ostream &
     operator<<(std::ostream &out, const Vector<I> &x);
 
-template <typename T, int N>
+template <typename A>
     std::ostream &
-    operator<<(std::ostream &out, const TinyVector<T,N> &x);
+    operator<<(std::ostream &out, const TinyVector<A> &x);
+
+template <typename I>
+    std::ostream &
+    operator<<(std::ostream &out, const TinyGeMatrix<I> &A);
 
 template <typename I>
     std::ostream &

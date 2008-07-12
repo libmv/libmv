@@ -48,6 +48,7 @@
 #include <flens/crs.h>
 #include <flens/densevector.h>
 #include <flens/evalclosure.h>
+#include <flens/fixedsizearray.h>
 #include <flens/fullstorage.h>
 #include <flens/generalmatrix.h>
 #include <flens/refcounter.h>
@@ -69,6 +70,8 @@
 #include <flens/sparse_blas.h>
 #include <flens/sparse_blas_flens.h>
 #include <flens/symmetricmatrix.h>
+#include <flens/tiny_blas.h>
+#include <flens/tinymatrix.h>
 #include <flens/tinyvector.h>
 #include <flens/traits.h>
 #include <flens/triangularmatrix.h>
