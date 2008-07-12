@@ -241,6 +241,8 @@ bool KltContext::SolveTrackingEquation(float gxx, float gxy, float gyy,
                                        float *dx, float *dy) {
   float det = gxx * gyy - gxy * gxy;
   if (det < small_determinant_threshold) {
+    *dx = 0;
+    *dy = 0;
     return false;
   }
   *dx = (gyy * ex - gxy * ey) / det;
