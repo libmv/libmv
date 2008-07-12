@@ -34,12 +34,13 @@ class KltContext {
  public:
   struct Feature {
     Vec2 position;
+    int half_window_size;
     float trackness;
   };
   typedef std::list<Feature> FeatureList;
 
   KltContext()
-      : window_size_(7),
+      : half_window_size_(3),
         min_trackness_(0.1),
         min_feature_dist_(10) {
   }
@@ -116,10 +117,18 @@ class KltContext {
                                     float small_determinant_threshold,
                                     float *dx, float *dy);
                                     
-  int WindowSize() { return window_size_; }
+  void DrawFeatureList(const FeatureList &features,
+                       const Vec3 &color,
+                       FloatImage *image);
+  void DrawFeature(const Feature &feature,
+                   const Vec3 &color,
+                   FloatImage *image);
+
+  int HalfWindowSize() { return half_window_size_; }
+  int WindowSize() { return 2 * HalfWindowSize() + 1; }
 
  protected:
-  int window_size_;
+  int half_window_size_;
   double min_trackness_;
   double min_feature_dist_;
 };

@@ -272,7 +272,25 @@ class ArrayND {
         return false;
     return true;
   }
+  
+  /// 1D sepecialization.
+  bool Contains(int i0) const {
+    return 0 <= i0 && i0 < Shape(0);
+  }
 
+  /// 2D sepecialization.
+  bool Contains(int i0, int i1) const {
+    return 0 <= i0 && i0 < Shape(0)
+        && 0 <= i1 && i1 < Shape(1);
+  }
+
+  /// 3D sepecialization.
+  bool Contains(int i0, int i1, int i2) const {
+    return 0 <= i0 && i0 < Shape(0)
+        && 0 <= i1 && i1 < Shape(1)
+        && 0 <= i2 && i2 < Shape(2);
+  }
+  
   bool operator==(const ArrayND<T, N> &other) const {
     if (shape_ != other.shape_) return false;
     if (strides_ != other.strides_) return false;

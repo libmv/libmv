@@ -22,6 +22,10 @@ ADD_EXECUTABLE(convolve_test convolve_test.cc)
 TARGET_LINK_LIBRARIES(convolve_test image flens gtest lapack atlas)
 ADD_TEST(convolve_test convolve_test)
 
+ADD_EXECUTABLE(sample_test sample_test.cc)
+TARGET_LINK_LIBRARIES(sample_test image flens gtest lapack atlas)
+ADD_TEST(sample_test sample_test)
+
 ADD_EXECUTABLE(lru_cache_test lru_cache_test.cc)
 TARGET_LINK_LIBRARIES(lru_cache_test gtest)
 ADD_TEST(lru_cache_test lru_cache_test)

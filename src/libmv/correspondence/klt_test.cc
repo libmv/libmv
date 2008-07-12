@@ -21,6 +21,7 @@
 #include <cstdio>
 
 #include "libmv/image/image.h"
+#include "libmv/image/image_io.h"
 #include "libmv/correspondence/klt.h"
 #include "testing/testing.h"
 
@@ -65,37 +66,54 @@ TEST(KltContext, TrackFeatureOneLevel) {
   EXPECT_NEAR(feature2.position(1), 27, 1);
 }
 
-/*
 TEST(KltContext, DetectGoodFeaturesLenna) {
   ByteImage byte_image;
   FloatImage image1;
   string lenna_filename = string(THIS_SOURCE_DIR) + "/klt_test/Lenna.pgm";
-  EXPECT_NE(0, ReadPgm(lenna_filename.c_str(), &byte_image));
+  EXPECT_NE(0, ReadPnm(lenna_filename.c_str(), &byte_image));
   ConvertByteImageToFloatImage(byte_image, &image1);
 
   KltContext klt;
   KltContext::FeatureList features;
   klt.DetectGoodFeatures(image1, &features);
   
+  FloatImage output_image(image1.Height(),image1.Width(),3);
+  for (int i = 0; i < image1.Height(); ++i) {
+    for (int j = 0; j < image1.Width(); ++j) {
+      output_image(i,j,0) = image1(i,j);
+      output_image(i,j,1) = image1(i,j);
+      output_image(i,j,2) = image1(i,j);
+    }
+  }
+ 
   FloatImage image2, image2_gx, image2_gy;
   image2.ResizeLike(image1);
-  for (int i = 1; i < image2.Height(); ++i) {
-    for (int j = 1; j < image2.Width(); ++j) {
-      image2(i,j) = image1(i - 1, j - 1);
+  int d = 2;
+  for (int i = d; i < image2.Height(); ++i) {
+    for (int j = d; j < image2.Width(); ++j) {
+      image2(i,j) = image1(i - d, j - d);
     }
   }
   ImageDerivatives(image2, 0.9, &image2_gx, &image2_gy);
+  KltContext::FeatureList features2;
   for (KltContext::FeatureList::iterator i = features.begin();
        i != features.end(); ++i ) {
     KltContext::Feature &feature1 = *i;
     KltContext::Feature feature2;
     feature2.position = feature1.position;
     klt.TrackFeatureOneLevel(image1, feature1, image2, image2_gx, image2_gy, &feature2);
+    features2.push_back(feature2);
     float dx = feature2.position(0) - feature1.position(0);
     float dy = feature2.position(1) - feature1.position(1);
     printf("%g, %g\n", dx, dy);
   }
+  
+  Vec3 red, green;
+  red = 1, 0, 0;
+  green = 0, 1, 0;
+  klt.DrawFeatureList(features, red, &output_image);
+  klt.DrawFeatureList(features2, green, &output_image);
+  WritePnm(output_image, "detected_features.ppm");
 }
-*/
 
 }  // namespace

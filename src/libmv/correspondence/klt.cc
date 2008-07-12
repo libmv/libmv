@@ -208,7 +208,7 @@ void KltContext::ComputeTrackingEquation(const FloatImage &image1,
                                          float *gyy,
                                          float *ex,
                                          float *ey) {
-  int half_width = WindowSize() / 2;
+  int half_width = HalfWindowSize();
   *gxx = 0;
   *gxy = 0;
   *gyy = 0;
@@ -247,6 +247,41 @@ bool KltContext::SolveTrackingEquation(float gxx, float gxy, float gyy,
   return true;
 }
 
+void KltContext::DrawFeatureList(const FeatureList &features,
+                                 const Vec3 &color,
+                                 FloatImage *image) {
+  for (FeatureList::const_iterator i = features.begin();
+       i != features.end(); ++i) {
+    DrawFeature(*i, color, image);
+  }
+}
+        
+void KltContext::DrawFeature(const Feature &feature,
+                             const Vec3 &color,
+                             FloatImage *image) {
+  assert(image->Depth() == 3);
+  
+  const int cross_width = 5;
+  int x = round(feature.position(0));
+  int y = round(feature.position(1));
+  if (!image->Contains(y,x)) {
+    return;
+  }
 
+  // Draw vertical line.
+  for (int i = max(0, y - cross_width);
+       i < min(image->Height(), y + cross_width + 1); ++i) {
+    for (int k = 0; k < 3; ++k) {
+      (*image)(i, x, k) = color(k);
+    }
+  }
+  // Draw horizontal line.
+  for (int j = max(0, x - cross_width);
+       j < min(image->Width(), x + cross_width + 1); ++j) {
+    for (int k = 0; k < 3; ++k) {
+      (*image)(y, j, k) = color(k);
+    }
+  }
+}
         
 }  // namespace libmv
