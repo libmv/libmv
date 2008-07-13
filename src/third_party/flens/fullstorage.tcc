@@ -728,6 +728,11 @@ template <typename T, StorageOrder Order>
 void
 FullStorageView<T, Order>::resize(int numRows, int numCols, int firstRow, int firstCol)
 {
+    (void) numRows;
+    (void) numCols;
+    (void) firstRow;
+    (void) firstCol;
+
     // It does not make sense to resize a view, but as long as the size is not
     // changed then calling this is no problem.
     assert(_numRows == numRows);

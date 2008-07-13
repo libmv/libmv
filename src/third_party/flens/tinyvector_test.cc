@@ -51,6 +51,7 @@ static inline T TransposedAccess(
     return A(j,i);
   } else {
     bool not_implemented_yet = 0;
+    (void) not_implemented_yet;
     assert(not_implemented_yet);
   }
   return T(0);

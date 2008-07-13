@@ -115,6 +115,10 @@ template <typename A>
 void
 TinyGeMatrix<A>::resize(int numRows, int numCols, int firstRow, int firstCol)
 {
+    (void) numRows;
+    (void) numCols;
+    (void) firstRow;
+    (void) firstCol;
     assert((numRows==this->numRows()) && (numCols==this->numCols()));
     assert((firstRow==this->firstRow()) && (firstCol==this->firstCol()));
 }

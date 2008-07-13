@@ -124,6 +124,7 @@ template <typename A>
 void
 TinyVector<A>::resize(int length)
 {
+    (void) length;
     assert(length==this->length());
 }
 
@@ -131,6 +132,8 @@ template <typename A>
 void
 TinyVector<A>::resize(int length, int firstIndex)
 {
+    (void) length;
+    (void) firstIndex;
     assert(length==this->length());
     assert(firstIndex==this->firstIndex());
 }
