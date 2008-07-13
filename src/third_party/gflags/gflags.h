@@ -344,6 +344,7 @@ inline bool flags_safe_bool(From from, const char *name) {
 }
 
 inline bool flags_safe_bool(bool from, const char *name) {
+  (void) name;
   return from;
 }
 

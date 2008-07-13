@@ -4,4 +4,4 @@ License: New BSD
 Upstream version: 0.8
 Local modifications:
 
-None.
+Changed some ints to size_t's to fix compiler warnings.

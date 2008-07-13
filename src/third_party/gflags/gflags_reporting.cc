@@ -55,7 +55,7 @@
 #include <assert.h>
 #include <string>
 #include <vector>
-#include "google/gflags.h"
+#include "gflags.h"
 
 #ifndef PATH_SEPARATOR
 #define PATH_SEPARATOR  '/'
@@ -118,7 +118,7 @@ string DescribeOneFlag(const CommandLineFlagInfo& flag) {
   string final_string = "";
   int chars_in_line = 0;  // how many chars in current line so far?
   while (1) {
-    assert(chars_left == strlen(c_string));  // Unless there's a \0 in there?
+    assert(size_t(chars_left) == strlen(c_string));  // Unless there's a \0 in there?
     const char* newline = strchr(c_string, '\n');
     if (newline == NULL && chars_in_line+chars_left < kLineLength) {
       // The whole remainder of the string fits on this line

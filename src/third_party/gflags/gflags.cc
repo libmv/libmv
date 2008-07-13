@@ -47,7 +47,7 @@
 #include <vector>
 #include <utility>     // for pair<>
 #include <algorithm>
-#include "google/gflags.h"
+#include "gflags.h"
 
 #ifndef PATH_SEPARATOR
 #define PATH_SEPARATOR  '/'
@@ -175,7 +175,7 @@ bool FlagValue::ParseFrom(const char* value) {
   if (type_ == FV_BOOL) {
     const char* kTrue[] = { "1", "t", "true", "y", "yes" };
     const char* kFalse[] = { "0", "f", "false", "n", "no" };
-    for (int i = 0; i < sizeof(kTrue)/sizeof(*kTrue); ++i) {
+    for (size_t i = 0; i < sizeof(kTrue)/sizeof(*kTrue); ++i) {
       if (strcasecmp(value, kTrue[i]) == 0) {
         SET_VALUE_AS(bool, true);
         return true;
@@ -1002,7 +1002,7 @@ string CommandLineFlagParser::ProcessFlagfileLocked(const string& flagval,
   string msg;
   vector<string> filename_list;
   ParseFlagList(flagval.c_str(), &filename_list);  // take a list of filenames
-  for (int i = 0; i < filename_list.size(); ++i) {
+  for (size_t i = 0; i < filename_list.size(); ++i) {
     const char* file = filename_list[i].c_str();
     msg += ProcessOptionsFromStringLocked(ReadFileIntoString(file), set_mode);
   }
@@ -1019,7 +1019,7 @@ string CommandLineFlagParser::ProcessFromenvLocked(const string& flagval,
   vector<string> flaglist;
   ParseFlagList(flagval.c_str(), &flaglist);
 
-  for (int i = 0; i < flaglist.size(); ++i) {
+  for (size_t i = 0; i < flaglist.size(); ++i) {
     const char* flagname = flaglist[i].c_str();
     CommandLineFlag* flag = registry_->FindFlagLocked(flagname);
     if (flag == NULL) {
@@ -1085,7 +1085,7 @@ bool CommandLineFlagParser::ReportErrors() {
   if (!FLAGS_undefok.empty()) {
     vector<string> flaglist;
     ParseFlagList(FLAGS_undefok.c_str(), &flaglist);
-    for (int i = 0; i < flaglist.size(); ++i)
+    for (size_t i = 0; i < flaglist.size(); ++i)
       if (undefined_names_.find(flaglist[i]) != undefined_names_.end()) {
         error_flags_[flaglist[i]] = "";    // clear the error message
       }
@@ -1393,6 +1393,7 @@ string CommandlineFlagsIntoString() {
 bool ReadFlagsFromString(const string& flagfilecontents,
                          const char* prog_name,   // TODO(csilvers): nix this
                          bool errors_are_fatal) {
+  (void) prog_name;
   FlagRegistry* const registry = FlagRegistry::GlobalRegistry();
   FlagSaverImpl saved_states(registry);
   saved_states.SaveFromRegistry();
