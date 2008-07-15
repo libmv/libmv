@@ -2,13 +2,18 @@
 
 // This is an example of how to use the flags facilities.
 
-DEFINE_int32(news_at, 11, "Explanation of option here.");
+DEFINE_int32(first_index, 0, "Index of the first image.");
+DEFINE_int32(last_index, -1, "Index of the last image.  Use -1 to autodetect it.");
 
 int main(int argc, char **argv) {
- google::SetUsageMessage("track a sequence.");
- google::ParseCommandLineFlags(&argc, &argv, true);
+  google::SetUsageMessage("Track a sequence.");
+  google::ParseCommandLineFlags(&argc, &argv, true);
 
- return 0;
+  printf("argc = %d\n", argc);
+  printf("%d", FLAG_first_index);
+  printf("%d", FLAG_first_index);
+
+  return 0;
 }
 
 

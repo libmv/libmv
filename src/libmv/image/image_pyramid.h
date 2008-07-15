@@ -34,6 +34,10 @@ class ImagePyramid {
   ImagePyramid() {
   }
 
+  ImagePyramid(const FloatImage &image, int num_levels, double sigma = 0.9) {
+    Init(image, num_levels, sigma);
+  }
+
   ~ImagePyramid() {
   }
 
@@ -60,10 +64,10 @@ class ImagePyramid {
     return sigma_;
   }
 
- protected:
+ private:
   void ComputeLevel(int l);
 
- protected:
+ private:
   double sigma_;
   std::vector<FloatImage> levels_;
   std::vector<FloatImage> gradient_x_;

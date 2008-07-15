@@ -45,9 +45,33 @@ class KltContext {
         min_feature_dist_(10) {
   }
 
-  void DetectGoodFeatures(const FloatImage &image,
+  void DetectGoodFeatures(const ImagePyramid &pyramid,
                           FeatureList *features);
 
+  void TrackFeature(const ImagePyramid &pyramid1,
+                    const Feature &feature1,
+                    const ImagePyramid &pyramid2,
+                    Feature *feature2_pointer);
+
+  void TrackFeatureOneLevel(const FloatImage &image1,
+                            const Vec2 &position1,
+                            const FloatImage &image2,
+                            const FloatImage &image2_gx,
+                            const FloatImage &image2_gy,
+                            Vec2 *position2_pointer);
+
+
+  void DrawFeatureList(const FeatureList &features,
+                       const Vec3 &color,
+                       FloatImage *image);
+  void DrawFeature(const Feature &feature,
+                   const Vec3 &color,
+                   FloatImage *image);
+
+  int HalfWindowSize() { return half_window_size_; }
+  int WindowSize() { return 2 * HalfWindowSize() + 1; }
+
+ private:
   // Compute the gradient matrix noted by Z in Good Features to Track.
   // Z = [gxx gxy; gxy gyy]
   // This function computes the matrix for every pixel.
@@ -65,24 +89,9 @@ class KltContext {
                         FloatImage *trackness_pointer,
                         double *trackness_mean);
 
-  void FindLocalMaxima(const FloatImage &trackness,
-                       FeatureList *features);
+  void FindLocalMaxima(const FloatImage &trackness, FeatureList *features);
 
   void RemoveTooCloseFeatures(FeatureList *features_pointer);
-
-  void TrackFeature(const ImagePyramid &pyramid1,
-                    const Feature &feature1,
-                    const ImagePyramid &pyramid2,
-                    const ImagePyramid &pyramid2_gx,
-                    const ImagePyramid &pyramid2_gy,
-                    Feature *feature2_pointer);
-
-  void TrackFeatureOneLevel(const FloatImage &image1,
-                            const Feature &feature1,
-                            const FloatImage &image2,
-                            const FloatImage &image2_gx,
-                            const FloatImage &image2_gy,
-                            Feature *feature2_pointer);
 
   // Compute the gradient matrix noted by Z and the error vector e.
   // See Good Features to Track.
@@ -97,7 +106,7 @@ class KltContext {
                                float *gyy,
                                float *ex,
                                float *ey);
-  
+
   // Solve the tracking equation
   //  [gxx gxy] [dx] = [ex]
   //  [gxy gyy] [dy] = [ey]
@@ -107,7 +116,7 @@ class KltContext {
                                     float ex, float ey,
                                     float small_determinant_threshold,
                                     float *dx, float *dy);
-                                    
+
   // Given the three distinct elements of the symmetric 2x2 matrix
   //                     [gxx gxy]
   //                     [gxy gyy],
@@ -116,18 +125,8 @@ class KltContext {
   static float MinEigenValue(float gxx, float gxy, float gyy) {
     return (gxx + gyy - sqrt((gxx - gyy) * (gxx - gyy) + 4 * gxy * gxy)) / 2.0f;
   }
-                                    
-  void DrawFeatureList(const FeatureList &features,
-                       const Vec3 &color,
-                       FloatImage *image);
-  void DrawFeature(const Feature &feature,
-                   const Vec3 &color,
-                   FloatImage *image);
 
-  int HalfWindowSize() { return half_window_size_; }
-  int WindowSize() { return 2 * HalfWindowSize() + 1; }
-
- protected:
+ private:
   int half_window_size_;
   double min_trackness_;
   double min_feature_dist_;

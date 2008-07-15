@@ -22,14 +22,12 @@
 
 #include "libmv/image/image.h"
 #include "libmv/image/image_io.h"
+#include "libmv/image/image_pyramid.h"
 #include "libmv/correspondence/klt.h"
 #include "testing/testing.h"
 
 using std::vector;
-using libmv::KltContext;
-using libmv::FloatImage;
-using libmv::ByteImage;
-using libmv::Vec3;
+using namespace libmv;
 
 namespace {
 
@@ -37,10 +35,12 @@ TEST(KltContext, DetectGoodFeaturesSimple) {
   FloatImage image(51, 51);
   image.Fill(0);
   image(25, 25) = 1.f;
+  ImagePyramid pyramid;
+  pyramid.Init(image, 3);
 
   KltContext klt;
   KltContext::FeatureList features;
-  klt.DetectGoodFeatures(image, &features);
+  klt.DetectGoodFeatures(pyramid, &features);
 
   EXPECT_EQ(features.size(), unsigned(1));
   EXPECT_EQ(features.back().position(0), 25);
@@ -51,7 +51,7 @@ TEST(KltContext, TrackFeatureOneLevel) {
   FloatImage image1(51, 51);
   image1.Fill(0);
   image1(25, 25) = 1.0f;
-  
+
   FloatImage image2;
   image2.ResizeLike(image1);
   image2.Fill(0);
@@ -66,14 +66,42 @@ TEST(KltContext, TrackFeatureOneLevel) {
   ConvolveGaussian(image2, 0.9, &image2blur);
   ImageDerivatives(image2, 0.9, &image2_gx, &image2_gy);
 
-  
+
+  KltContext klt;
+  Vec2 position1, position2;
+  position1 = 25, 25;
+  position2 = 25, 25;
+  klt.TrackFeatureOneLevel(image1blur, position1, image2blur,
+                           image2_gx, image2_gy, &position2);
+
+  EXPECT_NEAR(position2(0), 25 + d, 0.01);
+  EXPECT_NEAR(position2(1), 25 + d, 0.01);
+}
+
+TEST(KltContext, TrackFeature) {
+  FloatImage image1(51, 51);
+  image1.Fill(0);
+  image1(25, 25) = 1.0f;
+
+  FloatImage image2;
+  image2.ResizeLike(image1);
+  image2.Fill(0);
+  int d = 4;
+  for (int i = d; i < image2.Height(); ++i) {
+    for (int j = d; j < image2.Width(); ++j) {
+      image2(i,j) = image1(i - d, j - d);
+    }
+  }
+  ImagePyramid pyramid1(image1, 2);
+  ImagePyramid pyramid2(image2, 2);
+
   KltContext klt;
   KltContext::Feature feature1, feature2;
   feature1.position = 25, 25;
   feature2.position = 25, 25;
-  klt.TrackFeatureOneLevel(image1blur, feature1, image2blur,
-                           image2_gx, image2_gy, &feature2);
-  
+  klt.TrackFeature(pyramid1, feature1,
+                   pyramid2, &feature2);
+
   EXPECT_NEAR(feature2.position(0), 25 + d, 0.01);
   EXPECT_NEAR(feature2.position(1), 25 + d, 0.01);
 }
@@ -85,10 +113,12 @@ TEST(KltContext, DetectGoodFeaturesLenna) {
   EXPECT_NE(0, ReadPnm(lenna_filename.c_str(), &byte_image));
   ConvertByteImageToFloatImage(byte_image, &image1);
 
+  ImagePyramid pyramid1(image1, 3);
+
   KltContext klt;
   KltContext::FeatureList features;
-  klt.DetectGoodFeatures(image1, &features);
-  
+  klt.DetectGoodFeatures(pyramid1, &features);
+
   FloatImage output_image(image1.Height(),image1.Width(),3);
   for (int i = 0; i < image1.Height(); ++i) {
     for (int j = 0; j < image1.Width(); ++j) {
@@ -97,7 +127,7 @@ TEST(KltContext, DetectGoodFeaturesLenna) {
       output_image(i,j,2) = image1(i,j);
     }
   }
- 
+
   FloatImage image2;
   image2.ResizeLike(image1);
   int d = 2;
@@ -106,26 +136,35 @@ TEST(KltContext, DetectGoodFeaturesLenna) {
       image2(i,j) = image1(i - d, j - d);
     }
   }
-  
-  // Prepare images for tracking.
-  FloatImage image1blur, image2blur, image2_gx, image2_gy;
-  ConvolveGaussian(image1, 0.9, &image1blur);
-  ConvolveGaussian(image2, 0.9, &image2blur);
-  ImageDerivatives(image2, 0.9, &image2_gx, &image2_gy);
+
+  ImagePyramid pyramid2;
+  pyramid2.Init(image2,3);
   KltContext::FeatureList features2;
+  int inliers = 0, outliers = 0;
   for (KltContext::FeatureList::iterator i = features.begin();
        i != features.end(); ++i ) {
     KltContext::Feature &feature1 = *i;
     KltContext::Feature feature2;
     feature2.position = feature1.position;
-    klt.TrackFeatureOneLevel(image1blur, feature1, image2blur,
-                             image2_gx, image2_gy, &feature2);
+    klt.TrackFeatureOneLevel(pyramid1.Level(0),
+                             feature1.position,
+                             pyramid2.Level(0),
+                             pyramid2.GradientX(0),
+                             pyramid2.GradientY(0),
+                             &feature2.position);
     features2.push_back(feature2);
+
     float dx = feature2.position(0) - feature1.position(0);
     float dy = feature2.position(1) - feature1.position(1);
-    printf("%g, %g\n", dx, dy);
+    if ( sqr(dx-2) + sqr(dy-2) < sqr(1e-2) ) {
+      inliers++;
+    } else {
+      outliers++;
+    }
   }
-  
+  double inliers_proportion = float(inliers) / (inliers + outliers);
+  EXPECT_GE(inliers_proportion, 0.8);
+
   Vec3 red, green;
   red = 1, 0, 0;
   green = 0, 1, 0;

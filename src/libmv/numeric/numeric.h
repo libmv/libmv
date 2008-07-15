@@ -1,15 +1,15 @@
 // Copyright (c) 2007, 2008 libmv authors.
-// 
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
 // deal in the Software without restriction, including without limitation the
 // rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
 // sell copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -55,10 +55,10 @@ typedef flens::TinyVector<flens::FixedSizeArray1D<double, 4> > Vec4;
 // of A, that can be manipulated (changes underlying A).
 using flens::_;
 
-// Find U, s, and VT such that 
-//   
+// Find U, s, and VT such that
+//
 //   A = U * diag(s) * VT
-// 
+//
 // Destroys A.
 inline void SVD(Mat *A, Vec *s, Mat *U, Mat *VT) {
   svd(*A, *s, *U, *VT);
@@ -126,6 +126,12 @@ inline double NormalizeL2(TVec *x) {
   double l2 = sqrt(sum);
   *x /= l2;
   return l2;
+}
+
+// Return the square of a number.
+template<typename T>
+inline T sqr(T x) {
+  return x * x;
 }
 
 }  // namespace mv

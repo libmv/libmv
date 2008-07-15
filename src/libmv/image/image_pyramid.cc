@@ -50,7 +50,7 @@ void ImagePyramid::ComputeLevel(int l) {
   FloatImage subsampled(new_height, new_width);
   for (int i = 0; i < new_height; ++i) {
     for (int j = 0; j < new_width; ++j) {
-      subsampled(i,j) = SampleLinear(levels_[l-1], 2 * i + .5, 2 * j + .5);
+      subsampled(i,j) = SampleLinear(levels_[l-1], 2 * i, 2 * j);
     }
   }
 
