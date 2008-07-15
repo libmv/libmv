@@ -10,8 +10,8 @@ int main(int argc, char **argv) {
   google::ParseCommandLineFlags(&argc, &argv, true);
 
   printf("argc = %d\n", argc);
-  printf("%d", FLAG_first_index);
-  printf("%d", FLAG_first_index);
+  printf("%d\n", FLAGS_first_index);
+  printf("%d\n", FLAGS_last_index);
 
   return 0;
 }
