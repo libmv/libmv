@@ -54,4 +54,6 @@ TEST(Convolve, BoxFilterHorizontal) {
   EXPECT_TRUE(filtered == convolved);
 }
 
+//TODO(pau) add tests for ImageDerivatives, FirstOrderGaussianJet, BoxFilterVertical, ...
+
 }  // namespace

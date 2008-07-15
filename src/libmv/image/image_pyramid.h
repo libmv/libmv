@@ -27,64 +27,47 @@
 #include "libmv/image/image.h"
 #include "libmv/image/sample.h"
 
-using namespace std;
-using namespace libmv;
-
 namespace libmv {
 
 class ImagePyramid {
  public:
-  ImagePyramid() : num_levels_(0) {
+  ImagePyramid() {
   }
 
   ~ImagePyramid() {
   }
 
-  void Init(const FloatImage &im, int num_levels) {
-    num_levels_ = num_levels;
-    levels_.clear();
-    levels_.resize(NumLevels());
-
-    levels_[0] = im;
-    for (int i = 1; i < NumLevels(); ++i) {
-      ComputeLevel(i);
-    }
-  }
+  void Init(const FloatImage &image, int num_levels, double sigma = 0.9);
 
   const FloatImage &Level(int i) const {
     assert(0 <= i && i < NumLevels());
     return levels_[i];
   }
+  const FloatImage &GradientX(int i) const {
+    assert(0 <= i && i < NumLevels());
+    return gradient_x_[i];
+  }
+  const FloatImage &GradientY(int i) const {
+    assert(0 <= i && i < NumLevels());
+    return gradient_y_[i];
+  }
 
   int NumLevels() const {
-    return num_levels_;
+    return levels_.size();
+  }
+
+  double Sigma() const {
+    return sigma_;
   }
 
  protected:
-  void ComputeLevel(int l) {
-    assert(0 < l && l < NumLevels());
-
-    int height = Level(l-1).Height();
-    int width = Level(l-1).Width();
-    int new_height = height / 2;
-    int new_width = width / 2;
-    double sigma = 0.9;  // this is kind of magic
-
-    FloatImage blured(height, width);
-    ConvolveGaussian(Level(l-1), sigma, &blured);
-
-    levels_[l].Resize(new_height, new_width, 1);
-    for (int i = 0; i < new_height; ++i) {
-      for (int j = 0; j < new_width; ++j) {
-        levels_[l-1](i,j) = SampleLinear(levels_[l], 2*i + .5, 2*j + .5);
-      }
-    }
-  }
+  void ComputeLevel(int l);
 
  protected:
-  int num_levels_;
+  double sigma_;
   std::vector<FloatImage> levels_;
-
+  std::vector<FloatImage> gradient_x_;
+  std::vector<FloatImage> gradient_y_;
 };
 
 }  // namespace libmv

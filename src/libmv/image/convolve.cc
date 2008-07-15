@@ -139,7 +139,7 @@ void ConvolveGaussian(const FloatImage &in,
   ConvolveHorizontal(tmp, kernel, out_pointer);
 }
 
-void ImageDerivatives(const FloatImage &image,
+void ImageDerivatives(const FloatImage &in,
                       double sigma,
                       FloatImage *gradient_x,
                       FloatImage *gradient_y) {
@@ -148,16 +148,33 @@ void ImageDerivatives(const FloatImage &image,
 
   // Compute first derivative in x.
   FloatImage tmp;
-  ConvolveHorizontal(image, derivative, &tmp);
-//  WritePgm(tmp, "horiz_derivative_x.pgm");
+  ConvolveHorizontal(in, derivative, &tmp);
   ConvolveVertical(tmp, kernel, gradient_x);
-//  WritePgm(*gradient_x, "vert_kernel_x.pgm");
 
   // Compute first derivative in y.
-  ConvolveHorizontal(image, kernel, &tmp);
-//  WritePgm(tmp, "horiz_kernel_y.pgm");
+  ConvolveHorizontal(in, kernel, &tmp);
   ConvolveVertical(tmp, derivative, gradient_y);
-//  WritePgm(*gradient_y, "vert_derivative_y.pgm");
+}
+
+void FirstOrderGaussianJet(const FloatImage &in,
+                           double sigma,
+                           FloatImage *blured_image,
+                           FloatImage *gradient_x,
+                           FloatImage *gradient_y) {
+  Vec kernel, derivative;
+  ComputeGaussianKernel(sigma, &kernel, &derivative);
+  FloatImage tmp;
+
+  // Compute convolved image.
+  ConvolveVertical(in, kernel, &tmp);
+  ConvolveHorizontal(tmp, kernel, blured_image);
+
+  // Compute first derivative in x.
+  ConvolveHorizontal(in, derivative, gradient_x);
+
+  // Compute first derivative in y.
+  ConvolveHorizontal(in, kernel, &tmp);
+  ConvolveVertical(tmp, derivative, gradient_y);
 }
 
 void BoxFilterHorizontal(const FloatImage &in,

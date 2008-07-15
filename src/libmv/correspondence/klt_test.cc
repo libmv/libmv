@@ -29,6 +29,7 @@ using std::vector;
 using libmv::KltContext;
 using libmv::FloatImage;
 using libmv::ByteImage;
+using libmv::Vec3;
 
 namespace {
 

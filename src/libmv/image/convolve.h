@@ -42,6 +42,12 @@ void ImageDerivatives(const FloatImage &in,
                       FloatImage *gradient_x,
                       FloatImage *gradient_y);
 
+void FirstOrderGaussianJet(const FloatImage &in,
+                           double sigma,
+                           FloatImage *blured_image,
+                           FloatImage *gradient_x,
+                           FloatImage *gradient_y);
+
 void BoxFilterHorizontal(const FloatImage &in,
                          int window_size,
                          FloatImage *out_pointer);
