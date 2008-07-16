@@ -29,7 +29,7 @@
 
 namespace libmv {
 
-// Caveat: These use 1-indexing by default.
+// These all use 0-indexing. This is different than upstream FLENS.
 typedef flens::GeMatrix<flens::FullStorage<double, flens::ColMajor> > Mat;
 typedef flens::DenseVector<flens::Array<double> >                     Vec;
 
@@ -42,14 +42,9 @@ typedef flens::TinyVector<flens::FixedSizeArray1D<double, 2> > Vec2;
 typedef flens::TinyVector<flens::FixedSizeArray1D<double, 3> > Vec3;
 typedef flens::TinyVector<flens::FixedSizeArray1D<double, 4> > Vec4;
 
-// Do not use TinyVector<> directly; if needed, add more definitions here.
-//typedef flens::TinyVector<double, 2>     Vec2;
-//typedef flens::TinyVector<double, 3>     Vec3;
-//typedef flens::TinyVector<double, 4>     Vec4;
-//typedef flens::TinyGeMatrix<FixedSizeMat22>  Mat2;
-//typedef flens::TinyGeMatrix<FixedSizeMat33>  Mat3;
-//typedef flens::TinyGeMatrix<FixedSizeMat34>  Mat34;
-//typedef flens::TinyGeMatrix<FixedSizeMat44>  Mat4;
+typedef flens::TinyVector<flens::FixedSizeArray1D<float, 2> > Vec2f;
+typedef flens::TinyVector<flens::FixedSizeArray1D<float, 3> > Vec3f;
+typedef flens::TinyVector<flens::FixedSizeArray1D<float, 4> > Vec4f;
 
 // For matrix and vector views. Example: A(_(1,3), (4,5)) is a 3x2 submatrix
 // of A, that can be manipulated (changes underlying A).
@@ -66,11 +61,10 @@ inline void SVD(Mat *A, Vec *s, Mat *U, Mat *VT) {
 
 // Specialization for tiny matrices.
 template<class TA>
-//inline void SVD(flens::TinyGeMatrix<flens::FixedSizeArray2D<T, M, N> > *A,
 inline void SVD(TA *A, Vec *s, Mat *U, Mat *VT) {
   // TODO(keir): It's possible to eliminate this copying by pushing SVD support
   // for tiny matrices and vectors into FLENS.
-  Mat Ap;//(M,N);
+  Mat Ap;
   Ap = *A;
   svd(Ap, *s, *U, *VT);
 }
@@ -81,13 +75,12 @@ inline void SVD(TA *A, Vec *s, Mat *U, Mat *VT) {
 template<class TMat, class TVec>
 inline double Nullspace(TMat *A, TVec *x)
 {
-  int m = A->numRows();
-  int n = A->numCols();
   Mat U, VT;
   Vec s;
-
   SVD(A, &s, &U, &VT);
 
+  int m = A->numRows();
+  int n = A->numCols();
   x->resize(n);
   *x = VT(n-1, _);
   return s(std::min(n-1,m-1));
@@ -130,7 +123,7 @@ inline double NormalizeL2(TVec *x) {
 
 // Return the square of a number.
 template<typename T>
-inline T sqr(T x) {
+inline T Square(T x) {
   return x * x;
 }
 

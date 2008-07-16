@@ -111,6 +111,8 @@ static double dist2(const Vec2 &x, const Vec2 &y) {
   return a * a + b * b;
 }
 
+// TODO(keir): Use Stan's neat trick of using a 'punch-out' array to detect
+// too-closes features.
 void KltContext::RemoveTooCloseFeatures(FeatureList *features) {
   double treshold = min_feature_dist_ * min_feature_dist_;
 
@@ -175,10 +177,7 @@ void KltContext::TrackFeatureOneLevel(const FloatImage &image1,
                                       Vec2 *position2_pointer) {
   Vec2 &position2 = *position2_pointer;
 
-  const int max_iteration = 10;
-  const double precision = 1e-6;
-
-  for (int i = 0; i < max_iteration; ++i) {
+  for (int i = 0; i < max_iterations_; ++i) {
     // Compute gradient matrix and error vector.
     float gxx, gxy, gyy, ex, ey;
     ComputeTrackingEquation(image1, image2, image2_gx, image2_gy,
@@ -186,12 +185,12 @@ void KltContext::TrackFeatureOneLevel(const FloatImage &image1,
                             &gxx, &gxy, &gyy, &ex, &ey);
     // Solve the linear system for deltad.
     float dx, dy;
-    SolveTrackingEquation(gxx, gxy, gyy, ex, ey, 1e-6, &dx, &dy);
+    SolveTrackingEquation(gxx, gxy, gyy, ex, ey, &dx, &dy);
     // Update feature2 position.
     position2(0) += dx;
     position2(1) += dy;
 
-    if (sqr(dx) + sqr(dy) < sqr(precision)) {
+    if (Square(dx) + Square(dy) < min_update_distance2_) {
       break;
     }
   }
@@ -237,10 +236,9 @@ void KltContext::ComputeTrackingEquation(const FloatImage &image1,
 
 bool KltContext::SolveTrackingEquation(float gxx, float gxy, float gyy,
                                        float ex, float ey,
-                                       float small_determinant_threshold,
                                        float *dx, float *dy) {
   float det = gxx * gyy - gxy * gxy;
-  if (det < small_determinant_threshold) {
+  if (det < min_determinant_) {
     *dx = 0;
     *dy = 0;
     return false;

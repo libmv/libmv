@@ -35,19 +35,32 @@
 //
 // Note: A tracker has no notion of correspondence; it is up to the calling
 // code to handle such details.
-class Tracker {
-  // Draw this tracker directly on an image.
-  void Draw(ByteImage *image);
 
-  // Save: Figure out serialization...
-  void Save();
+// Tracks points between images.
+class Tracker {
+  // Correspondences is the only connection to the outside world?
+  Tracker(Correspondences *correspondences);
+  void TrackBetween(Image *image1, Image *image2);
 };
+
+/*
+feature 
+  track to (tracker *)
+    (now have concrete class; either pontfeat or uklt feat or line feat)
+    tracker->track(*this)
+
+    need to pass in a lazily loaded image sequence.
+
+    */
 
 // Anything needed to find a tracker in an image, given other stuff (other
 // trackers, image derivatives, image cutouts, motion models, kdtrees of image
 // feature vectors, etc).
-class TrackerContext {
-  Tracker *TrackTo(Image);
+class TrackManager {
+  void SetDetector(Detector *detector);
+  void SetTracker(Tracker *Tracker);
+  void AddImage();
+  void TrackBetweenImages(image1, image2);
 }
 
 #endif  // LIBMV_CORRESPONDENCE_TRACKER_H_

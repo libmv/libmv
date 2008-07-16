@@ -41,8 +41,11 @@ class KltContext {
 
   KltContext()
       : half_window_size_(3),
+        max_iterations_(10),
         min_trackness_(0.1),
-        min_feature_dist_(10) {
+        min_feature_dist_(10),
+        min_determinant_(1e-6),
+        min_update_distance2_(1e-6) {
   }
 
   void DetectGoodFeatures(const ImagePyramid &pyramid,
@@ -112,14 +115,15 @@ class KltContext {
   //  [gxy gyy] [dy] = [ey]
   // for dx and dy.
   // Borrowed from Stan Birchfield's KLT implementation.
-  static bool SolveTrackingEquation(float gxx, float gxy, float gyy,
-                                    float ex, float ey,
-                                    float small_determinant_threshold,
-                                    float *dx, float *dy);
+  bool SolveTrackingEquation(float gxx, float gxy, float gyy,
+                             float ex, float ey,
+                             float *dx, float *dy);
 
   // Given the three distinct elements of the symmetric 2x2 matrix
+  //
   //                     [gxx gxy]
   //                     [gxy gyy],
+  //
   // return the minimum eigenvalue of the matrix.
   // Borrowed from Stan Birchfield's KLT implementation.
   static float MinEigenValue(float gxx, float gxy, float gyy) {
@@ -128,8 +132,11 @@ class KltContext {
 
  private:
   int half_window_size_;
+  int max_iterations_;
   double min_trackness_;
   double min_feature_dist_;
+  double min_determinant_;
+  double min_update_distance2_;
 };
 
 }  // namespace libmv

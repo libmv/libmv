@@ -33,23 +33,28 @@ template<class LeftNode, class Edge, class RightNode>
 class BipartiteGraph {
  public:
   typedef std::pair<LeftNode, RightNode> LeftToRight;
-  typedef std::pair<RightNode, LeftNode> RightToLeft;
   typedef LeftToRight EdgeKey;
   typedef std::map<EdgeKey, Edge> EdgeMap;
+
+  typedef std::pair<RightNode, Edge> RightEdge;
+  typedef std::pair<LeftNode, Edge> LeftEdge;
+
+  typedef std::map<LeftNode, std::set<RightEdge> > LeftToRightMap;
+  typedef std::map<RightNode, std::set<LeftEdge> > RightToLeftMap;
 
   int NumEdges() const {
     return edges_.size();
   }
   int NumLeftNodes() const {
-    return CountMultiMapKeys(left_to_right_);
+    return left_to_right_.size();
   }
   int NumRightNodes() const {
-    return CountMultiMapKeys(right_to_left_);
+    return right_to_left_.size();
   }
   void Insert(const LeftNode left, const RightNode right, const Edge edge) {
     edges_[EdgeKey(left, right)] = edge;
-    left_to_right_.insert(LeftToRight(left, right));
-    right_to_left_.insert(RightToLeft(right, left));
+    left_to_right_[left].insert(RightEdge(right, edge));
+    right_to_left_[right].insert(LeftEdge(left, edge));
   }
   Edge GetEdge(const LeftNode left, const RightNode right) const {
     EdgeKey key(left, right);
@@ -71,43 +76,64 @@ class BipartiteGraph {
       return iter_->second;
     }
     bool Done() {
-      return iter_ == end_;
+      return iter_ == edges_->end();
     }
     void Next() {
       ++iter_;
     }
    private:
     typename EdgeMap::const_iterator iter_;
-    typename EdgeMap::const_iterator end_;
+    const EdgeMap *edges_;
   };
 
   EdgeIterator EdgesIterator() const {
     EdgeIterator iterator;
     iterator.iter_ = edges_.begin();
-    iterator.end_ = edges_.end();
+    iterator.edges_ = &edges_;
     return iterator;
   }
+
+  /*
+  class RightToLeftIterator {
+    friend class BipartiteGraph<LeftNode, Edge, RightNode>;
+   public:
+    LeftNode left() const {
+      return iter_->first.first;
+    }
+    RightNode right() const {
+      return iter_->first.second;
+    }
+    Edge edge() const {
+      return iter_->second;
+    }
+    bool Done() {
+      return iter_ == edgemap_.end();
+    }
+    void Next() {
+      ++iter_;
+    }
+   private:
+    typename EdgeMap::const_iterator iter_;
+    EdgeMap &edgemap_;
+  };
+
+  RightIterator EdgesIterator() const {
+    EdgeIterator iterator;
+    iterator.iter_ = edges_.begin();
+    iterator.edgemap_ = edgemap_;
+    return iterator;
+  }
+  */
 
   // TODO(keir): Write iterator over left nodes
   // TODO(keir): Write iterator over right nodes
   // TODO(keir): Write iterator over left-nodes-for-one-right-node.
   // TODO(keir): Write iterator over right-nodes-for-one-left-node.
  private:
-  template<typename Z, typename X>
-  int CountMultiMapKeys(const std::multimap<Z, X> &ZtoX) const {
-    // TODO(keir): Fix this painfully stupid implementation which I shamefully
-    // wrote.
-    std::set<Z> tmp;
-    typename std::multimap<Z, X>::const_iterator p;
-    for (p = ZtoX.begin(); p != ZtoX.end(); ++p) {
-      tmp.insert(p->first);
-    }
-    return tmp.size();
-  }
 
   EdgeMap edges_;
-  std::multimap<LeftNode, RightNode> left_to_right_;
-  std::multimap<RightNode, LeftNode> right_to_left_;
+  LeftToRightMap left_to_right_;
+  RightToLeftMap right_to_left_;
 };
 
 }  // namespace libmv

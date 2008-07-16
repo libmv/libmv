@@ -156,7 +156,7 @@ TEST(KltContext, DetectGoodFeaturesLenna) {
 
     float dx = feature2.position(0) - feature1.position(0);
     float dy = feature2.position(1) - feature1.position(1);
-    if ( sqr(dx-2) + sqr(dy-2) < sqr(1e-2) ) {
+    if ( Square(dx-2) + Square(dy-2) < Square(1e-2) ) {
       inliers++;
     } else {
       outliers++;
