@@ -156,21 +156,21 @@ void ImageDerivatives(const FloatImage &in,
   ConvolveVertical(tmp, derivative, gradient_y);
 }
 
-void FirstOrderGaussianJet(const FloatImage &in,
-                           double sigma,
-                           FloatImage *blured_image,
-                           FloatImage *gradient_x,
-                           FloatImage *gradient_y) {
+void BlurredImageAndDerivatives(const FloatImage &in,
+                                double sigma,
+                                FloatImage *blurred_image,
+                                FloatImage *gradient_x,
+                                FloatImage *gradient_y) {
   Vec kernel, derivative;
   ComputeGaussianKernel(sigma, &kernel, &derivative);
   FloatImage tmp;
 
   // Compute convolved image.
   ConvolveVertical(in, kernel, &tmp);
-  ConvolveHorizontal(tmp, kernel, blured_image);
+  ConvolveHorizontal(tmp, kernel, blurred_image);
 
   // Compute first derivative in x.
-  ConvolveHorizontal(in, derivative, gradient_x);
+  ConvolveHorizontal(tmp, derivative, gradient_x);
 
   // Compute first derivative in y.
   ConvolveHorizontal(in, kernel, &tmp);

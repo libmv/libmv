@@ -23,6 +23,7 @@
 #include "libmv/image/image.h"
 #include "libmv/image/image_io.h"
 #include "libmv/image/image_pyramid.h"
+#include "libmv/image/convolve.h"
 #include "libmv/correspondence/klt.h"
 #include "testing/testing.h"
 
@@ -79,9 +80,9 @@ TEST(KltContext, TrackFeatureOneLevel) {
 }
 
 TEST(KltContext, TrackFeature) {
-  FloatImage image1(51, 51);
+  FloatImage image1(101, 101);
   image1.Fill(0);
-  image1(25, 25) = 1.0f;
+  image1(50, 50) = 1.0f;
 
   FloatImage image2;
   image2.ResizeLike(image1);
@@ -97,13 +98,13 @@ TEST(KltContext, TrackFeature) {
 
   KltContext klt;
   KltContext::Feature feature1, feature2;
-  feature1.position = 25, 25;
-  feature2.position = 25, 25;
+  feature1.position = 50, 50;
+  feature2.position = 50, 50;
   klt.TrackFeature(pyramid1, feature1,
                    pyramid2, &feature2);
 
-  EXPECT_NEAR(feature2.position(0), 25 + d, 0.01);
-  EXPECT_NEAR(feature2.position(1), 25 + d, 0.01);
+  EXPECT_NEAR(feature2.position(0), 50 + d, 0.01);
+  EXPECT_NEAR(feature2.position(1), 50 + d, 0.01);
 }
 
 TEST(KltContext, DetectGoodFeaturesLenna) {

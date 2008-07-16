@@ -54,6 +54,13 @@ TEST(Convolve, BoxFilterHorizontal) {
   EXPECT_TRUE(filtered == convolved);
 }
 
-//TODO(pau) add tests for ImageDerivatives, FirstOrderGaussianJet, BoxFilterVertical, ...
+//TODO(pau) add tests for ImageDerivatives, FirstOrderGaussianJet,
+//   BoxFilterVertical, ...
+// Comment by mierle, Today (16 hours ago):
+//   i think a reasonable solution is to construct a float image with a known
+//   z=f(x,y) mapping, and then check that the derivatives match expectations
+//   (e.g. z = x^2 + sin(y) or something).
+//   Another simple check is that a constant image should have constant
+//   gradients and blur values.
 
 }  // namespace

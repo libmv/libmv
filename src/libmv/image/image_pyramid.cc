@@ -19,6 +19,7 @@
 // IN THE SOFTWARE.
 
 #include "libmv/image/image_pyramid.h"
+#include "libmv/image/convolve.h"
 
 namespace libmv {
 
@@ -33,8 +34,8 @@ void ImagePyramid::Init(const FloatImage &image,
   gradient_y_.clear();
   gradient_y_.resize(num_levels);
 
-  FirstOrderGaussianJet(image, Sigma(),
-                        &levels_[0], &gradient_x_[0], &gradient_y_[0]);
+  BlurredImageAndDerivatives(image, Sigma(),
+                             &levels_[0], &gradient_x_[0], &gradient_y_[0]);
 
   for (int i = 1; i < NumLevels(); ++i) {
     ComputeLevel(i);
@@ -50,12 +51,12 @@ void ImagePyramid::ComputeLevel(int l) {
   FloatImage subsampled(new_height, new_width);
   for (int i = 0; i < new_height; ++i) {
     for (int j = 0; j < new_width; ++j) {
-      subsampled(i,j) = SampleLinear(levels_[l-1], 2 * i, 2 * j);
+      subsampled(i,j) = levels_[l-1](2 * i, 2 * j);
     }
   }
 
-  FirstOrderGaussianJet(subsampled, Sigma(),
-                        &levels_[l], &gradient_x_[l], &gradient_y_[l]);
+  BlurredImageAndDerivatives(subsampled, Sigma(),
+                             &levels_[l], &gradient_x_[l], &gradient_y_[l]);
 }
 
 }  // namespace libmv

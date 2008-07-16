@@ -26,6 +26,7 @@
 #include "libmv/image/image.h"
 #include "libmv/image/image_io.h"
 #include "libmv/image/convolve.h"
+#include "libmv/image/sample.h"
 
 using std::vector;
 
@@ -165,6 +166,7 @@ void KltContext::TrackFeature(const ImagePyramid &pyramid1,
                          pyramid2.GradientX(i),
                          pyramid2.GradientY(i),
                          &position2);
+    printf("level %i position2 %g %g\n", i, position2(0), position2(1));
   }
   feature2_pointer->position = position2;
 }

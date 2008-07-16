@@ -23,9 +23,7 @@
 
 #include <vector>
 
-#include "libmv/image/convolve.h"
 #include "libmv/image/image.h"
-#include "libmv/image/sample.h"
 
 namespace libmv {
 
