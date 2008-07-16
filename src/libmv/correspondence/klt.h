@@ -51,6 +51,11 @@ class KltContext {
   void DetectGoodFeatures(const ImagePyramid &pyramid,
                           FeatureList *features);
 
+  void TrackFeatures(const ImagePyramid &pyramid1,
+                     const FeatureList &features1,
+                     const ImagePyramid &pyramid2,
+                     FeatureList *features2_pointer);
+
   void TrackFeature(const ImagePyramid &pyramid1,
                     const Feature &feature1,
                     const ImagePyramid &pyramid2,
@@ -66,10 +71,10 @@ class KltContext {
 
   void DrawFeatureList(const FeatureList &features,
                        const Vec3 &color,
-                       FloatImage *image);
+                       FloatImage *image) const;
   void DrawFeature(const Feature &feature,
                    const Vec3 &color,
-                   FloatImage *image);
+                   FloatImage *image) const;
 
   int HalfWindowSize() { return half_window_size_; }
   int WindowSize() { return 2 * HalfWindowSize() + 1; }

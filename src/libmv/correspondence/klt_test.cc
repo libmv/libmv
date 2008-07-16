@@ -79,6 +79,8 @@ TEST(KltContext, TrackFeatureOneLevel) {
   EXPECT_NEAR(position2(1), 25 + d, 0.01);
 }
 
+// TODO(pau) test TrackFeatures.
+
 TEST(KltContext, TrackFeature) {
   FloatImage image1(101, 101);
   image1.Fill(0);

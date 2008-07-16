@@ -25,18 +25,37 @@
 //#include "libmv/correspondence/correspondence.h"
 #include "libmv/correspondence/klt.h"
 #include "libmv/image/image.h"
+#include "libmv/image/image_io.h"
 #include "libmv/image/image_pyramid.h"
 #include "third_party/gflags/gflags.h"
 
 using std::string;
 using std::sort;
 using std::vector;
-using libmv::ByteImage;
+using libmv::KltContext;
 using libmv::ImagePyramid;
 using libmv::FloatImage;
+using libmv::Vec3;
 
-DEFINE_int32(first_index, 0, "Index of the first image.");
-DEFINE_int32(last_index, -1, "Index of the last image.  Use -1 to autodetect it.");
+void WriteOutputImage(const FloatImage &image,
+                      const KltContext &klt,
+                      const KltContext::FeatureList &features,
+                      const char *output_filename) {
+  FloatImage output_image(image.Height(), image.Width(), 3);
+  for (int i = 0; i < image.Height(); ++i) {
+    for (int j = 0; j < image.Width(); ++j) {
+      output_image(i,j,0) = image(i,j);
+      output_image(i,j,1) = image(i,j);
+      output_image(i,j,2) = image(i,j);
+    }
+  }
+
+  Vec3 green;
+  green = 0, 1, 0;
+  klt.DrawFeatureList(features, green, &output_image);
+
+  WritePnm(output_image, output_filename);
+}
 
 int main(int argc, char **argv) {
   google::SetUsageMessage("Track a sequence.");
@@ -55,15 +74,36 @@ int main(int argc, char **argv) {
     return 1;
   }
 
-  ByteImage byte_image;
-  FloatImage image1;
-  FloatImage image2;
-  ImagePyramid pyramid1(image1, 3);
-  ImagePyramid pyramid2;
 
-  for (size_t i = 0; i < files.size(); ++i) {
+  int oldind = 0, newind = 1;
+  FloatImage image[2];
+  ImagePyramid pyramid[2];
+  KltContext::FeatureList features[2];
+  KltContext klt;
+
+  ReadPnm(files[0].c_str(), &image[newind]);
+  pyramid[newind].Init(image[newind], 3);
+
+  klt.DetectGoodFeatures(pyramid[newind], &features[newind]);
+
+  WriteOutputImage(image[newind], klt, features[newind],
+                   (files[0]+".out.ppm").c_str());
+
+  for (size_t i = 1; i < files.size(); ++i) {
+    std::swap(oldind, newind);
+
+    ReadPnm(files[i].c_str(), &image[newind]);
+    pyramid[newind].Init(image[newind], 3);
+
+    klt.TrackFeatures(pyramid[oldind], features[oldind],
+                      pyramid[newind], &features[newind]);
+
+    WriteOutputImage(image[newind], klt, features[newind],
+                    (files[i]+".out.ppm").c_str());
+
     // TODO(keir): Finish me.
   }
+
 
   return 0;
 }

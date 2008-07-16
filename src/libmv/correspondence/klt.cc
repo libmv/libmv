@@ -144,6 +144,21 @@ void KltContext::RemoveTooCloseFeatures(FeatureList *features) {
   }
 }
 
+void KltContext::TrackFeatures(const ImagePyramid &pyramid1,
+                               const FeatureList &features1,
+                               const ImagePyramid &pyramid2,
+                               FeatureList *features2_pointer) {
+  FeatureList &features2 = *features2_pointer;
+
+  features2.clear();
+  for (FeatureList::const_iterator i = features1.begin();
+       i != features1.end(); ++i) {
+    Feature tracked_feature;
+    TrackFeature(pyramid1, *i, pyramid2, &tracked_feature);
+    features2.push_back(tracked_feature);
+  }
+}
+
 void KltContext::TrackFeature(const ImagePyramid &pyramid1,
                               const Feature &feature1,
                               const ImagePyramid &pyramid2,
@@ -166,7 +181,6 @@ void KltContext::TrackFeature(const ImagePyramid &pyramid1,
                          pyramid2.GradientX(i),
                          pyramid2.GradientY(i),
                          &position2);
-    printf("level %i position2 %g %g\n", i, position2(0), position2(1));
   }
   feature2_pointer->position = position2;
 }
@@ -252,7 +266,7 @@ bool KltContext::SolveTrackingEquation(float gxx, float gxy, float gyy,
 
 void KltContext::DrawFeatureList(const FeatureList &features,
                                  const Vec3 &color,
-                                 FloatImage *image) {
+                                 FloatImage *image) const {
   for (FeatureList::const_iterator i = features.begin();
        i != features.end(); ++i) {
     DrawFeature(*i, color, image);
@@ -261,7 +275,7 @@ void KltContext::DrawFeatureList(const FeatureList &features,
 
 void KltContext::DrawFeature(const Feature &feature,
                              const Vec3 &color,
-                             FloatImage *image) {
+                             FloatImage *image) const {
   assert(image->Depth() == 3);
 
   const int cross_width = 5;
