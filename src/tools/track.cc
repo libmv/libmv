@@ -92,6 +92,8 @@ int main(int argc, char **argv) {
   for (size_t i = 1; i < files.size(); ++i) {
     std::swap(oldind, newind);
 
+    printf("Tracking %s\n", files[i].c_str());
+
     ReadPnm(files[i].c_str(), &image[newind]);
     pyramid[newind].Init(image[newind], 3);
 
