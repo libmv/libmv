@@ -46,6 +46,11 @@ typedef flens::TinyVector<flens::FixedSizeArray1D<float, 2> > Vec2f;
 typedef flens::TinyVector<flens::FixedSizeArray1D<float, 3> > Vec3f;
 typedef flens::TinyVector<flens::FixedSizeArray1D<float, 4> > Vec4f;
 
+typedef flens::TinyVector<flens::FixedSizeArray1D<int, 2> > Vec2i;
+typedef flens::TinyVector<flens::FixedSizeArray1D<int, 3> > Vec3i;
+typedef flens::TinyVector<flens::FixedSizeArray1D<int, 4> > Vec4i;
+
+
 // For matrix and vector views. Example: A(_(1,3), (4,5)) is a 3x2 submatrix
 // of A, that can be manipulated (changes underlying A).
 using flens::_;
