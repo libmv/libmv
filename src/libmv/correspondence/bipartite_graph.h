@@ -42,6 +42,12 @@ class BipartiteGraph {
   typedef std::map<LeftNode, std::set<RightEdge> > LeftToRightMap;
   typedef std::map<RightNode, std::set<LeftEdge> > RightToLeftMap;
 
+  struct Entry {
+    LeftNode left;
+    Edge edge;
+    RightNode right;
+  };
+
   int NumEdges() const {
     return edges_.size();
   }
@@ -63,61 +69,118 @@ class BipartiteGraph {
     return it->second;
   }
 
-  class EdgeIterator {
+  enum IteratorType {
+    OVER_LEFT_NODES,
+    OVER_RIGHT_NODES,
+    OVER_EDGES,
+  };
+
+  // This iterator is a bit complicated to make the API easy to use.
+  class Iterator {
     friend class BipartiteGraph<LeftNode, Edge, RightNode>;
    public:
     LeftNode left() const {
-      return iter_->first.first;
+      return left_;
     }
     RightNode right() const {
-      return iter_->first.second;
+      return right_;
     }
     Edge edge() const {
-      return iter_->second;
+      return edge_;
     }
     bool Done() {
-      return iter_ == edges_->end();
+      if (type_ == OVER_EDGES) {
+        return iter_ == edges_->end();
+      } else if (type_ == OVER_LEFT_NODES) {
+        return left_iter_ == left_nodes_->end();
+      } else if (type_ == OVER_RIGHT_NODES) {
+        return right_iter_ == right_nodes_->end();
+      } else {
+        // error!
+        return true;
+      }
     }
     void Next() {
-      ++iter_;
+      if (type_ == OVER_EDGES) {
+        ++iter_;
+      } else if (type_ == OVER_LEFT_NODES) {
+        ++left_iter_;
+      } else if (type_ == OVER_RIGHT_NODES) {
+        ++right_iter_;
+      } else {
+        assert(0);
+      }
+      Assign();
+    }
+    void Assign() {
+      if (type_ == OVER_EDGES) {
+        left_ = iter_->first.first;
+        right_ = iter_->first.second;
+        edge_ = iter_->second;
+      } else if (type_ == OVER_LEFT_NODES) {
+        left_ = left_iter_->first;
+        edge_ = left_iter_->second;
+      } else if (type_ == OVER_RIGHT_NODES) {
+        right_ = right_iter_->first;
+        edge_ = right_iter_->second;
+      } else {
+        assert(0);
+      }
     }
    private:
+
+    // For iterators over edges.
     typename EdgeMap::const_iterator iter_;
     const EdgeMap *edges_;
+
+    typename std::set<RightEdge>::iterator right_iter_;
+    const std::set<RightEdge> *right_nodes_;
+    
+    typename std::set<LeftEdge>::iterator left_iter_;
+    const std::set<LeftEdge> *left_nodes_;
+    
+    IteratorType type_;
+    LeftNode left_;
+    RightNode right_;
+    Edge edge_;
   };
 
-  EdgeIterator EdgesIterator() const {
-    EdgeIterator iterator;
+  Iterator ScanAllEdges() const {
+    Iterator iterator;
+    iterator.type_ = OVER_EDGES;
     iterator.iter_ = edges_.begin();
+    iterator.Assign();
     iterator.edges_ = &edges_;
     return iterator;
   }
 
-  /*
-  class RightToLeftIterator {
-    friend class BipartiteGraph<LeftNode, Edge, RightNode>;
-   public:
-    LeftNode left() const {
-      return iter_->first.first;
-    }
-    RightNode right() const {
-      return iter_->first.second;
-    }
-    Edge edge() const {
-      return iter_->second;
-    }
-    bool Done() {
-      return iter_ == edgemap_.end();
-    }
-    void Next() {
-      ++iter_;
-    }
-   private:
-    typename EdgeMap::const_iterator iter_;
-    EdgeMap &edgemap_;
-  };
+  Iterator ScanEdgesForRightNode(const RightNode &right_node) const {
+    typename RightToLeftMap::const_iterator it =
+        right_to_left_.find(right_node);
+    assert(it != right_to_left_.end());
+    Iterator iterator;
+    iterator.type_ = OVER_LEFT_NODES;
+    iterator.left_iter_ = it->second.begin();
+    iterator.left_nodes_ = &it->second;
+    iterator.right_ = right_node;
+    iterator.Assign();
+    return iterator;
+  }
 
-  RightIterator EdgesIterator() const {
+  Iterator ScanEdgesForLeftNode(const LeftNode &left_node) const {
+    typename LeftToRightMap::const_iterator it = left_to_right_.find(left_node);
+    assert(it != left_to_right_.end());
+    Iterator iterator;
+    iterator.type_ = OVER_RIGHT_NODES;
+    iterator.right_iter_ = it->second.begin();
+    iterator.right_nodes_ = &it->second;
+    iterator.left_ = left_node;
+    iterator.Assign();
+    return iterator;
+  }
+
+  /*
+  RightToLeftIterator IterateOverRightNodes() const {
     EdgeIterator iterator;
     iterator.iter_ = edges_.begin();
     iterator.edgemap_ = edgemap_;
