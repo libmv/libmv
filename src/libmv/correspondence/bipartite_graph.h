@@ -51,17 +51,21 @@ class BipartiteGraph {
   int NumEdges() const {
     return edges_.size();
   }
+
   int NumLeftNodes() const {
     return left_to_right_.size();
   }
+
   int NumRightNodes() const {
     return right_to_left_.size();
   }
+
   void Insert(const LeftNode left, const RightNode right, const Edge edge) {
     edges_[EdgeKey(left, right)] = edge;
     left_to_right_[left].insert(RightEdge(right, edge));
     right_to_left_[right].insert(LeftEdge(left, edge));
   }
+
   Edge GetEdge(const LeftNode left, const RightNode right) const {
     EdgeKey key(left, right);
     typename EdgeMap::const_iterator it = edges_.find(key);
@@ -75,7 +79,8 @@ class BipartiteGraph {
     OVER_EDGES,
   };
 
-  // This iterator is a bit complicated to make the API easy to use.
+  // Iterates over the edges in the graph. The iteration may be constrained to
+  // the outgoing edges from nodes on either the left or the right.
   class Iterator {
     friend class BipartiteGraph<LeftNode, Edge, RightNode>;
    public:
@@ -96,7 +101,7 @@ class BipartiteGraph {
       } else if (type_ == OVER_RIGHT_NODES) {
         return right_iter_ == right_nodes_->end();
       } else {
-        // error!
+        assert(0);
         return true;
       }
     }
@@ -129,13 +134,15 @@ class BipartiteGraph {
     }
    private:
 
-    // For iterators over edges.
+    // For iterating over all edges.
     typename EdgeMap::const_iterator iter_;
     const EdgeMap *edges_;
 
+    // For iterating over edges connected to a particular left node.
     typename std::set<RightEdge>::iterator right_iter_;
     const std::set<RightEdge> *right_nodes_;
     
+    // For iterating over edges connected to a particular right node.
     typename std::set<LeftEdge>::iterator left_iter_;
     const std::set<LeftEdge> *left_nodes_;
     
@@ -179,19 +186,8 @@ class BipartiteGraph {
     return iterator;
   }
 
-  /*
-  RightToLeftIterator IterateOverRightNodes() const {
-    EdgeIterator iterator;
-    iterator.iter_ = edges_.begin();
-    iterator.edgemap_ = edgemap_;
-    return iterator;
-  }
-  */
-
   // TODO(keir): Write iterator over left nodes
   // TODO(keir): Write iterator over right nodes
-  // TODO(keir): Write iterator over left-nodes-for-one-right-node.
-  // TODO(keir): Write iterator over right-nodes-for-one-left-node.
  private:
 
   EdgeMap edges_;
