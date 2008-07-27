@@ -22,12 +22,13 @@
 #include <string>
 #include <vector>
 
-//#include "libmv/correspondence/correspondence.h"
 #include "libmv/correspondence/klt.h"
 #include "libmv/image/image.h"
 #include "libmv/image/image_io.h"
 #include "libmv/image/image_pyramid.h"
 #include "third_party/gflags/gflags.h"
+
+DEFINE_bool(debug_images, true, "Output debug images.");
 
 using std::string;
 using std::sort;
@@ -74,7 +75,6 @@ int main(int argc, char **argv) {
     return 1;
   }
 
-
   int oldind = 0, newind = 1;
   FloatImage image[2];
   ImagePyramid pyramid[2];
@@ -105,7 +105,6 @@ int main(int argc, char **argv) {
 
     // TODO(keir): Finish me.
   }
-
 
   return 0;
 }
