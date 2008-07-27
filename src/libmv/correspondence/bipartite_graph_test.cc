@@ -158,4 +158,51 @@ TEST(BipartiteGraph, ScanEdgesForLeftNode) {
   CheckIteratorOutput(x.ScanEdgesForLeftNode(2), kExpected, 3);
 }
 
+TEST(BipartiteGraph, DeleteWhileScanningAllEdges) {
+  TestBipartiteGraph x;
+  x.Insert(1,  1.5f, 'a');
+  x.Insert(2, 30.5f, 'c');
+  x.Insert(2, 40.5f, 'd');
+  x.Insert(2, 50.5f, 'e');
+  x.Insert(3,  2.5f, 'a');
+
+  for (TestBipartiteGraph::Iterator it = x.ScanAllEdges();
+       !it.Done(); it.Next()) {
+    if (it.left() == 1 || it.left() == 3) {
+      it.DeleteEdge();
+    }
+  }
+
+  TestBipartiteGraph::Entry kExpected[] = {
+    { 2, 'c', 30.5f },
+    { 2, 'd', 40.5f },
+    { 2, 'e', 50.5f },
+  };
+
+  CheckIteratorOutput(x.ScanAllEdges(), kExpected, 3);
+}
+
+TEST(BipartiteGraph, DeleteWhileScanningRightNodesForLeftNode) {
+  TestBipartiteGraph x;
+  x.Insert(1,  1.5f, 'a');
+  x.Insert(2, 30.5f, 'c');
+  x.Insert(2, 40.5f, 'd');
+  x.Insert(2, 50.5f, 'e');
+  x.Insert(3,  2.5f, 'a');
+
+  for (TestBipartiteGraph::Iterator it = x.ScanEdgesForLeftNode(2);
+       !it.Done(); it.Next()) {
+    if (it.edge() == 'c' || it.edge() == 'e') {
+      it.DeleteEdge();
+    }
+  }
+
+  TestBipartiteGraph::Entry kExpected[] = {
+    { 1, 'a',  1.5f },
+    { 2, 'd', 40.5f },
+    { 3, 'a',  2.5f },
+  };
+
+  CheckIteratorOutput(x.ScanAllEdges(), kExpected, 3);
+}
 }  // namespace

@@ -66,6 +66,24 @@ class BipartiteGraph {
     right_to_left_[right].insert(LeftEdge(left, edge));
   }
 
+  // Delete the edge connecting left and right.
+  void DeleteEdge(const LeftNode left, const RightNode right) {
+    assert(edges_.find(EdgeKey(left, right)) != edges_.end());
+    Edge edge = edges_[EdgeKey(left, right)];
+    edges_.erase(EdgeKey(left, right));
+    left_to_right_[left].erase(RightEdge(right, edge));
+    right_to_left_[right].erase(LeftEdge(left, edge));
+    // TODO(keir): Figure out when to prune empty sets; erasing here could
+    // invalidate iterators (calling Done() would crash).
+    //
+    //   if (left_to_right_[left].empty()) {
+    //     left_to_right_.erase(left);
+    //   }
+    //   if (right_to_left_[right].empty()) {
+    //     right_to_left_.erase(right);
+    //   }
+  }
+
   Edge GetEdge(const LeftNode left, const RightNode right) const {
     EdgeKey key(left, right);
     typename EdgeMap::const_iterator it = edges_.find(key);
@@ -93,19 +111,44 @@ class BipartiteGraph {
     Edge edge() const {
       return edge_;
     }
-    bool Done() {
+    bool Done() const {
       if (type_ == OVER_EDGES) {
         return iter_ == edges_->end();
       } else if (type_ == OVER_LEFT_NODES) {
         return left_iter_ == left_nodes_->end();
       } else if (type_ == OVER_RIGHT_NODES) {
         return right_iter_ == right_nodes_->end();
-      } else {
-        assert(0);
-        return true;
-      }
+      } 
+      assert(0);
+      return true;
     }
-    void Next() {
+
+    // Delete the current edge. Invalidates any other iterators pointing to
+    // this particular edge. After a Delete() call, left(), right(), and edge()
+    // have undefined results and calling Next() will advance the iterator to
+    // the element after the deleted one. Example:
+    //
+    //   for(Iterator it = ...; !it.Done(); it.Next()) {
+    //     ...
+    //     // Do stuff with it.left(), it.right(), and it.edge() 
+    //     ...
+    //     if (delete_this_entry) {
+    //       it.DeleteEdge();
+    //       // it.left(), it.right(), and it.edge() are now undefined, until
+    //       // the next iteration of the loop.
+    //     }
+    //   }
+    //
+    // This makes pruning edges in a graph straightforward.
+    void DeleteEdge() {
+      assert(!Done());
+      assert(!deleted_);
+      Advance();  // Preserves left_, right_, and edge_.
+      graph_->DeleteEdge(left_, right_);
+      deleted_ = true;
+    }
+
+    void Advance() {
       if (type_ == OVER_EDGES) {
         ++iter_;
       } else if (type_ == OVER_LEFT_NODES) {
@@ -114,6 +157,16 @@ class BipartiteGraph {
         ++right_iter_;
       } else {
         assert(0);
+      }
+    }
+
+    void Next() {
+      if (deleted_) {
+        // Do nothing if the last element was deleted, because the iterators
+        // have already been advanced by the delete.
+        deleted_ = false;
+      } else {
+        Advance();
       }
       Assign();
     }
@@ -135,7 +188,7 @@ class BipartiteGraph {
    private:
 
     // For iterating over all edges.
-    typename EdgeMap::const_iterator iter_;
+    typename EdgeMap::iterator iter_;
     const EdgeMap *edges_;
 
     // For iterating over edges connected to a particular left node.
@@ -150,31 +203,41 @@ class BipartiteGraph {
     LeftNode left_;
     RightNode right_;
     Edge edge_;
+
+    // Was the last item deleted? If so, the iterator was already advanced and
+    // it shouldn't be advanced at the next call to Next().
+    bool deleted_;
+
+    BipartiteGraph<LeftNode, Edge, RightNode> *graph_;
   };
 
-  Iterator ScanAllEdges() const {
+  // TODO(keir): Define sensible constructors for the iterator.
+  Iterator ScanAllEdges() {
     Iterator iterator;
     iterator.type_ = OVER_EDGES;
     iterator.iter_ = edges_.begin();
     iterator.Assign();
     iterator.edges_ = &edges_;
+    iterator.deleted_ = false;
+    iterator.graph_ = this;
     return iterator;
   }
 
-  Iterator ScanEdgesForRightNode(const RightNode &right_node) const {
-    typename RightToLeftMap::const_iterator it =
-        right_to_left_.find(right_node);
+  Iterator ScanEdgesForRightNode(const RightNode &right_node) {
+    typename RightToLeftMap::iterator it = right_to_left_.find(right_node);
     assert(it != right_to_left_.end());
     Iterator iterator;
     iterator.type_ = OVER_LEFT_NODES;
     iterator.left_iter_ = it->second.begin();
     iterator.left_nodes_ = &it->second;
     iterator.right_ = right_node;
+    iterator.deleted_ = false;
     iterator.Assign();
+    iterator.graph_ = this;
     return iterator;
   }
 
-  Iterator ScanEdgesForLeftNode(const LeftNode &left_node) const {
+  Iterator ScanEdgesForLeftNode(const LeftNode &left_node) {
     typename LeftToRightMap::const_iterator it = left_to_right_.find(left_node);
     assert(it != left_to_right_.end());
     Iterator iterator;
@@ -182,7 +245,9 @@ class BipartiteGraph {
     iterator.right_iter_ = it->second.begin();
     iterator.right_nodes_ = &it->second;
     iterator.left_ = left_node;
+    iterator.deleted_ = false;
     iterator.Assign();
+    iterator.graph_ = this;
     return iterator;
   }
 
