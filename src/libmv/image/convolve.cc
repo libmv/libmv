@@ -75,12 +75,16 @@ void ComputeGaussianKernel(double sigma, Vec *kernel, Vec *derivative) {
 
 void ConvolveHorizontal(const FloatImage &in,
                         const Vec &kernel,
-                        FloatImage *out_pointer) {
+                        FloatImage *out_pointer,
+                        int plane) {
   int halfwidth = kernel.length() / 2;
   int num_columns = in.Width();
   int num_rows = in.Height();
   FloatImage &out = *out_pointer;
-  out.ResizeLike(in);
+  if (plane == -1) {
+    out.ResizeLike(in);
+    plane = 0;
+  }
 
   assert(kernel.length() % 2 == 1);
   assert(&in != out_pointer);
@@ -95,7 +99,7 @@ void ConvolveHorizontal(const FloatImage &in,
           sum += in(j, ii) * kernel(k);
         }
       }
-      out(j, i) = sum;
+      out(j, i, plane) = sum;
     }
   }
 }
@@ -103,12 +107,16 @@ void ConvolveHorizontal(const FloatImage &in,
 // This could certainly be accelerated.
 void ConvolveVertical(const FloatImage &in,
                       const Vec &kernel,
-                      FloatImage *out_pointer) {
+                      FloatImage *out_pointer,
+                      int plane) {
   int halfwidth = kernel.length() / 2;
   int num_columns = in.Width();
   int num_rows = in.Height();
   FloatImage &out = *out_pointer;
-  out.ResizeLike(in);
+  if (plane == -1) {
+    out.ResizeLike(in);
+    plane = 0;
+  }
 
   assert(kernel.length() % 2 == 1);
   assert(&in != out_pointer);
@@ -123,7 +131,7 @@ void ConvolveVertical(const FloatImage &in,
           sum += in(jj, i) * kernel(k);
         }
       }
-      out(j, i) = sum;
+      out(j, i, plane) = sum;
     }
   }
 }
@@ -175,6 +183,26 @@ void BlurredImageAndDerivatives(const FloatImage &in,
   // Compute first derivative in y.
   ConvolveHorizontal(in, kernel, &tmp);
   ConvolveVertical(tmp, derivative, gradient_y);
+}
+
+void BlurredImageAndDerivativesChannels(const FloatImage &in,
+                                        double sigma,
+                                        FloatImage *blurred_and_gradxy) {
+  Vec kernel, derivative;
+  ComputeGaussianKernel(sigma, &kernel, &derivative);
+  FloatImage tmp;
+
+  // Compute convolved image.
+  ConvolveVertical(in, kernel, &tmp);
+  blurred_and_gradxy->Resize(in.Height(), in.Width(), 3);
+  ConvolveHorizontal(tmp, kernel, blurred_and_gradxy, 0);
+
+  // Compute first derivative in x.
+  ConvolveHorizontal(tmp, derivative, blurred_and_gradxy, 1);
+
+  // Compute first derivative in y.
+  ConvolveHorizontal(in, kernel, &tmp);
+  ConvolveVertical(tmp, derivative, blurred_and_gradxy, 2);
 }
 
 void BoxFilterHorizontal(const FloatImage &in,

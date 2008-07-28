@@ -29,10 +29,12 @@ namespace libmv {
 void ComputeGaussianKernel(double sigma, Vec *kernel, Vec *derivative);
 void ConvolveHorizontal(const FloatImage &in,
                         const Vec &kernel,
-                        FloatImage *out_pointer);
+                        FloatImage *out_pointer,
+                        int plane = -1);
 void ConvolveVertical(const FloatImage &in,
                       const Vec &kernel,
-                      FloatImage *out_pointer);
+                      FloatImage *out_pointer,
+                      int plane = -1);
 void ConvolveGaussian(const FloatImage &in,
                       double sigma,
                       FloatImage *out_pointer);
@@ -47,6 +49,12 @@ void BlurredImageAndDerivatives(const FloatImage &in,
                                 FloatImage *blurred_image,
                                 FloatImage *gradient_x,
                                 FloatImage *gradient_y);
+
+// Blur and take the gradients of an image, storing the results inside the tree
+// channels of blurred_and_gradxy.
+void BlurredImageAndDerivativesChannels(const FloatImage &in,
+                                        double sigma,
+                                        FloatImage *blurred_and_gradxy);
 
 void BoxFilterHorizontal(const FloatImage &in,
                          int window_size,
