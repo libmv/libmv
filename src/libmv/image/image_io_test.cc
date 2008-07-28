@@ -24,14 +24,15 @@
 #include "libmv/image/image_io.h"
 #include "testing/testing.h"
 
-using libmv::Image;
+using libmv::Array3Df;
+using libmv::Array3Du;
 using libmv::FloatImage;
 
 namespace {
 
 TEST(ReadPnm, InvalidFiles) {
-  Image<unsigned char> image;
-  FloatImage float_image;
+  Array3Du image;
+  Array3Df float_image;
   string png_filename = string(THIS_SOURCE_DIR) + "/image_test/two_pixels.png";
   EXPECT_FALSE(ReadPnm(png_filename.c_str(), &image));
   EXPECT_FALSE(ReadPnm("hopefully_unexisting_file", &image));
@@ -40,7 +41,7 @@ TEST(ReadPnm, InvalidFiles) {
 }
 
 TEST(ReadPnm, Pgm) {
-  Image<unsigned char> image;
+  Array3Du image;
   string pgm_filename = string(THIS_SOURCE_DIR) + "/image_test/two_pixels.pgm";
   EXPECT_TRUE(ReadPnm(pgm_filename.c_str(), &image));
   EXPECT_EQ(2, image.Width());
@@ -62,20 +63,20 @@ TEST(ReadPnm, PgmFloat) {
 }
 
 TEST(WritePnm, Pgm) {
-  Image<unsigned char> image(1,2);
+  Array3Du image(1,2);
   image(0,0) = 255;
   image(0,1) = 0;
   string out_filename = string(THIS_SOURCE_DIR)
 	              + "/image_test/test_write_pnm.pgm";
   EXPECT_TRUE(WritePnm(image, out_filename.c_str()));
 
-  Image<unsigned char> read_image;
+  Array3Du read_image;
   EXPECT_TRUE(ReadPnm(out_filename.c_str(), &read_image));
   EXPECT_TRUE(read_image == image);
 }
 
 TEST(ReadPnm, Ppm) {
-  Image<unsigned char> image;
+  Array3Du image;
   string ppm_filename = string(THIS_SOURCE_DIR) + "/image_test/two_pixels.ppm";
   EXPECT_TRUE(ReadPnm(ppm_filename.c_str(), &image));
   EXPECT_EQ(2, image.Width());
@@ -90,7 +91,7 @@ TEST(ReadPnm, Ppm) {
 }
 
 TEST(WritePnm, Ppm) {
-  Image<unsigned char> image(1,2,3);
+  Array3Du image(1,2,3);
   image(0,0,0) = 255;
   image(0,0,1) = 255;
   image(0,0,2) = 255;
@@ -101,7 +102,7 @@ TEST(WritePnm, Ppm) {
 	              + "/image_test/test_write_pnm.ppm";
   EXPECT_TRUE(WritePnm(image, out_filename.c_str()));
 
-  Image<unsigned char> read_image;
+  Array3Du read_image;
   EXPECT_TRUE(ReadPnm(out_filename.c_str(), &read_image));
   EXPECT_TRUE(read_image == image);
 }

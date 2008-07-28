@@ -22,6 +22,8 @@
 #include <string>
 #include <vector>
 
+#include "libmv/correspondence/correspondence.h"
+#include "libmv/correspondence/feature.h"
 #include "libmv/correspondence/klt.h"
 #include "libmv/image/image.h"
 #include "libmv/image/image_io.h"
@@ -30,17 +32,18 @@
 
 DEFINE_bool(debug_images, true, "Output debug images.");
 
-using std::string;
-using std::sort;
-using std::vector;
-using libmv::KltContext;
-using libmv::ImagePyramid;
+using libmv::Array3Df;
 using libmv::FloatImage;
+using libmv::ImagePyramid;
+using libmv::KLTContext;
 using libmv::Vec3;
+using std::sort;
+using std::string;
+using std::vector;
 
 void WriteOutputImage(const FloatImage &image,
-                      const KltContext &klt,
-                      const KltContext::FeatureList &features,
+                      const KLTContext &klt,
+                      const KLTContext::FeatureList &features,
                       const char *output_filename) {
   FloatImage output_image(image.Height(), image.Width(), 3);
   for (int i = 0; i < image.Height(); ++i) {
@@ -76,19 +79,20 @@ int main(int argc, char **argv) {
   }
 
   int oldind = 0, newind = 1;
-  FloatImage image[2];
+  Array3Df image[2];
   ImagePyramid pyramid[2];
-  KltContext::FeatureList features[2];
-  KltContext klt;
+  KLTContext::FeatureList features[2];
+  KLTContext klt;
 
   ReadPnm(files[0].c_str(), &image[newind]);
   pyramid[newind].Init(image[newind], 3);
 
-  klt.DetectGoodFeatures(pyramid[newind], &features[newind]);
+  klt.DetectGoodFeatures(pyramid[newind].Level(0), &features[newind]);
 
   WriteOutputImage(image[newind], klt, features[newind],
                    (files[0]+".out.ppm").c_str());
 
+  // TODO(keir): Use correspondences here!
   for (size_t i = 1; i < files.size(); ++i) {
     std::swap(oldind, newind);
 

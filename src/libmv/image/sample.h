@@ -27,7 +27,7 @@ namespace libmv {
 
 /// Nearest neighbor interpolation.
 template<typename T>
-inline T SampleNearest(const Image<T> &image,
+inline T SampleNearest(const Array3D<T> &image,
                        float y, float x, int v = 0) {
   const int i = int(round(y));
   const int j = int(round(x));
@@ -58,7 +58,7 @@ static void LinearInitAxis(float fx, int width,
 
 /// Linear interpolation.
 template<typename T>
-inline T SampleLinear(const Image<T> &image, float y, float x, int v = 0) {
+inline T SampleLinear(const Array3D<T> &image, float y, float x, int v = 0) {
   int x1, y1, x2, y2;
   float dx1, dy1, dx2, dy2;
 
@@ -74,6 +74,32 @@ inline T SampleLinear(const Image<T> &image, float y, float x, int v = 0) {
            dy2 * ( dx1 * im21 + dx2 * im22 ));
 }
 
+// Downsample all channels by 2. Input image must have even size in width and
+// height.
+inline void DownsampleChannelsBy2(const Array3Df &in, Array3Df *out) {
+  assert(in.Height() % 2 == 0);
+  assert(in.Width() % 2 == 0);
+
+  int height = in.Height()/2;
+  int width = in.Width()/2;
+  int depth = in.Depth();
+
+  out->Resize(height, width, depth);
+
+  // 2x2 box filter downsampling.
+  for (int i = 0; i < height; ++i) {
+    for (int j = 0; j < width; ++j) {
+      for (int k = 0; k < depth; ++k) {
+        (*out)(i, j, k) = (in(2 * i,     2 * j,     k) +
+                           in(2 * i + 1, 2 * j,     k) +
+                           in(2 * i,     2 * j + 1, k) +
+                           in(2 * i + 1, 2 * j + 1, k)) / 4.0;
+      }
+    }
+  }
+
+}
+
 }  // namespace libmv
 
-#endif  // LIBMV_IMAGE_IMAGE_SAMPLE_H_
+#endif  // LIBMV_IMAGE_SAMPLE_H_

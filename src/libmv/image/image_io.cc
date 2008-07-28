@@ -34,13 +34,13 @@ int ReadPnm(const char *filename, ByteImage *im) {
   return res;
 }
 
-int ReadPnm(const char *filename, FloatImage *im) {
+int ReadPnm(const char *filename, FloatImage *image) {
   ByteImage byte_image;
   int res = ReadPnm(filename, &byte_image);
   if (!res) {
     return res;
   }
-  ConvertByteImageToFloatImage(byte_image, im);
+  ByteArrayToScaledFloatArray(byte_image, image);
   return res;
 }
 
@@ -92,7 +92,7 @@ int WritePnm(const ByteImage &im, const char *filename) {
 
 int WritePnm(const FloatImage &image, const char *filename) {
   ByteImage byte_image;
-  ConvertFloatImageToByteImage(image, &byte_image);
+  FloatArrayToScaledByteArray(image, &byte_image);
   return WritePnm(byte_image, filename);
 }
 

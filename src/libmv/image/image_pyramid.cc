@@ -20,43 +20,25 @@
 
 #include "libmv/image/image_pyramid.h"
 #include "libmv/image/convolve.h"
+#include "libmv/image/sample.h"
 
 namespace libmv {
 
-void ImagePyramid::Init(const FloatImage &image,
+void ImagePyramid::Init(const Array3Df &image,
                         int num_levels,
                         double sigma) {
+  assert(image.Depth() == 1);
+
   sigma_ = sigma;
   levels_.clear();
   levels_.resize(num_levels);
-  gradient_x_.clear();
-  gradient_x_.resize(num_levels);
-  gradient_y_.clear();
-  gradient_y_.resize(num_levels);
 
-  BlurredImageAndDerivatives(image, Sigma(),
-                             &levels_[0], &gradient_x_[0], &gradient_y_[0]);
+  BlurredImageAndDerivativesChannels(image, Sigma(), &levels_[0]);
 
   for (int i = 1; i < NumLevels(); ++i) {
-    ComputeLevel(i);
+    // TODO(keir): Is it accurate enough to boxfilter gradients?
+    DownsampleChannelsBy2(levels_[i-1], &levels_[i]);
   }
-}
-
-void ImagePyramid::ComputeLevel(int l) {
-  assert(0 < l && l < NumLevels());
-
-  int new_height = Level(l-1).Height() / 2;
-  int new_width = Level(l-1).Width() / 2;
-
-  FloatImage subsampled(new_height, new_width);
-  for (int i = 0; i < new_height; ++i) {
-    for (int j = 0; j < new_width; ++j) {
-      subsampled(i,j) = levels_[l-1](2 * i, 2 * j);
-    }
-  }
-
-  BlurredImageAndDerivatives(subsampled, Sigma(),
-                             &levels_[l], &gradient_x_[l], &gradient_y_[l]);
 }
 
 }  // namespace libmv

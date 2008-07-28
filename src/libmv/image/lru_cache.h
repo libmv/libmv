@@ -160,6 +160,9 @@ class LRUCache : public Cache<K, V> {
       K key_to_remove;
       unpinned_items_.Dequeue(&key_to_remove);
       CachedItem *item = &(items_[key_to_remove]);
+      // TODO(keir): We need to delete this sometimes! Figure out the right way
+      // to detect that this is a pointer and delete it.
+      // delete item->value;
       size_ -= item->size;
       items_.erase(items_.find(key_to_remove));
     }

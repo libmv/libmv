@@ -26,7 +26,7 @@ using namespace libmv;
 namespace {
 
 TEST(Image, Nearest) {
-  Image<int> image(2,2);
+  Array3Du image(2,2);
   image(0,0) = 0;
   image(0,1) = 1;
   image(1,0) = 2;
@@ -38,12 +38,26 @@ TEST(Image, Nearest) {
 }
 
 TEST(Image, Linear) {
-  Image<float> image(2,2);
+  Array3Df image(2,2);
   image(0,0) = 0;
   image(0,1) = 1;
   image(1,0) = 2;
   image(1,1) = 3;
   EXPECT_EQ(1.5, SampleLinear(image, 0.5,0.5));
+}
+
+TEST(Image, DownsampleBy2) {
+  Array3Df image(2,2);
+  image(0,0) = 0;
+  image(0,1) = 1;
+  image(1,0) = 2;
+  image(1,1) = 3;
+  Array3Df resampled_image;
+  DownsampleChannelsBy2(image, &resampled_image);
+  ASSERT_EQ(1, resampled_image.Height());
+  ASSERT_EQ(1, resampled_image.Width());
+  ASSERT_EQ(1, resampled_image.Depth());
+  EXPECT_FLOAT_EQ(6./4., resampled_image(0, 0));
 }
 
 }  // namespace

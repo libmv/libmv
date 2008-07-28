@@ -73,14 +73,14 @@ void ComputeGaussianKernel(double sigma, Vec *kernel, Vec *derivative) {
   *derivative /= factor;
 }
 
-void ConvolveHorizontal(const FloatImage &in,
+void ConvolveHorizontal(const Array3Df &in,
                         const Vec &kernel,
-                        FloatImage *out_pointer,
+                        Array3Df *out_pointer,
                         int plane) {
   int halfwidth = kernel.length() / 2;
   int num_columns = in.Width();
   int num_rows = in.Height();
-  FloatImage &out = *out_pointer;
+  Array3Df &out = *out_pointer;
   if (plane == -1) {
     out.ResizeLike(in);
     plane = 0;
@@ -105,14 +105,14 @@ void ConvolveHorizontal(const FloatImage &in,
 }
 
 // This could certainly be accelerated.
-void ConvolveVertical(const FloatImage &in,
+void ConvolveVertical(const Array3Df &in,
                       const Vec &kernel,
-                      FloatImage *out_pointer,
+                      Array3Df *out_pointer,
                       int plane) {
   int halfwidth = kernel.length() / 2;
   int num_columns = in.Width();
   int num_rows = in.Height();
-  FloatImage &out = *out_pointer;
+  Array3Df &out = *out_pointer;
   if (plane == -1) {
     out.ResizeLike(in);
     plane = 0;
@@ -136,42 +136,25 @@ void ConvolveVertical(const FloatImage &in,
   }
 }
 
-void ConvolveGaussian(const FloatImage &in,
+void ConvolveGaussian(const Array3Df &in,
                       double sigma,
-                      FloatImage *out_pointer) {
+                      Array3Df *out_pointer) {
   Vec kernel, derivative;
   ComputeGaussianKernel(sigma, &kernel, &derivative);
 
-  FloatImage tmp;
+  Array3Df tmp;
   ConvolveVertical(in, kernel, &tmp);
   ConvolveHorizontal(tmp, kernel, out_pointer);
 }
 
-void ImageDerivatives(const FloatImage &in,
-                      double sigma,
-                      FloatImage *gradient_x,
-                      FloatImage *gradient_y) {
-  Vec kernel, derivative;
-  ComputeGaussianKernel(sigma, &kernel, &derivative);
-
-  // Compute first derivative in x.
-  FloatImage tmp;
-  ConvolveHorizontal(in, derivative, &tmp);
-  ConvolveVertical(tmp, kernel, gradient_x);
-
-  // Compute first derivative in y.
-  ConvolveHorizontal(in, kernel, &tmp);
-  ConvolveVertical(tmp, derivative, gradient_y);
-}
-
-void BlurredImageAndDerivatives(const FloatImage &in,
+void BlurredImageAndDerivatives(const Array3Df &in,
                                 double sigma,
-                                FloatImage *blurred_image,
-                                FloatImage *gradient_x,
-                                FloatImage *gradient_y) {
+                                Array3Df *blurred_image,
+                                Array3Df *gradient_x,
+                                Array3Df *gradient_y) {
   Vec kernel, derivative;
   ComputeGaussianKernel(sigma, &kernel, &derivative);
-  FloatImage tmp;
+  Array3Df tmp;
 
   // Compute convolved image.
   ConvolveVertical(in, kernel, &tmp);
@@ -185,14 +168,20 @@ void BlurredImageAndDerivatives(const FloatImage &in,
   ConvolveVertical(tmp, derivative, gradient_y);
 }
 
-void BlurredImageAndDerivativesChannels(const FloatImage &in,
+// Compute the gaussian blur of an image and the derivatives of the blurred
+// image, and store the results in three channels. Since the blurred value and
+// gradients are closer in memory, this leads to better performance if all
+// three values are needed at the same time.
+void BlurredImageAndDerivativesChannels(const Array3Df &in,
                                         double sigma,
-                                        FloatImage *blurred_and_gradxy) {
+                                        Array3Df *blurred_and_gradxy) {
+  assert(in.Depth() == 1);
+
   Vec kernel, derivative;
   ComputeGaussianKernel(sigma, &kernel, &derivative);
-  FloatImage tmp;
 
   // Compute convolved image.
+  Array3Df tmp;
   ConvolveVertical(in, kernel, &tmp);
   blurred_and_gradxy->Resize(in.Height(), in.Width(), 3);
   ConvolveHorizontal(tmp, kernel, blurred_and_gradxy, 0);
@@ -205,53 +194,78 @@ void BlurredImageAndDerivativesChannels(const FloatImage &in,
   ConvolveVertical(tmp, derivative, blurred_and_gradxy, 2);
 }
 
-void BoxFilterHorizontal(const FloatImage &in,
+void BoxFilterHorizontal(const Array3Df &in,
                          int window_size,
-                         FloatImage *out_pointer) {
-  assert(in.Depth() == 1);
-
-  FloatImage &out = *out_pointer;
+                         Array3Df *out_pointer) {
+  Array3Df &out = *out_pointer;
   out.ResizeLike(in);
   int half_width = (window_size - 1) / 2;
 
-  for (int i=0; i<in.Height(); ++i) {
-    float sum = 0;
-    // Init sum.
-    for (int j=0; j<half_width; ++j) {
-      sum += in(i,j);
-    }
-    // Fill left border.
-    for (int j=0; j < half_width + 1; ++j) {
-      sum += in(i, j + half_width);
-      out(i,j) = sum;
-    }
-    // Fill interior.
-    for (int j = half_width + 1; j<in.Width()-half_width; ++j) {
-      sum -= in(i, j - half_width - 1);
-      sum += in(i, j + half_width);
-      out(i,j) = sum;
-    }
-    // Fill right border.
-    for (int j = in.Width() - half_width; j<in.Width(); ++j) {
-      sum -= in(i, j - half_width - 1);
-      out(i,j) = sum;
+  for (int k = 0; k < in.Depth(); ++k) {
+    for (int i=0; i<in.Height(); ++i) {
+      float sum = 0;
+      // Init sum.
+      for (int j=0; j<half_width; ++j) {
+        sum += in(i, j, k);
+      }
+      // Fill left border.
+      for (int j=0; j < half_width + 1; ++j) {
+        sum += in(i, j + half_width, k);
+        out(i, j, k) = sum;
+      }
+      // Fill interior.
+      for (int j = half_width + 1; j<in.Width()-half_width; ++j) {
+        sum -= in(i, j - half_width - 1, k);
+        sum += in(i, j + half_width, k);
+        out(i, j, k) = sum;
+      }
+      // Fill right border.
+      for (int j = in.Width() - half_width; j<in.Width(); ++j) {
+        sum -= in(i, j - half_width - 1, k);
+        out(i, j, k) = sum;
+      }
     }
   }
 }
 
-void BoxFilterVertical(const FloatImage &in,
+void BoxFilterVertical(const Array3Df &in,
                        int window_size,
-                       FloatImage *out_pointer) {
-  // TODO(pau) this should be done faster without calling Convolve.
-  Vec kernel(window_size);
-  for (int i = 0; i < window_size; ++i) kernel(i) = 1;
-  ConvolveVertical(in, kernel, out_pointer);
+                       Array3Df *out_pointer) {
+  Array3Df &out = *out_pointer;
+  out.ResizeLike(in);
+  int half_width = (window_size - 1) / 2;
+
+  for (int k = 0; k < in.Depth(); ++k) {
+    for (int j = 0; j < in.Width(); ++j) {
+      float sum = 0;
+      // Init sum.
+      for (int i=0; i<half_width; ++i) {
+        sum += in(i, j, k);
+      }
+      // Fill left border.
+      for (int i=0; i < half_width + 1; ++i) {
+        sum += in(i + half_width, j, k);
+        out(i, j, k) = sum;
+      }
+      // Fill interior.
+      for (int i = half_width + 1; i<in.Height()-half_width; ++i) {
+        sum -= in(i - half_width - 1, j, k);
+        sum += in(i + half_width, j, k);
+        out(i, j, k) = sum;
+      }
+      // Fill right border.
+      for (int i = in.Height() - half_width; i<in.Height(); ++i) {
+        sum -= in(i - half_width - 1, j, k);
+        out(i, j, k) = sum;
+      }
+    }
+  }
 }
 
-void BoxFilter(const FloatImage &in,
+void BoxFilter(const Array3Df &in,
                int box_width,
-               FloatImage *out) {
-  FloatImage tmp;
+               Array3Df *out) {
+  Array3Df tmp;
   BoxFilterHorizontal(in, box_width, &tmp);
   BoxFilterVertical(tmp, box_width, out);
 };

@@ -27,52 +27,68 @@
 
 namespace libmv {
 
-/// Image class storing the values in a 3D array (row,column,channel).
-template <typename T>
-class Image : public ArrayND<T, 3> {
-  typedef ArrayND<T, 3> Base;
+typedef Array3Du ByteImage;  // For backwards compatibility.
+typedef Array3Df FloatImage;
+
+// An image class that is a thin wrapper around Array3D's of various types.
+// TODO(keir): Decide if we should add reference counting semantics... Maybe it
+// is the best solution after all.
+class Image {
  public:
-  Image()
-    : Base() {
-  }
-  Image(int height, int width, int depth=1)
-    : Base(height,width,depth) {
+
+  // Create an image from an array. The image takes ownership of the array.
+  Image(Array3Du *array) : array_type_(BYTE), array_(array) {}
+  Image(Array3Df *array) : array_type_(FLOAT), array_(array) {}
+
+  // Underlying data type.
+  enum DataType {
+    NONE,
+    BYTE,
+    FLOAT,
+  };
+
+  // Size in bytes that the image takes in memory.
+  int MemorySizeInBytes() {
+    int size;
+    if (array_type_ == BYTE) {
+      size = reinterpret_cast<Array3Du *>(array_)->Size();
+      size *= sizeof(unsigned char);
+      size += sizeof(Array3Du);
+    } else if (array_type_ == FLOAT) {
+      size = reinterpret_cast<Array3Df *>(array_)->Size();
+      size *= sizeof(unsigned char);
+      size += sizeof(Array3Df);
+    }
+    size += sizeof(*this);
+    return size;
   }
 
-  void Resize(int height, int width, int depth=1) {
-    Base::Resize(height, width, depth);
+  ~Image() {
+    if (array_type_ == BYTE) {
+      delete reinterpret_cast<Array3Du *>(array_);
+    } else if (array_type_ == FLOAT) {
+      delete reinterpret_cast<Array3Df *>(array_);
+    }
   }
 
-  int Height() const {
-    return Base::Shape(0);
-  }
-  int Width() const {
-    return Base::Shape(1);
-  }
-  int Depth() const {
-    return Base::Shape(2);
+  Array3Du *AsArray3Du() {
+    if (array_type_ == BYTE) {
+      return reinterpret_cast<Array3Du *>(array_);
+    }
+    return NULL;
   }
 
-  /// Enable accessing with 2 indices for grayscale images.
-  T &operator()(int i0, int i1, int i2 = 0) {
-    assert(0 <= i0 && i0 < Height());
-    assert(0 <= i1 && i1 < Width());
-    return Base::operator()(i0,i1,i2);
+  Array3Df *AsArray3Df() {
+    if (array_type_ == FLOAT) {
+      return reinterpret_cast<Array3Df *>(array_);
+    }
+    return NULL;
   }
-  const T &operator()(int i0, int i1, int i2 = 0) const {
-    assert(0 <= i0 && i0 < Height());
-    assert(0 <= i1 && i1 < Width());
-    return Base::operator()(i0,i1,i2);
-  }
+
+ private:
+  DataType array_type_;
+  BaseArray *array_;
 };
-
-typedef Image<unsigned char> ByteImage;
-typedef Image<float> FloatImage;
-
-void ConvertFloatImageToByteImage(const FloatImage &float_image,
-                                  ByteImage *byte_image);
-void ConvertByteImageToFloatImage(const ByteImage &byte_image,
-                                  FloatImage *float_image);
 
 }  // namespace libmv
 

@@ -24,6 +24,38 @@
 
 namespace libmv {
 
-// TODO(keir): put something useful here!
+void FloatArrayToScaledByteArray(const Array3Df &float_array,
+                                 Array3Du *byte_array) {
+  byte_array->ResizeLike(float_array);
+  float minval=HUGE_VAL, maxval=-HUGE_VAL;
+  for (int i = 0; i < float_array.Height(); ++i) {
+    for (int j = 0; j < float_array.Width(); ++j) {
+      for (int k = 0; k < float_array.Depth(); ++k) {
+        minval = std::min(minval, float_array(i,j,k));
+        maxval = std::max(maxval, float_array(i,j,k));
+      }
+    }
+  }
+  for (int i = 0; i < float_array.Height(); ++i) {
+    for (int j = 0; j < float_array.Width(); ++j) {
+      for (int k = 0; k < float_array.Depth(); ++k) {
+        float unscaled = (float_array(i,j,k) - minval) / (maxval - minval);
+        (*byte_array)(i,j,k) = (unsigned char)(255 * unscaled);
+      }
+    }
+  }
+}
+
+void ByteArrayToScaledFloatArray(const Array3Du &byte_array,
+                                 Array3Df *float_array) {
+  float_array->ResizeLike(byte_array);
+  for (int i = 0; i < byte_array.Height(); ++i) {
+    for (int j = 0; j < byte_array.Width(); ++j) {
+      for (int k = 0; k < byte_array.Depth(); ++k) {
+	      (*float_array)(i,j,k) = float(byte_array(i,j,k)) / 255.0f;
+      }
+    }
+  }
+}
 
 }  // namespace libmv

@@ -29,8 +29,7 @@ namespace libmv {
 
 class ImagePyramid {
  public:
-  ImagePyramid() {
-  }
+  ImagePyramid() {}
 
   ImagePyramid(const FloatImage &image, int num_levels, double sigma = 0.9) {
     Init(image, num_levels, sigma);
@@ -41,17 +40,9 @@ class ImagePyramid {
 
   void Init(const FloatImage &image, int num_levels, double sigma = 0.9);
 
-  const FloatImage &Level(int i) const {
+  const Array3Df &Level(int i) const {
     assert(0 <= i && i < NumLevels());
     return levels_[i];
-  }
-  const FloatImage &GradientX(int i) const {
-    assert(0 <= i && i < NumLevels());
-    return gradient_x_[i];
-  }
-  const FloatImage &GradientY(int i) const {
-    assert(0 <= i && i < NumLevels());
-    return gradient_y_[i];
   }
 
   int NumLevels() const {
@@ -67,9 +58,7 @@ class ImagePyramid {
 
  private:
   double sigma_;
-  std::vector<FloatImage> levels_;
-  std::vector<FloatImage> gradient_x_;
-  std::vector<FloatImage> gradient_y_;
+  std::vector<Array3Df> levels_;
 };
 
 }  // namespace libmv

@@ -65,7 +65,7 @@ void ImageViewer::open()
 //                              gauss,
 //                              &blurred_mv_image);
 //    mv_image.CopyFrom(blurred_mv_image);
-    libmv::ConvertFloatImageToByteImage(blurred_mv_image, &mv_image);
+    libmv::FloatArrayToScaledByteArray(blurred_mv_image, &mv_image);
 //    mv_image.CopyFrom(float_mv_image);
 
     printf("w=%d,h=%d\n", mv_image.Width(), mv_image.Height());

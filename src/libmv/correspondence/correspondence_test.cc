@@ -60,6 +60,8 @@ TEST(Correspondences, Views) {
   EXPECT_EQ(2, view_it.track());
 }
 
+// This function works over TestFeatures only; other features will be filtered
+// out by the view.
 int CountTestPoints(CorrespondencesView<TestFeature> view) {
   CorrespondencesView<TestFeature>::Iterator it = view.ScanAllFeatures();
   int count = 0;

@@ -22,6 +22,7 @@
 #include "testing/testing.h"
 
 using libmv::ArrayND;
+using libmv::Array3D;
 
 namespace {
 
@@ -221,6 +222,47 @@ TEST(ArrayND, IsEqualOperator) {
   b(1,1,0) = 5;
   EXPECT_TRUE(a != b);
   EXPECT_FALSE(a == b);
+}
+
+TEST(Array3D, Sizes) {
+  Array3D<int> array;
+  EXPECT_EQ(array.Height(), 0);
+  EXPECT_EQ(array.Width(), 0);
+  EXPECT_EQ(array.Depth(), 0);
+  EXPECT_EQ(array.Shape(0), 0);
+}
+
+TEST(Array3D, CopyConstructor) {
+  Array3D<int> array(10,10);
+  array(0,0) = 1;
+  array(0,1) = 1;
+  Array3D<int> copy(array);
+  EXPECT_EQ(copy.Height(), 10);
+  EXPECT_EQ(copy.Width(), 10);
+  EXPECT_EQ(copy.Depth(), 1);
+  EXPECT_EQ(copy(0,0), 1);
+  copy(0,1) = 2;
+  EXPECT_EQ(array(0,1), 1);
+}
+
+TEST(Array3D, Assignation) {
+  Array3D<int> array(10,10);
+  array(0,0) = 1;
+  array(0,1) = 1;
+  Array3D<int> copy;
+  copy = array;
+  EXPECT_EQ(copy.Height(), 10);
+  EXPECT_EQ(copy.Width(), 10);
+  EXPECT_EQ(copy.Depth(), 1);
+  EXPECT_EQ(copy(0,0), 1);
+  copy(0,1) = 2;
+  EXPECT_EQ(array(0,1), 1);
+}
+
+TEST(Array3D, Parenthesis) {
+  Array3D<int> array(1,2,3);
+  array(0,1,0) = 3;
+  EXPECT_EQ(array(0,1), 3);
 }
 
 }  // namespace

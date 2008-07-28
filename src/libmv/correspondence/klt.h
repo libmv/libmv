@@ -24,22 +24,27 @@
 #include <cassert>
 #include <list>
 
+#include "libmv/correspondence/feature.h"
 #include "libmv/image/image.h"
 #include "libmv/image/image_pyramid.h"
 #include "libmv/numeric/numeric.h"
 
 namespace libmv {
 
-class KltContext {
- public:
-  struct Feature {
-    Vec2 position;
-    int half_window_size;
-    float trackness;
-  };
-  typedef std::list<Feature> FeatureList;
+struct KLTPointFeature : public PointFeature {
+  virtual const Vec2f &Point() {
+    return position;
+  }
+  Vec2f position;
+  int half_window_size;
+  float trackness;
+};
 
-  KltContext()
+class KLTContext {
+ public:
+  typedef std::list<KLTPointFeature *> FeatureList;
+
+  KLTContext()
       : half_window_size_(3),
         max_iterations_(10),
         min_trackness_(0.1),
@@ -48,92 +53,34 @@ class KltContext {
         min_update_distance2_(1e-6) {
   }
 
-  void DetectGoodFeatures(const ImagePyramid &pyramid,
+  void DetectGoodFeatures(const Array3Df &image_and_gradients,
                           FeatureList *features);
+
+  void TrackFeature(const ImagePyramid &pyramid1,
+                    const KLTPointFeature &feature1,
+                    const ImagePyramid &pyramid2,
+                    KLTPointFeature *feature2_pointer);
 
   void TrackFeatures(const ImagePyramid &pyramid1,
                      const FeatureList &features1,
                      const ImagePyramid &pyramid2,
                      FeatureList *features2_pointer);
 
-  void TrackFeature(const ImagePyramid &pyramid1,
-                    const Feature &feature1,
-                    const ImagePyramid &pyramid2,
-                    Feature *feature2_pointer);
-
-  void TrackFeatureOneLevel(const FloatImage &image1,
+  void TrackFeatureOneLevel(const FloatImage &image_and_gradient1,
                             const Vec2 &position1,
-                            const FloatImage &image2,
-                            const FloatImage &image2_gx,
-                            const FloatImage &image2_gy,
+                            const FloatImage &image_and_gradient2,
                             Vec2 *position2_pointer);
 
 
   void DrawFeatureList(const FeatureList &features,
                        const Vec3 &color,
                        FloatImage *image) const;
-  void DrawFeature(const Feature &feature,
+  void DrawFeature(const KLTPointFeature &feature,
                    const Vec3 &color,
                    FloatImage *image) const;
 
   int HalfWindowSize() { return half_window_size_; }
   int WindowSize() { return 2 * HalfWindowSize() + 1; }
-
- private:
-  // Compute the gradient matrix noted by Z in Good Features to Track.
-  // Z = [gxx gxy; gxy gyy]
-  // This function computes the matrix for every pixel.
-  void ComputeGradientMatrix(const FloatImage &gradient_x,
-                             const FloatImage &gradient_y,
-                             FloatImage *gxx,
-                             FloatImage *gxy,
-                             FloatImage *gyy);
-
-  // Compute trackness of every pixel given the gradient matrix.
-  // This is done as described in the Good Features to Track paper.
-  void ComputeTrackness(const FloatImage &gxx,
-                        const FloatImage &gxy,
-                        const FloatImage &gyy,
-                        FloatImage *trackness_pointer,
-                        double *trackness_mean);
-
-  void FindLocalMaxima(const FloatImage &trackness, FeatureList *features);
-
-  void RemoveTooCloseFeatures(FeatureList *features_pointer);
-
-  // Compute the gradient matrix noted by Z and the error vector e.
-  // See Good Features to Track.
-  void ComputeTrackingEquation(const FloatImage &image1,
-                               const FloatImage &image2,
-                               const FloatImage &image2_gx,
-                               const FloatImage &image2_gy,
-                               const Vec2 &position1,
-                               const Vec2 &position2,
-                               float *gxx,
-                               float *gxy,
-                               float *gyy,
-                               float *ex,
-                               float *ey);
-
-  // Solve the tracking equation
-  //  [gxx gxy] [dx] = [ex]
-  //  [gxy gyy] [dy] = [ey]
-  // for dx and dy.
-  // Borrowed from Stan Birchfield's KLT implementation.
-  bool SolveTrackingEquation(float gxx, float gxy, float gyy,
-                             float ex, float ey,
-                             float *dx, float *dy);
-
-  // Given the three distinct elements of the symmetric 2x2 matrix
-  //
-  //                     [gxx gxy]
-  //                     [gxy gyy],
-  //
-  // return the minimum eigenvalue of the matrix.
-  // Borrowed from Stan Birchfield's KLT implementation.
-  static float MinEigenValue(float gxx, float gxy, float gyy) {
-    return (gxx + gyy - sqrt((gxx - gyy) * (gxx - gyy) + 4 * gxy * gxy)) / 2.0f;
-  }
 
  private:
   int half_window_size_;

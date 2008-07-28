@@ -34,14 +34,14 @@ class Feature {
 class PointFeature : public Feature {
  public:
   virtual ~PointFeature();
-  virtual const Vec2f &Location() = 0;
+  virtual const Vec2f &Point() = 0;
 };
 
-class LineSegmentFeature : public Feature {
+class LineFeature : public Feature {
  public:
-  virtual ~LineSegmentFeature();
-  virtual const Vec2f &EndPoint1() = 0;
-  virtual const Vec2f &EndPoint2() = 0;
+  virtual ~LineFeature();
+  virtual const Vec2f &Point1() = 0;
+  virtual const Vec2f &Point2() = 0;
 };
 
 }  // namespace libmv

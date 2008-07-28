@@ -30,9 +30,12 @@ using libmv::Tuple;
 
 namespace libmv {
 
+class BaseArray {
+};
+
 /// A multidimensional array class.
-template <typename T,int N>
-class ArrayND {
+template <typename T, int N>
+class ArrayND : public BaseArray {
  public:
   /// Type for the multidimensional indices.
   typedef Tuple<int,N> Index;
@@ -326,6 +329,48 @@ class ArrayND {
   T *data_;
 };
 
+/// 3D array (row, column, channel).
+template <typename T>
+class Array3D : public ArrayND<T, 3> {
+  typedef ArrayND<T, 3> Base;
+ public:
+  Array3D()
+      : Base() {
+  }
+  Array3D(int height, int width, int depth=1)
+      : Base(height, width, depth) {
+  }
+
+  void Resize(int height, int width, int depth=1) {
+    Base::Resize(height, width, depth);
+  }
+
+  int Height() const {
+    return Base::Shape(0);
+  }
+  int Width() const {
+    return Base::Shape(1);
+  }
+  int Depth() const {
+    return Base::Shape(2);
+  }
+
+  /// Enable accessing with 2 indices for grayscale images.
+  T &operator()(int i0, int i1, int i2 = 0) {
+    assert(0 <= i0 && i0 < Height());
+    assert(0 <= i1 && i1 < Width());
+    return Base::operator()(i0,i1,i2);
+  }
+  const T &operator()(int i0, int i1, int i2 = 0) const {
+    assert(0 <= i0 && i0 < Height());
+    assert(0 <= i1 && i1 < Width());
+    return Base::operator()(i0,i1,i2);
+  }
+};
+
+typedef Array3D<unsigned char> Array3Du;
+typedef Array3D<float> Array3Df;
+
 // TODO(keir): make this work for N != 3.
 template <typename TA, typename TB, typename TC>
 void MultiplyElements(const ArrayND<TA, 3> a,
@@ -344,6 +389,13 @@ void MultiplyElements(const ArrayND<TA, 3> a,
   }
 }
 
+// Convert a float array into a byte array by scaling values by 255* (max-min).
+void FloatArrayToScaledByteArray(const Array3Df &float_array,
+                                 Array3Du *byte_array);
+
+// Convert a byte array into a float array by dividing values by 255.
+void ByteArrayToScaledFloatArray(const Array3Du &byte_array,
+                                 Array3Df *float_array);
 
 }  // namespace libmv
 

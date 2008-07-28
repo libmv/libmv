@@ -29,6 +29,8 @@
 namespace libmv {
 
 class Feature;
+class PointFeature;
+class LineFeature;
 
 typedef int ImageID; // TODO(keir): Decide if simple numbers are good enough.
 typedef int TrackID; // TODO(keir): Decide if simple numbers are good enough.
@@ -57,6 +59,9 @@ class Correspondences {
     void Next() {
       iter_.Next();
     }
+    void DeleteFeature() {
+      iter_.DeleteEdge();
+    }
    private:
     Iterator(CorrespondenceGraph::Iterator iter)
         : iter_(iter) {}
@@ -76,10 +81,11 @@ private:
   CorrespondenceGraph correspondences_;
 };
 
+// A view of correspondences such that only features who have a run-time type
+// of SpecificFeature are ever returned from iterations over it.
 template<typename SpecificFeature>
 class CorrespondencesView {
  public:
-
    CorrespondencesView(Correspondences *correspondences)
        : correspondences_(correspondences) {}
 
@@ -107,7 +113,7 @@ class CorrespondencesView {
    private:
     void SkipOtherFeatures() {
       while (!iter_.Done() &&
-             NULL == dynamic_cast<SpecificFeature *>(iter_.feature())) {
+             !dynamic_cast<SpecificFeature *>(iter_.feature())) {
         iter_.Next();
       }
     }
@@ -126,6 +132,9 @@ class CorrespondencesView {
 private:
   Correspondences *correspondences_;
 };
+
+typedef CorrespondencesView<PointFeature> PointCorrespondences;
+typedef CorrespondencesView<LineFeature> LineCorrespondences;
 
 }  // namespace libmv
 

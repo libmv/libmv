@@ -22,16 +22,15 @@
 #include "testing/testing.h"
 
 using libmv::Image;
-using libmv::FloatImage;
+using libmv::Array3Df;
 using libmv::ImagePyramid;
 
 namespace {
 
 TEST(ImagePyramid, Init) {
-  FloatImage im(32,32);
-  im.Fill(1);
-  ImagePyramid ip;
-  ip.Init(im,2);
+  Array3Df image(32,32);
+  image.Fill(1);
+  ImagePyramid ip(image, 2);
 
   EXPECT_EQ(ip.NumLevels(), 2);
   EXPECT_NEAR(ip.Level(0)(16,16), 1, 1e-7);
