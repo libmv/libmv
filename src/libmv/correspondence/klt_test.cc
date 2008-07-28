@@ -106,19 +106,17 @@ TEST(KLTContext, TrackFeature) {
 
 /*
 TEST(KLTContext, DetectGoodFeaturesLenna) {
-  ByteImage byte_image;
-  FloatImage image1;
+  Array3Df image1;
   string lenna_filename = string(THIS_SOURCE_DIR) + "/klt_test/Lenna.pgm";
-  EXPECT_NE(0, ReadPnm(lenna_filename.c_str(), &byte_image));
-  ConvertByteImageToFloatImage(byte_image, &image1);
+  EXPECT_NE(0, ReadPnm(lenna_filename.c_str(), &image1));
 
   ImagePyramid pyramid1(image1, 3);
 
   KLTContext klt;
   KLTContext::FeatureList features;
-  klt.DetectGoodFeatures(pyramid1, &features);
+  klt.DetectGoodFeatures(pyramid1.Level(0), &features);
 
-  FloatImage output_image(image1.Height(),image1.Width(),3);
+  FloatImage output_image(image1.Height(), image1.Width(), 3);
   for (int i = 0; i < image1.Height(); ++i) {
     for (int j = 0; j < image1.Width(); ++j) {
       output_image(i,j,0) = image1(i,j);
@@ -138,23 +136,24 @@ TEST(KLTContext, DetectGoodFeaturesLenna) {
 
   ImagePyramid pyramid2;
   pyramid2.Init(image2,3);
-  KltContext::FeatureList features2;
+  KLTContext::FeatureList features2;
   int inliers = 0, outliers = 0;
-  for (KltContext::FeatureList::iterator i = features.begin();
+  for (KLTContext::FeatureList::iterator i = features.begin();
        i != features.end(); ++i ) {
-    KltContext::Feature &feature1 = *i;
-    KltContext::Feature feature2;
-    feature2.position = feature1.position;
+    KLTPointFeature &feature1 = **i;
+    KLTPointFeature *feature2 = new KLTPointFeature;
+    Vec2 pos1, pos2;
+    pos1 = feature1.position(0), feature1.position(1);
+    pos2 = feature1.position(0), feature1.position(1);
     klt.TrackFeatureOneLevel(pyramid1.Level(0),
-                             feature1.position,
+                             pos1,
                              pyramid2.Level(0),
-                             pyramid2.GradientX(0),
-                             pyramid2.GradientY(0),
-                             &feature2.position);
+                             &pos2);
+    feature2->position = pos2(0), pos2(1);
     features2.push_back(feature2);
 
-    float dx = feature2.position(0) - feature1.position(0);
-    float dy = feature2.position(1) - feature1.position(1);
+    float dx = pos2(0) - pos1(0);
+    float dy = pos2(1) - pos1(1);
     if ( Square(dx-2) + Square(dy-2) < Square(1e-2) ) {
       inliers++;
     } else {
@@ -172,5 +171,6 @@ TEST(KLTContext, DetectGoodFeaturesLenna) {
   WritePnm(output_image, "detected_features.ppm");
 }
 */
+
 
 }  // namespace
