@@ -60,7 +60,7 @@ class BipartiteGraph {
     return right_to_left_.size();
   }
 
-  void Insert(const LeftNode left, const RightNode right, const Edge edge) {
+  void Insert(const LeftNode left, const Edge edge, const RightNode right) {
     edges_[EdgeKey(left, right)] = edge;
     left_to_right_[left].insert(RightEdge(right, edge));
     right_to_left_[right].insert(LeftEdge(left, edge));

@@ -36,21 +36,21 @@ TEST(BipartiteGraph, Empty) {
 
 TEST(BipartiteGraph, InsertEdges) {
   BipartiteGraph<int, int, int> x;
-  x.Insert(1, 2, 3);
+  x.Insert(1, 3, 2);
   EXPECT_EQ(1, x.NumEdges());
-  x.Insert(1, 2, 3);
+  x.Insert(1, 3, 2);
   EXPECT_EQ(1, x.NumEdges());
-  x.Insert(2, 2, 3);
+  x.Insert(2, 3, 2);
   EXPECT_EQ(2, x.NumEdges());
 }
 
 TEST(BipartiteGraph, NumLeftRight) {
   BipartiteGraph<int, int, int> x;
-  x.Insert(1, 2, 3);
+  x.Insert(1, 3, 2);
   EXPECT_EQ(x.NumLeftNodes(), 1);
   EXPECT_EQ(x.NumRightNodes(), 1);
   EXPECT_EQ(x.NumEdges(), 1);
-  x.Insert(2, 2, 3);
+  x.Insert(2, 3, 2);
   EXPECT_EQ(x.NumLeftNodes(), 2);
   EXPECT_EQ(x.NumRightNodes(), 1);
   EXPECT_EQ(x.NumEdges(), 2);
@@ -58,10 +58,10 @@ TEST(BipartiteGraph, NumLeftRight) {
 
 TEST(BipartiteGraph, MultipleInsertions) {
   BipartiteGraph<int, int, int> x;
-  x.Insert(1, 2, 10);
-  x.Insert(2, 2, 20);
-  x.Insert(1, 4, 30);
-  x.Insert(2, 3, 40);
+  x.Insert(1, 10, 2);
+  x.Insert(2, 20, 2);
+  x.Insert(1, 30, 4);
+  x.Insert(2, 40, 3);
   EXPECT_EQ(x.GetEdge(1, 2), 10);
   EXPECT_EQ(x.GetEdge(2, 2), 20);
   EXPECT_EQ(x.GetEdge(1, 4), 30);
@@ -70,9 +70,9 @@ TEST(BipartiteGraph, MultipleInsertions) {
 
 TEST(BipartiteGraph, EdgeIterator) {
   BipartiteGraph<int, int, int> x;
-  x.Insert(1, 2, 10);
-  x.Insert(1, 4, 30);
-  x.Insert(2, 2, 20);
+  x.Insert(1, 10, 2);
+  x.Insert(1, 30, 4);
+  x.Insert(2, 20, 2);
 
   BipartiteGraph<int, int, int>::Iterator it = x.ScanAllEdges();
   ASSERT_FALSE(it.Done());
@@ -100,7 +100,7 @@ typedef BipartiteGraph<int, char, float> TestBipartiteGraph;
 
 TEST(BipartiteGraph, ScanEdgesForRightNodeOneItemHit) {
   TestBipartiteGraph x;
-  x.Insert(1, 1.5f, 'a');
+  x.Insert(1, 'a', 1.5f);
   TestBipartiteGraph::Iterator it = x.ScanEdgesForRightNode(1.5f);
   EXPECT_FALSE(it.Done());
   EXPECT_EQ(1, it.left());
@@ -126,11 +126,11 @@ void CheckIteratorOutput(TestBipartiteGraph::Iterator it,
 
 TEST(BipartiteGraph, ScanEdgesForRightNode) {
   TestBipartiteGraph x;
-  x.Insert(1,  1.5f, 'a');
-  x.Insert(1, 30.5f, 'c');
-  x.Insert(2, 30.5f, 'd');
-  x.Insert(2,  0.5f, 'e');
-  x.Insert(3, 30.5f, 'f');
+  x.Insert(1, 'a',  1.5f);
+  x.Insert(1, 'c', 30.5f);
+  x.Insert(2, 'd', 30.5f);
+  x.Insert(2, 'e',  0.5f);
+  x.Insert(3, 'f', 30.5f);
 
   TestBipartiteGraph::Entry kExpected[] = {
     { 1, 'c', 30.5f },
@@ -143,11 +143,11 @@ TEST(BipartiteGraph, ScanEdgesForRightNode) {
 
 TEST(BipartiteGraph, ScanEdgesForLeftNode) {
   TestBipartiteGraph x;
-  x.Insert(1,  1.5f, 'a');
-  x.Insert(2, 30.5f, 'c');
-  x.Insert(2, 40.5f, 'd');
-  x.Insert(2, 50.5f, 'e');
-  x.Insert(3,  2.5f, 'a');
+  x.Insert(1, 'a',  1.5f);
+  x.Insert(2, 'c', 30.5f);
+  x.Insert(2, 'd', 40.5f);
+  x.Insert(2, 'e', 50.5f);
+  x.Insert(3, 'a',  2.5f);
 
   TestBipartiteGraph::Entry kExpected[] = {
     { 2, 'c', 30.5f },
@@ -160,11 +160,11 @@ TEST(BipartiteGraph, ScanEdgesForLeftNode) {
 
 TEST(BipartiteGraph, DeleteWhileScanningAllEdges) {
   TestBipartiteGraph x;
-  x.Insert(1,  1.5f, 'a');
-  x.Insert(2, 30.5f, 'c');
-  x.Insert(2, 40.5f, 'd');
-  x.Insert(2, 50.5f, 'e');
-  x.Insert(3,  2.5f, 'a');
+  x.Insert(1, 'a',  1.5f);
+  x.Insert(2, 'c', 30.5f);
+  x.Insert(2, 'd', 40.5f);
+  x.Insert(2, 'e', 50.5f);
+  x.Insert(3, 'a',  2.5f);
 
   for (TestBipartiteGraph::Iterator it = x.ScanAllEdges();
        !it.Done(); it.Next()) {
@@ -184,11 +184,11 @@ TEST(BipartiteGraph, DeleteWhileScanningAllEdges) {
 
 TEST(BipartiteGraph, DeleteWhileScanningRightNodesForLeftNode) {
   TestBipartiteGraph x;
-  x.Insert(1,  1.5f, 'a');
-  x.Insert(2, 30.5f, 'c');
-  x.Insert(2, 40.5f, 'd');
-  x.Insert(2, 50.5f, 'e');
-  x.Insert(3,  2.5f, 'a');
+  x.Insert(1, 'a',  1.5f);
+  x.Insert(2, 'c', 30.5f);
+  x.Insert(2, 'd', 40.5f);
+  x.Insert(2, 'e', 50.5f);
+  x.Insert(3, 'a',  2.5f);
 
   for (TestBipartiteGraph::Iterator it = x.ScanEdgesForLeftNode(2);
        !it.Done(); it.Next()) {

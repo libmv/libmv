@@ -70,7 +70,7 @@ class Correspondences {
 
   // Transfers ownership of Feature*.
   void Insert(ImageID image_id, TrackID track_id, Feature *feature) {
-    correspondences_.Insert(image_id, track_id, feature);
+    correspondences_.Insert(image_id, feature, track_id);
   }
 
   Iterator ScanAllFeatures() {
