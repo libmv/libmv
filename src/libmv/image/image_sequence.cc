@@ -92,6 +92,7 @@ class ImageSequenceFromFile : public CachedImageSequence {
       : CachedImageSequence(4*1024*1024) {
     filenames_ = image_filenames;
   }
+  // TODO(keir): support external caches. Expose cache object.
   virtual int length() {
     return filenames_.size();
   }
