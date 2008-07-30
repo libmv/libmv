@@ -1,6 +1,7 @@
 ADD_DEFINITIONS(-DTHIS_SOURCE_DIR=\\"${LIBMV_SOURCE_DIR}/libmv/image\\")
 
-ADD_LIBRARY(image image.cc image_io.cc convolve.cc image_pyramid.cc array_nd.cc)
+ADD_LIBRARY(image image.cc image_io.cc convolve.cc image_pyramid.cc array_nd.cc
+            image_sequence.cc)
 
 ADD_EXECUTABLE(tuple_test tuple_test.cc)
 TARGET_LINK_LIBRARIES(tuple_test gtest)
@@ -13,6 +14,10 @@ ADD_TEST(array_nd_test array_nd_test)
 ADD_EXECUTABLE(image_test image_test.cc)
 TARGET_LINK_LIBRARIES(image_test image gtest)
 ADD_TEST(image_test image_test)
+
+ADD_EXECUTABLE(image_sequence_test image_sequence_test.cc)
+TARGET_LINK_LIBRARIES(image_sequence_test image gtest)
+ADD_TEST(image_sequence_test image_sequence_test)
 
 ADD_EXECUTABLE(image_io_test image_io_test.cc)
 TARGET_LINK_LIBRARIES(image_io_test image gtest)

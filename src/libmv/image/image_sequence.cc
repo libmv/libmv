@@ -18,8 +18,10 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
+//#include <pair>
 #include <string>
 #include <vector>
+#include <cstdio>
 
 #include "libmv/image/image.h"
 #include "libmv/image/image_io.h"
@@ -28,74 +30,89 @@
 
 namespace libmv {
 
-// TODO(keir): Merge the image caches into one large cache that caches across
-// filters. This is tough because we don't have a single image base class that
-// we can put in the cache; we have to instead cache per filter.
-//
-// TODO(keir): There needs to be cache introspection support; for testing, and
-// for displaying in a GUI (i.e. what images are loaded in the cache).
+ImageSequence::~ImageSequence() {}
+Array3Df *ImageSequence::GetFloatImage(int i) {
+  Image *image = GetImage(i);
+  assert(image);
+  return image->AsArray3Df();
+}
 
-template<T>
-class CachedImageSequence : ImageSequence<T> {
+// A key for a shared image cache. Typically the void * will be a pointer to
+// the image sequence that is using the cache.
+typedef std::pair<void *, int> TaggedImageKey;
+
+// A image cache that is shared among many image sequences (or anything that
+// produces images).
+typedef LRUCache<TaggedImageKey, Image *> ImageCache;
+
+ImageCache *NewImageCache(int max_size) {
+  return new ImageCache(max_size);
+}
+
+class CachedImageSequence : public ImageSequence {
  public:
+  virtual ~CachedImageSequence() {}
   CachedImageSequence(int max_size)
-      : cache_(max_size) {}
+      : cache_(NewImageCache(max_size)) {}
+  CachedImageSequence(ImageCache *image_cache)
+      : cache_(image_cache) {}
 
-  virtual Image<T> *LoadPinned(int i) {
-    Image<T> *image;
-    if (!cache_.FetchAndPin(i, &image)) {
+  virtual Image *GetImage(int i) {
+    Image *image;
+    TaggedImageKey cache_key(this, i);
+    if (!cache_->FetchAndPin(cache_key, &image)) {
       image = LoadImage(i);
       if (!image) {
         return 0;
       }
-      // TODO(keir): Pick a more useful size here...
-      cache_.StoreAndPin(i, image);
+      cache_->StoreAndPinSized(cache_key, image, image->MemorySizeInBytes());
     }
-    return result;
-  }
-  virtual int size() = 0;
-  virtual void Unpin(int i) {
-    cache_.Unpin(i);
+    return image;
   }
 
-  virtual Image<T> *LoadImage(int i) = 0;
+  virtual void Unpin(int i) {
+    TaggedImageKey cache_key(this, i);
+    cache_->Unpin(cache_key);
+  }
+
+  virtual int length() = 0;
+  virtual Image *LoadImage(int i) = 0;
 
  private:
-  LRUCache<std::string, Image<T> *> cache_;
+  ImageCache *cache_;
 };
 
 // An image sequence loaded from disk with caching behaviour.
-template<T>
-class ImageSequenceFromFile : CachedImageSequence<T> {
+class ImageSequenceFromFile : public CachedImageSequence {
  public:
+  virtual ~ImageSequenceFromFile() {}
   ImageSequenceFromFile(const std::vector<std::string> &image_filenames)
       // TODO(keir): Ick; constant here is nasty. It almost certainly needs to
       // change.
-      : CachedImageSequence(4) {
+      : CachedImageSequence(4*1024*1024) {
     filenames_ = image_filenames;
   }
-  virtual int size() {
+  virtual int length() {
     return filenames_.size();
   }
-  virtual Image<T> *LoadImage(int i) {
-    Image<T> *image = new Image<T>;
+  virtual Image *LoadImage(int i) {
+    Array3Df *image = new Array3Df;
     // TODO(keir): Make this handle png, jpg, etc.
-    if (!ReadPnm(filenames_[i], image)) {
+    if (!ReadPnm(filenames_[i].c_str(), image)) {
       delete image;
+      // TODO(keir): Better error reporting?
+      printf("Failed loading image %d: %s\n", i, filenames_[i].c_str());
       return 0;
     }
-    return image;
+    return new Image(image);
   }
 
  private:
   std::vector<std::string> filenames_;
 };
 
-ByteImageSequence *ByteImageSequenceFromFiles(
-    const std::vector<string> &filenames) {
-  return new ImageSequenceFromFile<unsigned char>(filenames);
+ImageSequence *ImageSequenceFromFiles(const std::vector<string> &filenames) {
+  return new ImageSequenceFromFile(filenames);
 }
 
 }  // namespace libmv
-
-#endif  // LIBMV_IMAGE_IMAGE_SEQUENCE_H_

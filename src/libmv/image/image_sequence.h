@@ -21,7 +21,6 @@
 #ifndef LIBMV_IMAGE_IMAGE_SEQUENCE_H_
 #define LIBMV_IMAGE_IMAGE_SEQUENCE_H_
 
-
 // TODO(keir): This is TOTALLY UNFINISHED and needs to be adjusted to use the
 // new generic Image() rather than the current floatarray/etc.
 
@@ -34,20 +33,16 @@ namespace libmv {
 
 // An image sequence with caching behaviour. Callers must Unpin() images that
 // they load to allow cached images to be freed.
-template<T>
 class ImageSequence {
  public:
-  virtual Image<T> *LoadPinned(int i) = 0;
+  virtual ~ImageSequence();
+  virtual Image *GetImage(int i) = 0;
+  virtual Array3Df *GetFloatImage(int i);
   virtual void Unpin(int i) = 0;
-  virtual int size() = 0;
-  virtual int channels() = 0;
+  virtual int length() = 0;
 };
 
-typedef ImageSequence<unsigned char> ByteImageSequence;
-typedef ImageSequence<float> FloatImageSequence;
-
-ByteImageSequence *ByteImageSequenceFromFiles(
-    const std::vector<string> &filenames);
+ImageSequence *ImageSequenceFromFiles(const std::vector<string> &filenames);
 
 }  // namespace libmv
 
