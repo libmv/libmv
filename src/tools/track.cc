@@ -65,6 +65,9 @@ int main(int argc, char **argv) {
   google::SetUsageMessage("Track a sequence.");
   google::ParseCommandLineFlags(&argc, &argv, true);
 
+  // TODO(keir): Resurrect this! Need to use new image pyramids.
+  
+  /*
   // This is not the place for this. I am experimenting with what sort of API
   // will be convenient for the tracking base classes.
   vector<string> files;
@@ -80,7 +83,7 @@ int main(int argc, char **argv) {
 
   int oldind = 0, newind = 1;
   Array3Df image[2];
-  ImagePyramid pyramid[2];
+  ImagePyramid *pyramid[2];
   KLTContext::FeatureList features[2];
   KLTContext klt;
 
@@ -109,6 +112,7 @@ int main(int argc, char **argv) {
 
     // TODO(keir): Finish me.
   }
+  */
 
   return 0;
 }

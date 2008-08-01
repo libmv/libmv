@@ -18,25 +18,27 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
-#include <iostream>
 #include <vector>
 
-#include "libmv/image/image_sequence.h"
+#include "libmv/image/cached_image_sequence.h"
+#include "libmv/image/image_sequence_io.h"
 #include "testing/testing.h"
 
 using libmv::Image;
+using libmv::ImageCache;
 using libmv::ImageSequence;
 using libmv::ImageSequenceFromFiles;
 using libmv::Array3Df;
 
 namespace {
 
-TEST(ReadPnm, Pgm) {
+TEST(ImageSequenceIO, FromFiles) {
   std::vector<string> files;
   files.push_back(string(THIS_SOURCE_DIR) + "/image_test/two_pixels.pgm");
   files.push_back(string(THIS_SOURCE_DIR) + "/image_test/two_pixels_gray.pgm");
-  ImageSequence *sequence = ImageSequenceFromFiles(files);
-  EXPECT_EQ(2, sequence->length());
+  ImageCache cache;
+  ImageSequence *sequence = ImageSequenceFromFiles(files, &cache);
+  EXPECT_EQ(2, sequence->Length());
 
   Array3Df *image = sequence->GetFloatImage(0);
   ASSERT_TRUE(image);
@@ -56,13 +58,6 @@ TEST(ReadPnm, Pgm) {
 
   sequence->Unpin(0);
   sequence->Unpin(1);
-}
-
-TEST(Image, Simple) {
-  Array3Df *array = new Array3Df(2,3);
-  Image image(array);
-  EXPECT_EQ(array, image.AsArray3Df());
-  EXPECT_TRUE(NULL == image.AsArray3Du());
 }
 
 }  // namespace

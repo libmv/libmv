@@ -18,21 +18,35 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
-#include <iostream>
+#include <vector>
 
-#include "libmv/image/image.h"
-#include "testing/testing.h"
+#include "libmv/image/cached_image_sequence.h"
 
-using libmv::Image;
-using libmv::Array3Df;
+namespace libmv {
 
-namespace {
+class MockImageSequence : public CachedImageSequence {
+ public:
+  virtual ~MockImageSequence() {}
 
-TEST(Image, SimpleImageAccessors) {
-  Array3Df *array = new Array3Df(2,3);
-  Image image(array);
-  EXPECT_EQ(array, image.AsArray3Df());
-  EXPECT_TRUE(NULL == image.AsArray3Du());
-}
+  MockImageSequence(ImageCache *cache)
+      : CachedImageSequence(cache) {}
 
-}  // namespace
+  virtual Image *LoadImage(int i) {
+    // Always produces a fresh copy, because the cache owns the result of this
+    // function.
+    return new Image(new Array3Df(*images_[i]));
+  }
+
+  virtual int Length() {
+    return images_.size();
+  }
+
+  void Append(Array3Df *image) {
+    images_.push_back(image);
+  }
+
+ private:
+  std::vector<Array3Df *> images_;
+};
+
+}  // namespace libmv

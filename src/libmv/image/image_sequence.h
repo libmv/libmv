@@ -21,28 +21,33 @@
 #ifndef LIBMV_IMAGE_IMAGE_SEQUENCE_H_
 #define LIBMV_IMAGE_IMAGE_SEQUENCE_H_
 
-// TODO(keir): This is TOTALLY UNFINISHED and needs to be adjusted to use the
-// new generic Image() rather than the current floatarray/etc.
-
-#include <string>
-#include <vector>
-
-#include "libmv/image/image.h"
-
 namespace libmv {
 
-// An image sequence with caching behaviour. Callers must Unpin() images that
-// they load to allow cached images to be freed.
+class Array3Df;
+class Image;
+class ImageCache;
+
+// An image sequence. The image sequence always owns the images.  Callers must
+// Unpin() images that they access.
 class ImageSequence {
  public:
   virtual ~ImageSequence();
+
+  // Retreive an image from the sequence. The image sequence retains ownership
+  // of the image. Callers must Unpin() the image after they are done with it.
   virtual Image *GetImage(int i) = 0;
   virtual Array3Df *GetFloatImage(int i);
-  virtual void Unpin(int i) = 0;
-  virtual int length() = 0;
-};
 
-ImageSequence *ImageSequenceFromFiles(const std::vector<string> &filenames);
+  // Call this after an image is no longer in use, with an index matching that
+  // which was retrieved with GetImage() or GetFloatImage().
+  virtual void Unpin(int i) = 0;
+
+  // Number of frames in the sequence.
+  virtual int Length() = 0;
+
+  // The image cache. Null if the sequence is uncached.
+  virtual ImageCache *Cache();
+};
 
 }  // namespace libmv
 

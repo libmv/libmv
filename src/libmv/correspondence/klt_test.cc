@@ -91,17 +91,20 @@ TEST(KLTContext, TrackFeature) {
   int d = 4;
   image2(32 + d, 32 + d) = 1.0f;
 
-  ImagePyramid pyramid1(image1, 3, 1.0);
-  ImagePyramid pyramid2(image2, 3, 1.0);
+  ImagePyramid *pyramid1 = MakeImagePyramid(image1, 3, 1.0);
+  ImagePyramid *pyramid2 = MakeImagePyramid(image2, 3, 1.0);
 
   KLTContext klt;
   KLTPointFeature feature1, feature2;
   feature1.position = 32, 32;
   feature2.position = 32, 32;
-  klt.TrackFeature(pyramid1, feature1, pyramid2, &feature2);
+  klt.TrackFeature(*pyramid1, feature1, *pyramid2, &feature2);
 
   EXPECT_NEAR(feature2.position(0), 32 + d, 0.01);
   EXPECT_NEAR(feature2.position(1), 32 + d, 0.01);
+
+  delete pyramid1;
+  delete pyramid2;
 }
 
 /*

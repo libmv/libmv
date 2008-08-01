@@ -24,17 +24,19 @@
 using libmv::Image;
 using libmv::Array3Df;
 using libmv::ImagePyramid;
+using libmv::MakeImagePyramid;
 
 namespace {
 
 TEST(ImagePyramid, Init) {
   Array3Df image(32,32);
   image.Fill(1);
-  ImagePyramid ip(image, 2);
+  ImagePyramid *ip = MakeImagePyramid(image, 2, 0.9);
 
-  EXPECT_EQ(ip.NumLevels(), 2);
-  EXPECT_NEAR(ip.Level(0)(16,16), 1, 1e-7);
-  EXPECT_NEAR(ip.Level(1)(8,8), 1, 1e-7);
+  EXPECT_EQ(ip->NumLevels(), 2);
+  EXPECT_NEAR(ip->Level(0)(16,16), 1, 1e-7);
+  EXPECT_NEAR(ip->Level(1)(8,8), 1, 1e-7);
+  delete ip;
 }
 
 }  // namespace

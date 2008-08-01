@@ -29,38 +29,14 @@ namespace libmv {
 
 class ImagePyramid {
  public:
-  ImagePyramid() {}
-
-  ImagePyramid(const FloatImage &image, int num_levels, double sigma = 0.9) {
-    Init(image, num_levels, sigma);
-  }
-
-  ~ImagePyramid() {
-  }
-
-  void Init(const FloatImage &image, int num_levels, double sigma = 0.9);
-
-  const Array3Df &Level(int i) const {
-    assert(0 <= i && i < NumLevels());
-    return levels_[i];
-  }
-
-  int NumLevels() const {
-    return levels_.size();
-  }
-
-  double Sigma() const {
-    return sigma_;
-  }
-
- private:
-  void ComputeLevel(int l);
-
- private:
-  double sigma_;
-  std::vector<Array3Df> levels_;
+  virtual ~ImagePyramid() {}
+  virtual const Array3Df &Level(int i) const = 0;
+  virtual int NumLevels() const = 0;
 };
 
+ImagePyramid *MakeImagePyramid(const Array3Df &image,
+                               int num_levels,
+                               double sigma);
 }  // namespace libmv
 
 #endif  // LIBMV_IMAGE_IMAGE_PYRAMID_H

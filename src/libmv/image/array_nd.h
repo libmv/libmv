@@ -369,7 +369,19 @@ class Array3D : public ArrayND<T, 3> {
 };
 
 typedef Array3D<unsigned char> Array3Du;
-typedef Array3D<float> Array3Df;
+//typedef Array3D<float> Array3Df;
+
+class Array3Df : public Array3D<float> {
+ public:
+  Array3Df()
+      : Array3D<float>() {}
+  Array3Df(int height, int width, int depth=1)
+      : Array3D<float>(height, width, depth) {}
+
+  // Copy constructor copies pixel data.
+  Array3Df(const Array3Df &b) : Array3D<float>(b) {
+  }
+};
 
 // TODO(keir): make this work for N != 3.
 template <typename TA, typename TB, typename TC>

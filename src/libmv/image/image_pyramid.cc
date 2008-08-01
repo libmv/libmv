@@ -24,21 +24,50 @@
 
 namespace libmv {
 
-void ImagePyramid::Init(const Array3Df &image,
-                        int num_levels,
-                        double sigma) {
-  assert(image.Depth() == 1);
+class ConcreteImagePyramid : public ImagePyramid {
+ public:
+  ConcreteImagePyramid() {}
 
-  sigma_ = sigma;
-  levels_.clear();
-  levels_.resize(num_levels);
-
-  BlurredImageAndDerivativesChannels(image, Sigma(), &levels_[0]);
-
-  for (int i = 1; i < NumLevels(); ++i) {
-    // TODO(keir): Is it accurate enough to boxfilter gradients?
-    DownsampleChannelsBy2(levels_[i-1], &levels_[i]);
+  ConcreteImagePyramid(const FloatImage &image,
+                       int num_levels,
+                       double sigma = 0.9) {
+    Init(image, num_levels, sigma);
   }
+
+  virtual ~ConcreteImagePyramid() {
+  }
+
+  void Init(const FloatImage &image, int num_levels, double sigma = 0.9) {
+    assert(image.Depth() == 1);
+
+    levels_.clear();
+    levels_.resize(num_levels);
+
+    BlurredImageAndDerivativesChannels(image, sigma, &levels_[0]);
+
+    for (int i = 1; i < NumLevels(); ++i) {
+      // TODO(keir): Is it accurate enough to boxfilter gradients?
+      DownsampleChannelsBy2(levels_[i-1], &levels_[i]);
+    }
+  }
+
+  virtual const Array3Df &Level(int i) const {
+    assert(0 <= i && i < NumLevels());
+    return levels_[i];
+  }
+
+  virtual int NumLevels() const {
+    return levels_.size();
+  }
+
+ private:
+  std::vector<Array3Df> levels_;
+};
+
+ImagePyramid *MakeImagePyramid(const Array3Df &image,
+                               int num_levels,
+                               double sigma) {
+  return new ConcreteImagePyramid(image, num_levels, sigma);
 }
 
 }  // namespace libmv

@@ -1,15 +1,15 @@
 // Copyright (c) 2007, 2008 libmv authors.
-// 
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
 // deal in the Software without restriction, including without limitation the
 // rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
 // sell copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -17,55 +17,24 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
-//
-// Concrete image classes. For now based on OpenCV.
 
-extern "C" {
-#include "opencv/highgui.h"
-}
-
-#include <string>
-
-#include "libmv/image/image.h"
+#ifndef LIBMV_IMAGE_IMAGE_SEQUENCE_FILTERS_H_
+#define LIBMV_IMAGE_IMAGE_SEQUENCE_FILTERS_H_
 
 namespace libmv {
 
-// Private class that wraps an IplImage
-class LibmvImage : public Image {
- public:
-  // Takes ownership of image.
-  LibmvImage(IplImage *image)
-    : image_(image) {};
+class ImageSequence;
 
-  ~LibmvImage() {
-    cvReleaseImage(&image_);
-  }
-  char *Pixels() {
-    return image_->imageData;
-  }
-  int Width() {
-    return image_->width;
-  }
-  int Height() {
-    return image_->height;
-  }
-  int Depth() {
-    return image_->depth;
-  }
- private:
-  LibmvImage();
-  IplImage *image_;
-};
+// Produce a three-channel sequence from a monochrome sequence with:
+// Channel 0: Source image Gaussian blurred with a kernel of variance sigma.
+// Channel 1: X derivative of channel 0.
+// Channel 2: Y derivative of channel 0.
+ImageSequence *BlurSequenceAndTakeDerivatives(ImageSequence *source,
+                                              double sigma);
 
-Image *LoadImage(const char *filename) {
-  IplImage *image = cvLoadImage(filename);
-  if (image) {
-    return new LibmvImage(image);
-  }
-  return NULL;
-}
+// Downsample each image in source by 2 in each dimension.
+ImageSequence *DownsampleSequenceBy2(ImageSequence *source);
 
-Image *LoadImage(const string &filename) {
-  return LoadImage(filename.c_str());
-}
 }  // namespace libmv
+
+#endif  // LIBMV_IMAGE_IMAGE_SEQUENCE_FILTERS_H_
