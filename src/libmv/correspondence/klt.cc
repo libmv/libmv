@@ -271,7 +271,11 @@ void KLTContext::TrackFeatureOneLevel(const Array3Df &image_and_gradient1,
                                       Vec2 *position2_pointer) {
   Vec2 &position2 = *position2_pointer;
 
-  for (int i = 0; i < max_iterations_; ++i) {
+  int i;
+  float dx=0, dy=0;
+  max_iterations_ = 30;
+  printf("disps = array([\n");
+  for (i = 0; i < max_iterations_; ++i) {
     // Compute gradient matrix and error vector.
     float gxx, gxy, gyy, ex, ey;
     ComputeTrackingEquation(image_and_gradient1, image_and_gradient2,
@@ -279,25 +283,34 @@ void KLTContext::TrackFeatureOneLevel(const Array3Df &image_and_gradient1,
                             HalfWindowSize(),
                             &gxx, &gxy, &gyy, &ex, &ey);
     // Solve the linear system for deltad.
-    float dx, dy;
     if (!SolveTrackingEquation(gxx, gxy, gyy, ex, ey, min_determinant_,
                                &dx, &dy)) {
       // TODO(keir): drop feature.
-//      printf("dropped!\n");
+      printf("dropped!\n");
     }
+
+    // shrink the update
+    dx *= 0.5;
+    dy *= 0.5;
 
     // Update feature2 position.
     position2(0) += dx;
     position2(1) += dy;
 
+    printf("  [%10f, %10f, %10f, %10f],\n", dx, dy, position2(0), position2(1));
+
     // TODO(keir): Handle other tracking failure conditions and pass the
     // reasons out to the caller. For example, for pyramid tracking a failure
     // at a coarse level suggests trying again at a finer level.
     if (Square(dx) + Square(dy) < min_update_distance2_) {
-//      printf("distance too small: %f, %f\n", dx, dy);
+      printf("# distance too small: %f, %f\n", dx, dy);
       break;
     }
 //    printf("dx=%f, dy=%f\n", dx, dy);
+  }
+  printf("])\n");
+  if (i == max_iterations_) {
+    printf("hit max iters. dx=%f, dy=%f\n", dx, dy);
   }
 }
 
