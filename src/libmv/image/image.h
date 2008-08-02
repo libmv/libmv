@@ -58,6 +58,9 @@ class Image {
       size = reinterpret_cast<Array3Df *>(array_)->Size();
       size *= sizeof(unsigned char);
       size += sizeof(Array3Df);
+    } else {
+      size = 0;
+      assert(0);
     }
     size += sizeof(*this);
     return size;

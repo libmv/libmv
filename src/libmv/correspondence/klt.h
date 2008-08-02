@@ -45,7 +45,7 @@ class KLTContext {
   typedef std::list<KLTPointFeature *> FeatureList;
 
   KLTContext()
-      : half_window_size_(3),
+      : half_window_size_(5),
         max_iterations_(10),
         min_trackness_(0.1),
         min_feature_dist_(10),

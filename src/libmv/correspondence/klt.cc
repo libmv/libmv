@@ -117,7 +117,7 @@ static double dist2(const Vec2f &x, const Vec2f &y) {
 }
 
 // TODO(keir): Use Stan's neat trick of using a 'punch-out' array to detect
-// too-closes features.
+// too-closes features. This is O(n^2)!
 static void RemoveTooCloseFeatures(KLTContext::FeatureList *features,
                                    double mindist2) {
 
@@ -253,8 +253,8 @@ static bool SolveTrackingEquation(float gxx, float gxy, float gyy,
                                   float min_determinant,
                                   float *dx, float *dy) {
   float det = gxx * gyy - gxy * gxy;
-  printf("det=%f, min_det=%f, gxx=%f, gxy=%f, gyy=%f\n", det, min_determinant,
-      gxx, gxy, gyy);
+//  printf("det=%f, min_det=%f, gxx=%f, gxy=%f, gyy=%f\n", det, min_determinant,
+//      gxx, gxy, gyy);
   if (det < min_determinant) {
     *dx = 0;
     *dy = 0;
@@ -283,7 +283,7 @@ void KLTContext::TrackFeatureOneLevel(const Array3Df &image_and_gradient1,
     if (!SolveTrackingEquation(gxx, gxy, gyy, ex, ey, min_determinant_,
                                &dx, &dy)) {
       // TODO(keir): drop feature.
-      printf("dropped!\n");
+//      printf("dropped!\n");
     }
 
     // Update feature2 position.
@@ -294,10 +294,10 @@ void KLTContext::TrackFeatureOneLevel(const Array3Df &image_and_gradient1,
     // reasons out to the caller. For example, for pyramid tracking a failure
     // at a coarse level suggests trying again at a finer level.
     if (Square(dx) + Square(dy) < min_update_distance2_) {
-      printf("distance too small: %f, %f\n", dx, dy);
+//      printf("distance too small: %f, %f\n", dx, dy);
       break;
     }
-    printf("dx=%f, dy=%f\n", dx, dy);
+//    printf("dx=%f, dy=%f\n", dx, dy);
   }
 }
 

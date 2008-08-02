@@ -28,15 +28,17 @@
 #include "libmv/image/image.h"
 #include "libmv/image/image_io.h"
 #include "libmv/image/image_pyramid.h"
+#include "libmv/image/image_sequence_io.h"
+#include "libmv/image/cached_image_sequence.h"
+#include "libmv/image/pyramid_sequence.h"
 #include "third_party/gflags/gflags.h"
 
 DEFINE_bool(debug_images, true, "Output debug images.");
+DEFINE_double(sigma, 0.9, "Blur filter strength.");
+DEFINE_int32(pyramid_levels, 4, "Number of levels in the image pyramid.");
 
-using libmv::Array3Df;
-using libmv::FloatImage;
-using libmv::ImagePyramid;
-using libmv::KLTContext;
-using libmv::Vec3;
+using namespace libmv;
+
 using std::sort;
 using std::string;
 using std::vector;
@@ -65,9 +67,6 @@ int main(int argc, char **argv) {
   google::SetUsageMessage("Track a sequence.");
   google::ParseCommandLineFlags(&argc, &argv, true);
 
-  // TODO(keir): Resurrect this! Need to use new image pyramids.
-  
-  /*
   // This is not the place for this. I am experimenting with what sort of API
   // will be convenient for the tracking base classes.
   vector<string> files;
@@ -81,39 +80,41 @@ int main(int argc, char **argv) {
     return 1;
   }
 
-  int oldind = 0, newind = 1;
-  Array3Df image[2];
-  ImagePyramid *pyramid[2];
-  KLTContext::FeatureList features[2];
+  ImageCache cache;
+  ImageSequence *source = ImageSequenceFromFiles(files, &cache);
+  PyramidSequence *pyramid_sequence = MakePyramidSequence(source,
+                                                          FLAGS_pyramid_levels,
+                                                          FLAGS_sigma);
   KLTContext klt;
+  KLTContext::FeatureList features[2];
 
-  ReadPnm(files[0].c_str(), &image[newind]);
-  pyramid[newind].Init(image[newind], 3);
+  int oldind = 0, newind = 1;
 
-  klt.DetectGoodFeatures(pyramid[newind].Level(0), &features[newind]);
-
-  WriteOutputImage(image[newind], klt, features[newind],
+  // TODO(keir): Really have to get a scoped_ptr<> implementation!
+  // Consider taking the one from boost but editing out the cruft.
+  ImagePyramid *pyramid = pyramid_sequence->Pyramid(0);
+  klt.DetectGoodFeatures(pyramid->Level(0), &features[oldind]);
+  WriteOutputImage(pyramid->Level(0), klt, features[oldind],
                    (files[0]+".out.ppm").c_str());
 
   // TODO(keir): Use correspondences here!
   for (size_t i = 1; i < files.size(); ++i) {
+    printf("Tracking %2d features in %s\n",
+           features[oldind].size(),
+           files[i].c_str());
+    klt.TrackFeatures(pyramid_sequence->Pyramid(i-1),  features[oldind],
+                      pyramid_sequence->Pyramid(i),   &features[newind]);
+    printf("...now have %2d features.\n", features[newind].size());
+
+    WriteOutputImage(
+        pyramid_sequence->Pyramid(i)->Level(0),
+        klt, features[newind], (files[i]+".out.ppm").c_str());
+
+    WritePnm(pyramid_sequence->Pyramid(i)->Level(0),
+             (files[i]+".out_deriv.ppm").c_str());
+
     std::swap(oldind, newind);
-
-    printf("Tracking %s\n", files[i].c_str());
-
-    ReadPnm(files[i].c_str(), &image[newind]);
-    pyramid[newind].Init(image[newind], 3);
-
-    klt.TrackFeatures(pyramid[oldind], features[oldind],
-                      pyramid[newind], &features[newind]);
-
-    WriteOutputImage(image[newind], klt, features[newind],
-                    (files[i]+".out.ppm").c_str());
-
-    // TODO(keir): Finish me.
   }
-  */
-
   return 0;
 }
 

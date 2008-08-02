@@ -28,6 +28,7 @@
 #include <map>
 #include <list>
 #include <cassert>
+#include <cstdio>
 
 #include "libmv/image/cache.h"
 
@@ -163,6 +164,7 @@ class LRUCache : public Cache<K, V> {
       // TODO(keir): We need to delete this sometimes! Figure out the right way
       // to detect that this is a pointer and delete it.
       // delete item->value;
+      printf("leaking %d bytes\n", item->size);
       size_ -= item->size;
       items_.erase(items_.find(key_to_remove));
     }
