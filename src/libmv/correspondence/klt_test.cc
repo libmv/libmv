@@ -98,7 +98,7 @@ TEST(KLTContext, TrackFeature) {
   KLTPointFeature feature1, feature2;
   feature1.position = 32, 32;
   feature2.position = 32, 32;
-  klt.TrackFeature(*pyramid1, feature1, *pyramid2, &feature2);
+  klt.TrackFeature(pyramid1, feature1, pyramid2, &feature2);
 
   EXPECT_NEAR(feature2.position(0), 32 + d, 0.01);
   EXPECT_NEAR(feature2.position(1), 32 + d, 0.01);

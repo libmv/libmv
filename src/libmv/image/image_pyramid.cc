@@ -51,7 +51,7 @@ class ConcreteImagePyramid : public ImagePyramid {
     }
   }
 
-  virtual const Array3Df &Level(int i) const {
+  virtual const Array3Df &Level(int i) {
     assert(0 <= i && i < NumLevels());
     return levels_[i];
   }

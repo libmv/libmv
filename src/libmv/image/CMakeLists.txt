@@ -2,7 +2,7 @@ ADD_DEFINITIONS(-DTHIS_SOURCE_DIR=\\"${LIBMV_SOURCE_DIR}/libmv/image\\")
 
 ADD_LIBRARY(image image.cc image_io.cc convolve.cc image_pyramid.cc array_nd.cc
             image_sequence.cc image_sequence_io.cc image_sequence_filters.cc
-            filtered_sequence.cc)
+            filtered_sequence.cc pyramid_sequence.cc)
 
 ADD_EXECUTABLE(tuple_test tuple_test.cc)
 TARGET_LINK_LIBRARIES(tuple_test gtest)
@@ -31,6 +31,10 @@ ADD_TEST(filtered_sequence_test filtered_sequence_test)
 ADD_EXECUTABLE(image_sequence_filters_test image_sequence_filters_test.cc)
 TARGET_LINK_LIBRARIES(image_sequence_filters_test image flens gtest lapack atlas)
 ADD_TEST(image_sequence_filters_test image_sequence_filters_test)
+
+ADD_EXECUTABLE(pyramid_sequence_test pyramid_sequence_test.cc)
+TARGET_LINK_LIBRARIES(pyramid_sequence_test image flens gtest lapack atlas)
+ADD_TEST(pyramid_sequence_test pyramid_sequence_test)
 
 ADD_EXECUTABLE(convolve_test convolve_test.cc)
 TARGET_LINK_LIBRARIES(convolve_test image flens gtest lapack atlas)

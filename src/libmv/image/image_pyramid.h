@@ -21,16 +21,14 @@
 #ifndef LIBMV_IMAGE_IMAGE_PYRAMID_H
 #define LIBMV_IMAGE_IMAGE_PYRAMID_H
 
-#include <vector>
-
-#include "libmv/image/image.h"
-
 namespace libmv {
+
+class Array3Df;
 
 class ImagePyramid {
  public:
   virtual ~ImagePyramid() {}
-  virtual const Array3Df &Level(int i) const = 0;
+  virtual const Array3Df &Level(int i) = 0;
   virtual int NumLevels() const = 0;
 };
 

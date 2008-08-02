@@ -56,14 +56,14 @@ class KLTContext {
   void DetectGoodFeatures(const Array3Df &image_and_gradients,
                           FeatureList *features);
 
-  void TrackFeature(const ImagePyramid &pyramid1,
+  void TrackFeature(ImagePyramid *pyramid1,
                     const KLTPointFeature &feature1,
-                    const ImagePyramid &pyramid2,
+                    ImagePyramid *pyramid2,
                     KLTPointFeature *feature2_pointer);
 
-  void TrackFeatures(const ImagePyramid &pyramid1,
+  void TrackFeatures(ImagePyramid *pyramid1,
                      const FeatureList &features1,
-                     const ImagePyramid &pyramid2,
+                     ImagePyramid *pyramid2,
                      FeatureList *features2_pointer);
 
   void TrackFeatureOneLevel(const FloatImage &image_and_gradient1,

@@ -165,9 +165,9 @@ void KLTContext::DetectGoodFeatures(const Array3Df &image_and_gradients,
 }
 
 // TODO(keir): Restore or delete these functions...
-void KLTContext::TrackFeatures(const ImagePyramid &pyramid1,
+void KLTContext::TrackFeatures(ImagePyramid *pyramid1,
                                const FeatureList &features1,
-                               const ImagePyramid &pyramid2,
+                               ImagePyramid *pyramid2,
                                FeatureList *features2_pointer) {
   FeatureList &features2 = *features2_pointer;
 
@@ -180,11 +180,11 @@ void KLTContext::TrackFeatures(const ImagePyramid &pyramid1,
   }
 }
 
-void KLTContext::TrackFeature(const ImagePyramid &pyramid1,
+void KLTContext::TrackFeature(ImagePyramid *pyramid1,
                               const KLTPointFeature &feature1,
-                              const ImagePyramid &pyramid2,
+                              ImagePyramid *pyramid2,
                               KLTPointFeature *feature2_pointer) {
-  const int highest_level = pyramid1.NumLevels() - 1;
+  const int highest_level = pyramid1->NumLevels() - 1;
 
   Vec2 position1, position2;
   position2(0) = feature1.position(0) / pow(2., highest_level + 1);
@@ -196,9 +196,9 @@ void KLTContext::TrackFeature(const ImagePyramid &pyramid1,
     position2(0) *= 2;
     position2(1) *= 2;
 
-    TrackFeatureOneLevel(pyramid1.Level(i),
+    TrackFeatureOneLevel(pyramid1->Level(i),
                          position1,
-                         pyramid2.Level(i),
+                         pyramid2->Level(i),
                          &position2);
   }
   feature2_pointer->position = position2;
