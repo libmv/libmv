@@ -383,6 +383,24 @@ class Array3Df : public Array3D<float> {
   }
 };
 
+// TODO(keir): Uninline this and push to .cc.
+inline void SplitChannels(const Array3Df input,
+                          Array3Df *channel0,
+                          Array3Df *channel1,
+                          Array3Df *channel2) {
+  assert(input.Depth() >= 3);
+  channel0->Resize(input.Height(), input.Width());
+  channel1->Resize(input.Height(), input.Width());
+  channel2->Resize(input.Height(), input.Width());
+  for (int row = 0; row < input.Height(); ++row) {
+    for (int column = 0; column < input.Width(); ++column) {
+      (*channel0)(row, column) = input(row, column, 0);
+      (*channel1)(row, column) = input(row, column, 1);
+      (*channel2)(row, column) = input(row, column, 2);
+    }
+  }
+}
+
 // TODO(keir): make this work for N != 3.
 template <typename TA, typename TB, typename TC>
 void MultiplyElements(const ArrayND<TA, 3> a,
@@ -400,6 +418,27 @@ void MultiplyElements(const ArrayND<TA, 3> a,
     }
   }
 }
+
+inline void PrintArray(const Array3Df &array) {
+  printf("[\n");
+  for (int r = 0; r < array.Height(); ++r) {
+    printf("[");
+    for (int c = 0; c < array.Width(); ++c) {
+      if (array.Depth() == 1) {
+        printf("%11f, ", array(r, c));
+      } else {
+        printf("[");
+        for (int k = 0; k < array.Depth(); ++k) {
+          printf("%11f, ", array(r, c, k));
+        }
+        printf("],");
+      }
+    }
+    printf("],\n");
+  }
+  printf("]\n");
+}
+
 
 // Convert a float array into a byte array by scaling values by 255* (max-min).
 void FloatArrayToScaledByteArray(const Array3Df &float_array,
