@@ -77,6 +77,10 @@ class Correspondences {
     return Iterator(correspondences_.ScanAllEdges());
   }
 
+  Iterator ScanFeaturesForImage(ImageID image) {
+    return Iterator(correspondences_.ScanEdgesForLeftNode(image));
+  }
+
 private:
   CorrespondenceGraph correspondences_;
 };
@@ -127,6 +131,10 @@ class CorrespondencesView {
 
   Iterator ScanAllFeatures() {
     return Iterator(correspondences_->ScanAllFeatures());
+  }
+
+  Iterator ScanFeaturesForImage(ImageID image) {
+    return Iterator(correspondences_->ScanFeaturesForImage(image));
   }
 
 private:

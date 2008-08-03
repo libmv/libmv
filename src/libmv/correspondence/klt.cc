@@ -315,14 +315,16 @@ void KLTContext::DrawFeatureList(const FeatureList &features,
 }
 
 // TODO(keir): Replace this with Cairo.
-void KLTContext::DrawFeature(const KLTPointFeature &feature,
-                             const Vec3 &color,
-                             FloatImage *image) const {
+void DrawFeature(const PointFeature &feature,
+                 const Vec3 &color,
+                 FloatImage *image) {
   assert(image->Depth() == 3);
 
+  const Vec2f &point = feature.Point();
+
   const int cross_width = 5;
-  int x = lround(feature.position(0));
-  int y = lround(feature.position(1));
+  int x = lround(point(0));
+  int y = lround(point(1));
   if (!image->Contains(y,x)) {
     return;
   }

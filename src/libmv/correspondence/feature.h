@@ -34,7 +34,7 @@ class Feature {
 class PointFeature : public Feature {
  public:
   virtual ~PointFeature();
-  virtual const Vec2f &Point() = 0;
+  virtual const Vec2f &Point() const = 0;
 };
 
 class LineFeature : public Feature {

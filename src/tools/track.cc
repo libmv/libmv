@@ -44,8 +44,7 @@ using std::string;
 using std::vector;
 
 void WriteOutputImage(const FloatImage &image,
-                      const KLTContext &klt,
-                      const KLTContext::FeatureList &features,
+                      CorrespondencesView<KLTPointFeature>::Iterator features,
                       const char *output_filename) {
   FloatImage output_image(image.Height(), image.Width(), 3);
   for (int i = 0; i < image.Height(); ++i) {
@@ -58,7 +57,9 @@ void WriteOutputImage(const FloatImage &image,
 
   Vec3 green;
   green = 0, 1, 0;
-  klt.DrawFeatureList(features, green, &output_image);
+  for (; !features.Done(); features.Next()) {
+    DrawFeature(*features.feature(), green, &output_image);
+  }
 
   WritePnm(output_image, output_filename);
 }
@@ -86,34 +87,48 @@ int main(int argc, char **argv) {
       MakePyramidSequence(source, FLAGS_pyramid_levels, FLAGS_sigma);
 
   KLTContext klt;
-  KLTContext::FeatureList features[2];
-
-  int oldind = 0, newind = 1;
+  Correspondences correspondences;
 
   // TODO(keir): Really have to get a scoped_ptr<> implementation!
   // Consider taking the one from boost but editing out the cruft.
   ImagePyramid *pyramid = pyramid_sequence->Pyramid(0);
-  klt.DetectGoodFeatures(pyramid->Level(0), &features[oldind]);
-  WriteOutputImage(pyramid->Level(0), klt, features[oldind],
-                   (files[0]+".out.ppm").c_str());
+  KLTContext::FeatureList features;
+  klt.DetectGoodFeatures(pyramid->Level(0), &features);
+//  WriteOutputImage(pyramid->Level(0), klt, features,
+//                   (files[0]+".out.ppm").c_str());
+  int i = 0;
+  for (KLTContext::FeatureList::iterator it = features.begin();
+       it != features.end(); ++it, ++i) {
+    correspondences.Insert(0, i, *it);
+  }
 
+  CorrespondencesView<KLTPointFeature> klt_correspondences(&correspondences);
   // TODO(keir): Use correspondences here!
   for (size_t i = 1; i < files.size(); ++i) {
-    printf("Tracking %2d features in %s\n",
-           features[oldind].size(),
-           files[i].c_str());
+    printf("Tracking %2d features in %s\n", features.size(), files[i].c_str());
 
-    klt.TrackFeatures(pyramid_sequence->Pyramid(i-1),  features[oldind],
-                      pyramid_sequence->Pyramid(i),   &features[newind]);
-
-    printf("...now have %2d features.\n", features[newind].size());
+    CorrespondencesView<KLTPointFeature>::Iterator it =
+        klt_correspondences.ScanFeaturesForImage(i-1);
+    for (; !it.Done(); it.Next()) {
+      KLTPointFeature *next_position = new KLTPointFeature;
+      if (klt.TrackFeature(pyramid_sequence->Pyramid(i-1), *it.feature(),
+                           pyramid_sequence->Pyramid(i), next_position)) {
+        correspondences.Insert(i, it.track(), next_position);
+      } else {
+        delete next_position;
+      }
+    }
 
     WriteOutputImage(
         pyramid_sequence->Pyramid(i)->Level(0),
-        klt, features[newind], (files[i]+".out.ppm").c_str());
-
-    std::swap(oldind, newind);
+        klt_correspondences.ScanFeaturesForImage(i),
+        (files[i]+".out.ppm").c_str());
   }
+
+  // XXX
+  // TODO(keir): Now do something useful with 'correspondences'!
+  // XXX
+  //
   return 0;
 }
 

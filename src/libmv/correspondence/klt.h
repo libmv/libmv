@@ -33,7 +33,7 @@ namespace libmv {
 
 struct KLTPointFeature : public PointFeature {
   // (x, y) position (not row, column).
-  virtual const Vec2f &Point() {
+  virtual const Vec2f &Point() const {
     return position;
   }
   Vec2f position;
@@ -76,10 +76,6 @@ class KLTContext {
   void DrawFeatureList(const FeatureList &features,
                        const Vec3 &color,
                        FloatImage *image) const;
-  void DrawFeature(const KLTPointFeature &feature,
-                   const Vec3 &color,
-                   FloatImage *image) const;
-
   int HalfWindowSize() { return half_window_size_; }
   int WindowSize() { return 2 * HalfWindowSize() + 1; }
 
@@ -91,6 +87,10 @@ class KLTContext {
   double min_determinant_;
   double min_update_distance2_;
 };
+
+void DrawFeature(const PointFeature &feature,
+                 const Vec3 &color,
+                 FloatImage *image);
 
 }  // namespace libmv
 
