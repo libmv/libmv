@@ -65,10 +65,10 @@ inline T SampleLinear(const Array3D<T> &image, float y, float x, int v = 0) {
   LinearInitAxis(y, image.Height(), &y1, &y2, &dy1, &dy2);
   LinearInitAxis(x, image.Width(),  &x1, &x2, &dx1, &dx2);
 
-  const T im11 = image(y1,x1,v);
-  const T im12 = image(y1,x2,v);
-  const T im21 = image(y2,x1,v);
-  const T im22 = image(y2,x2,v);
+  const T im11 = image(y1, x1, v);
+  const T im12 = image(y1, x2, v);
+  const T im21 = image(y2, x1, v);
+  const T im22 = image(y2, x2, v);
 
   return T(dy1 * ( dx1 * im11 + dx2 * im12 ) +
            dy2 * ( dx1 * im21 + dx2 * im22 ));
@@ -80,20 +80,20 @@ inline void DownsampleChannelsBy2(const Array3Df &in, Array3Df *out) {
   assert(in.Height() % 2 == 0);
   assert(in.Width() % 2 == 0);
 
-  int height = in.Height()/2;
-  int width = in.Width()/2;
+  int height = in.Height() / 2;
+  int width = in.Width() / 2;
   int depth = in.Depth();
 
   out->Resize(height, width, depth);
 
   // 2x2 box filter downsampling.
-  for (int i = 0; i < height; ++i) {
-    for (int j = 0; j < width; ++j) {
+  for (int r = 0; r < height; ++r) {
+    for (int c = 0; c < width; ++c) {
       for (int k = 0; k < depth; ++k) {
-        (*out)(i, j, k) = (in(2 * i,     2 * j,     k) +
-                           in(2 * i + 1, 2 * j,     k) +
-                           in(2 * i,     2 * j + 1, k) +
-                           in(2 * i + 1, 2 * j + 1, k)) / 4.0;
+        (*out)(r, c, k) = (in(2 * r,     2 * c,     k) +
+                           in(2 * r + 1, 2 * c,     k) +
+                           in(2 * r,     2 * c + 1, k) +
+                           in(2 * r + 1, 2 * c + 1, k)) / 4.0;
       }
     }
   }
