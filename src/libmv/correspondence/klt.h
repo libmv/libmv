@@ -32,6 +32,7 @@
 namespace libmv {
 
 struct KLTPointFeature : public PointFeature {
+  // (x, y) position (not row, column).
   virtual const Vec2f &Point() {
     return position;
   }
@@ -45,7 +46,7 @@ class KLTContext {
   typedef std::list<KLTPointFeature *> FeatureList;
 
   KLTContext()
-      : half_window_size_(5),
+      : half_window_size_(3),
         max_iterations_(10),
         min_trackness_(0.1),
         min_feature_dist_(10),
@@ -56,7 +57,7 @@ class KLTContext {
   void DetectGoodFeatures(const Array3Df &image_and_gradients,
                           FeatureList *features);
 
-  void TrackFeature(ImagePyramid *pyramid1,
+  bool TrackFeature(ImagePyramid *pyramid1,
                     const KLTPointFeature &feature1,
                     ImagePyramid *pyramid2,
                     KLTPointFeature *feature2_pointer);
@@ -66,7 +67,7 @@ class KLTContext {
                      ImagePyramid *pyramid2,
                      FeatureList *features2_pointer);
 
-  void TrackFeatureOneLevel(const FloatImage &image_and_gradient1,
+  bool TrackFeatureOneLevel(const FloatImage &image_and_gradient1,
                             const Vec2 &position1,
                             const FloatImage &image_and_gradient2,
                             Vec2 *position2_pointer);

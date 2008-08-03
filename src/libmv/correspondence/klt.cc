@@ -164,7 +164,6 @@ void KLTContext::DetectGoodFeatures(const Array3Df &image_and_gradients,
   RemoveTooCloseFeatures(features, min_feature_dist_ * min_feature_dist_);
 }
 
-// TODO(keir): Restore or delete these functions...
 void KLTContext::TrackFeatures(ImagePyramid *pyramid1,
                                const FeatureList &features1,
                                ImagePyramid *pyramid2,
@@ -180,28 +179,33 @@ void KLTContext::TrackFeatures(ImagePyramid *pyramid1,
   }
 }
 
-void KLTContext::TrackFeature(ImagePyramid *pyramid1,
+bool KLTContext::TrackFeature(ImagePyramid *pyramid1,
                               const KLTPointFeature &feature1,
                               ImagePyramid *pyramid2,
                               KLTPointFeature *feature2_pointer) {
-  const int highest_level = pyramid1->NumLevels() - 1;
-
   Vec2 position1, position2;
-  position2(0) = feature1.position(0) / pow(2., highest_level + 1);
-  position2(1) = feature1.position(1) / pow(2., highest_level + 1);
+  position2(0) = feature1.position(0);
+  position2(1) = feature1.position(1);
+  position2 /= pow(2., pyramid1->NumLevels());
 
-  for (int i = highest_level; i >= 0; --i) {
+  for (int i = pyramid1->NumLevels() - 1; i >= 0; --i) {
     position1(0) = feature1.position(0) / pow(2., i);
     position1(1) = feature1.position(1) / pow(2., i);
-    position2(0) *= 2;
-    position2(1) *= 2;
+    position2 *= 2;
 
-    TrackFeatureOneLevel(pyramid1->Level(i),
-                         position1,
-                         pyramid2->Level(i),
-                         &position2);
+    bool succeeded = TrackFeatureOneLevel(pyramid1->Level(i),
+                                          position1,
+                                          pyramid2->Level(i),
+                                          &position2);
+    if (i == 0 && !succeeded) {
+      // Only fail on the highest-resolution level, because a failure on a
+      // coarse level does not mean failure at a lower level (consider
+      // out-of-bounds conditions).
+      return false;
+    }
   }
   feature2_pointer->position = position2;
+  return true;
 }
 
 // Compute the gradient matrix noted by Z and the error vector e.
@@ -216,21 +220,18 @@ static void ComputeTrackingEquation(const Array3Df &image_and_gradient1,
                                     float *gyy,
                                     float *ex,
                                     float *ey) {
-  *gxx = 0;
-  *gxy = 0;
-  *gyy = 0;
-  *ex = 0;
-  *ey = 0;
-  for (int i = -half_width; i <= half_width; ++i) {
-    for (int j = -half_width; j <= half_width; ++j) {
-      float x1 = position1(0) + j;
-      float y1 = position1(1) + i;
-      float x2 = position2(0) + j;
-      float y2 = position2(1) + i;
+  *gxx = *gxy = *gyy = 0;
+  *ex = *ey = 0;
+  for (int r = -half_width; r <= half_width; ++r) {
+    for (int c = -half_width; c <= half_width; ++c) {
+      float x1 = position1(0) + c;
+      float y1 = position1(1) + r;
+      float x2 = position2(0) + c;
+      float y2 = position2(1) + r;
       // TODO(pau): should do boundary checking outside this loop, and call here
       // a sampler that does not boundary checking.
-      float I = SampleLinear(image_and_gradient1, y1, x1, 0);
-      float J = SampleLinear(image_and_gradient2, y2, x2, 0);
+      float I =  SampleLinear(image_and_gradient1, y1, x1, 0);
+      float J =  SampleLinear(image_and_gradient2, y2, x2, 0);
       float gx = SampleLinear(image_and_gradient2, y2, x2, 1);
       float gy = SampleLinear(image_and_gradient2, y2, x2, 2);
       *gxx += gx * gx;
@@ -253,8 +254,6 @@ static bool SolveTrackingEquation(float gxx, float gxy, float gyy,
                                   float min_determinant,
                                   float *dx, float *dy) {
   float det = gxx * gyy - gxy * gxy;
-//  printf("det=%f, min_det=%f, gxx=%f, gxy=%f, gyy=%f\n", det, min_determinant,
-//      gxx, gxy, gyy);
   if (det < min_determinant) {
     *dx = 0;
     *dy = 0;
@@ -265,7 +264,7 @@ static bool SolveTrackingEquation(float gxx, float gxy, float gyy,
   return true;
 }
 
-void KLTContext::TrackFeatureOneLevel(const Array3Df &image_and_gradient1,
+bool KLTContext::TrackFeatureOneLevel(const Array3Df &image_and_gradient1,
                                       const Vec2 &position1,
                                       const Array3Df &image_and_gradient2,
                                       Vec2 *position2_pointer) {
@@ -273,8 +272,7 @@ void KLTContext::TrackFeatureOneLevel(const Array3Df &image_and_gradient1,
 
   int i;
   float dx=0, dy=0;
-  max_iterations_ = 30;
-  printf("disps = array([\n");
+  max_iterations_ = 10;
   for (i = 0; i < max_iterations_; ++i) {
     // Compute gradient matrix and error vector.
     float gxx, gxy, gyy, ex, ey;
@@ -285,33 +283,25 @@ void KLTContext::TrackFeatureOneLevel(const Array3Df &image_and_gradient1,
     // Solve the linear system for deltad.
     if (!SolveTrackingEquation(gxx, gxy, gyy, ex, ey, min_determinant_,
                                &dx, &dy)) {
-      // TODO(keir): drop feature.
-      printf("dropped!\n");
+      return false;
     }
-
-    // shrink the update
-    dx *= 0.5;
-    dy *= 0.5;
 
     // Update feature2 position.
     position2(0) += dx;
     position2(1) += dy;
 
-    printf("  [%10f, %10f, %10f, %10f],\n", dx, dy, position2(0), position2(1));
-
     // TODO(keir): Handle other tracking failure conditions and pass the
     // reasons out to the caller. For example, for pyramid tracking a failure
     // at a coarse level suggests trying again at a finer level.
     if (Square(dx) + Square(dy) < min_update_distance2_) {
-      printf("# distance too small: %f, %f\n", dx, dy);
       break;
     }
-//    printf("dx=%f, dy=%f\n", dx, dy);
   }
-  printf("])\n");
+
   if (i == max_iterations_) {
-    printf("hit max iters. dx=%f, dy=%f\n", dx, dy);
+    // TODO(keir): Somehow indicate that we hit max iterations.
   }
+  return true;
 }
 
 
@@ -324,6 +314,7 @@ void KLTContext::DrawFeatureList(const FeatureList &features,
   }
 }
 
+// TODO(keir): Replace this with Cairo.
 void KLTContext::DrawFeature(const KLTPointFeature &feature,
                              const Vec3 &color,
                              FloatImage *image) const {
