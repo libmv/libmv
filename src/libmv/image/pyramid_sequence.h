@@ -21,18 +21,22 @@
 #ifndef LIBMV_IMAGE_PYRAMID_SEQUENCE_H_
 #define LIBMV_IMAGE_PYRAMID_SEQUENCE_H_
 
-#include <vector>
-
 namespace libmv {
 
-class image;
 class ImagePyramid;
 
 class PyramidSequence {
  public:
   virtual ~PyramidSequence();
+
+  // Length of underlying image sequence.
   virtual int Length() = 0;
-  virtual ImagePyramid *Pyramid(int i) = 0;
+
+  // Get an image pyramid constructed from frame_number in the source sequence.
+  // The PyramidSequence retains ownership of the ImagePyramid (callers must
+  // not delete it). The ImagePyramid remains valid while the PyramidSequence
+  // is in scope.
+  virtual ImagePyramid *Pyramid(int frame_number) = 0;
 };
 
 PyramidSequence *MakePyramidSequence(ImageSequence *sequence,
