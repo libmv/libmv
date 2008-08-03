@@ -68,6 +68,9 @@ class ConcretePyramidSequence : public PyramidSequence {
  public:
   virtual ~ConcretePyramidSequence() {
     for (size_t i = 0; i < levels_.size(); ++i) {
+      delete downsamples_[i];
+    }
+    for (size_t i = 0; i < levels_.size(); ++i) {
       delete levels_[i];
     }
     for (int i = 0; i < source_->Length(); ++i) {
@@ -76,9 +79,14 @@ class ConcretePyramidSequence : public PyramidSequence {
   }
 
   ConcretePyramidSequence(ImageSequence *source, int levels, double sigma) {
-    levels_.push_back(BlurSequenceAndTakeDerivatives(source, sigma));
+    downsamples_.resize(levels);
+    downsamples_[0] = source;
     for (int i = 1; i < levels; ++i) {
-      levels_.push_back(DownsampleSequenceBy2(levels_.back()));
+      downsamples_[i] = DownsampleSequenceBy2(downsamples_[i-1]);
+    }
+    levels_.resize(levels);
+    for (int i = 0; i < levels; ++i) {
+      levels_[i] = BlurSequenceAndTakeDerivatives(downsamples_[i], sigma);
     }
     constructed_pyramids_.resize(source->Length());
     for (int i = 0; i < source->Length(); ++i) {
@@ -101,6 +109,7 @@ class ConcretePyramidSequence : public PyramidSequence {
  private:
   ImageSequence *source_;
   std::vector<ImageSequence *> levels_;
+  std::vector<ImageSequence *> downsamples_;
   std::vector<ImagePyramid *> constructed_pyramids_;
 };
 

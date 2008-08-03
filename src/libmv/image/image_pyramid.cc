@@ -40,14 +40,16 @@ class ConcreteImagePyramid : public ImagePyramid {
   void Init(const FloatImage &image, int num_levels, double sigma = 0.9) {
     assert(image.Depth() == 1);
 
-    levels_.clear();
     levels_.resize(num_levels);
 
     BlurredImageAndDerivativesChannels(image, sigma, &levels_[0]);
 
+    vector<Array3Df> downsamples(num_levels);
+    downsamples[0] = image;
+
     for (int i = 1; i < NumLevels(); ++i) {
-      // TODO(keir): Is it accurate enough to boxfilter gradients?
-      DownsampleChannelsBy2(levels_[i-1], &levels_[i]);
+      DownsampleChannelsBy2(downsamples[i-1], &downsamples[i]);
+      BlurredImageAndDerivativesChannels(downsamples[i], sigma, &levels_[i]);
     }
   }
 
