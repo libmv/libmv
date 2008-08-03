@@ -89,17 +89,17 @@ void ConvolveHorizontal(const Array3Df &in,
   assert(kernel.length() % 2 == 1);
   assert(&in != out_pointer);
 
-  for (int j = 0; j < num_rows; ++j)  {
-    for (int i = 0; i < num_columns; ++i)  {
+  for (int r = 0; r < num_rows; ++r)  {
+    for (int c = 0; c < num_columns; ++c)  {
       double sum = 0.0;
       int l = 0;
-      for (int k = kernel.length()-1; k >= 0; --k, ++l) {
-        int ii = i - halfwidth + l;
-        if (0 <= ii && ii < num_columns) {
-          sum += in(j, ii) * kernel(k);
+      for (int k = kernel.length() - 1; k >= 0; --k, ++l) {
+        int cc = c - halfwidth + l;
+        if (0 <= cc && cc < num_columns) {
+          sum += in(r, cc) * kernel(k);
         }
       }
-      out(j, i, plane) = sum;
+      out(r, c, plane) = sum;
     }
   }
 }
