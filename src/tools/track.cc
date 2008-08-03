@@ -82,9 +82,9 @@ int main(int argc, char **argv) {
 
   ImageCache cache;
   ImageSequence *source = ImageSequenceFromFiles(files, &cache);
-  PyramidSequence *pyramid_sequence = MakePyramidSequence(source,
-                                                          FLAGS_pyramid_levels,
-                                                          FLAGS_sigma);
+  PyramidSequence *pyramid_sequence =
+      MakePyramidSequence(source, FLAGS_pyramid_levels, FLAGS_sigma);
+
   KLTContext klt;
   KLTContext::FeatureList features[2];
 
@@ -102,16 +102,15 @@ int main(int argc, char **argv) {
     printf("Tracking %2d features in %s\n",
            features[oldind].size(),
            files[i].c_str());
+
     klt.TrackFeatures(pyramid_sequence->Pyramid(i-1),  features[oldind],
                       pyramid_sequence->Pyramid(i),   &features[newind]);
+
     printf("...now have %2d features.\n", features[newind].size());
 
     WriteOutputImage(
         pyramid_sequence->Pyramid(i)->Level(0),
         klt, features[newind], (files[i]+".out.ppm").c_str());
-
-    WritePnm(pyramid_sequence->Pyramid(i)->Level(0),
-             (files[i]+".out_deriv.ppm").c_str());
 
     std::swap(oldind, newind);
   }
