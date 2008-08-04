@@ -51,13 +51,9 @@ class Image {
   int MemorySizeInBytes() {
     int size;
     if (array_type_ == BYTE) {
-      size = reinterpret_cast<Array3Du *>(array_)->Size();
-      size *= sizeof(unsigned char);
-      size += sizeof(Array3Du);
+      size = reinterpret_cast<Array3Du *>(array_)->MemorySizeInBytes();
     } else if (array_type_ == FLOAT) {
-      size = reinterpret_cast<Array3Df *>(array_)->Size();
-      size *= sizeof(unsigned char);
-      size += sizeof(Array3Df);
+      size = reinterpret_cast<Array3Df *>(array_)->MemorySizeInBytes();
     } else {
       size = 0;
       assert(0);

@@ -24,6 +24,7 @@
 #include "libmv/image/image_sequence.h"
 #include "libmv/image/image_sequence_filters.h"
 #include "libmv/image/pyramid_sequence.h"
+#include "libmv/image/lru_cache.h"
 
 namespace libmv {
 
@@ -56,6 +57,11 @@ class ImageSequenceBackedImagePyramid : public ImagePyramid {
 
   virtual int NumLevels() const {
     return levels_.size();
+  }
+
+  virtual int MemorySizeInBytes() const {
+    //TODO(pau) this is ugly!
+    return -1;
   }
 
  private:
@@ -118,5 +124,52 @@ PyramidSequence *MakePyramidSequence(ImageSequence *source,
                                      double sigma) {
   return new ConcretePyramidSequence(source, levels, sigma);
 }
+
+
+/////////////////////////////////////////////////////////////
+// This is pau trying things.
+
+class SimpleConcretePyramidSequence : public PyramidSequence {
+ public:
+  virtual ~SimpleConcretePyramidSequence() {
+  }
+
+  SimpleConcretePyramidSequence(ImageSequence *source,
+                                 int levels,
+                                 double sigma)
+    : source_(source), levels_(levels), sigma_(sigma), cache_(10*1024*1024) {
+  }
+
+  virtual int Length() {
+    return source_->Length();
+  }
+
+  virtual ImagePyramid *Pyramid(int frame) {
+    ImagePyramid *pyramid;
+    if (!cache_.FetchAndPin(frame, &pyramid)) {
+      pyramid = MakeImagePyramid(*source_->GetFloatImage(frame),
+                                 levels_,
+                                 sigma_);
+      source_->Unpin(frame);
+      cache_.StoreAndPinSized(frame, pyramid, pyramid->MemorySizeInBytes());
+    }
+    return pyramid;
+  }
+
+ private:
+  ImageSequence *source_;
+  int levels_;
+  double sigma_;
+  LRUCache<int, ImagePyramid *> cache_;
+};
+
+PyramidSequence *MakeSimplePyramidSequence(ImageSequence *source,
+                                            int levels,
+                                            double sigma) {
+  return new SimpleConcretePyramidSequence(source, levels, sigma);
+}
+
+// End of pau trying things.
+/////////////////////////////////////////////////////////////
 
 }  // namespace libmv

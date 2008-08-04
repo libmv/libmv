@@ -43,6 +43,10 @@ PyramidSequence *MakePyramidSequence(ImageSequence *sequence,
                                      int levels,
                                      double sigma);
 
+// This is pau trying things
+PyramidSequence *MakeSimplePyramidSequence(ImageSequence *sequence,
+                                           int levels,
+                                           double sigma);
 }  // namespace libmv
 
 #endif  // LIBMV_IMAGE_PYRAMID_SEQUENCE_H_

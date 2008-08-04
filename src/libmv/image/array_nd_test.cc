@@ -105,6 +105,15 @@ TEST(ArrayND, Size) {
   EXPECT_FALSE(a.Contains(shape));
 }
 
+TEST(ArrayND, MemorySizeInBytes) {
+  int s[] = {2, 3};
+  ArrayND<int,2>::Index shape(s);
+  ArrayND<int,2> a(shape);
+
+  int size = 24 + sizeof(a);
+  EXPECT_EQ(size, a.MemorySizeInBytes());
+}
+
 TEST(ArrayND, Parenthesis) {
   typedef ArrayND<int, 2>::Index Index;
 

@@ -62,6 +62,14 @@ class ConcreteImagePyramid : public ImagePyramid {
     return levels_.size();
   }
 
+  int MemorySizeInBytes() const {
+    int sum = 0;
+    for (int i = 0; i < NumLevels(); ++i) {
+      sum += levels_[i].MemorySizeInBytes();
+    }
+    return sum;
+  }
+
  private:
   std::vector<Array3Df> levels_;
 };

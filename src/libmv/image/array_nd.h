@@ -191,6 +191,11 @@ class ArrayND : public BaseArray {
     return size;
   }
 
+  /// Return the total amount of memory used by the array.
+  int MemorySizeInBytes() const {
+    return sizeof(*this) + Size() * sizeof(T);
+  }
+
   /// Pointer to the first element of the array.
   T *Data() { return data_; }
 

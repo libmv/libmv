@@ -35,4 +35,11 @@ TEST(Image, SimpleImageAccessors) {
   EXPECT_TRUE(NULL == image.AsArray3Du());
 }
 
+TEST(Image, MemorySizeInBytes) {
+  Array3Df *array = new Array3Df(2,3);
+  Image image(array);
+  int size = sizeof(image) + array->MemorySizeInBytes();
+  EXPECT_EQ(size, image.MemorySizeInBytes());
+}
+
 }  // namespace

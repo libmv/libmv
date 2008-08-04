@@ -30,6 +30,7 @@ class ImagePyramid {
   virtual ~ImagePyramid() {}
   virtual const Array3Df &Level(int i) = 0;
   virtual int NumLevels() const = 0;
+  virtual int MemorySizeInBytes() const = 0;
 };
 
 ImagePyramid *MakeImagePyramid(const Array3Df &image,
