@@ -23,6 +23,74 @@
 
 #include "libmv/numeric/numeric.h"
 
+
+// TODO(pau) IMPORTANT:  This has been copy pasted from tinyvector_test.cc
+// to make tiny_matrix product work.  This should be provided by flens itself.
+namespace flens {
+
+template <typename T, int M, int N>
+static inline T TransposedAccess(
+  Transpose trans,
+  const TinyGeMatrix<FixedSizeArray2D<T, M, N> > &A,
+  int i, int j) {
+  if (trans == NoTrans) {
+    return A(i,j);
+  } else if (trans == Trans) {
+    return A(j,i);
+  } else {
+    bool not_implemented_yet = 0;
+    (void) not_implemented_yet;
+    assert(not_implemented_yet);
+  }
+  return T(0);
+}
+
+// GEMM
+// C = alpha *A'*B' + beta*C
+template <typename ALPHA, typename BETA,
+          typename TA, int MA, int NA,
+          typename TB, int MB, int NB,
+          typename TC, int MC, int NC>
+void
+mm(Transpose transA, Transpose transB,
+   ALPHA alpha,
+   const TinyGeMatrix<FixedSizeArray2D<TA, MA, NA> > &A,
+   const TinyGeMatrix<FixedSizeArray2D<TB, MB, NB> > &B,
+   BETA beta, TinyGeMatrix<FixedSizeArray2D<TC, MC, NC> > &C) {
+  // Conjugates not implemented yet.
+  assert(transA == NoTrans || transA == Trans);
+  assert(transB == NoTrans || transB == Trans); 
+  // A mxn x B nxp = C mxp
+  const int M = MC;
+  const int N = (transA == NoTrans) ? NA : MA;
+  if (transB == NoTrans) {
+    assert(N == MB);
+  } else {
+    assert(N == NB);
+  }
+  const int P = NC;
+
+#define loop(x, n) for (int x = 0; x < n; ++x)
+  loop (i, M) {
+    loop (j, P) {
+      TC AikBkj = TC(0);
+      loop (k, N) { 
+        TA Axx = TransposedAccess(transA, A, i, k);
+        TB Bxx = TransposedAccess(transB, B, k, j);
+        AikBkj += Axx * Bxx;
+      }
+      C(i, j) = alpha*AikBkj + beta*C(i, j);
+    }
+  }
+#undef loop
+}
+}  // namespace flens
+
+
+
+
+
+
 namespace libmv {
 
 //TODO(pau) Find the flens function for this or move to numeric.h.
@@ -124,7 +192,7 @@ void EnforceFundamentalRank2Constraint(Mat3 *F) {
   *F = U_d_Vt;
 }
 
-// HZ 11.2 pag.281
+// HZ 11.2 pag.281 (x1 = x', x2 = x)
 void FundamentalFromCorrespondences8Point(const std::vector<Vec2> &x1,
                                           const std::vector<Vec2> &x2,
                                           Mat3 *F) {
@@ -132,13 +200,21 @@ void FundamentalFromCorrespondences8Point(const std::vector<Vec2> &x1,
   assert(x1.size() == x2.size());
 
   // Normalize the data.
-  // TODO
+  Mat3 T1, T2;
+  PreconditionerFromPoints(x1, &T1);
+  PreconditionerFromPoints(x2, &T2);
+  std::vector<Vec2> x1_normalized, x2_normalized;
+  ApplyTransformationToPoints(x1, T1, &x1_normalized);
+  ApplyTransformationToPoints(x2, T2, &x2_normalized);
 
-  FundamentalFromCorrespondencesLinear(x1, x2, F);
+  // Estimate the fundamental matrix.
+  FundamentalFromCorrespondencesLinear(x1_normalized, x2_normalized, F);
   EnforceFundamentalRank2Constraint(F);
 
   // Denormalize the fundamental matrix.
-  // TODO
+  Mat3 F_T2;
+  F_T2 = (*F) * T2; 
+  *F = transpose(T1) * F_T2; 
 }
 
 }  // namespace libmv
