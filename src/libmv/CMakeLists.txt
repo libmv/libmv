@@ -1,3 +1,4 @@
 ADD_SUBDIRECTORY(image)
 ADD_SUBDIRECTORY(numeric)
 ADD_SUBDIRECTORY(correspondence)
+ADD_SUBDIRECTORY(multiview)
