@@ -40,8 +40,8 @@ class Cache {
   virtual void MassUnpin() = 0;
   virtual bool ContainsKey(const K &key) = 0;
   virtual void SetMaxSize(const int size) = 0;
-  virtual const int MaxSize() = 0;
-  virtual const int Size() = 0;
+  virtual int MaxSize() const = 0;
+  virtual int Size() const = 0;
   virtual ~Cache() {}
 };
 }  // namespace libmv

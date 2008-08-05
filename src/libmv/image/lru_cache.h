@@ -138,11 +138,11 @@ class LRUCache : public Cache<K, V> {
     return items_.find(key) != items_.end();
   }
 
-  virtual const int MaxSize() {
+  virtual int MaxSize() const {
     return max_size_;
   }
 
-  virtual const int Size() {
+  virtual int Size() const {
     return size_;
   }
 

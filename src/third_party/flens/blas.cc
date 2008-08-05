@@ -31,6 +31,7 @@
  */
 
 #include <cmath>
+#include <cstdlib>
 #include <flens/blas.h>
 
 #ifdef VECLIB
@@ -209,7 +210,7 @@ asum(int N, const int *x, int incX)
 {
     int sum = 0;
     for (int i=0; i<N; i+=incX) {
-        sum += abs(x[i]);
+        sum += std::abs(x[i]);
     }
     return sum;
 }
@@ -219,7 +220,7 @@ asum(int N, const double *x, int incX)
 {
     double sum = 0.;
     for (int i=0; i<N; i+=incX) {
-        sum += fabs(x[i]);
+        sum += std::fabs(x[i]);
     }
     return 0;
 }

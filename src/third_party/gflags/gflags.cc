@@ -247,11 +247,20 @@ string FlagValue::ToString() const {
       snprintf(intbuf, sizeof(intbuf), "%d", VALUE_AS(int32));
       return intbuf;
     case FV_INT64:
+#if __WORDSIZE == 64
+      snprintf(intbuf, sizeof(intbuf), "%ld", VALUE_AS(int64));
+#else
       snprintf(intbuf, sizeof(intbuf), "%lld", VALUE_AS(int64));
+#endif
       return intbuf;
     case FV_UINT64:
+#if __WORDSIZE == 64
+      snprintf(intbuf, sizeof(intbuf), "%lu", VALUE_AS(uint64));
+#else
       snprintf(intbuf, sizeof(intbuf), "%llu", VALUE_AS(uint64));
+#endif
       return intbuf;
+
     case FV_DOUBLE:
       snprintf(intbuf, sizeof(intbuf), "%.17g", VALUE_AS(double));
       return intbuf;

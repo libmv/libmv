@@ -9,7 +9,9 @@ PROJECT(LIBMV)
 
 ENABLE_TESTING()
 
-SET(CMAKE_CXX_FLAGS "-Wall -W -Wfatal-errors -Werror")
+#no-deprecated needed for gcc-4.3 on debian/testing
+# needed due to flens/refcounter.h including deprecated hash_map
+SET(CMAKE_CXX_FLAGS "-Wall -W -Wfatal-errors -Werror -Wno-deprecated")
 
 INCLUDE_DIRECTORIES(third_party/gtest
 	            third_party/gtest/include

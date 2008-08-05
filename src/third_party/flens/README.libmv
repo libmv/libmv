@@ -7,6 +7,8 @@ Local modifications:
 Switched default first index to 0 instead of 1, so that both normal and tiny
 Added list and scalar initializers to tiny matrices and vectors
 
+Added cstdlib header and std:: prefixes in blas.cc
+
 Changes incorporated or fixed by upstream:
 Fixed compile warnings that happen when not linking MKL.
 Added support to copy between dense and tiny matrices and vectors.

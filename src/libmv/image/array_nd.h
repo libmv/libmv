@@ -22,6 +22,8 @@
 #define LIBMV_IMAGE_ARRAY_ND_H
 
 #include <cassert>
+#include <cstdio>
+#include <cstring>
 
 #include "libmv/image/tuple.h"
 
@@ -58,7 +60,7 @@ class ArrayND : public BaseArray {
   /// Copy constructor copies pixel data.
   ArrayND(const ArrayND<T, N> &b) : data_(NULL) {
     ResizeLike(b);
-    memcpy(Data(), b.Data(), sizeof(T) * Size());
+    std::memcpy(Data(), b.Data(), sizeof(T) * Size());
   }
 
   /// Crate a 1D array of lenght s0.
@@ -84,7 +86,7 @@ class ArrayND : public BaseArray {
   /// Assignation copies pixel data.
   ArrayND &operator=(const ArrayND<T, N> &b) {
     ResizeLike(b);
-    memcpy(Data(), b.Data(), sizeof(T) * Size());
+    std::memcpy(Data(), b.Data(), sizeof(T) * Size());
     return *this;
   }
 
@@ -425,6 +427,8 @@ void MultiplyElements(const ArrayND<TA, 3> a,
 }
 
 inline void PrintArray(const Array3Df &array) {
+  using namespace std;
+
   printf("[\n");
   for (int r = 0; r < array.Height(); ++r) {
     printf("[");

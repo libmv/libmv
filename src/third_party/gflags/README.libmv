@@ -5,3 +5,6 @@ Upstream version: 0.8
 Local modifications:
 
 Changed some ints to size_t's to fix compiler warnings.
+
+Added #if __WORDSIZE == 64 in gflacs.cc to fix compiler warnings
+ See gflags issue 13 @ Project URL

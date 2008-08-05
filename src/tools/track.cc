@@ -105,7 +105,7 @@ int main(int argc, char **argv) {
   CorrespondencesView<KLTPointFeature> klt_correspondences(&correspondences);
   // TODO(keir): Use correspondences here!
   for (size_t i = 1; i < files.size(); ++i) {
-    printf("Tracking %2d features in %s\n", features.size(), files[i].c_str());
+    printf("Tracking %2zd features in %s\n", features.size(), files[i].c_str());
 
     CorrespondencesView<KLTPointFeature>::Iterator it =
         klt_correspondences.ScanFeaturesForImage(i-1);
