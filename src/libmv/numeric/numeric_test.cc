@@ -101,4 +101,19 @@ TEST(Numeric, Diag) {
   EXPECT_EQ(2, D(1,1));
 }
 
+TEST(Numeric, MeanAndVarianceAlongRows) {
+  int n = 4;
+  Mat points(2,n);
+  points = 0, 0, 1, 1,
+           0, 2, 1, 3; 
+
+  Vec mean, variance;
+  MeanAndVarianceAlongRows(points, &mean, &variance);
+
+  EXPECT_NEAR(0.5, mean(0), 1e-8);
+  EXPECT_NEAR(1.5, mean(1), 1e-8);
+  EXPECT_NEAR(0.25, variance(0), 1e-8);
+  EXPECT_NEAR(1.25, variance(1), 1e-8);
+}
+
 }  // namespace

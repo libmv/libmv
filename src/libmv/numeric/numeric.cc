@@ -33,5 +33,31 @@ Mat Diag(const Vec &x) {
   return A;
 }
 
+void MeanAndVarianceAlongRows(const Mat &A,
+                              Vec *mean_pointer,
+                              Vec *variance_pointer) {
+  Vec &mean = *mean_pointer;
+  Vec &variance = *variance_pointer;
+  int n = A.numRows();
+  int m = A.numCols();
+  mean.resize(n);
+  variance.resize(n);
+
+  for (int i = 0; i < n; ++i) {
+    mean(i) = 0;
+    variance(i) = 0;
+    for (int j = 0; j < m; ++j) {
+      double x = A(i, j);
+      mean(i) += x;
+      variance(i) += x * x;
+    }
+  }
+
+  mean /= m;
+  for (int i = 0; i < n; ++i) {
+    variance(i) = variance(i) / m - Square(mean(i));
+  }
+}
+
 }  // namespace libmv
 

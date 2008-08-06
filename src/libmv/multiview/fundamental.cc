@@ -24,38 +24,16 @@
 
 namespace libmv {
 
-void MeanAndVariancesFromPoints(const Mat &points,
-                                double *meanx,
-                                double *meany,
-                                double *varx,
-                                double *vary) {
-  int n = points.numCols();
-  double sumx = 0, sumx2 = 0;
-  double sumy = 0, sumy2 = 0;
-  for (int i = 0; i < n; ++i) {
-    double x = points(0, i);
-    double y = points(1, i);
-    sumx += x;
-    sumx2 += x * x;
-    sumy += y;
-    sumy2 += y * y;
-  }
-  *meanx = sumx / n;
-  *meany = sumy / n;
-  *varx = sumx2 / n - Square(*meanx);
-  *vary = sumy2 / n - Square(*meany);
-}
-
 // HZ 4.4.4 pag.109
 void PreconditionerFromPoints(const Mat &points, Mat3 *T) {
-  double meanx, meany, varx, vary;
-  MeanAndVariancesFromPoints(points, &meanx, &meany, &varx, &vary);
+  Vec mean, variance;
+  MeanAndVarianceAlongRows(points, &mean, &variance);
 
-  double xfactor = sqrt(2 / varx);
-  double yfactor = sqrt(2 / vary);
+  double xfactor = sqrt(2 / variance(0));
+  double yfactor = sqrt(2 / variance(1));
 
-  *T = xfactor, 0, -xfactor * meanx,
-       0, yfactor, -yfactor * meany,
+  *T = xfactor, 0, -xfactor * mean(0),
+       0, yfactor, -yfactor * mean(1),
        0, 0, 1;
 }
 

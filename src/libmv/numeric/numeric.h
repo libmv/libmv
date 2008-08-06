@@ -135,6 +135,11 @@ inline T Square(T x) {
 // Return a diagonal matrix from a vector containg the diagonal values.
 Mat Diag(const Vec &x);
 
+
+void MeanAndVarianceAlongRows(const Mat &A,
+                              Vec *mean_pointer,
+                              Vec *variance_pointer);
+
 }  // namespace mv
 
 #endif  // LIBMV_NUMERIC_NUMERIC_H

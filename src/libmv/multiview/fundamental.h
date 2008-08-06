@@ -31,12 +31,6 @@
 
 namespace libmv {
 
-void MeanAndVariancesFromPoints(const Mat &points,
-                                double *meanx,
-                                double *meany,
-                                double *varx,
-                                double *vary);
-
 // TODO(pau) These two functions should go in a more general header.
 void PreconditionerFromPoints(const Mat &points, Mat3 *T);
 

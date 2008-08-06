@@ -27,21 +27,6 @@
 namespace {
 using namespace libmv;
 
-TEST(Fundamental, MeanAndVariancesFromPoints) {
-  int n = 4;
-  Mat points(2,n);
-  points = 0, 0, 1, 1,
-           0, 2, 1, 3; 
-
-  double meanx, meany, varx, vary;
-  MeanAndVariancesFromPoints(points, &meanx, &meany, &varx, &vary);
-
-  EXPECT_NEAR(0.5, meanx, 1e-8);
-  EXPECT_NEAR(1.5, meany, 1e-8);
-  EXPECT_NEAR(0.25, varx, 1e-8);
-  EXPECT_NEAR(1.25, vary, 1e-8);
-}
-
 TEST(Fundamental, PreconditionerFromPoints) {
   int n = 4;
   Mat points(2,n);
@@ -54,13 +39,13 @@ TEST(Fundamental, PreconditionerFromPoints) {
   Mat normalized_points;
   ApplyTransformationToPoints(points, T, &normalized_points);
 
-  double meanx, meany, varx, vary;
-  MeanAndVariancesFromPoints(normalized_points, &meanx, &meany, &varx, &vary);
+  Vec mean, variance;
+  MeanAndVarianceAlongRows(normalized_points, &mean, &variance);
 
-  EXPECT_NEAR(0, meanx, 1e-8);
-  EXPECT_NEAR(0, meany, 1e-8);
-  EXPECT_NEAR(2, varx, 1e-8);
-  EXPECT_NEAR(2, vary, 1e-8);
+  EXPECT_NEAR(0, mean(0), 1e-8);
+  EXPECT_NEAR(0, mean(1), 1e-8);
+  EXPECT_NEAR(2, variance(0), 1e-8);
+  EXPECT_NEAR(2, variance(1), 1e-8);
 }
 
 TEST(Fundamental, FundamentalFromCorrespondencesLinear) {
