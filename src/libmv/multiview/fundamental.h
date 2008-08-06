@@ -31,27 +31,27 @@
 
 namespace libmv {
 
-void MeanAndVariancesFromPoints(const std::vector<Vec2> &points,
+void MeanAndVariancesFromPoints(const Mat &points,
                                 double *meanx,
                                 double *meany,
                                 double *varx,
                                 double *vary);
 
 // TODO(pau) These two functions should go in a more general header.
-void PreconditionerFromPoints(const std::vector<Vec2> &points, Mat3 *T);
+void PreconditionerFromPoints(const Mat &points, Mat3 *T);
 
-void ApplyTransformationToPoints(const std::vector<Vec2> &points,
+void ApplyTransformationToPoints(const Mat &points,
                                  const Mat3 &T,
-                                 std::vector<Vec2> *normalized_points);
+                                 Mat *normalized_points);
 
-void FundamentalFromCorrespondencesLinear(const std::vector<Vec2> &x1,
-                                          const std::vector<Vec2> &x2,
+void FundamentalFromCorrespondencesLinear(const Mat &x1,
+                                          const Mat &x2,
                                           Mat3 *F);
 
 void EnforceFundamentalRank2Constraint(Mat3 *F);
 
-void FundamentalFromCorrespondences8Point(const std::vector<Vec2> &x1,
-                                          const std::vector<Vec2> &x2,
+void FundamentalFromCorrespondences8Point(const Mat &x1,
+                                          const Mat &x2,
                                           Mat3 *F);
 
 } // namespace libmv

@@ -24,17 +24,17 @@
 
 namespace libmv {
 
-void MeanAndVariancesFromPoints(const std::vector<Vec2> &points,
+void MeanAndVariancesFromPoints(const Mat &points,
                                 double *meanx,
                                 double *meany,
                                 double *varx,
                                 double *vary) {
-  int n = points.size();
+  int n = points.numCols();
   double sumx = 0, sumx2 = 0;
   double sumy = 0, sumy2 = 0;
   for (int i = 0; i < n; ++i) {
-    double x = points[i](0);
-    double y = points[i](1);
+    double x = points(0, i);
+    double y = points(1, i);
     sumx += x;
     sumx2 += x * x;
     sumy += y;
@@ -47,7 +47,7 @@ void MeanAndVariancesFromPoints(const std::vector<Vec2> &points,
 }
 
 // HZ 4.4.4 pag.109
-void PreconditionerFromPoints(const std::vector<Vec2> &points, Mat3 *T) {
+void PreconditionerFromPoints(const Mat &points, Mat3 *T) {
   double meanx, meany, varx, vary;
   MeanAndVariancesFromPoints(points, &meanx, &meany, &varx, &vary);
 
@@ -59,37 +59,41 @@ void PreconditionerFromPoints(const std::vector<Vec2> &points, Mat3 *T) {
        0, 0, 1;
 }
 
-void ApplyTransformationToPoints(const std::vector<Vec2> &points,
+// TODO(pau) this can be done by matrix multiplication.
+void ApplyTransformationToPoints(const Mat &points,
                                  const Mat3 &T,
-                                 std::vector<Vec2> *transformed_points) {
-  int n = points.size();
-  transformed_points->resize(n);
+                                 Mat *transformed_points) {
+  int n = points.numCols();
+  transformed_points->resize(2,n);
   for (int i = 0; i < n; ++i) {
     Vec3 in, out;
-    in = points[i](0), points[i](1), 1;
+    in = points(0, i), points(1, i), 1;
     out = T * in;
-    (*transformed_points)[i] = out(0), out(1);
+    (*transformed_points)(0, i) = out(0);
+    (*transformed_points)(1, i) = out(1);
   }
 }
 
 // HZ 11.1 pag.279
-void FundamentalFromCorrespondencesLinear(const std::vector<Vec2> &x1,
-                                          const std::vector<Vec2> &x2,
+void FundamentalFromCorrespondencesLinear(const Mat &x1,
+                                          const Mat &x2,
                                           Mat3 *F) {
-  assert(8 <= x1.size());
-  assert(x1.size() == x2.size());
+  assert(2 == x1.numRows());
+  assert(8 <= x1.numCols());
+  assert(x1.numRows() == x2.numRows());
+  assert(x1.numCols() == x2.numCols());
 
-  int n = x1.size();
+  int n = x1.numCols();
   Mat A(n, 9);
   for (int i = 0; i < n; ++i) {
-    A(i, 0) = x1[i](0) * x2[i](0);
-    A(i, 1) = x1[i](0) * x2[i](1);
-    A(i, 2) = x1[i](0);
-    A(i, 3) = x1[i](1) * x2[i](0);
-    A(i, 4) = x1[i](1) * x2[i](1);
-    A(i, 5) = x1[i](1);
-    A(i, 6) = x2[i](0);
-    A(i, 7) = x2[i](1);
+    A(i, 0) = x1(0, i) * x2(0, i);
+    A(i, 1) = x1(0, i) * x2(1, i);
+    A(i, 2) = x1(0, i);
+    A(i, 3) = x1(1, i) * x2(0, i);
+    A(i, 4) = x1(1, i) * x2(1, i);
+    A(i, 5) = x1(1, i);
+    A(i, 6) = x2(0, i);
+    A(i, 7) = x2(1, i);
     A(i, 8) = 1;
   }
   Vec f;
@@ -113,17 +117,19 @@ void EnforceFundamentalRank2Constraint(Mat3 *F) {
 }
 
 // HZ 11.2 pag.281 (x1 = x', x2 = x)
-void FundamentalFromCorrespondences8Point(const std::vector<Vec2> &x1,
-                                          const std::vector<Vec2> &x2,
+void FundamentalFromCorrespondences8Point(const Mat &x1,
+                                          const Mat &x2,
                                           Mat3 *F) {
-  assert(8 <= x1.size());
-  assert(x1.size() == x2.size());
+  assert(2 == x1.numRows());
+  assert(8 <= x1.numCols());
+  assert(x1.numRows() == x2.numRows());
+  assert(x1.numCols() == x2.numCols());
 
   // Normalize the data.
   Mat3 T1, T2;
   PreconditionerFromPoints(x1, &T1);
   PreconditionerFromPoints(x2, &T2);
-  std::vector<Vec2> x1_normalized, x2_normalized;
+  Mat x1_normalized, x2_normalized;
   ApplyTransformationToPoints(x1, T1, &x1_normalized);
   ApplyTransformationToPoints(x2, T2, &x2_normalized);
 

@@ -29,11 +29,9 @@ using namespace libmv;
 
 TEST(Fundamental, MeanAndVariancesFromPoints) {
   int n = 4;
-  std::vector<Vec2> points(n);
-  points[0] = 0, 0;
-  points[1] = 0, 2;
-  points[2] = 1, 1;
-  points[3] = 1, 3;
+  Mat points(2,n);
+  points = 0, 0, 1, 1,
+           0, 2, 1, 3; 
 
   double meanx, meany, varx, vary;
   MeanAndVariancesFromPoints(points, &meanx, &meany, &varx, &vary);
@@ -46,16 +44,14 @@ TEST(Fundamental, MeanAndVariancesFromPoints) {
 
 TEST(Fundamental, PreconditionerFromPoints) {
   int n = 4;
-  std::vector<Vec2> points(n);
-  points[0] = 0, 0;
-  points[1] = 0, 2;
-  points[2] = 1, 1;
-  points[3] = 1, 3;
+  Mat points(2,n);
+  points = 0, 0, 1, 1,
+           0, 2, 1, 3; 
 
   Mat3 T;
   PreconditionerFromPoints(points, &T);
 
-  std::vector<Vec2> normalized_points;
+  Mat normalized_points;
   ApplyTransformationToPoints(points, T, &normalized_points);
 
   double meanx, meany, varx, vary;
@@ -69,84 +65,74 @@ TEST(Fundamental, PreconditionerFromPoints) {
 
 TEST(Fundamental, FundamentalFromCorrespondencesLinear) {
   int n = 8;
-  std::vector<Vec2> x1(n);
-  x1[0] = 0, 0;
-  x1[1] = 0, 1;
-  x1[2] = 0, 2;
-  x1[3] = 1, 0;
-  x1[4] = 1, 1;
-  x1[5] = 1, 2;
-  x1[6] = 2, 0;
-  x1[7] = 2, 1;
+  Mat x1(2,n);
+  x1 = 0, 0, 0, 1, 1, 1, 2, 2,
+       0, 1, 2, 0, 1, 2, 0, 1;
 
-  std::vector<Vec2> x2(n);
+  Mat x2(2,n);
+  x2 = x1;
   for (int i = 0; i < n; ++i) {
-    x2[i] = x1[i](0), x1[i](1) + 1;
+    x2(1,i) += 1;
   }
 
   Mat3 F;
   FundamentalFromCorrespondencesLinear(x1, x2, &F);
 
-  std::vector<double> x_F_y(n);
+  Vec x_F_y(n);
   for (int i = 0; i < n; ++i) {
     Vec3 x, y, F_y;
-    x = x1[i](0), x1[i](1), 1;
-    y = x2[i](0), x2[i](1), 1;
+    x = x1(0, i), x1(1, i), 1;
+    y = x2(0, i), x2(1, i), 1;
     F_y = F * y;
-    x_F_y[i] = dot(x, F_y);
+    x_F_y(i) = dot(x, F_y);
   }
 
   // Something really weird was happening when this asserts were done inside
   // the for loop above.
-  EXPECT_NEAR(0, x_F_y[0], 1e-8);
-  EXPECT_NEAR(0, x_F_y[1], 1e-8);
-  EXPECT_NEAR(0, x_F_y[2], 1e-8);
-  EXPECT_NEAR(0, x_F_y[3], 1e-8);
-  EXPECT_NEAR(0, x_F_y[4], 1e-8);
-  EXPECT_NEAR(0, x_F_y[5], 1e-8);
-  EXPECT_NEAR(0, x_F_y[6], 1e-8);
-  EXPECT_NEAR(0, x_F_y[7], 1e-8);
+  EXPECT_NEAR(0, x_F_y(0), 1e-8);
+  EXPECT_NEAR(0, x_F_y(1), 1e-8);
+  EXPECT_NEAR(0, x_F_y(2), 1e-8);
+  EXPECT_NEAR(0, x_F_y(3), 1e-8);
+  EXPECT_NEAR(0, x_F_y(4), 1e-8);
+  EXPECT_NEAR(0, x_F_y(5), 1e-8);
+  EXPECT_NEAR(0, x_F_y(6), 1e-8);
+  EXPECT_NEAR(0, x_F_y(7), 1e-8);
 }
 
 TEST(Fundamental, FundamentalFromCorrespondences8Point) {
   int n = 8;
-  std::vector<Vec2> x1(n);
-  x1[0] = 0, 0;
-  x1[1] = 0, 1;
-  x1[2] = 0, 2;
-  x1[3] = 1, 0;
-  x1[4] = 1, 1;
-  x1[5] = 1, 2;
-  x1[6] = 2, 0;
-  x1[7] = 2, 1;
+  Mat x1(2,n);
+  x1 = 0, 0, 0, 1, 1, 1, 2, 2,
+       0, 1, 2, 0, 1, 2, 0, 1;
 
-  std::vector<Vec2> x2(n);
+  Mat x2(2,n);
+  x2 = x1;
   for (int i = 0; i < n; ++i) {
-    x2[i] = x1[i](0), x1[i](1) + 1;
+    x2(1,i) += 1;
   }
 
   Mat3 F;
   FundamentalFromCorrespondences8Point(x1, x2, &F);
 
-  std::vector<double> x_F_y(n);
+  Vec x_F_y(n);
   for (int i = 0; i < n; ++i) {
     Vec3 x, y, F_y;
-    x = x1[i](0), x1[i](1), 1;
-    y = x2[i](0), x2[i](1), 1;
+    x = x1(0, i), x1(1, i), 1;
+    y = x2(0, i), x2(1, i), 1;
     F_y = F * y;
-    x_F_y[i] = dot(x, F_y);
+    x_F_y(i) = dot(x, F_y);
   }
 
   // Something really weird was happening when this asserts were done inside
   // the for loop above.
-  EXPECT_NEAR(0, x_F_y[0], 1e-8);
-  EXPECT_NEAR(0, x_F_y[1], 1e-8);
-  EXPECT_NEAR(0, x_F_y[2], 1e-8);
-  EXPECT_NEAR(0, x_F_y[3], 1e-8);
-  EXPECT_NEAR(0, x_F_y[4], 1e-8);
-  EXPECT_NEAR(0, x_F_y[5], 1e-8);
-  EXPECT_NEAR(0, x_F_y[6], 1e-8);
-  EXPECT_NEAR(0, x_F_y[7], 1e-8);
+  EXPECT_NEAR(0, x_F_y(0), 1e-8);
+  EXPECT_NEAR(0, x_F_y(1), 1e-8);
+  EXPECT_NEAR(0, x_F_y(2), 1e-8);
+  EXPECT_NEAR(0, x_F_y(3), 1e-8);
+  EXPECT_NEAR(0, x_F_y(4), 1e-8);
+  EXPECT_NEAR(0, x_F_y(5), 1e-8);
+  EXPECT_NEAR(0, x_F_y(6), 1e-8);
+  EXPECT_NEAR(0, x_F_y(7), 1e-8);
 
   // TODO(pau) Check that det(F) == 0.
   //EXPECT_NEAR(0, det(F), 1e-8);
