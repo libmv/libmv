@@ -71,6 +71,7 @@
 #include <flens/sparse_blas_flens.h>
 #include <flens/symmetricmatrix.h>
 #include <flens/tiny_blas.h>
+#include <flens/tiny_evalclosure.h>
 #include <flens/tinymatrix.h>
 #include <flens/tinyvector.h>
 #include <flens/traits.h>
