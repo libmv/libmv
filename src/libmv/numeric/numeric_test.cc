@@ -90,4 +90,15 @@ TEST(Numeric, NormalizeL2) {
   EXPECT_DOUBLE_EQ(2./sqrt(5.), x(1));
 }
 
+TEST(Numeric, Diag) {
+  Vec x(2);
+  x = 1, 2;
+  Mat D;
+  D = Diag(x);
+  EXPECT_EQ(1, D(0,0));
+  EXPECT_EQ(0, D(0,1));
+  EXPECT_EQ(0, D(1,0));
+  EXPECT_EQ(2, D(1,1));
+}
+
 }  // namespace

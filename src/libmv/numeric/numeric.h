@@ -131,6 +131,9 @@ template<typename T>
 inline T Square(T x) {
   return x * x;
 }
+  
+// Return a diagonal matrix from a vector containg the diagonal values.
+Mat Diag(const Vec &x);
 
 }  // namespace mv
 

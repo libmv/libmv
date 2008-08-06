@@ -24,17 +24,6 @@
 
 namespace libmv {
 
-//TODO(pau) Find the flens function for this or move to numeric.h.
-Mat Diag(const Vec &x) {
-  int n = x.length();
-  Mat A(n,n);
-  A = 0;
-  for (int i = 0; i < n; ++i) {
-    A(i,i) = x(i);
-  }
-  return A;
-}
-
 void MeanAndVariancesFromPoints(const std::vector<Vec2> &points,
                                 double *meanx,
                                 double *meany,

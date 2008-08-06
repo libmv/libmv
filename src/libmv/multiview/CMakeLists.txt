@@ -6,6 +6,7 @@ ADD_DEFINITIONS(
 ADD_LIBRARY(multiview fundamental.cc)
 
 ADD_EXECUTABLE(fundamental_test fundamental_test.cc)
-TARGET_LINK_LIBRARIES(fundamental_test multiview flens gtest lapack atlas)
+TARGET_LINK_LIBRARIES(fundamental_test multiview numeric
+                      flens gtest lapack atlas)
 ADD_TEST(fundamental_test fundamental_test)
 
