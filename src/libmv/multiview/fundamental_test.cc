@@ -24,8 +24,14 @@
 #include "libmv/numeric/numeric.h"
 #include "testing/testing.h"
 
+#include "libmv/multiview/generated.cc"
+
 namespace {
 using namespace libmv;
+
+TEST(Fundamental, FileGenerator) {
+  EXPECT_EQ(3, x);
+}
 
 TEST(Fundamental, PreconditionerFromPoints) {
   int n = 4;

@@ -16,7 +16,8 @@ SET(CMAKE_CXX_FLAGS "-Wall -W -Wfatal-errors -Werror -Wno-deprecated")
 INCLUDE_DIRECTORIES(third_party/gtest
 	            third_party/gtest/include
 		    third_party/
-		    .
+		    ${LIBMV_SOURCE_DIR}
+		    ${LIBMV_BINARY_DIR}
 )
 
 # Mac specific things.
@@ -27,6 +28,13 @@ IF(APPLE)
     # Tell FLENS to use Veclib.
     ADD_DEFINITIONS('-DVECLIB')
 ENDIF(APPLE)
+
+
+MACRO(ADD_GENERATED_SOURCE generated_file python_generator)
+    ADD_CUSTOM_COMMAND(OUTPUT ${generated_file}
+	       COMMAND python ${CMAKE_CURRENT_SOURCE_DIR}/${python_generator}
+	       DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${python_generator})
+ENDMACRO(ADD_GENERATED_SOURCE)
 
 
 ADD_SUBDIRECTORY(libmv)
