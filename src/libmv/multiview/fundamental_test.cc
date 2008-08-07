@@ -33,6 +33,76 @@ TEST(Fundamental, FileGenerator) {
   EXPECT_EQ(3, x);
 }
 
+TEST(Fundamental, P_From_KRt) {
+  Mat34 P;
+  Mat3 K, R;
+  Vec3 t;
+
+  K = 10,  1, 30,
+       0, 20, 40,
+       0,  0,  1;
+  R = 1, 0, 0,
+      0, 1, 0,
+      0, 0, 1;
+  t = 1, 2, 3;
+  P_From_KRt(K, R, t, &P);
+  KRt_From_P(P, &K, &R, &t);
+  EXPECT_NEAR(10, K(0,0), 1e-8);
+  EXPECT_NEAR( 1, K(0,1), 1e-8);
+  EXPECT_NEAR(30, K(0,2), 1e-8);
+  EXPECT_NEAR( 0, K(1,0), 1e-8);
+  EXPECT_NEAR(20, K(1,1), 1e-8);
+  EXPECT_NEAR(40, K(1,2), 1e-8);
+  EXPECT_NEAR( 0, K(2,0), 1e-8);
+  EXPECT_NEAR( 0, K(2,1), 1e-8);
+  EXPECT_NEAR( 1, K(2,2), 1e-8);
+  EXPECT_NEAR( 1, R(0,0), 1e-8);
+  EXPECT_NEAR( 0, R(0,1), 1e-8);
+  EXPECT_NEAR( 0, R(0,2), 1e-8);
+  EXPECT_NEAR( 0, R(1,0), 1e-8);
+  EXPECT_NEAR( 1, R(1,1), 1e-8);
+  EXPECT_NEAR( 0, R(1,2), 1e-8);
+  EXPECT_NEAR( 0, R(2,0), 1e-8);
+  EXPECT_NEAR( 0, R(2,1), 1e-8);
+  EXPECT_NEAR( 1, R(2,2), 1e-8);
+  EXPECT_NEAR( 1, t(0), 1e-8);
+  EXPECT_NEAR( 2, t(1), 1e-8);
+  EXPECT_NEAR( 3, t(2), 1e-8);
+
+  // This is for testing that det(R) = 1, which is not the current behaviour
+  // of KRt_From_P
+/*  P =-1, 0, 0, 0,
+      0, 1, 0, 0,
+      0, 0, 1, 0;
+  KRt_From_P(P, &K, &R, &t);
+  EXPECT_NEAR( 1, K(0,0), 1e-8);
+  EXPECT_NEAR( 0, K(0,1), 1e-8);
+  EXPECT_NEAR( 0, K(0,2), 1e-8);
+  EXPECT_NEAR( 0, K(1,0), 1e-8);
+  EXPECT_NEAR(-1, K(1,1), 1e-8);
+  EXPECT_NEAR( 0, K(1,2), 1e-8);
+  EXPECT_NEAR( 0, K(2,0), 1e-8);
+  EXPECT_NEAR( 0, K(2,1), 1e-8);
+  EXPECT_NEAR( 1, K(2,2), 1e-8);
+  EXPECT_NEAR(-1, R(0,0), 1e-8);
+  EXPECT_NEAR( 0, R(0,1), 1e-8);
+  EXPECT_NEAR( 0, R(0,2), 1e-8);
+  EXPECT_NEAR( 0, R(1,0), 1e-8);
+  EXPECT_NEAR(-1, R(1,1), 1e-8);
+  EXPECT_NEAR( 0, R(1,2), 1e-8);
+  EXPECT_NEAR( 0, R(2,0), 1e-8);
+  EXPECT_NEAR( 0, R(2,1), 1e-8);
+  EXPECT_NEAR( 1, R(2,2), 1e-8);
+  EXPECT_NEAR( 0, t(0), 1e-8);
+  EXPECT_NEAR( 0, t(1), 1e-8);
+  EXPECT_NEAR( 0, t(2), 1e-8);
+  */
+}
+
+TEST(Fundamental, FundamentalFromProjections) {
+
+}
+
 TEST(Fundamental, PreconditionerFromPoints) {
   int n = 4;
   Mat points(2,n);

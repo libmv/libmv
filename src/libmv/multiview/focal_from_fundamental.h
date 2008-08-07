@@ -25,4 +25,14 @@
 #ifndef LIBMV_MULTIVIEW_FOCAL_FROM_FUNDAMENTAL_H_
 #define LIBMV_MULTIVIEW_FOCAL_FROM_FUNDAMENTAL_H_
 
+#include "libmv/numeric/numeric.h"
+
+namespace libmv {
+
+void FindEpipoles(const Mat3 &F, Vec3 *e1, Vec3 *e2);
+void RotationToEliminateY(const Vec3 &x, Mat3 *T);
+void TransformFundamentalForFocalCalculation(const Mat3 &F, Mat3 *Fp);
+
+} // namespace libmv
+
 #endif  // LIBMV_MULTIVIEW_FOCAL_FROM_FUNDAMENTAL_H_

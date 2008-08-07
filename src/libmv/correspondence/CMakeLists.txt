@@ -1,7 +1,4 @@
-
-ADD_DEFINITIONS(
-  -DTHIS_SOURCE_DIR=\\"${LIBMV_SOURCE_DIR}/libmv/correspondence\\"
-)
+ADD_DEFINITIONS(-DTHIS_SOURCE_DIR=\\"${CMAKE_CURRENT_SOURCE_DIR}\\")
 
 ADD_LIBRARY(correspondence klt.cc feature.cc correspondence.cc)
 

@@ -51,7 +51,7 @@ typedef flens::TinyVector<flens::FixedSizeArray1D<int, 3> > Vec3i;
 typedef flens::TinyVector<flens::FixedSizeArray1D<int, 4> > Vec4i;
 
 
-// For matrix and vector views. Example: A(_(1,3), (4,5)) is a 3x2 submatrix
+// For matrix and vector views. Example: A(_(1,3), _(4,5)) is a 3x2 submatrix
 // of A, that can be manipulated (changes underlying A).
 using flens::_;
 
@@ -93,7 +93,7 @@ inline double Nullspace(TMat *A, TVec *x)
 
 // In place transpose for square matrices.
 template<class TA>
-inline void Transpose(TA *A) {
+inline void TransposeInPlace(TA *A) {
   for (int i = 0; i < A->numRows(); ++i) {
     for (int j = i+1; j < A->numCols(); ++j) {
       std::swap((*A)(i,j), (*A)(j,i));
@@ -134,6 +134,13 @@ inline T Square(T x) {
   
 // Return a diagonal matrix from a vector containg the diagonal values.
 Mat Diag(const Vec &x);
+
+// Return the determinant of A computed by LU factorization.  A is destroyed.
+double DeterminantLU(Mat *A);
+double DeterminantSlow(const Mat &A);
+double Cofactor(const Mat &A, int i, int j);
+void Adjoint(const Mat &A, Mat *B);
+void InverseSlow(const Mat &A, Mat *I);
 
 
 void MeanAndVarianceAlongRows(const Mat &A,

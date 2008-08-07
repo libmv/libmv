@@ -65,7 +65,7 @@ TEST(Numeric, TinyMatrixNullspace) {
 TEST(Numeric, TinyMatrixSquareTranspose) {
   Mat2 A;
   A = 1.0, 2.0, 3.0, 4.0;
-  libmv::Transpose(&A);
+  libmv::TransposeInPlace(&A);
   EXPECT_EQ(1.0, A(0, 0));
   EXPECT_EQ(3.0, A(0, 1));
   EXPECT_EQ(2.0, A(1, 0));
@@ -99,6 +99,52 @@ TEST(Numeric, Diag) {
   EXPECT_EQ(0, D(0,1));
   EXPECT_EQ(0, D(1,0));
   EXPECT_EQ(2, D(1,1));
+}
+
+TEST(Numeric, DeterminantSlow) {
+  Mat A(2, 2);
+  A =  1, 2,
+      -1, 3;
+  double detA = DeterminantSlow(A);
+  EXPECT_NEAR(5, detA, 1e-8); 
+  
+  Mat B(4,4);
+  B =  0,  1,  2,  3,
+       4,  5,  6,  7,
+       8,  9, 10, 11,
+      12, 13, 14, 15;
+  double detB = DeterminantSlow(B);
+  EXPECT_NEAR(0, detB, 1e-8); 
+}
+
+TEST(Numeric, InverseSlow) {
+  Mat A(2, 2), A1, I;
+  A =  1, 2,
+      -1, 3;
+  InverseSlow(A, &A1);
+  I = A * A1;
+
+  EXPECT_NEAR(1, I(0,0), 1e-8); 
+  EXPECT_NEAR(0, I(0,1), 1e-8); 
+  EXPECT_NEAR(0, I(1,0), 1e-8); 
+  EXPECT_NEAR(1, I(1,1), 1e-8); 
+
+  Mat B(4,4), B1;
+  B =  0,  1,  2,  3,
+       4,  5,  6,  7,
+       8,  9,  2, 11,
+      12, 13, 14,  4;
+  InverseSlow(B, &B1);
+  I = B * B1;
+  EXPECT_NEAR(1, I(0,0), 1e-8); 
+  EXPECT_NEAR(0, I(0,1), 1e-8); 
+  EXPECT_NEAR(0, I(0,2), 1e-8); 
+  EXPECT_NEAR(0, I(1,0), 1e-8); 
+  EXPECT_NEAR(1, I(1,1), 1e-8); 
+  EXPECT_NEAR(0, I(1,2), 1e-8); 
+  EXPECT_NEAR(0, I(2,0), 1e-8); 
+  EXPECT_NEAR(0, I(2,1), 1e-8); 
+  EXPECT_NEAR(1, I(2,2), 1e-8); 
 }
 
 TEST(Numeric, MeanAndVarianceAlongRows) {
@@ -147,9 +193,34 @@ TEST(Numeric, VerticalStack) {
   EXPECT_EQ(4, z(1,1));
 }
 
-//TEST(Numeric, ThisCraches) {
+// This crashes.
+//TEST(Numeric, ColumnMatrixListInitialization) {
 //  Mat x(2,1);
 //  x = 1, 2;
+//}
+//
+
+// This segfaults inside lapack.
+//TEST(Numeric, DeterminantLU) {
+//  Mat A(2, 2);
+//  A =  1, 2,
+//      -1, 3;
+//  double detA = DeterminantLU(&A);
+//  EXPECT_NEAR(5, detA, 1e-8); 
+//}
+
+// This does unexpected things.
+//TEST(Numeric, InplaceProduct) {
+//  Mat K(2,2), S(2,2);
+//  K = 1, 0,
+//      0, 1;
+//  S = 1, 0,
+//      0, 1;
+//  K = K * S; // This sets K to zero without warning!
+//  EXPECT_NEAR(1, K(0,0), 1e-8);
+//  EXPECT_NEAR(0, K(0,1), 1e-8);
+//  EXPECT_NEAR(0, K(1,0), 1e-8);
+//  EXPECT_NEAR(1, K(1,1), 1e-8);
 //}
 
 }  // namespace

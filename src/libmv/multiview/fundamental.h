@@ -31,6 +31,10 @@
 
 namespace libmv {
 
+void FundamentalFromProjections(const Mat34 &P1, const Mat34 &P2, Mat3 *F);
+void P_From_KRt(const Mat3 &K, const Mat3 &R, const Vec3 &t, Mat34 *P);
+void KRt_From_P(const Mat34 &P, Mat3 *K, Mat3 *R, Vec3 *t);
+
 // TODO(pau) These two functions should go in a more general header.
 void PreconditionerFromPoints(const Mat &points, Mat3 *T);
 

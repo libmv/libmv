@@ -21,6 +21,18 @@
 #include "libmv/multiview/focal_from_fundamental.h"
 #include "testing/testing.h"
 
-TEST(x) {
+namespace {
+
+TEST(FocalFromFundamental, FindEpipoles) {
+//  Mat34 P1, P2;
+//  P1 = 1, 0, 0, 0,
+ //      0, 1, 0, 0,
+  //     0, 0, 1, 0;
+//  P2 = 1, 0, 0,-1,
+//       0, 1, 0, 0,
+//       0, 0, 1, 0;
+
+
+}
 
 }
