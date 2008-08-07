@@ -52,7 +52,7 @@ void ApplyTransformationToPoints(const Mat &points,
   }
 }
 
-// HZ 11.1 pag.279
+// HZ 11.1 pag.279 (x1 = x, x2 = x')
 void FundamentalFromCorrespondencesLinear(const Mat &x1,
                                           const Mat &x2,
                                           Mat3 *F) {
@@ -64,14 +64,14 @@ void FundamentalFromCorrespondencesLinear(const Mat &x1,
   int n = x1.numCols();
   Mat A(n, 9);
   for (int i = 0; i < n; ++i) {
-    A(i, 0) = x1(0, i) * x2(0, i);
-    A(i, 1) = x1(0, i) * x2(1, i);
-    A(i, 2) = x1(0, i);
-    A(i, 3) = x1(1, i) * x2(0, i);
-    A(i, 4) = x1(1, i) * x2(1, i);
-    A(i, 5) = x1(1, i);
-    A(i, 6) = x2(0, i);
-    A(i, 7) = x2(1, i);
+    A(i, 0) = x2(0, i) * x1(0, i);
+    A(i, 1) = x2(0, i) * x1(1, i);
+    A(i, 2) = x2(0, i);
+    A(i, 3) = x2(1, i) * x1(0, i);
+    A(i, 4) = x2(1, i) * x1(1, i);
+    A(i, 5) = x2(1, i);
+    A(i, 6) = x1(0, i);
+    A(i, 7) = x1(1, i);
     A(i, 8) = 1;
   }
   Vec f;
@@ -94,7 +94,7 @@ void EnforceFundamentalRank2Constraint(Mat3 *F) {
   *F = U_d_Vt;
 }
 
-// HZ 11.2 pag.281 (x1 = x', x2 = x)
+// HZ 11.2 pag.281 (x1 = x, x2 = x')
 void FundamentalFromCorrespondences8Point(const Mat &x1,
                                           const Mat &x2,
                                           Mat3 *F) {
@@ -116,9 +116,9 @@ void FundamentalFromCorrespondences8Point(const Mat &x1,
   EnforceFundamentalRank2Constraint(F);
 
   // Denormalize the fundamental matrix.
-  Mat3 F_T2;
-  F_T2 = (*F) * T2; 
-  *F = transpose(T1) * F_T2; 
+  Mat3 F_T1;
+  F_T1 = (*F) * T1; 
+  *F = transpose(T2) * F_T1; 
 }
 
 }  // namespace libmv

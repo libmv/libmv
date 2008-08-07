@@ -69,25 +69,25 @@ TEST(Fundamental, FundamentalFromCorrespondencesLinear) {
   Mat3 F;
   FundamentalFromCorrespondencesLinear(x1, x2, &F);
 
-  Vec x_F_y(n);
+  Vec y_F_x(n);
   for (int i = 0; i < n; ++i) {
-    Vec3 x, y, F_y;
+    Vec3 x, y, F_x;
     x = x1(0, i), x1(1, i), 1;
     y = x2(0, i), x2(1, i), 1;
-    F_y = F * y;
-    x_F_y(i) = dot(x, F_y);
+    F_x = F * x;
+    y_F_x(i) = dot(y, F_x);
   }
 
   // Something really weird was happening when this asserts were done inside
   // the for loop above.
-  EXPECT_NEAR(0, x_F_y(0), 1e-8);
-  EXPECT_NEAR(0, x_F_y(1), 1e-8);
-  EXPECT_NEAR(0, x_F_y(2), 1e-8);
-  EXPECT_NEAR(0, x_F_y(3), 1e-8);
-  EXPECT_NEAR(0, x_F_y(4), 1e-8);
-  EXPECT_NEAR(0, x_F_y(5), 1e-8);
-  EXPECT_NEAR(0, x_F_y(6), 1e-8);
-  EXPECT_NEAR(0, x_F_y(7), 1e-8);
+  EXPECT_NEAR(0, y_F_x(0), 1e-8);
+  EXPECT_NEAR(0, y_F_x(1), 1e-8);
+  EXPECT_NEAR(0, y_F_x(2), 1e-8);
+  EXPECT_NEAR(0, y_F_x(3), 1e-8);
+  EXPECT_NEAR(0, y_F_x(4), 1e-8);
+  EXPECT_NEAR(0, y_F_x(5), 1e-8);
+  EXPECT_NEAR(0, y_F_x(6), 1e-8);
+  EXPECT_NEAR(0, y_F_x(7), 1e-8);
 }
 
 TEST(Fundamental, FundamentalFromCorrespondences8Point) {
@@ -105,25 +105,25 @@ TEST(Fundamental, FundamentalFromCorrespondences8Point) {
   Mat3 F;
   FundamentalFromCorrespondences8Point(x1, x2, &F);
 
-  Vec x_F_y(n);
+  Vec y_F_x(n);
   for (int i = 0; i < n; ++i) {
-    Vec3 x, y, F_y;
+    Vec3 x, y, F_x;
     x = x1(0, i), x1(1, i), 1;
     y = x2(0, i), x2(1, i), 1;
-    F_y = F * y;
-    x_F_y(i) = dot(x, F_y);
+    F_x = F * x;
+    y_F_x(i) = dot(y, F_x);
   }
 
   // Something really weird was happening when this asserts were done inside
   // the for loop above.
-  EXPECT_NEAR(0, x_F_y(0), 1e-8);
-  EXPECT_NEAR(0, x_F_y(1), 1e-8);
-  EXPECT_NEAR(0, x_F_y(2), 1e-8);
-  EXPECT_NEAR(0, x_F_y(3), 1e-8);
-  EXPECT_NEAR(0, x_F_y(4), 1e-8);
-  EXPECT_NEAR(0, x_F_y(5), 1e-8);
-  EXPECT_NEAR(0, x_F_y(6), 1e-8);
-  EXPECT_NEAR(0, x_F_y(7), 1e-8);
+  EXPECT_NEAR(0, y_F_x(0), 1e-8);
+  EXPECT_NEAR(0, y_F_x(1), 1e-8);
+  EXPECT_NEAR(0, y_F_x(2), 1e-8);
+  EXPECT_NEAR(0, y_F_x(3), 1e-8);
+  EXPECT_NEAR(0, y_F_x(4), 1e-8);
+  EXPECT_NEAR(0, y_F_x(5), 1e-8);
+  EXPECT_NEAR(0, y_F_x(6), 1e-8);
+  EXPECT_NEAR(0, y_F_x(7), 1e-8);
 
   // TODO(pau) Check that det(F) == 0.
   //EXPECT_NEAR(0, det(F), 1e-8);
