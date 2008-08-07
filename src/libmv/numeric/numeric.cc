@@ -59,5 +59,27 @@ void MeanAndVarianceAlongRows(const Mat &A,
   }
 }
 
+void HorizontalStack(const Mat &left, const Mat &right, Mat *stacked) {
+  assert(left.numRows() == left.numRows());
+  int n = left.numRows();
+  int m1 = left.numCols();
+  int m2 = right.numCols();
+
+  stacked->resize(n, m1 + m2);
+  (*stacked)(_(0, n - 1), _(0, m1 - 1)) = left;
+  (*stacked)(_(0, n - 1), _(m1, m1 + m2 - 1)) = right;
+}
+
+void VerticalStack(const Mat &top, const Mat &bottom, Mat *stacked) {
+  assert(top.numCols() == bottom.numCols());
+  int n1 = top.numRows();
+  int n2 = bottom.numRows();
+  int m = top.numCols();
+
+  stacked->resize(n1 + n2, m);
+  (*stacked)(_(0, n1 - 1), _(0, m - 1)) = top;
+  (*stacked)(_(n1, n1 + n2 - 1), _(0, m - 1)) = bottom;
+}
+
 }  // namespace libmv
 

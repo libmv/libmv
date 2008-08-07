@@ -116,4 +116,40 @@ TEST(Numeric, MeanAndVarianceAlongRows) {
   EXPECT_NEAR(1.25, variance(1), 1e-8);
 }
 
+TEST(Numeric, HorizontalStack) {
+  Mat x(2,1), y(2,1), z;
+  x(0,0) = 1; // List initialization do not work here.  See ThisCrashes bellow.
+  x(1,0) = 2;
+  y(0,0) = 3;
+  y(1,0) = 4;
+
+  HorizontalStack(x, y, &z);
+
+  EXPECT_EQ(2, z.numCols());
+  EXPECT_EQ(2, z.numRows());
+  EXPECT_EQ(1, z(0,0));
+  EXPECT_EQ(2, z(1,0));
+  EXPECT_EQ(3, z(0,1));
+  EXPECT_EQ(4, z(1,1));
+}
+
+TEST(Numeric, VerticalStack) {
+  Mat x(1,2), y(1,2), z;
+  x = 1, 2;
+  y = 3, 4;
+  VerticalStack(x, y, &z);
+
+  EXPECT_EQ(2, z.numCols());
+  EXPECT_EQ(2, z.numRows());
+  EXPECT_EQ(1, z(0,0));
+  EXPECT_EQ(2, z(0,1));
+  EXPECT_EQ(3, z(1,0));
+  EXPECT_EQ(4, z(1,1));
+}
+
+//TEST(Numeric, ThisCraches) {
+//  Mat x(2,1);
+//  x = 1, 2;
+//}
+
 }  // namespace
