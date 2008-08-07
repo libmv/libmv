@@ -31,7 +31,7 @@ ENDIF(APPLE)
 
 
 MACRO(ADD_GENERATED_SOURCE generated_file python_generator)
-    ADD_CUSTOM_COMMAND(OUTPUT ${generated_file}
+    ADD_CUSTOM_COMMAND(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${generated_file}
 	       COMMAND python ${CMAKE_CURRENT_SOURCE_DIR}/${python_generator}
 	       DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${python_generator})
 ENDMACRO(ADD_GENERATED_SOURCE)
