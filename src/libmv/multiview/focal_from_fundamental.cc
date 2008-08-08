@@ -55,7 +55,7 @@ void RotationToEliminateY(const Vec3 &x, Mat3 *T) {
 // In the original image, the fundamental property is x1'Fx2 = 0 for all x1 and
 // x2 that are corresponding scene points. Transforming the image we have
 //
-//   (T1x1)'F(T2x2) = 0
+//   (T1x1)'rotatedF(T2x2) = 0
 //
 void TransformFundamentalForFocalCalculation(const Mat3 &F, Mat3 *Fp) {
   Vec3 e1, e2;
@@ -67,6 +67,32 @@ void TransformFundamentalForFocalCalculation(const Mat3 &F, Mat3 *Fp) {
   RotationToEliminateY(e2, &T);
   *Fp = Fpp*T;
   //*Fp = Fpp*transpose(T);
+}
+
+// Given a fundamental matrix of two cameras and their principal points,
+// computes the fundamental matrix corresponding to the same cameras with the
+// principal points shifted to a new location.
+void FundamentalShiftPrincipalPoints(const Mat3 &F,
+                                     const Vec2 &p1,
+                                     const Vec2 &p1_new,
+                                     const Vec2 &p2,
+                                     const Vec2 &p2_new,
+                                     Mat3 *F_new) {
+  Mat T1(3,3), T2(3,3), T1_inv(3,3), T2_inv(3,3),
+      F_T1_inv(3,3), T2_inv_trans_F_T1_inv(3,3);
+  T1 = 1, 0, p1_new(0) - p1(0),
+       0, 1, p1_new(1) - p1(1),
+       0, 0,                 1;
+  T2 = 1, 0, p2_new(0) - p2(0),
+       0, 1, p2_new(1) - p2(1),
+       0, 0,                 1;
+  InverseSlow(T1, &T1_inv);
+  InverseSlow(T2, &T2_inv);
+  Mat F_tmp;
+  F_tmp = F;
+  F_T1_inv = F_tmp * T1_inv;
+  T2_inv_trans_F_T1_inv = transpose(T2_inv) * F_T1_inv;
+  *F_new = T2_inv_trans_F_T1_inv;
 }
 
 }  // namespace libmv
