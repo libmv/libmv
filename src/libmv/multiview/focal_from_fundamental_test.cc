@@ -27,6 +27,76 @@ namespace {
 
 using namespace libmv;
 
+// Two cameras looking with orthogonal (non-crossing) viewing rays.
+// One at the origin and looking to the z direction.
+// The other at (1,1,1) and looking down the y direction.
+void OrthogonalViewsFundamental(Mat3 *F) {
+  Mat3 K1, R1, K2, R2;
+  Vec3 t1, t2;
+  Mat34 P1, P2;
+  K1 = 1, 0, 0,
+       0, 1, 0,
+       0, 0, 1;
+  K2 = K1;
+  R1 = 1, 0, 0,
+       0, 1, 0,
+       0, 0, 1;
+  R2 = 1, 0,  0,
+       0, 0, -1,
+       0, 1,  0;
+  t1 = 0, 0, 0;
+  t2 = -1, 1, 1;
+
+  P_From_KRt(K1, R1, t1, &P1);
+  P_From_KRt(K2, R2, t2, &P2);
+  FundamentalFromProjections(P1, P2, F);
+}
+
+TEST(FocalFromFundamental, EpipolesFromFundamental) {
+  Mat3 F;
+  OrthogonalViewsFundamental(&F);
+
+  Vec3 e1, e2;
+  EpipolesFromFundamental(F, &e1, &e2);
+  e1 /= e1(2);
+  e2 /= e2(2);
+  EXPECT_NEAR( 1, e1(0), 1e-8);
+  EXPECT_NEAR(-1, e1(1), 1e-8);
+  EXPECT_NEAR( 1, e1(2), 1e-8);
+  EXPECT_NEAR(-1, e2(0), 1e-8);
+  EXPECT_NEAR( 1, e2(1), 1e-8);
+  EXPECT_NEAR( 1, e2(2), 1e-8);
+}
+
+TEST(FocalFromFundamental, RotationToEliminateY) {
+  Vec3 a, b;
+  a = 1, -1, 0;
+  Mat3 T;
+  RotationToEliminateY(a, &T);
+  b = T * a;
+  EXPECT_NEAR(sqrt(2), b(0), 1e-8);
+  EXPECT_NEAR(      0, b(1), 1e-8);
+  EXPECT_NEAR(      0, b(2), 1e-8);
+}
+
+TEST(FocalFromFundamental, FundamentalAlignEpipolesToXAxis) {
+  Mat3 F, F_rotated;
+  OrthogonalViewsFundamental(&F);
+  FundamentalAlignEpipolesToXAxis(F,&F_rotated);
+  Vec3 e1, e2;
+  EpipolesFromFundamental(F_rotated, &e1, &e2);
+  e1 /= e1(2);
+  e2 /= e2(2);
+  EXPECT_NEAR(sqrt(2), fabs(e1(0)), 1e-8); // The sign of x is undetermined.
+                                           // It depends on the sign of z
+                                           // before the alignement.
+  EXPECT_NEAR(      0,       e1(1), 1e-8); // y coordinate is now 0.
+  EXPECT_NEAR(      1,       e1(2), 1e-8);
+  EXPECT_NEAR(sqrt(2), fabs(e2(0)), 1e-8);
+  EXPECT_NEAR(      0,       e2(1), 1e-8); // y coordinate is now 0.
+  EXPECT_NEAR(      1,       e2(2), 1e-8);
+}
+
 TEST(FocalFromFundamental, FundamentalShiftPrincipalPoints) {
   // Create two pair of cameras with the same parameters except for the
   // principal point.
@@ -87,7 +157,15 @@ TEST(FocalFromFundamental, FundamentalShiftPrincipalPoints) {
   EXPECT_NEAR(F_new(2,2), F_new_computed(2,2), 1e-8);
 }
 
-TEST(FocalFromFundamental, FindEpipoles) {
+TEST(FocalFromFundamental, FocalFromFundamental) {
+  Mat3 F;
+  Vec2 zero2;
+  zero2 = 0, 0;
+  double f1, f2;
+  OrthogonalViewsFundamental(&F);
+  FocalFromFundamental(F, zero2, zero2, &f1, &f2);
+  EXPECT_NEAR(1, f1, 1e-8);
+  EXPECT_NEAR(1, f2, 1e-8);
 }
 
 }

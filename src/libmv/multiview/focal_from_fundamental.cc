@@ -25,7 +25,7 @@
 
 namespace libmv {
 
-void FindEpipoles(const Mat3 &F, Vec3 *e1, Vec3 *e2) {
+void EpipolesFromFundamental(const Mat3 &F, Vec3 *e1, Vec3 *e2) {
   Mat3 Fp = F;
   double s1 = Nullspace(&Fp, e1);  // Left nullspace.
   Fp = F;
@@ -52,21 +52,20 @@ void RotationToEliminateY(const Vec3 &x, Mat3 *T) {
 // Rotate each image to cause the y component of both epipoles to become zero.
 // When this happens, the fundamental matrix takes on a special form.
 // 
-// In the original image, the fundamental property is x1'Fx2 = 0 for all x1 and
+// In the original image, the fundamental property is x2'Fx1 = 0 for all x1 and
 // x2 that are corresponding scene points. Transforming the image we have
 //
-//   (T1x1)'rotatedF(T2x2) = 0
+//   (T2x2)' F_rotated (T1x1) = 0.
 //
-void TransformFundamentalForFocalCalculation(const Mat3 &F, Mat3 *Fp) {
+// Thus, F_rotated = T2 F T1'.
+void FundamentalAlignEpipolesToXAxis(const Mat3 &F, Mat3 *F_rotated) {
   Vec3 e1, e2;
-  FindEpipoles(F, &e1, &e2);
-  Mat3 T, Fpp;
-  RotationToEliminateY(e1, &T);
-  TransposeInPlace(&T);  // Inverse!
-  Fpp = F*transpose(T);
-  RotationToEliminateY(e2, &T);
-  *Fp = Fpp*T;
-  //*Fp = Fpp*transpose(T);
+  EpipolesFromFundamental(F, &e1, &e2);
+  Mat3 T1, T2, T2_F;
+  RotationToEliminateY(e1, &T1);
+  RotationToEliminateY(e2, &T2);
+  T2_F = T2 * F;
+  *F_rotated = T2_F * transpose(T1);
 }
 
 // Given a fundamental matrix of two cameras and their principal points,
@@ -93,6 +92,51 @@ void FundamentalShiftPrincipalPoints(const Mat3 &F,
   F_T1_inv = F_tmp * T1_inv;
   T2_inv_trans_F_T1_inv = transpose(T2_inv) * F_T1_inv;
   *F_new = T2_inv_trans_F_T1_inv;
+}
+
+void FocalFromFundamental(const Mat3 &F,
+                          const Vec2 &principal_point1,
+                          const Vec2 &principal_point2,
+                          double *f1,
+                          double *f2) {
+  Mat3 F_shifted, F_rotated;
+  Vec2 zero2;
+  zero2 = 0,0;
+  FundamentalShiftPrincipalPoints(F,
+                                  principal_point1, zero2,
+                                  principal_point2, zero2,
+                                  &F_shifted);
+
+  FundamentalAlignEpipolesToXAxis(F_shifted, &F_rotated);
+
+  Vec3 e1, e2;
+  EpipolesFromFundamental(F_rotated, &e1, &e2);
+
+  Mat3 T1, T2;
+  T1 = 1 / e1(2), 0,          0,
+               0, 1,          0,
+               0, 0, -1 / e1(0);
+  T2 = 1 / e2(2), 0,          0,
+               0, 1,          0,
+               0, 0, -1 / e2(0);
+  Mat3 T2_F, A;
+  T2_F = T2 * F_rotated;
+  A = T2_F * T1;
+
+  double a = A(0,0);
+  double b = A(0,1);
+  double c = A(1,0);
+  double d = A(1,1);
+
+  // TODO(pau) Should check we are not dividing by 0.
+  double f1_square = - (a * c * Square(e1(0)))
+                     / (a * c * Square(e1(2)) + b * d);
+  double f2_square = - (a * b * Square(e2(0)))
+                     / (a * b * Square(e2(2)) + c * d);
+
+  // TODO(pau) Should check that the squares are positive.
+  *f1 = sqrt(f1_square);
+  *f2 = sqrt(f2_square);
 }
 
 }  // namespace libmv
