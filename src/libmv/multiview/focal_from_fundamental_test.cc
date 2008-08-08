@@ -168,4 +168,104 @@ TEST(FocalFromFundamental, FocalFromFundamental) {
   EXPECT_NEAR(1, f2, 1e-8);
 }
 
+//TODO(pau) Move this to a proper place.
+void HomogeneousToEuclidean(const Mat &H, Mat *X) {
+  int d = H.numRows() - 1;
+  int n = H.numCols();
+  X->resize(d, n);
+  for (int i = 0; i < n; ++i) {
+    double h = H(d, i);
+    for (int j = 0; j < d; ++j) {
+      (*X)(j, i) = H(j, i) / h;
+    }
+  }
+}
+
+//TODO(pau) Move this to a proper place.
+void EuclideanToHomogeneous(const Mat &X, Mat *H) {
+  int d = X.numRows();
+  int n = X.numCols();
+  H->resize(d + 1, n);
+  for (int i = 0; i < n; ++i) {
+    for (int j = 0; j < d; ++j) {
+      (*H)(j, i) = X(j, i);
+    }
+    (*H)(d, i) = 1;
+  }
+}
+
+//TODO(pau) Move this to a proper place.
+void Project(const Mat34 &P, const Mat &X, Mat *x) {
+  Mat PP, XX, xx;
+  PP = P;
+  EuclideanToHomogeneous(X, &XX);
+  xx = PP * XX;
+  HomogeneousToEuclidean(xx, x);
+}
+
+TEST(FocalFromFundamental, TwoViewReconstruction) {
+  // Two cameras at (0,0,-10) and (2,1,-10) looking towards z+.
+  Vec2 p1, p2;
+  double f1, f2;
+  Mat3 K1, R1, K2, R2;
+  Vec3 t1, t2;
+  Mat34 P1, P2;
+  f1 = 320;
+  f2 = 360;
+  p1 = 160, 120;
+  p2 = 170, 110;
+  K1 = f1,  0, p1(0),
+        0, f1, p1(1),
+        0,  0,     1;
+  K2 = f2,  0, p2(0),
+        0, f2, p2(1),
+        0,  0,     1;
+  R1 = 1, 0, 0,
+       0, 1, 0,
+       0, 0, 1;
+  R2 = R1;
+  t1 = 0, 0, 10;
+  t2 = -2, -1, 10;
+  P_From_KRt(K1, R1, t1, &P1);
+  P_From_KRt(K2, R2, t2, &P2);
+
+  // The 8 points of a cube and their projections.
+  int n = 8;
+  Mat X(3,n), x1, x2;
+  X = 0, 1, 0, 1, 0, 1, 0, 1,
+      0, 0, 1, 1, 0, 0, 1, 1,
+      0, 0, 0, 0, 1, 1, 1, 1;
+  Project(P1, X, &x1);
+  Project(P2, X, &x2);
+
+  // Compute fundamental matrix from correspondences.
+  Mat3 F_estimated;
+  FundamentalFromCorrespondences8Point(x1, x2, &F_estimated);
+
+  // Compute focal lenght.
+  double f1_estimated, f2_estimated;
+  FocalFromFundamental(F_estimated, p1, p2, &f1_estimated, &f2_estimated);
+
+  // Build K matrices from the known principal points and the compted focals.
+  Mat3 K1_estimated, K2_estimated;
+  K1_estimated = f1_estimated,            0, p1(0),
+                            0, f1_estimated, p1(1),
+                            0,            0,     1;
+  K2_estimated = f2_estimated,            0, p2(0),
+                            0, f2_estimated, p2(1),
+                            0,            0,     1;
+
+  Mat3 F;
+  FundamentalFromProjections(P1, P2, &F);
+  //std::cout << F << std::endl;
+  //std::cout << F_estimated << std::endl;
+
+  //std::cout << K1 << std::endl;
+  //std::cout << K1_estimated << std::endl;
+  //std::cout << K2 << std::endl;
+  //std::cout << K2_estimated << std::endl;
+
+  // TODO: Recover R, t from F and K
+}
+
 }
