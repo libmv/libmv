@@ -298,7 +298,9 @@ template <typename T>
 void
 ArrayView<T>::resize(int length, int firstIndex)
 {
-    assert((length==_length) && (firstIndex==_firstIndex));
+    assert((length == _length) && (firstIndex == _firstIndex));
+    (void) length;
+    (void) firstIndex;
 }
 
 template <typename T>
