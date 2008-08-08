@@ -164,10 +164,8 @@ TEST(Numeric, MeanAndVarianceAlongRows) {
 
 TEST(Numeric, HorizontalStack) {
   Mat x(2,1), y(2,1), z;
-  x(0,0) = 1; // List initialization do not work here.  See ThisCrashes bellow.
-  x(1,0) = 2;
-  y(0,0) = 3;
-  y(1,0) = 4;
+  x = 1, 2;
+  y = 3, 4;
 
   HorizontalStack(x, y, &z);
 
@@ -192,6 +190,13 @@ TEST(Numeric, VerticalStack) {
   EXPECT_EQ(3, z(1,0));
   EXPECT_EQ(4, z(1,1));
 }
+
+// This gives a compile error.
+//TEST(Numeric, Mat3MatProduct) {
+//  Mat3 A;
+//  Mat B, C;
+//  C = A * B;
+//}
 
 // This segfaults inside lapack.
 //TEST(Numeric, DeterminantLU) {
