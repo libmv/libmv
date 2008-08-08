@@ -210,4 +210,34 @@ TEST(TinyMatrix, GEMMTransposeB) {
   EXPECT_EQ(C(2, 2), 404);
 }
 
+// There was a bug in the flens list initialization code, where it would not
+// work if there was only one column. This is here to guard against the bug
+// coming back in the future. Also, there are some extra tests.
+TEST(Matrix, SingleColumnMatrixListInitialization1) {
+  Mat x(2, 1);
+  x = 1, 2;
+  EXPECT_EQ(1, x(0, 0));
+  EXPECT_EQ(2, x(1 ,0));
+}
+
+TEST(Matrix, SingleColumnMatrixListInitialization2) {
+  Mat x(4, 1);
+  x = 1, 2, 3, 4;
+  EXPECT_EQ(1, x(0, 0));
+  EXPECT_EQ(2, x(1, 0));
+  EXPECT_EQ(3, x(2, 0));
+  EXPECT_EQ(4, x(3, 0));
+}
+
+TEST(Matrix, MatrixListInitialization2) {
+  Mat x(3, 2);
+  x = 1, 2, 3, 4, 5, 6;
+  EXPECT_EQ(1, x(0, 0));
+  EXPECT_EQ(2, x(0, 1));
+  EXPECT_EQ(3, x(1, 0));
+  EXPECT_EQ(4, x(1, 1));
+  EXPECT_EQ(5, x(2, 0));
+  EXPECT_EQ(6, x(2, 1));
+}
+
 }  // namespace

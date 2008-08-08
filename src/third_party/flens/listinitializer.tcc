@@ -190,6 +190,9 @@ ListInitializerSwitch<GeMatrix<I> >::operator,(T x)
 {
     _wipeOnDestruct = false;
     _A(_row,_col) = _value;
+    if (_A.numCols() == 1) {
+      return ListInitializer<GeMatrix<I> >(_A, ++_row, _col, x);
+    }
     return ListInitializer<GeMatrix<I> >(_A, _row, ++_col, x);
 }
 

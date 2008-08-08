@@ -193,13 +193,6 @@ TEST(Numeric, VerticalStack) {
   EXPECT_EQ(4, z(1,1));
 }
 
-// This crashes.
-//TEST(Numeric, ColumnMatrixListInitialization) {
-//  Mat x(2,1);
-//  x = 1, 2;
-//}
-//
-
 // This segfaults inside lapack.
 //TEST(Numeric, DeterminantLU) {
 //  Mat A(2, 2);
