@@ -199,6 +199,13 @@ TEST(Numeric, VerticalStack) {
 }
 
 // This gives a compile error.
+//TEST(Numeric, TinyMatrixView) {
+//  Mat34 P;
+//  Mat K;
+//  K = P(_, _(0, 2));
+//}
+
+// This gives a compile error.
 //TEST(Numeric, Mat3MatProduct) {
 //  Mat3 A;
 //  Mat B, C;

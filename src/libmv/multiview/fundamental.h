@@ -18,9 +18,6 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //
-// Calculate the focal length from a fundamental matrix. Requires the image to
-// have a 0,0 principal point. In practice that means the F should be
-// normalized before being passed to these routines.
 
 #ifndef LIBMV_MULTIVIEW_FUNDAMENTAL_H_
 #define LIBMV_MULTIVIEW_FUNDAMENTAL_H_
@@ -52,4 +49,4 @@ void FundamentalFromCorrespondences8Point(const Mat &x1,
 
 } // namespace libmv
 
-#endif  // LIBMV_MULTIVIEW_FOCAL_FROM_FUNDAMENTAL_H_
+#endif  // LIBMV_MULTIVIEW_FUNDAMENTAL_H_

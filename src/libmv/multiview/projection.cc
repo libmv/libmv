@@ -40,15 +40,11 @@ void KRt_From_P(const Mat34 &P, Mat3 *Kp, Mat3 *Rp, Vec3 *tp) {
   Vec t(3,3);
 
   // Decompose using the RQ decomposition HZ A4.1.1 pag.579.
-  for(int i=0;i<3;i++) {
-    for(int j=0;j<3;j++) {
-      K(i,j) = P(i,j);
-    }
-  }
-  Mat Q(3,3);
-  Q = 1, 0, 0,
-      0, 1, 0,
-      0, 0, 1;
+  Mat P_tmp;
+  P_tmp = P;
+  K = P_tmp(_, _(0, 2));
+
+  Mat Q = Identity(3);
 
   // Set K(2,1) to zero.
   if (K(2,1) != 0) {
@@ -118,7 +114,7 @@ void KRt_From_P(const Mat34 &P, Mat3 *Kp, Mat3 *Rp, Vec3 *tp) {
     R = S * R;
   }
 
-  // compute the translation vector
+  // Compute translation.
   Vec p(3);
   p = P(0,3), P(1,3), P(2,3);
   // TODO(pau) This sould be done by a SolveLinearSystem(A, b, &x) call.

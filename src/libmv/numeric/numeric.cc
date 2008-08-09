@@ -23,6 +23,15 @@
 
 namespace libmv {
 
+Mat Identity(int n) {
+  Mat I(n, n);
+  I = 0;
+  for (int i = 0; i < n; ++i) {
+    I(i, i) = 1;
+  }
+  return I;
+}
+
 Mat Diag(const Vec &x) {
   int n = x.length();
   Mat A(n,n);
