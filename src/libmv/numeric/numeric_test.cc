@@ -199,6 +199,18 @@ TEST(Numeric, VerticalStack) {
 //}
 
 // This segfaults inside lapack.
+//TEST(Numeric, DeterminantLU7) {
+//  Mat A(5, 5);
+//  A =  1, 0, 0, 0, 0,
+//       0, 1, 0, 0, 0,
+//       0, 0, 1, 0, 0,
+//       0, 0, 0, 1, 0,
+//       0, 0, 0, 0, 1;
+//  double detA = DeterminantLU(&A);
+//  EXPECT_NEAR(5, detA, 1e-8); 
+//}
+
+// This segfaults inside lapack.
 //TEST(Numeric, DeterminantLU) {
 //  Mat A(2, 2);
 //  A =  1, 2,

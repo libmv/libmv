@@ -19,6 +19,7 @@
 // IN THE SOFTWARE.
 
 #include <iostream>
+#include <string>
 
 #include "libmv/image/image.h"
 #include "libmv/image/image_io.h"
@@ -27,6 +28,7 @@
 using libmv::Array3Df;
 using libmv::Array3Du;
 using libmv::FloatImage;
+using std::string;
 
 namespace {
 

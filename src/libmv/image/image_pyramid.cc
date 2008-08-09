@@ -18,9 +18,13 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
+#include <vector>
+
 #include "libmv/image/image_pyramid.h"
 #include "libmv/image/convolve.h"
 #include "libmv/image/sample.h"
+
+using std::vector;
 
 namespace libmv {
 

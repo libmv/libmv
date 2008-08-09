@@ -18,6 +18,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
+#include <string>
 #include <vector>
 
 #include "libmv/image/cached_image_sequence.h"
@@ -33,9 +34,9 @@ using libmv::Array3Df;
 namespace {
 
 TEST(ImageSequenceIO, FromFiles) {
-  std::vector<string> files;
-  files.push_back(string(THIS_SOURCE_DIR) + "/image_test/two_pixels.pgm");
-  files.push_back(string(THIS_SOURCE_DIR) + "/image_test/two_pixels_gray.pgm");
+  std::vector<std::string> files;
+  files.push_back(std::string(THIS_SOURCE_DIR) + "/image_test/two_pixels.pgm");
+  files.push_back(std::string(THIS_SOURCE_DIR) + "/image_test/two_pixels_gray.pgm");
   ImageCache cache;
   ImageSequence *sequence = ImageSequenceFromFiles(files, &cache);
   EXPECT_EQ(2, sequence->Length());

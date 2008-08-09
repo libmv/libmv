@@ -22,13 +22,8 @@
 #define LIBMV_IMAGE_ARRAY_ND_H
 
 #include <cassert>
-#include <cstdio>
-#include <cstring>
 
 #include "libmv/image/tuple.h"
-
-using namespace std;
-using libmv::Tuple;
 
 namespace libmv {
 
@@ -43,39 +38,46 @@ class ArrayND : public BaseArray {
   typedef Tuple<int,N> Index;
 
   /// Create an empty array.
-  ArrayND() : data_(NULL) {
+  ArrayND()
+      : shape_(0), strides_(0), data_(NULL) {
     Resize(Index(0));
   }
 
   /// Create an array with the shape.
-  ArrayND(const Index &shape) : data_(NULL) {
+  ArrayND(const Index &shape)
+      : shape_(0), strides_(0), data_(NULL) {
     Resize(shape);
   }
 
   /// Create an array with the shape.
-  ArrayND(int *shape) : data_(NULL) {
+  ArrayND(int *shape)
+      : shape_(0), strides_(0), data_(NULL) {
     Resize(shape);
   }
 
   /// Copy constructor copies pixel data.
-  ArrayND(const ArrayND<T, N> &b) : data_(NULL) {
+  ArrayND(const ArrayND<T, N> &b)
+      : shape_(0), strides_(0), data_(NULL) {
     ResizeLike(b);
     std::memcpy(Data(), b.Data(), sizeof(T) * Size());
   }
 
   /// Crate a 1D array of lenght s0.
-  ArrayND(int s0) : data_(NULL) {
+  ArrayND(int s0)
+      : shape_(0), strides_(0), data_(NULL) {
     Resize(s0);
   }
 
-  /// Crate a 2D array of shape (s0,s1).
-  ArrayND(int s0, int s1) : data_(NULL) {
-    Resize(s0,s1);
+  /// Crate a 2D array of shape (s0, s1).
+  ArrayND(int s0, int s1)
+      : shape_(0), strides_(0), data_(NULL) {
+    Resize(s0, s1);
   }
 
-  /// Crate a 3D array of shape (s0,s1,s2).
-  ArrayND(int s0, int s1, int s2) : data_(NULL) {
-    Resize(s0,s1,s2);
+  /// Crate a 3D array of shape (s0, s1, s2).
+  ArrayND(int s0, int s1, int s2)
+      : shape_(0), strides_(0), data_(NULL) {
+    Resize(s0, s1, s2);
   }
 
   /// Destructor deletes pixel data.
@@ -99,38 +101,31 @@ class ArrayND : public BaseArray {
   }
 
   /// Create an array of shape s.
-  void Resize(const Index &shape) {
-    Resize(shape.Data());
+  void Resize(const Index &new_shape) {
+    if (shape_ == new_shape) { 
+      // Don't bother realloacting if the shapes match.
+      return;
+    }
+    shape_.Reset(new_shape);
+    strides_(N - 1) = 1;
+    for (int i = N - 1; i > 0; --i) {
+      strides_(i - 1) = strides_(i) * shape_(i);
+    }
+    delete [] data_;
+    data_ = NULL;
+    if (Size() > 0) {
+      data_ = new T[Size()];
+    }
   }
 
   template<typename D>
   void ResizeLike(const ArrayND<D,N> &other) {
-    strides_ = other.Strides();
-    if ( other.Shapes() != shape_ ) {
-      shape_.Reset(other.Shapes());
-      delete [] data_;
-      if (Size()>0)
-        data_ = new T[Size()];
-      else
-        data_ = NULL;
-    }
+    Resize(other.Shape());
   }
 
   /// Resizes the array to shape s.  All data is lost.
-  void Resize(const int *shapeArray) {
-    Index newShape(shapeArray);
-    if ( shape_ != newShape ) { 
-      shape_.Reset( newShape);
-      strides_(N-1) = 1;
-      for (int i = N - 1; i > 0; --i)
-        strides_(i-1) = strides_(i) * shape_(i);
-
-      delete [] data_;
-      if (Size()>0)
-        data_ = new T[Size()];
-      else
-        data_ = NULL;
-    }
+  void Resize(const int *new_shape_array) {
+    Resize(Index(new_shape_array));
   }
 
   /// Resize a 1D array to length s0.

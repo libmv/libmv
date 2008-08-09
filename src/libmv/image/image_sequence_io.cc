@@ -55,7 +55,7 @@ class LazyImageSequenceFromFiles : public CachedImageSequence {
   std::vector<std::string> filenames_;
 };
 
-ImageSequence *ImageSequenceFromFiles(const std::vector<string> &filenames,
+ImageSequence *ImageSequenceFromFiles(const std::vector<std::string> &filenames,
                                       ImageCache *cache) {
   return new LazyImageSequenceFromFiles(filenames, cache);
 }
