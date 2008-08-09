@@ -199,6 +199,13 @@ TEST(Numeric, VerticalStack) {
 }
 
 // This gives a compile error.
+//TEST(Numeric, TinyMatrixScalarProduct) {
+//  Mat3 A;
+//  A *= 2;
+//  A = A * 2;
+//}
+
+// This gives a compile error.
 //TEST(Numeric, TinyMatrixView) {
 //  Mat34 P;
 //  Mat K;

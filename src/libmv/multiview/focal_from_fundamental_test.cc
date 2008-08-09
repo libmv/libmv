@@ -169,18 +169,6 @@ TEST(FocalFromFundamental, FocalFromFundamental) {
   EXPECT_NEAR(1, f2, 1e-8);
 }
 
-//TODO(pau) Move this to a proper place.
-template<typename TMat>
-double FrobeniusNorm(const TMat &A) {
-  double norm = 0;
-  for (int i = 0; i < A.numRows(); ++i) {
-    for (int j = 0; j < A.numCols(); ++j) {
-      norm += Square(A(i, j));
-    }
-  }
-  return sqrt(norm);
-}
-
 TEST(FocalFromFundamental, TwoViewReconstruction) {
   // Two cameras at (0,0,-10) and (2,1,-10) looking towards z+.
   Vec2 p1, p2;

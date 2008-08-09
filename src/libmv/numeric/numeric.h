@@ -134,6 +134,10 @@ inline T Square(T x) {
   
 Mat Identity(int n);
 
+Mat3 RotationAroundX(double angle);
+Mat3 RotationAroundY(double angle);
+Mat3 RotationAroundZ(double angle);
+
 // Return a diagonal matrix from a vector containg the diagonal values.
 Mat Diag(const Vec &x);
 
@@ -145,6 +149,19 @@ double DeterminantSlow(const Mat3 &A);
 double Cofactor(const Mat &A, int i, int j);
 void Adjoint(const Mat &A, Mat *B);
 void InverseSlow(const Mat &A, Mat *I);
+
+template<typename TMat>
+double FrobeniusNorm(const TMat &A) {
+  double norm = 0;
+  for (int i = 0; i < A.numRows(); ++i) {
+    for (int j = 0; j < A.numCols(); ++j) {
+      norm += Square(A(i, j));
+    }
+  }
+  return sqrt(norm);
+}
+
+
 
 
 void MeanAndVarianceAlongRows(const Mat &A,

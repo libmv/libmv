@@ -37,15 +37,17 @@ void ApplyTransformationToPoints(const Mat &points,
                                  const Mat3 &T,
                                  Mat *normalized_points);
 
-void FundamentalFromCorrespondencesLinear(const Mat &x1,
-                                          const Mat &x2,
-                                          Mat3 *F);
+double FundamentalFromCorrespondencesLinear(const Mat &x1,
+                                            const Mat &x2,
+                                            Mat3 *F);
 
 void EnforceFundamentalRank2Constraint(Mat3 *F);
 
-void FundamentalFromCorrespondences8Point(const Mat &x1,
-                                          const Mat &x2,
-                                          Mat3 *F);
+double FundamentalFromCorrespondences8Point(const Mat &x1,
+                                            const Mat &x2,
+                                            Mat3 *F);
+
+void NormalizeFundamental(const Mat3 F, Mat3 *F_normalized);
 
 } // namespace libmv
 

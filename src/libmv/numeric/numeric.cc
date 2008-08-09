@@ -32,6 +32,37 @@ Mat Identity(int n) {
   return I;
 }
 
+Mat3 RotationAroundX(double angle) {
+  double c = cos(angle);
+  double s = sin(angle);
+  Mat3 R;
+  R = 1, 0,  0,
+      0, c, -s,
+      0, s,  c;
+  return R;
+}
+
+Mat3 RotationAroundY(double angle) {
+  double c = cos(angle);
+  double s = sin(angle);
+  Mat3 R;
+  R =  c, 0, s,
+       0, 1, 0,
+      -s, 0, c;
+  return R;
+}
+
+Mat3 RotationAroundZ(double angle) {
+  double c = cos(angle);
+  double s = sin(angle);
+  Mat3 R;
+  R = c, -s, 0,
+      s,  c, 0,
+      0,  0, 1;
+  return R;
+}
+
+
 Mat Diag(const Vec &x) {
   int n = x.length();
   Mat A(n,n);

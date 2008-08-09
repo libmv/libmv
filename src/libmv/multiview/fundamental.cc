@@ -82,9 +82,9 @@ void ApplyTransformationToPoints(const Mat &points,
 }
 
 // HZ 11.1 pag.279 (x1 = x, x2 = x')
-void FundamentalFromCorrespondencesLinear(const Mat &x1,
-                                          const Mat &x2,
-                                          Mat3 *F) {
+double FundamentalFromCorrespondencesLinear(const Mat &x1,
+                                            const Mat &x2,
+                                            Mat3 *F) {
   assert(2 == x1.numRows());
   assert(8 <= x1.numCols());
   assert(x1.numRows() == x2.numRows());
@@ -103,13 +103,16 @@ void FundamentalFromCorrespondencesLinear(const Mat &x1,
     A(i, 7) = x1(1, i);
     A(i, 8) = 1;
   }
+
   Vec f;
-  Nullspace(&A, &f);
+  double smaller_singular_value;
+  smaller_singular_value = Nullspace(&A, &f);
   for (int i = 0; i < 3; ++i) {
     for (int j = 0; j < 3; ++j) {
       (*F)(i, j) = f(3 * i + j);
     }
   }
+  return smaller_singular_value;
 }
 
 // HZ 11.1.1 pag.280
@@ -124,9 +127,9 @@ void EnforceFundamentalRank2Constraint(Mat3 *F) {
 }
 
 // HZ 11.2 pag.281 (x1 = x, x2 = x')
-void FundamentalFromCorrespondences8Point(const Mat &x1,
-                                          const Mat &x2,
-                                          Mat3 *F) {
+double FundamentalFromCorrespondences8Point(const Mat &x1,
+                                            const Mat &x2,
+                                            Mat3 *F) {
   assert(2 == x1.numRows());
   assert(8 <= x1.numCols());
   assert(x1.numRows() == x2.numRows());
@@ -141,13 +144,28 @@ void FundamentalFromCorrespondences8Point(const Mat &x1,
   ApplyTransformationToPoints(x2, T2, &x2_normalized);
 
   // Estimate the fundamental matrix.
-  FundamentalFromCorrespondencesLinear(x1_normalized, x2_normalized, F);
+  double smaller_singular_value;
+  smaller_singular_value = 
+      FundamentalFromCorrespondencesLinear(x1_normalized, x2_normalized, F);
   EnforceFundamentalRank2Constraint(F);
 
   // Denormalize the fundamental matrix.
   Mat3 F_T1;
   F_T1 = (*F) * T1; 
   *F = transpose(T2) * F_T1; 
+
+  return smaller_singular_value;
 }
+
+void NormalizeFundamental(const Mat3 F, Mat3 *F_normalized) {
+  Mat F_tmp;
+  F_tmp = F;
+  F_tmp /= FrobeniusNorm(F);
+  if(F_tmp(2,2) < 0) {
+    F_tmp *= -1;
+  }
+  *F_normalized = F_tmp;
+}
+
 
 }  // namespace libmv
