@@ -117,14 +117,10 @@ class ArrayND : public BaseArray {
   }
 
   /// Resizes the array to shape s.  All data is lost.
-  void Resize(const int *shape) {
-    bool different_shape = false;
-    for ( int j = N - 1; j >= 0; --j)
-      if ( shape[j] != shape_(j) )
-        different_shape = true;
-
-    if ( different_shape ) { 
-      shape_.Reset(shape);
+  void Resize(const int *shapeArray) {
+    Index newShape(shapeArray);
+    if ( shape_ != newShape ) { 
+      shape_.Reset( newShape);
       strides_(N-1) = 1;
       for (int i = N - 1; i > 0; --i)
         strides_(i-1) = strides_(i) * shape_(i);
