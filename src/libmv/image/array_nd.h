@@ -105,35 +105,39 @@ class ArrayND : public BaseArray {
 
   template<typename D>
   void ResizeLike(const ArrayND<D,N> &other) {
-    // TODO(keir): Don't reallocate memory if sizes don't change.
-
-    shape_.Reset(other.Shapes());
     strides_ = other.Strides();
-    delete [] data_;
-    if (Size()>0)
-      data_ = new T[Size()];
-    else
-      data_ = NULL;
+    if ( other.Shapes() != shape_ ) {
+      shape_.Reset(other.Shapes());
+      delete [] data_;
+      if (Size()>0)
+        data_ = new T[Size()];
+      else
+        data_ = NULL;
+    }
   }
 
   /// Resizes the array to shape s.  All data is lost.
   void Resize(const int *shape) {
-    // TODO(keir): Don't reallocate memory if sizes don't change.
+    bool different_shape = false;
+    for ( int j = N - 1; j >= 0; --j)
+      if ( shape[j] != shape_(j) )
+        different_shape = true;
 
-    shape_.Reset(shape);
-    strides_(N-1) = 1;
-    for (int i = N - 1; i > 0; --i)
-      strides_(i-1) = strides_(i) * shape_(i);
+    if ( different_shape ) { 
+      shape_.Reset(shape);
+      strides_(N-1) = 1;
+      for (int i = N - 1; i > 0; --i)
+        strides_(i-1) = strides_(i) * shape_(i);
 
-    delete [] data_;
-    if (Size()>0)
-      data_ = new T[Size()];
-    else
-      data_ = NULL;
+      delete [] data_;
+      if (Size()>0)
+        data_ = new T[Size()];
+      else
+        data_ = NULL;
+    }
   }
 
-
-  /// Resize a 1D array to lenght s0.
+  /// Resize a 1D array to length s0.
   void Resize(int s0) {
     assert(N == 1);
     int shape[] = {s0};
@@ -390,29 +394,53 @@ class Array3Df : public Array3D<float> {
   }
 };
 
-// TODO(keir): Uninline this and push to .cc.
-inline void SplitChannels(const Array3Df input,
+void SplitChannels(const Array3Df input,
                           Array3Df *channel0,
                           Array3Df *channel1,
-                          Array3Df *channel2) {
-  assert(input.Depth() >= 3);
-  channel0->Resize(input.Height(), input.Width());
-  channel1->Resize(input.Height(), input.Width());
-  channel2->Resize(input.Height(), input.Width());
-  for (int row = 0; row < input.Height(); ++row) {
-    for (int column = 0; column < input.Width(); ++column) {
-      (*channel0)(row, column) = input(row, column, 0);
-      (*channel1)(row, column) = input(row, column, 1);
-      (*channel2)(row, column) = input(row, column, 2);
+                          Array3Df *channel2);
+
+template <typename AArrayType, typename BArrayType, typename CArrayType>
+void MultiplyElements( const AArrayType &a, 
+           const BArrayType &b,
+           CArrayType *c ) {
+  // This function does an element-wise multiply between
+  // the two Arrays A and B, and stores the result in C.
+  // A and B must have the same dimensions.
+  assert( a.Shape() == b.Shape() );
+  c->ResizeLike(a);
+
+  // To perform the multiplcation, a "current" index into the N-dimensions of
+  // the A and B matrix specifies which elements are being multiplied.
+  typename CArrayType::Index index;
+
+  // The index starts at the maximum value for each dimension
+  const typename CArrayType::Index& cShape = c->Shape(); 
+  for ( int i = 0; i < CArrayType::Index::SIZE; ++i )
+    index(i) = cShape(i) - 1;
+
+  // After each multiplication, the highest-dimensional index is reduced.
+  // if this reduces it less than zero, it resets to its maximum value
+  // and decrements the index of the next lower dimension.
+  // This ripple-action continues until the entire new array has been
+  // calculated, indicated by dimension zero having a negative index.
+  while ( index(0) >= 0 ) {
+    (*c)(index) = a(index) * b(index);
+
+    int dimension = CArrayType::Index::SIZE - 1;
+    index(dimension) = index(dimension) - 1; 
+    while ( dimension > 0 && index(dimension) < 0 ) {
+      index(dimension) = cShape(dimension) - 1;
+      index(dimension - 1) = index(dimension - 1) - 1;
+      --dimension;
     }
   }
 }
 
-// TODO(keir): make this work for N != 3.
 template <typename TA, typename TB, typename TC>
-void MultiplyElements(const ArrayND<TA, 3> a,
-                      const ArrayND<TB, 3> b,
+void MultiplyElements(const ArrayND<TA, 3> &a,
+                      const ArrayND<TB, 3> &b,
                       ArrayND<TC, 3> *c) {
+  //Specialization for N==3
   c->ResizeLike(a);
   assert(a.Shape(0) == b.Shape(0));
   assert(a.Shape(1) == b.Shape(1));
@@ -425,6 +453,8 @@ void MultiplyElements(const ArrayND<TA, 3> a,
     }
   }
 }
+
+
 
 inline void PrintArray(const Array3Df &array) {
   using namespace std;

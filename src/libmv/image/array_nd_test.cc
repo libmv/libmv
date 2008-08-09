@@ -294,4 +294,31 @@ TEST(Array3Df, SplitChannels) {
   }
 }
 
+TEST( ArrayND, MultiplyElementsGeneric) {
+  ArrayND<double, 5> A;
+  ArrayND<int, 5> B;
+  ArrayND<double, 5> C;
+  int shape[] = { 1,3,5,7,1 };
+  A.Resize(shape);
+  B.Resize(shape);
+
+  A.Fill( 1.1 );
+  B.Fill( 2 );
+  MultiplyElements( A, B, &C );
+	
+  ArrayND<double,5>::Index cIndex;
+  for (int d0 = 0; d0 < shape[0]; ++d0 ) 
+   for (int d1 = 0; d1 < shape[1]; ++d1 )
+    for (int d2 = 0; d2 < shape[2]; ++d2 )
+     for (int d3 = 0; d3 < shape[3]; ++d3 )
+      for (int d4 = 0; d4 < shape[4]; ++d4 ) {
+	cIndex(0) = d0;
+	cIndex(1) = d1;
+	cIndex(2) = d2;
+	cIndex(3) = d3;
+	cIndex(4) = d4;
+        EXPECT_EQ(2.2, C(cIndex));
+      }
+}
+
 }  // namespace

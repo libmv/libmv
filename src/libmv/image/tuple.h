@@ -29,6 +29,7 @@ namespace libmv {
 template <typename T,int N>
 class Tuple {
  public:
+  enum {SIZE=N};
   /// Custruct a tuple with unitialized data.
   Tuple() {}
 

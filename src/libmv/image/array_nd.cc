@@ -58,4 +58,21 @@ void ByteArrayToScaledFloatArray(const Array3Du &byte_array,
   }
 }
 
+void SplitChannels(const Array3Df input,
+                          Array3Df *channel0,
+                          Array3Df *channel1,
+                          Array3Df *channel2) {
+  assert(input.Depth() >= 3);
+  channel0->Resize(input.Height(), input.Width());
+  channel1->Resize(input.Height(), input.Width());
+  channel2->Resize(input.Height(), input.Width());
+  for (int row = 0; row < input.Height(); ++row) {
+    for (int column = 0; column < input.Width(); ++column) {
+      (*channel0)(row, column) = input(row, column, 0);
+      (*channel1)(row, column) = input(row, column, 1);
+      (*channel2)(row, column) = input(row, column, 2);
+    }
+  }
+}
+
 }  // namespace libmv

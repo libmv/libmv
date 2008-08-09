@@ -9,7 +9,7 @@ TARGET_LINK_LIBRARIES(tuple_test gtest)
 ADD_TEST(tuple_test tuple_test)
 
 ADD_EXECUTABLE(array_nd_test array_nd_test.cc)
-TARGET_LINK_LIBRARIES(array_nd_test gtest)
+TARGET_LINK_LIBRARIES(array_nd_test gtest image)
 ADD_TEST(array_nd_test array_nd_test)
 
 ADD_EXECUTABLE(image_test image_test.cc)
