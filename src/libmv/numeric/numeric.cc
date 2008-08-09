@@ -92,6 +92,13 @@ double DeterminantSlow(const Mat &A) {
   return det;
 }
 
+double DeterminantSlow(const Mat3 &A) {
+  Mat tmp;
+  tmp = A;
+  return DeterminantSlow(tmp);
+}
+
+
 double Cofactor(const Mat &A, int i, int j) {
   assert(A.numRows() == A.numCols());
   int n = A.numRows();

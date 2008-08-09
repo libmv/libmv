@@ -22,8 +22,8 @@
 // have a 0,0 principal point. In practice that means the F should be
 // normalized before being passed to these routines.
 
-#ifndef LIBMV_MULTIVIEW_FUNDAMENTAL_H_
-#define LIBMV_MULTIVIEW_FUNDAMENTAL_H_
+#ifndef LIBMV_MULTIVIEW_PROJECTION_H_
+#define LIBMV_MULTIVIEW_PROJECTION_H_
 
 #include <vector>
 
@@ -31,25 +31,17 @@
 
 namespace libmv {
 
-void FundamentalFromProjections(const Mat34 &P1, const Mat34 &P2, Mat3 *F);
+void P_From_KRt(const Mat3 &K, const Mat3 &R, const Vec3 &t, Mat34 *P);
 
-// TODO(pau) These two functions should go in a more general header.
-void PreconditionerFromPoints(const Mat &points, Mat3 *T);
+void KRt_From_P(const Mat34 &P, Mat3 *K, Mat3 *R, Vec3 *t);
 
-void ApplyTransformationToPoints(const Mat &points,
-                                 const Mat3 &T,
-                                 Mat *normalized_points);
+void HomogeneousToEuclidean(const Mat &H, Mat *X);
 
-void FundamentalFromCorrespondencesLinear(const Mat &x1,
-                                          const Mat &x2,
-                                          Mat3 *F);
+void EuclideanToHomogeneous(const Mat &X, Mat *H);
 
-void EnforceFundamentalRank2Constraint(Mat3 *F);
+void Project(const Mat34 &P, const Mat &X, Mat *x);
 
-void FundamentalFromCorrespondences8Point(const Mat &x1,
-                                          const Mat &x2,
-                                          Mat3 *F);
 
 } // namespace libmv
 
-#endif  // LIBMV_MULTIVIEW_FOCAL_FROM_FUNDAMENTAL_H_
+#endif  // LIBMV_MULTIVIEW_PROJECTION_H_

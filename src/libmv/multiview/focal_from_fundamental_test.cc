@@ -20,6 +20,7 @@
 
 #include "libmv/multiview/focal_from_fundamental.h"
 #include "libmv/multiview/fundamental.h"
+#include "libmv/multiview/projection.h"
 #include "libmv/numeric/numeric.h"
 #include "testing/testing.h"
 
@@ -169,38 +170,15 @@ TEST(FocalFromFundamental, FocalFromFundamental) {
 }
 
 //TODO(pau) Move this to a proper place.
-void HomogeneousToEuclidean(const Mat &H, Mat *X) {
-  int d = H.numRows() - 1;
-  int n = H.numCols();
-  X->resize(d, n);
-  for (int i = 0; i < n; ++i) {
-    double h = H(d, i);
-    for (int j = 0; j < d; ++j) {
-      (*X)(j, i) = H(j, i) / h;
+template<typename TMat>
+double FrobeniusNorm(const TMat &A) {
+  double norm = 0;
+  for (int i = 0; i < A.numRows(); ++i) {
+    for (int j = 0; j < A.numCols(); ++j) {
+      norm += Square(A(i, j));
     }
   }
-}
-
-//TODO(pau) Move this to a proper place.
-void EuclideanToHomogeneous(const Mat &X, Mat *H) {
-  int d = X.numRows();
-  int n = X.numCols();
-  H->resize(d + 1, n);
-  for (int i = 0; i < n; ++i) {
-    for (int j = 0; j < d; ++j) {
-      (*H)(j, i) = X(j, i);
-    }
-    (*H)(d, i) = 1;
-  }
-}
-
-//TODO(pau) Move this to a proper place.
-void Project(const Mat34 &P, const Mat &X, Mat *x) {
-  Mat PP, XX, xx;
-  PP = P;
-  EuclideanToHomogeneous(X, &XX);
-  xx = PP * XX;
-  HomogeneousToEuclidean(xx, x);
+  return sqrt(norm);
 }
 
 TEST(FocalFromFundamental, TwoViewReconstruction) {
@@ -257,15 +235,19 @@ TEST(FocalFromFundamental, TwoViewReconstruction) {
 
   Mat3 F;
   FundamentalFromProjections(P1, P2, &F);
-  //std::cout << F << std::endl;
-  //std::cout << F_estimated << std::endl;
 
-  //std::cout << K1 << std::endl;
-  //std::cout << K1_estimated << std::endl;
-  //std::cout << K2 << std::endl;
-  //std::cout << K2_estimated << std::endl;
+  Mat FF, FF_estimated;
+  FF = F / FrobeniusNorm(F);
+  FF_estimated = F_estimated / FrobeniusNorm(F_estimated);
+  std::cout << FF << std::endl;
+  std::cout << FF_estimated << std::endl;
 
-  // TODO: Recover R, t from F and K
+//  std::cout << K1 << std::endl;
+//  std::cout << K1_estimated << std::endl;
+//  std::cout << K2 << std::endl;
+//  std::cout << K2_estimated << std::endl;
+
+  // TODO(pau): Recover R, t from F and K
 }
 
 }

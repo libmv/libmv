@@ -136,8 +136,10 @@ inline T Square(T x) {
 Mat Diag(const Vec &x);
 
 // Return the determinant of A computed by LU factorization.  A is destroyed.
-double DeterminantLU(Mat *A);
+//double DeterminantLU(Mat *A);
+
 double DeterminantSlow(const Mat &A);
+double DeterminantSlow(const Mat3 &A);
 double Cofactor(const Mat &A, int i, int j);
 void Adjoint(const Mat &A, Mat *B);
 void InverseSlow(const Mat &A, Mat *I);

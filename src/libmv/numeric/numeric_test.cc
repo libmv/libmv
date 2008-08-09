@@ -115,6 +115,13 @@ TEST(Numeric, DeterminantSlow) {
       12, 13, 14, 15;
   double detB = DeterminantSlow(B);
   EXPECT_NEAR(0, detB, 1e-8); 
+
+  Mat3 C;
+  C =  0, 1, 2,
+       3, 4, 5,
+       6, 7, 1;
+  double detC = DeterminantSlow(C);
+  EXPECT_NEAR(21, detC, 1e-8); 
 }
 
 TEST(Numeric, InverseSlow) {
