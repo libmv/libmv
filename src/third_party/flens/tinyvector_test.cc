@@ -210,6 +210,27 @@ TEST(TinyMatrix, GEMMTransposeB) {
   EXPECT_EQ(C(2, 2), 404);
 }
 
+TEST(Matrix, GEMMMixingVariableWithFixedMatrices) {
+  Mat3 T;
+  T = 2, 0, 1,
+      0, 2, 0,
+      0, 0, 1;
+
+  Mat X(3, 2);
+  X = 0,  1,
+      4,  5,
+      8,  9;
+
+  Mat Y(3, 2);
+  Y = T * X;
+
+  Mat expected_y(3, 2);
+  expected_y = 8, 11,
+               8, 10,
+               8,  9;
+  EXPECT_EQ(expected_y, Y);
+}
+
 // There was a bug in the flens list initialization code, where it would not
 // work if there was only one column. This is here to guard against the bug
 // coming back in the future. Also, there are some extra tests.

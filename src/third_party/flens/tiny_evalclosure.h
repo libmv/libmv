@@ -22,11 +22,10 @@
 
 namespace flens {
 
-template <typename T, int M, int N>
-static inline T TransposedAccess(
-  Transpose trans,
-  const TinyGeMatrix<FixedSizeArray2D<T, M, N> > &A,
-  int i, int j) {
+template <typename TA>
+static inline typename TA::T TransposedAccess(Transpose trans,
+                                     const TA &A,
+                                     int i, int j) {
   if (trans == NoTrans) {
     return A(i,j);
   } else if (trans == Trans) {
@@ -36,8 +35,12 @@ static inline T TransposedAccess(
     (void) not_implemented_yet;
     assert(not_implemented_yet);
   }
-  return T(0);
+  return typename TA::T(0);
 }
+
+// TODO(keir): That the GEMM has to be repeated twice is really nasty. I'm not
+// sure how to collapse it to one definition though. It would be great if
+// someone who has stronger template meta-fu than me fixed this.
 
 // GEMM
 // C = alpha *A'*B' + beta*C
@@ -71,6 +74,48 @@ mm(Transpose transA, Transpose transB,
       loop (k, N) { 
         TA Axx = TransposedAccess(transA, A, i, k);
         TB Bxx = TransposedAccess(transB, B, k, j);
+        AikBkj += Axx * Bxx;
+      }
+      C(i, j) = alpha*AikBkj + beta*C(i, j);
+    }
+  }
+#undef loop
+}
+
+// GEMM, where A is TinyMatrix, but B and C are normal matrices.
+// C = alpha *A'*B' + beta*C
+template <typename ALPHA, typename BETA,
+          typename TA, int MA, int NA,
+          typename TB,
+          typename TC>
+void
+mm(Transpose transA, Transpose transB,
+   ALPHA alpha,
+   const TinyGeMatrix<FixedSizeArray2D<TA, MA, NA> > &A,
+   const GeMatrix<TB> &B,
+   BETA beta,
+   GeMatrix<TC> &C) {
+  // Conjugates not implemented yet.
+  assert(transA == NoTrans || transA == Trans);
+  assert(transB == NoTrans || transB == Trans); 
+
+  // A mxn x B nxp = C mxp
+  const int M = C.numRows();
+  const int N = (transA == NoTrans) ? NA : MA;
+  if (transB == NoTrans) {
+    assert(N == B.numRows());
+  } else {
+    assert(N == B.numCols());
+  }
+  const int P = C.numCols();
+
+#define loop(x, n) for (int x = 0; x < n; ++x)
+  loop (i, M) {
+    loop (j, P) {
+      typename GeMatrix<TC>::T AikBkj = typename GeMatrix<TC>::T(0);
+      loop (k, N) { 
+        TA Axx = TransposedAccess(transA, A, i, k);
+        typename GeMatrix<TB>::T Bxx = TransposedAccess(transB, B, k, j);
         AikBkj += Axx * Bxx;
       }
       C(i, j) = alpha*AikBkj + beta*C(i, j);
