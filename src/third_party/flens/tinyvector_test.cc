@@ -261,4 +261,13 @@ TEST(Matrix, MatrixListInitialization2) {
   EXPECT_EQ(6, x(2, 1));
 }
 
+TEST(TinyMatrix, TinyMatrixScalarProduct) {
+  Mat3 A;
+  A = 1;
+  A *= 2;
+  Mat3 B;
+  B = 2;
+  EXPECT_EQ(B, A);
+}
+
 }  // namespace

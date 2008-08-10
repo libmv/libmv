@@ -81,6 +81,33 @@ TinyGeMatrix<A>::operator+=(const Matrix<RHS> &rhs)
 
 template <typename A>
 template <typename RHS>
+bool
+TinyGeMatrix<A>::operator==(const TinyGeMatrix<RHS> &rhs) const
+{
+  for (int row = 0; row < numRows(); ++row) {
+    for (int column = 0; column < numCols(); ++column) {
+      if ((*this)(row, column) != rhs(row, column)) {
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
+template <typename A>
+TinyGeMatrix<A> &
+TinyGeMatrix<A>::operator*=(const T scale_by)
+{
+  for (int row = 0; row < numRows(); ++row) {
+    for (int column = 0; column < numCols(); ++column) {
+      (*this)(row, column) *= scale_by;
+    }
+  }
+  return *this;
+}
+
+template <typename A>
+template <typename RHS>
 TinyGeMatrix<A> &
 TinyGeMatrix<A>::operator-=(const Vector<RHS> &rhs)
 {

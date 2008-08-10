@@ -70,6 +70,17 @@ class TinyGeMatrix
             TinyGeMatrix<A> &
             operator-=(const Vector<RHS> &rhs);
 
+        template <typename RHS>
+            TinyGeMatrix<A> &
+            operator*=(const Matrix<RHS> &rhs);
+
+        template <typename RHS>
+            bool
+            operator==(const TinyGeMatrix<RHS> &rhs) const;
+
+        TinyGeMatrix<A> &
+        operator*=(const T);
+
         const T &
         operator()(int row, int col) const;
 
