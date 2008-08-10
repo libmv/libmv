@@ -185,6 +185,20 @@ GeMatrix<FS>::operator/=(T alpha)
 }
 
 template <typename FS>
+bool
+GeMatrix<FS>::operator==(const GeMatrix<FS> &other) const
+{
+    for (int column = 0; column < other.numCols(); ++column) {
+      for (int row = 0; row < other.numRows(); ++row) {
+        if ((*this)(row, column) != other(row, column)) {
+          return false;
+        }
+      }
+    }
+    return true;
+}
+
+template <typename FS>
 inline
 const typename GeMatrix<FS>::T &
 GeMatrix<FS>::operator()(int row, int col) const

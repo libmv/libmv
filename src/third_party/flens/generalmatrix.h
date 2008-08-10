@@ -136,6 +136,9 @@ class GeMatrix
         GeMatrix<FS> &
         operator/=(T alpha);
 
+        bool
+        operator==(const GeMatrix<FS> &rhs) const;
+
         const T &
         operator()(int row, int col) const;
 
