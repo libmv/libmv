@@ -161,6 +161,13 @@ double FrobeniusNorm(const TMat &A) {
   return sqrt(norm);
 }
 
+template<typename TMat>
+double FrobeniusDistance(const TMat &A, const TMat &B) {
+  TMat diff;
+  diff = A - B;
+  return FrobeniusNorm(diff);
+}
+
 
 
 

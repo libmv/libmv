@@ -13,7 +13,9 @@ TARGET_LINK_LIBRARIES(fundamental_test multiview numeric
                       flens gtest lapack atlas)
 ADD_TEST(fundamental_test fundamental_test)
 
-ADD_EXECUTABLE(focal_from_fundamental_test focal_from_fundamental_test.cc)
+ADD_EXECUTABLE(focal_from_fundamental_test
+               focal_from_fundamental_test.cc
+               test_data_sets.cc)
 TARGET_LINK_LIBRARIES(focal_from_fundamental_test multiview numeric
                       flens gtest lapack atlas)
 ADD_TEST(focal_from_fundamental_test focal_from_fundamental_test)

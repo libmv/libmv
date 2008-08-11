@@ -21,6 +21,7 @@
 #include "libmv/multiview/focal_from_fundamental.h"
 #include "libmv/multiview/fundamental.h"
 #include "libmv/multiview/projection.h"
+#include "libmv/multiview/test_data_sets.h"
 #include "libmv/numeric/numeric.h"
 #include "testing/testing.h"
 
@@ -171,42 +172,23 @@ TEST(FocalFromFundamental, FocalFromFundamental) {
 
 TEST(FocalFromFundamental, TwoViewReconstruction) {
   // Two cameras at (0,0,-10) and (2,1,-10) looking towards z+.
+  TwoViewDataSet d = TwoRealisticCameras();
   Vec2 p1, p2;
+  p1 = d.K1(0,2), d.K1(1,2);
+  p2 = d.K2(0,2), d.K2(1,2);
   double f1, f2;
-  Mat3 K1, R1, K2, R2;
-  Vec3 t1, t2;
-  Mat34 P1, P2;
-  f1 = 320;
-  f2 = 360;
-  p1 = 160, 120;
-  p2 = 170, 110;
-  K1 = f1,  0, p1(0),
-        0, f1, p1(1),
-        0,  0,     1;
-  K2 = f2,  0, p2(0),
-        0, f2, p2(1),
-        0,  0,     1;
-  R1 = 1, 0, 0,
-       0, 1, 0,
-       0, 0, 1;
-  R2 = R1;
-  t1 = 0, 0, 10;
-  t2 = -2, -1, 10;
-  P_From_KRt(K1, R1, t1, &P1);
-  P_From_KRt(K2, R2, t2, &P2);
-
-  // The 8 points of a cube and their projections.
-  int n = 8;
-  Mat X(3,n), x1, x2;
-  X = 0, 1, 0, 1, 0, 1, 0, 1,
-      0, 0, 1, 1, 0, 0, 1, 1,
-      0, 0, 0, 0, 1, 1, 1, 1;
-  Project(P1, X, &x1);
-  Project(P2, X, &x2);
+  f1 = d.K1(0,0);
+  f2 = d.K2(0,0);
 
   // Compute fundamental matrix from correspondences.
   Mat3 F_estimated;
-  FundamentalFromCorrespondences8Point(x1, x2, &F_estimated);
+  FundamentalFromCorrespondences8Point(d.x1, d.x2, &F_estimated);
+
+  Mat3 F_gt_norm, F_estimated_norm;
+  NormalizeFundamental(d.F, &F_gt_norm);
+  NormalizeFundamental(F_estimated, &F_estimated_norm);
+
+  EXPECT_NEAR(0, FrobeniusDistance(F_gt_norm, F_estimated_norm), 1e-8);
 
   // Compute focal lenght.
   double f1_estimated, f2_estimated;
@@ -220,20 +202,8 @@ TEST(FocalFromFundamental, TwoViewReconstruction) {
   K2_estimated = f2_estimated,            0, p2(0),
                             0, f2_estimated, p2(1),
                             0,            0,     1;
-
-  Mat3 F;
-  FundamentalFromProjections(P1, P2, &F);
-
-  Mat FF, FF_estimated;
-  FF = F / FrobeniusNorm(F);
-  FF_estimated = F_estimated / FrobeniusNorm(F_estimated);
-  std::cout << FF << std::endl;
-  std::cout << FF_estimated << std::endl;
-
-//  std::cout << K1 << std::endl;
-//  std::cout << K1_estimated << std::endl;
-//  std::cout << K2 << std::endl;
-//  std::cout << K2_estimated << std::endl;
+  EXPECT_NEAR(0, FrobeniusDistance(d.K1, K1_estimated), 1e-8);
+  EXPECT_NEAR(0, FrobeniusDistance(d.K2, K2_estimated), 1e-8);
 
   // TODO(pau): Recover R, t from F and K
 }
