@@ -22,6 +22,7 @@
 
 #include "libmv/multiview/fundamental.h"
 #include "libmv/multiview/projection.h"
+#include "libmv/multiview/test_data_sets.h"
 #include "libmv/numeric/numeric.h"
 #include "testing/testing.h"
 
@@ -128,54 +129,16 @@ TEST(Fundamental, FundamentalFromCorrespondences8Point) {
   EXPECT_NEAR(0, DeterminantSlow(F), 1e-8);
 }
 
-// Two cameras at (-1,-1,-10) and (2,1,-10) looking approximately towards z+.
-void TwoRealisticCameras(Mat34 *P1, Mat34 *P2) {
-  Vec2 p1, p2;
-  double f1, f2;
-  Mat3 K1, R1, K2, R2;
-  Vec3 t1, t2;
-  f1 = 320;
-  f2 = 360;
-  p1 = 160, 120;
-  p2 = 170, 110;
-  K1 = f1,  0, p1(0),
-        0, f1, p1(1),
-        0,  0,     1;
-  K2 = f2,  0, p2(0),
-        0, f2, p2(1),
-        0,  0,     1;
-  R1 = RotationAroundZ(-0.1);
-  R2 = RotationAroundX(-0.1);
-  t1 = 1, 1, 10;
-  t2 = -2, -1, 10;
-  P_From_KRt(K1, R1, t1, P1);
-  P_From_KRt(K2, R2, t2, P2);
-}
-
 TEST(Fundamental, FundamentalFromCorrespondencesLinearRealistic) {
-  Mat34 P1, P2;
-  TwoRealisticCameras(&P1, &P2);
-
-  // The 8 points and their projections.
-  int n = 8;
-  Mat X(3,n), x1, x2;
-  X = 0, 1, 0, 1, 0, 1, 0, 1,
-      0, 0, 1, 1, 0, 0, 1, 1,
-      0, 0, 0, 0, 1, 1, 1, 2;
-  Project(P1, X, &x1);
-  Project(P2, X, &x2);
+  TwoViewDataSet d = TwoRealisticCameras();
 
   // Compute fundamental matrix from correspondences.
   Mat3 F_estimated;
-  FundamentalFromCorrespondencesLinear(x1, x2, &F_estimated);
-
-  // Compute ground truth.
-  Mat3 F_gt;
-  FundamentalFromProjections(P1, P2, &F_gt);
+  FundamentalFromCorrespondencesLinear(d.x1, d.x2, &F_estimated);
 
   // Normalize.
   Mat3 F_gt_norm, F_estimated_norm;
-  NormalizeFundamental(F_gt, &F_gt_norm);
+  NormalizeFundamental(d.F, &F_gt_norm);
   NormalizeFundamental(F_estimated, &F_estimated_norm);
   
   // Compare with ground truth.
@@ -190,11 +153,12 @@ TEST(Fundamental, FundamentalFromCorrespondencesLinearRealistic) {
   EXPECT_NEAR(F_gt_norm(2, 2), F_estimated_norm(2, 2), 1e-8);
 
   // Check fundamental properties.
+  int n = d.X.numCols();
   Vec y_F_x(n);
   for (int i = 0; i < n; ++i) {
     Vec3 x, y, F_x;
-    x = x1(0, i), x1(1, i), 1;
-    y = x2(0, i), x2(1, i), 1;
+    x = d.x1(0, i), d.x1(1, i), 1;
+    y = d.x2(0, i), d.x2(1, i), 1;
     F_x = F_estimated * x;
     y_F_x(i) = dot(y, F_x);
   }
@@ -210,29 +174,15 @@ TEST(Fundamental, FundamentalFromCorrespondencesLinearRealistic) {
 }
 
 TEST(Fundamental, FundamentalFromCorrespondences8PointRealistic) {
-  Mat34 P1, P2;
-  TwoRealisticCameras(&P1, &P2);
-
-  // The 8 points and their projections.
-  int n = 8;
-  Mat X(3,n), x1, x2;
-  X = 0, 1, 0, 1, 0, 1, 0, 1,
-      0, 0, 1, 1, 0, 0, 1, 1,
-      0, 0, 0, 0, 1, 1, 1, 2;
-  Project(P1, X, &x1);
-  Project(P2, X, &x2);
+  TwoViewDataSet d = TwoRealisticCameras();
 
   // Compute fundamental matrix from correspondences.
   Mat3 F_estimated;
-  FundamentalFromCorrespondences8Point(x1, x2, &F_estimated);
-
-  // Compute ground truth.
-  Mat3 F_gt;
-  FundamentalFromProjections(P1, P2, &F_gt);
+  FundamentalFromCorrespondences8Point(d.x1, d.x2, &F_estimated);
 
   // Normalize.
   Mat3 F_gt_norm, F_estimated_norm;
-  NormalizeFundamental(F_gt, &F_gt_norm);
+  NormalizeFundamental(d.F, &F_gt_norm);
   NormalizeFundamental(F_estimated, &F_estimated_norm);
   
   // Compare with ground truth.
@@ -247,11 +197,12 @@ TEST(Fundamental, FundamentalFromCorrespondences8PointRealistic) {
   EXPECT_NEAR(F_gt_norm(2, 2), F_estimated_norm(2, 2), 1e-8);
 
   // Check fundamental properties.
+  int n = d.X.numCols();
   Vec y_F_x(n);
   for (int i = 0; i < n; ++i) {
     Vec3 x, y, F_x;
-    x = x1(0, i), x1(1, i), 1;
-    y = x2(0, i), x2(1, i), 1;
+    x = d.x1(0, i), d.x1(1, i), 1;
+    y = d.x2(0, i), d.x2(1, i), 1;
     F_x = F_estimated * x;
     y_F_x(i) = dot(y, F_x);
   }
@@ -270,22 +221,20 @@ TEST(Fundamental, FundamentalFromCorrespondences8PointRealistic) {
 // FundamentalFromCorrespondencesX return a small number when linear estimation
 // of F fails.
 TEST(Fundamental, FundamentalFromCorrespondences8PointDegenerate) {
-  Mat34 P1, P2;
-  TwoRealisticCameras(&P1, &P2);
+  TwoViewDataSet d = TwoRealisticCameras();
 
   // The 8 points of a cube and their projections.
-  int n = 8;
-  Mat X(3,n), x1, x2;
-  X = 0, 1, 0, 1, 0, 1, 0, 1,
-      0, 0, 1, 1, 0, 0, 1, 1,
-      0, 0, 0, 0, 1, 1, 1, 1;
-  Project(P1, X, &x1);
-  Project(P2, X, &x2);
+  d.X.resize(3,8);
+  d.X = 0, 1, 0, 1, 0, 1, 0, 1,
+        0, 0, 1, 1, 0, 0, 1, 1,
+        0, 0, 0, 0, 1, 1, 1, 1;
+  Project(d.P1, d.X, &d.x1);
+  Project(d.P2, d.X, &d.x2);
 
   // Compute fundamental matrix from correspondences.
   Mat3 F_estimated;
   double res;
-  res = FundamentalFromCorrespondences8Point(x1, x2, &F_estimated);
+  res = FundamentalFromCorrespondences8Point(d.x1, d.x2, &F_estimated);
 
   EXPECT_NEAR(0, res, 1e-8);
 }

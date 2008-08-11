@@ -7,7 +7,8 @@ TARGET_LINK_LIBRARIES(projection_test multiview numeric
                       flens gtest lapack atlas)
 ADD_TEST(projection_test projection_test)
 
-ADD_EXECUTABLE(fundamental_test fundamental_test.cc generated.cc)
+ADD_EXECUTABLE(fundamental_test fundamental_test.cc
+               test_data_sets.cc generated.cc)
 TARGET_LINK_LIBRARIES(fundamental_test multiview numeric
                       flens gtest lapack atlas)
 ADD_TEST(fundamental_test fundamental_test)

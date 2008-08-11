@@ -18,22 +18,39 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
-#ifndef LIBMV_MULTIVIEW_PROJECTION_H_
-#define LIBMV_MULTIVIEW_PROJECTION_H_
-
-#include <vector>
-
 #include "libmv/numeric/numeric.h"
+#include "libmv/multiview/projection.h"
+#include "libmv/multiview/fundamental.h"
+#include "libmv/multiview/test_data_sets.h"
 
 namespace libmv {
 
-void P_From_KRt(const Mat3 &K, const Mat3 &R, const Vec3 &t, Mat34 *P);
-void KRt_From_P(const Mat34 &P, Mat3 *K, Mat3 *R, Vec3 *t);
+TwoViewDataSet TwoRealisticCameras() {
+  TwoViewDataSet d;
 
-void HomogeneousToEuclidean(const Mat &H, Mat *X);
-void EuclideanToHomogeneous(const Mat &X, Mat *H);
-void Project(const Mat34 &P, const Mat &X, Mat *x);
+  d.K1 = 320,   0, 160,
+           0, 320, 120,
+           0,   0,   1;
+  d.K2 = 360,   0, 170,
+           0, 360, 110,
+           0,   0,   1;
+  d.R1 = RotationAroundZ(-0.1);
+  d.R2 = RotationAroundX(-0.1);
+  d.t1 = 1, 1, 10;
+  d.t2 = -2, -1, 10;
+  P_From_KRt(d.K1, d.R1, d.t1, &d.P1);
+  P_From_KRt(d.K2, d.R2, d.t2, &d.P2);
 
-} // namespace libmv
+  FundamentalFromProjections(d.P1, d.P2, &d.F);
+  
+  d.X.resize(3,8);
+  d.X = 0, 1, 0, 1, 0, 1, 0, 1,
+        0, 0, 1, 1, 0, 0, 1, 1,
+        0, 0, 0, 0, 1, 1, 1, 2;
+  Project(d.P1, d.X, &d.x1);
+  Project(d.P2, d.X, &d.x2);
+  
+  return d;
+}
 
-#endif  // LIBMV_MULTIVIEW_PROJECTION_H_
+}  // namespace libmv

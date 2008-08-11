@@ -18,8 +18,8 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
-#ifndef LIBMV_MULTIVIEW_PROJECTION_H_
-#define LIBMV_MULTIVIEW_PROJECTION_H_
+#ifndef LIBMV_MULTIVIEW_TEST_DATA_SETS_H_
+#define LIBMV_MULTIVIEW_TEST_DATA_SETS_H_
 
 #include <vector>
 
@@ -27,13 +27,19 @@
 
 namespace libmv {
 
-void P_From_KRt(const Mat3 &K, const Mat3 &R, const Vec3 &t, Mat34 *P);
-void KRt_From_P(const Mat34 &P, Mat3 *K, Mat3 *R, Vec3 *t);
+struct TwoViewDataSet {
+  Mat3 K1, K2;  // Internal parameters.
+  Mat3 R1, R2;  // Rotation.
+  Vec3 t1, t2;  // Translation.
+  Mat34 P1, P2; // Projection matrix, P = K(R|t)
+  Mat3 F;       // Fundamental matrix.
+  Mat X;        // 3D points.
+  Mat x1, x2;   // Projected points.
+};
 
-void HomogeneousToEuclidean(const Mat &H, Mat *X);
-void EuclideanToHomogeneous(const Mat &X, Mat *H);
-void Project(const Mat34 &P, const Mat &X, Mat *x);
+// Two cameras at (-1,-1,-10) and (2,1,-10) looking approximately towards z+.
+TwoViewDataSet TwoRealisticCameras();
 
 } // namespace libmv
 
-#endif  // LIBMV_MULTIVIEW_PROJECTION_H_
+#endif  // LIBMV_MULTIVIEW_TEST_DATA_SETS_H_
