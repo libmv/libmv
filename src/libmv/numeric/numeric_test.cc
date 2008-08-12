@@ -239,6 +239,20 @@ TEST(Numeric, CrossProductMatrix) {
 //  C = A * B;
 //}
 
+// This gives a compile error.
+//TEST(Numeric, Vec3Negative) {
+//  Vec3 x;
+//  Vec3 y;
+//  x = -y;
+//}
+
+// This gives a compile error.
+//TEST(Numeric, Vec3VecInteroperability) {
+//  Vec3 x;
+//  Vec y;
+//  x = y + y;
+//}
+
 // This segfaults inside lapack.
 //TEST(Numeric, DeterminantLU7) {
 //  Mat A(5, 5);
