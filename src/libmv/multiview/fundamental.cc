@@ -201,4 +201,38 @@ void EssentialFromRt(const Mat3 &R1,
   *E = Tx * R;
 }
 
+// TODO(pau) Test this, and write a function to choose the right solution
+// based on correspondences by imposing their triangulation to be in front of
+// the cameras.
+void MotionFromEssential(const Mat3 &E,
+                         std::vector<Mat3> *Rs,
+                         std::vector<Vec3> *ts) {
+  Mat E_tmp(3,3), U(3,3), Vt(3,3), W(3,3), U_W, U_Wt, U_W_Vt, U_Wt_Vt;
+  Vec d(3), u3(3), m_u3(3);
+  E_tmp = E;
+  SVD(&E_tmp, &d, &U, &Vt);
+  u3 = U(0,2), U(1,2), U(2,2);
+  m_u3 = -u3;
+  W = 0, -1, 0,
+      1,  0, 0,
+      0,  0, 1;
+  // TODO(pau) We need a MatrixMultiply(res, A1, A2, ..., An);
+  U_W = U * W;
+  U_Wt = U * transpose(W);
+  U_W_Vt = U_W * Vt;
+  U_Wt_Vt = U_Wt * Vt;
+
+  Rs->resize(4);
+  ts->resize(4);
+  (*Rs)[0] = U_W_Vt;
+  (*ts)[0] = u3;
+  (*Rs)[1] = U_W_Vt;
+  (*ts)[1] = m_u3;
+  (*Rs)[2] = U_Wt_Vt;
+  (*ts)[2] = u3;
+  (*Rs)[3] = U_Wt_Vt;
+  (*ts)[3] = m_u3;
+}
+
+
 }  // namespace libmv
