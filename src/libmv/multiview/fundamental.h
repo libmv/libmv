@@ -49,6 +49,32 @@ double FundamentalFromCorrespondences8Point(const Mat &x1,
 
 void NormalizeFundamental(const Mat3 F, Mat3 *F_normalized);
 
+// Compute the relative camera motion between two cameras.
+// Given the motion parameters of two cameras, computes the motion parameters
+// of the second one assuming the first one to be at the origin.
+// If T1 and T2 are the camera motions, the computed relative motion is
+// 
+//      T = T2 T1^{-1}
+//
+void RelativeCameraMotion(const Mat3 &R1,
+                          const Vec3 &t1,
+                          const Mat3 &R2,
+                          const Vec3 &t2,
+                          Mat3 *R,
+                          Vec3 *t);
+
+void EssentialFromFundamental(const Mat3 &F,
+                              const Mat3 &K1,
+                              const Mat3 &K2,
+                              Mat3 *E);
+
+void EssentialFromRt(const Mat3 &R1,
+                     const Vec3 &t1,
+                     const Mat3 &R2,
+                     const Vec3 &t2,
+                     Mat3 *E);
+
+
 } // namespace libmv
 
 #endif  // LIBMV_MULTIVIEW_FUNDAMENTAL_H_

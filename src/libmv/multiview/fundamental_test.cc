@@ -239,4 +239,21 @@ TEST(Fundamental, FundamentalFromCorrespondences8PointDegenerate) {
   EXPECT_NEAR(0, res, 1e-8);
 }
 
+
+TEST(Fundamental, EssentialFromFundamental) {
+  TwoViewDataSet d = TwoRealisticCameras();
+  
+  Mat3 E_from_Rt;
+  EssentialFromRt(d.R1, d.t1, d.R2, d.t2, &E_from_Rt);
+
+  Mat3 E_from_F;
+  EssentialFromFundamental(d.F, d.K1, d.K2, &E_from_F);
+
+  Mat3 E_from_Rt_norm, E_from_F_norm;
+  NormalizeFundamental(E_from_Rt, &E_from_Rt_norm);
+  NormalizeFundamental(E_from_F, &E_from_F_norm);
+
+  EXPECT_NEAR(0, FrobeniusDistance(E_from_Rt_norm, E_from_F_norm), 1e-8);
+}
+
 } // namespace

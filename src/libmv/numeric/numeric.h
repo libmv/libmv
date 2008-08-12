@@ -101,29 +101,80 @@ inline void TransposeInPlace(TA *A) {
   }
 }
 
+template<typename TVec>
+inline double NormL1(const TVec &x) {
+  double sum = 0;
+  for (int i = x.firstIndex(); i <= x.lastIndex(); ++i) {
+    sum += fabs(x(i));
+  }
+  return sum;
+}
+
+template<typename TVec>
+inline double NormL2(const TVec &x) {
+  double sum = 0;
+  for (int i = x.firstIndex(); i <= x.lastIndex(); ++i) {
+    sum += x(i) * x(i);
+  }
+  return sqrt(sum);
+}
+
+template<typename TVec>
+inline double NormLInfinity(const TVec &x) {
+  double max = 0;
+  for (int i = x.firstIndex(); i <= x.lastIndex(); ++i) {
+    double a = fabs(x(i));
+    if (max < a) {
+      max = a;
+    }
+  }
+  return max;
+}
+
+template<typename TVec>
+inline double DistanceL1(const TVec &x, const TVec &y) {
+  TVec d;
+  d = x - y;
+  return NormL1(d);
+}
+template<typename TVec>
+inline double DistanceL2(const TVec &x, const TVec &y) {
+  TVec d;
+  d = x - y;
+  return NormL2(d);
+}
+template<typename TVec>
+inline double DistanceLInfinity(const TVec &x, const TVec &y) {
+  TVec d;
+  d = x - y;
+  return NormLInfinity(d);
+}
+
 // Normalize a vector with the L1 norm, and return the norm before it was
 // normalized.
 template<typename TVec>
 inline double NormalizeL1(TVec *x) {
-  double sum = 0;
-  for (int i = x->firstIndex(); i <= x->lastIndex(); ++i) {
-    sum += fabs((*x)(i));
-  }
-  *x /= sum;
-  return sum;
+  double norm = NormL1(*x);
+  *x /= norm;
+  return norm;
 }
 
 // Normalize a vector with the L2 norm, and return the norm before it was
 // normalized.
 template<typename TVec>
 inline double NormalizeL2(TVec *x) {
-  double sum = 0;
-  for (int i = x->firstIndex(); i <= x->lastIndex(); ++i) {
-    sum += (*x)(i)*(*x)(i);
-  }
-  double l2 = sqrt(sum);
-  *x /= l2;
-  return l2;
+  double norm = NormL2(*x);
+  *x /= norm;
+  return norm;
+}
+
+// Normalize a vector with the L^Infinity norm, and return the norm before it
+// was normalized.
+template<typename TVec>
+inline double NormalizeLInfinity(TVec *x) {
+  double norm = NormLInfinity(*x);
+  *x /= norm;
+  return norm;
 }
 
 // Return the square of a number.
@@ -168,8 +219,8 @@ double FrobeniusDistance(const TMat &A, const TMat &B) {
   return FrobeniusNorm(diff);
 }
 
-
-
+Vec3 CrossProduct(const Vec3 &x, const Vec3 &y);
+Mat3 CrossProductMatrix(const Vec3 &x);
 
 void MeanAndVarianceAlongRows(const Mat &A,
                               Vec *mean_pointer,

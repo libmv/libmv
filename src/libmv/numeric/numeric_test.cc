@@ -198,6 +198,33 @@ TEST(Numeric, VerticalStack) {
   EXPECT_EQ(4, z(1,1));
 }
 
+TEST(Numeric, CrossProduct) {
+  Vec3 x, y, z;
+  x = 1, 0, 0;
+  y = 0, 1, 0;
+  z = 0, 0, 1;
+  Vec3 xy = CrossProduct(x, y);
+  Vec3 yz = CrossProduct(y, z);
+  Vec3 zx = CrossProduct(z, x);
+  EXPECT_NEAR(0, DistanceLInfinity(xy, z), 1e-8);
+  EXPECT_NEAR(0, DistanceLInfinity(yz, x), 1e-8);
+  EXPECT_NEAR(0, DistanceLInfinity(zx, y), 1e-8);
+}
+
+TEST(Numeric, CrossProductMatrix) {
+  Vec3 x, y;
+  x = 1, 2, 3;
+  y = 2, 3, 4;
+  Vec3 xy = CrossProduct(x, y);
+  Vec3 yx = CrossProduct(y, x);
+  Mat3 X = CrossProductMatrix(x);
+  Vec3 Xy, Xty;
+  Xy = X * y;
+  Xty = transpose(X) * y;
+  EXPECT_NEAR(0, DistanceLInfinity(xy, Xy), 1e-8);
+  EXPECT_NEAR(0, DistanceLInfinity(yx, Xty), 1e-8);
+}
+
 // This gives a compile error.
 //TEST(Numeric, TinyMatrixView) {
 //  Mat34 P;

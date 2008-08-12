@@ -179,6 +179,23 @@ void InverseSlow(const Mat &A, Mat *I) {
   *I = *I / DeterminantSlow(A);
 }
 
+Vec3 CrossProduct(const Vec3 &x, const Vec3 &y) {
+  Vec3 v;
+  v = x(1) * y(2) - x(2) * y(1),
+      x(2) * y(0) - x(0) * y(2),
+      x(0) * y(1) - x(1) * y(0);
+  return v;
+}
+
+Mat3 CrossProductMatrix(const Vec3 &x) {
+  Mat3 X;
+  X =     0, -x(2),  x(1),
+       x(2),     0, -x(0),
+      -x(1),  x(0),     0;
+  return X;
+}
+
+
 void MeanAndVarianceAlongRows(const Mat &A,
                               Vec *mean_pointer,
                               Vec *variance_pointer) {

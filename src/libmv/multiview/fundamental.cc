@@ -168,4 +168,37 @@ void NormalizeFundamental(const Mat3 F, Mat3 *F_normalized) {
 }
 
 
+// HZ 9.6 pag 257
+void EssentialFromFundamental(const Mat3 &F,
+                              const Mat3 &K1,
+                              const Mat3 &K2,
+                              Mat3 *E) {
+  Mat3 F_K1;
+  F_K1 = F * K1;
+  *E = transpose(K2) * F_K1;
+}
+
+void RelativeCameraMotion(const Mat3 &R1,
+                          const Vec3 &t1,
+                          const Mat3 &R2,
+                          const Vec3 &t2,
+                          Mat3 *R,
+                          Vec3 *t) {
+  *R = R2 * transpose(R1);
+  *t = t2 - (*R) * t1;
+}
+
+// HZ 9.6 pag 257
+void EssentialFromRt(const Mat3 &R1,
+                     const Vec3 &t1,
+                     const Mat3 &R2,
+                     const Vec3 &t2,
+                     Mat3 *E) {
+  Mat3 R;
+  Vec3 t;
+  RelativeCameraMotion(R1, t1, R2, t2, &R, &t);
+  Mat3 Tx = CrossProductMatrix(t);
+  *E = Tx * R;
+}
+
 }  // namespace libmv
