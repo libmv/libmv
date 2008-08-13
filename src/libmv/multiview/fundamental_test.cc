@@ -256,4 +256,29 @@ TEST(Fundamental, EssentialFromFundamental) {
   EXPECT_NEAR(0, FrobeniusDistance(E_from_Rt_norm, E_from_F_norm), 1e-8);
 }
 
+TEST(Fundamental, MotionFromEssential) {
+  TwoViewDataSet d = TwoRealisticCameras();
+
+  Mat3 E;
+  EssentialFromRt(d.R1, d.t1, d.R2, d.t2, &E);
+
+  Mat3 R;
+  Vec3 t;
+  RelativeCameraMotion(d.R1, d.t1, d.R2, d.t2, &R, &t);
+  NormalizeL2(&t);
+
+  std::vector<Mat3> Rs;
+  std::vector<Vec3> ts;
+  MotionFromEssential(E, &Rs, &ts); 
+
+  bool one_solution_is_correct = false;
+  for (size_t i = 0; i < Rs.size(); ++i) {
+    if(FrobeniusDistance(Rs[i], R) < 1e-8 && DistanceL2(ts[i], t) < 1e-8) {
+      one_solution_is_correct = true;
+      break;
+    }
+  }
+  EXPECT_TRUE(one_solution_is_correct);
+}
+  
 } // namespace

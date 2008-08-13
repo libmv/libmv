@@ -74,7 +74,10 @@ void EssentialFromRt(const Mat3 &R1,
                      const Vec3 &t2,
                      Mat3 *E);
 
-
+void MotionFromEssential(const Mat3 &E,
+                         std::vector<Mat3> *Rs,
+                         std::vector<Vec3> *ts);
+ 
 } // namespace libmv
 
 #endif  // LIBMV_MULTIVIEW_FUNDAMENTAL_H_
