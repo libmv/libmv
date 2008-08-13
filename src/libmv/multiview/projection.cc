@@ -178,5 +178,10 @@ void Project(const Mat34 &P, const Mat &X, Mat *x) {
   HomogeneousToEuclidean(xx, x);
 }
 
+double Depth(const Mat3 &R, const Vec3 &t, const Vec3 &X) {
+  return R(2,0) * X(0) + R(2,1) * X(1) + R(2,2) * X(2) + t(2);
+}
+
+
 
 }  // namespace libmv

@@ -76,7 +76,27 @@ void EssentialFromRt(const Mat3 &R1,
 void MotionFromEssential(const Mat3 &E,
                          std::vector<Mat3> *Rs,
                          std::vector<Vec3> *ts);
- 
+
+// Choose one of the four possible motion solutions from an essential matrix.
+// Decides the right solution by checking that the triangulation of a match
+// x1--x2 lies in front of the cameras.
+// Return the index of the right solution or -1 if no solution.
+int MotionFromEssentialChooseSolution(const std::vector<Mat3> &Rs,
+                                      const std::vector<Vec3> &ts,
+                                      const Mat3 &K1,
+                                      const Vec2 &x1,
+                                      const Mat3 &K2,
+                                      const Vec2 &x2);
+
+bool MotionFromEssentialAndCorrespondence(const Mat3 &E,
+                                          const Mat3 &K1,
+                                          const Vec2 &x1,
+                                          const Mat3 &K2,
+                                          const Vec2 &x2,
+                                          Mat3 *R,
+                                          Vec3 *t);
+
+  
 } // namespace libmv
 
 #endif  // LIBMV_MULTIVIEW_FUNDAMENTAL_H_

@@ -39,8 +39,7 @@ TEST(Triangulation, TriangulateDLT) {
     MatrixColumn(d.x2, i, &x2);
     Vec3 X_estimated, X_gt;
     MatrixColumn(d.X, i, &X_gt);
-    Vec4 Xh = TriangulateDLT(d.P1, x1, d.P2, x2);
-    HomogeneousToEuclidean(Xh, &X_estimated);
+    TriangulateDLT(d.P1, x1, d.P2, x2, &X_estimated);
     EXPECT_NEAR(0, DistanceLInfinity(X_estimated, X_gt), 1e-8);
   }
 }

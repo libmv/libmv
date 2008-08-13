@@ -19,13 +19,15 @@
 // IN THE SOFTWARE.
 
 #include "libmv/numeric/numeric.h"
+#include "libmv/multiview/projection.h"
 #include "libmv/multiview/triangulation.h"
 
 namespace libmv {
 
 // HZ 12.2 pag.312
-Vec4 TriangulateDLT(const Mat34 &P1, const Vec2 &x1,
-                    const Mat34 &P2, const Vec2 &x2) {
+void TriangulateDLT(const Mat34 &P1, const Vec2 &x1,
+                    const Mat34 &P2, const Vec2 &x2,
+                    Vec4 *X_homogeneous) {
   Mat design(4,4);
   for (int i = 0; i < 4; ++i) {
     design(0,i) = x1(0) * P1(2,i) - P1(0,i);
@@ -35,10 +37,15 @@ Vec4 TriangulateDLT(const Mat34 &P1, const Vec2 &x1,
   }
   Vec X;
   Nullspace(&design, &X);
-  Vec4 XX;
-  XX = X;
-  return XX;
+  *X_homogeneous = X;
 }
 
+void TriangulateDLT(const Mat34 &P1, const Vec2 &x1,
+                    const Mat34 &P2, const Vec2 &x2,
+                    Vec3 *X_euclidean) {
+  Vec4 X_homogeneous;
+  TriangulateDLT(P1, x1, P2, x2, &X_homogeneous);
+  HomogeneousToEuclidean(X_homogeneous, X_euclidean);
+}
 
 }  // namespace libmv

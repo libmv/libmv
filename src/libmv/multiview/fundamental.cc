@@ -19,6 +19,8 @@
 // IN THE SOFTWARE.
 
 #include "libmv/numeric/numeric.h"
+#include "libmv/multiview/projection.h"
+#include "libmv/multiview/triangulation.h"
 #include "libmv/multiview/fundamental.h"
 
 namespace libmv {
@@ -200,9 +202,6 @@ void EssentialFromRt(const Mat3 &R1,
   *E = Tx * R;
 }
 
-// TODO(pau) Write a function to choose the right solution based on
-// correspondences by imposing their triangulation to be in front of
-// the cameras.
 void MotionFromEssential(const Mat3 &E,
                          std::vector<Mat3> *Rs,
                          std::vector<Vec3> *ts) {
@@ -244,29 +243,55 @@ void MotionFromEssential(const Mat3 &E,
   (*ts)[3] = m_u3;
 }
 
-// Choose one of the four possible motion solutions from an essential matrix.
-// Decides the right solution by checking that the triangulation of a match
-// x1--x2 lies in front of the cameras.
-// Return the index of the right solution or -1 if no solution.
 int MotionFromEssentialChooseSolution(const std::vector<Mat3> &Rs,
                                       const std::vector<Vec3> &ts,
+                                      const Mat3 &K1,
                                       const Vec2 &x1,
+                                      const Mat3 &K2,
                                       const Vec2 &x2) {
   assert(Rs.size() == 4);
   assert(ts.size() == 4);
-  for (size_t i = 0; i < Rs.size(); ++i) {
-    (void)x1;
-    (void)x2;
-//    Vec3 X;
-//    Triangulate(x1, x2, &X);
-//    double d1 = Depth(P1, X);
-//    double d2 = Depth(P2, X);
-//    if (d1 > 0 && d2 > 0) {
-//      return int(i);
-//    }
+
+  Mat34 P1, P2;
+  Mat3 R1;
+  Vec3 t1;
+  R1 = Identity(3);
+  t1 = 0;
+  P_From_KRt(K1, R1, t1, &P1);
+  for (int i = 0; i < 4; ++i) {
+    const Mat3 &R2 = Rs[i];
+    const Vec3 &t2 = ts[i];
+    P_From_KRt(K2, R2, t2, &P2);
+    Vec3 X;
+    TriangulateDLT(P1, x1, P2, x2, &X);
+    double d1 = Depth(R1, t1, X);
+    double d2 = Depth(R2, t2, X);
+    if (d1 > 0 && d2 > 0) {
+      return i;
+    }
   }
   return -1;
 }
 
+bool MotionFromEssentialAndCorrespondence(const Mat3 &E,
+                                          const Mat3 &K1,
+                                          const Vec2 &x1,
+                                          const Mat3 &K2,
+                                          const Vec2 &x2,
+                                          Mat3 *R,
+                                          Vec3 *t) {
+  std::vector<Mat3> Rs;
+  std::vector<Vec3> ts;
+  MotionFromEssential(E, &Rs, &ts);
+  int solution = MotionFromEssentialChooseSolution(Rs, ts, K1, x1, K2, x2);
+  if (solution >= 0) {
+    *R = Rs[solution];
+    *t = ts[solution];
+    return true;
+  }
+  else {
+    return false;
+  }
+}
 
 }  // namespace libmv

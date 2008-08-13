@@ -280,5 +280,55 @@ TEST(Fundamental, MotionFromEssential) {
   }
   EXPECT_TRUE(one_solution_is_correct);
 }
-  
+
+TEST(Fundamental, MotionFromEssentialChooseSolution) {
+  TwoViewDataSet d = TwoRealisticCameras();
+
+  Mat3 E;
+  EssentialFromRt(d.R1, d.t1, d.R2, d.t2, &E);
+
+  Mat3 R;
+  Vec3 t;
+  RelativeCameraMotion(d.R1, d.t1, d.R2, d.t2, &R, &t);
+  NormalizeL2(&t);
+
+  std::vector<Mat3> Rs;
+  std::vector<Vec3> ts;
+  MotionFromEssential(E, &Rs, &ts); 
+
+  Vec2 x1, x2;
+  MatrixColumn(d.x1, 0, &x1);
+  MatrixColumn(d.x2, 0, &x2);
+  int solution = MotionFromEssentialChooseSolution(Rs, ts, d.K1, x1, d.K2, x2);
+
+  EXPECT_LE(0, solution);
+  EXPECT_LE(solution, 3);
+  EXPECT_LE(FrobeniusDistance(Rs[solution], R), 1e-8);
+  EXPECT_LE(DistanceL2(ts[solution], t), 1e-8);
+}
+
+TEST(Fundamental, MotionFromEssentialAndCorrespondence) {
+  TwoViewDataSet d = TwoRealisticCameras();
+
+  Mat3 E;
+  EssentialFromRt(d.R1, d.t1, d.R2, d.t2, &E);
+
+  Mat3 R;
+  Vec3 t;
+  RelativeCameraMotion(d.R1, d.t1, d.R2, d.t2, &R, &t);
+  NormalizeL2(&t);
+
+  Vec2 x1, x2;
+  MatrixColumn(d.x1, 0, &x1);
+  MatrixColumn(d.x2, 0, &x2);
+
+  Mat3 R_estimated;
+  Vec3 t_estimated;
+  MotionFromEssentialAndCorrespondence(E, d.K1, x1, d.K2, x2,
+                                       &R_estimated, &t_estimated); 
+
+  EXPECT_LE(FrobeniusDistance(R_estimated, R), 1e-8);
+  EXPECT_LE(DistanceL2(t_estimated, t), 1e-8);
+}
+ 
 } // namespace
