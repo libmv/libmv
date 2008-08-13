@@ -225,6 +225,38 @@ TEST(Numeric, CrossProductMatrix) {
   EXPECT_NEAR(0, DistanceLInfinity(yx, Xty), 1e-8);
 }
 
+TEST(Numeric, MatrixColumn) {
+  Mat A2(2,3);
+  Vec2 v2;
+  A2 = 1, 2, 3,
+       4, 5, 6;
+  MatrixColumn(A2, 1, &v2);
+  EXPECT_EQ(2, v2(0));
+  EXPECT_EQ(5, v2(1));
+
+  Mat A3(3,3);
+  Vec3 v3;
+  A3 = 1, 2, 3,
+       4, 5, 6,
+       7, 8, 9;
+  MatrixColumn(A3, 1, &v3);
+  EXPECT_EQ(2, v3(0));
+  EXPECT_EQ(5, v3(1));
+  EXPECT_EQ(8, v3(2));
+
+  Mat A4(4,3);
+  Vec4 v4;
+  A4 =  1,  2,  3,
+        4,  5,  6,
+        7,  8,  9,
+       10, 11, 12;
+  MatrixColumn(A4, 1, &v4);
+  EXPECT_EQ( 2, v4(0));
+  EXPECT_EQ( 5, v4(1));
+  EXPECT_EQ( 8, v4(2));
+  EXPECT_EQ(11, v4(3));
+}
+
 // This gives a compile error.
 //TEST(Numeric, TinyMatrixView) {
 //  Mat34 P;

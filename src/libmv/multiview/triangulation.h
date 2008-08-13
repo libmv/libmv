@@ -17,31 +17,19 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
-//
-// Calculate the focal length from a fundamental matrix.
 
-#ifndef LIBMV_MULTIVIEW_FOCAL_FROM_FUNDAMENTAL_H_
-#define LIBMV_MULTIVIEW_FOCAL_FROM_FUNDAMENTAL_H_
+#ifndef LIBMV_MULTIVIEW_TRIANGULATION_H_
+#define LIBMV_MULTIVIEW_TRIANGULATION_H_
+
+#include <vector>
 
 #include "libmv/numeric/numeric.h"
 
 namespace libmv {
 
-void EpipolesFromFundamental(const Mat3 &F, Vec3 *e1, Vec3 *e2);
-void RotationToEliminateY(const Vec3 &x, Mat3 *T);
-void FundamentalAlignEpipolesToXAxis(const Mat3 &F, Mat3 *Fp);
-void FundamentalShiftPrincipalPoints(const Mat3 &F,
-                                     const Vec2 &p1,
-                                     const Vec2 &p1_new,
-                                     const Vec2 &p2,
-                                     const Vec2 &p2_new,
-                                     Mat3 *F_new);
-void FocalFromFundamental(const Mat3 &F,
-                          const Vec2 &principal_point1,
-                          const Vec2 &principal_point2,
-                          double *f1,
-                          double *f2);
-
+Vec4 TriangulateDLT(const Mat34 &P1, const Vec2 &x1,
+                    const Mat34 &P2, const Vec2 &x2);
+ 
 } // namespace libmv
 
-#endif  // LIBMV_MULTIVIEW_FOCAL_FROM_FUNDAMENTAL_H_
+#endif  // LIBMV_MULTIVIEW_TRIANGULATION_H_

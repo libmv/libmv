@@ -17,31 +17,33 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
-//
-// Calculate the focal length from a fundamental matrix.
 
-#ifndef LIBMV_MULTIVIEW_FOCAL_FROM_FUNDAMENTAL_H_
-#define LIBMV_MULTIVIEW_FOCAL_FROM_FUNDAMENTAL_H_
+#include <iostream>
 
+#include "libmv/multiview/triangulation.h"
+#include "libmv/multiview/fundamental.h"
+#include "libmv/multiview/projection.h"
+#include "libmv/multiview/test_data_sets.h"
 #include "libmv/numeric/numeric.h"
+#include "testing/testing.h"
 
-namespace libmv {
+namespace {
+using namespace libmv;
 
-void EpipolesFromFundamental(const Mat3 &F, Vec3 *e1, Vec3 *e2);
-void RotationToEliminateY(const Vec3 &x, Mat3 *T);
-void FundamentalAlignEpipolesToXAxis(const Mat3 &F, Mat3 *Fp);
-void FundamentalShiftPrincipalPoints(const Mat3 &F,
-                                     const Vec2 &p1,
-                                     const Vec2 &p1_new,
-                                     const Vec2 &p2,
-                                     const Vec2 &p2_new,
-                                     Mat3 *F_new);
-void FocalFromFundamental(const Mat3 &F,
-                          const Vec2 &principal_point1,
-                          const Vec2 &principal_point2,
-                          double *f1,
-                          double *f2);
+TEST(Triangulation, TriangulateDLT) {
+  TwoViewDataSet d = TwoRealisticCameras();
 
-} // namespace libmv
+  for (int i = 0; i < d.X.numCols(); ++i) {
+    Vec2 x1, x2;
+    MatrixColumn(d.x1, i, &x1);
+    MatrixColumn(d.x2, i, &x2);
+    Vec3 X_estimated, X_gt;
+    MatrixColumn(d.X, i, &X_gt);
+    Vec4 Xh = TriangulateDLT(d.P1, x1, d.P2, x2);
+    HomogeneousToEuclidean(Xh, &X_estimated);
+    EXPECT_NEAR(0, DistanceLInfinity(X_estimated, X_gt), 1e-8);
+  }
+}
 
-#endif  // LIBMV_MULTIVIEW_FOCAL_FROM_FUNDAMENTAL_H_
+
+} // namespace

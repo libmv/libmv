@@ -140,6 +140,16 @@ void HomogeneousToEuclidean(const Mat &H, Mat *X) {
   }
 }
 
+void HomogeneousToEuclidean(const Vec3 &H, Vec2 *X) {
+  double w = H(2);
+  *X = H(0) / w, H(1) / w;
+}
+
+void HomogeneousToEuclidean(const Vec4 &H, Vec3 *X) {
+  double w = H(3);
+  *X = H(0) / w, H(1) / w, H(2) / w;
+}
+
 void EuclideanToHomogeneous(const Mat &X, Mat *H) {
   int d = X.numRows();
   int n = X.numCols();
@@ -150,6 +160,14 @@ void EuclideanToHomogeneous(const Mat &X, Mat *H) {
     }
     (*H)(d, i) = 1;
   }
+}
+
+void EuclideanToHomogeneous(const Vec2 &X, Vec3 *H) {
+  *H = X(0), X(1), 1;
+};
+
+void EuclideanToHomogeneous(const Vec3 &X, Vec4 *H) {
+  *H = X(0), X(1), X(2), 1;
 }
 
 void Project(const Mat34 &P, const Mat &X, Mat *x) {

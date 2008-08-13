@@ -229,6 +229,10 @@ void MeanAndVarianceAlongRows(const Mat &A,
 void HorizontalStack(const Mat &left, const Mat &right, Mat *stacked);
 void VerticalStack(const Mat &top, const Mat &bottom, Mat *stacked);
 
+void MatrixColumn(const Mat &A, int i, Vec2 *v);
+void MatrixColumn(const Mat &A, int i, Vec3 *v);
+void MatrixColumn(const Mat &A, int i, Vec4 *v);
+
 }  // namespace mv
 
 #endif  // LIBMV_NUMERIC_NUMERIC_H

@@ -17,10 +17,9 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
-//
-// 
 
 #include "libmv/numeric/numeric.h"
+#include "libmv/multiview/fundamental.h"
 
 namespace libmv {
 
@@ -243,6 +242,30 @@ void MotionFromEssential(const Mat3 &E,
   (*ts)[2] = u3;
   (*Rs)[3] = U_Wt_Vt;
   (*ts)[3] = m_u3;
+}
+
+// Choose one of the four possible motion solutions from an essential matrix.
+// Decides the right solution by checking that the triangulation of a match
+// x1--x2 lies in front of the cameras.
+// Return the index of the right solution or -1 if no solution.
+int MotionFromEssentialChooseSolution(const std::vector<Mat3> &Rs,
+                                      const std::vector<Vec3> &ts,
+                                      const Vec2 &x1,
+                                      const Vec2 &x2) {
+  assert(Rs.size() == 4);
+  assert(ts.size() == 4);
+  for (size_t i = 0; i < Rs.size(); ++i) {
+    (void)x1;
+    (void)x2;
+//    Vec3 X;
+//    Triangulate(x1, x2, &X);
+//    double d1 = Depth(P1, X);
+//    double d2 = Depth(P2, X);
+//    if (d1 > 0 && d2 > 0) {
+//      return int(i);
+//    }
+  }
+  return -1;
 }
 
 

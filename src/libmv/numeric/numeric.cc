@@ -244,5 +244,18 @@ void VerticalStack(const Mat &top, const Mat &bottom, Mat *stacked) {
   (*stacked)(_(n1, n1 + n2 - 1), _) = bottom;
 }
 
+void MatrixColumn(const Mat &A, int i, Vec2 *v) {
+  assert(A.numRows() == 2);
+  *v = A(0,i), A(1,i);
+}
+void MatrixColumn(const Mat &A, int i, Vec3 *v) {
+  assert(A.numRows() == 3);
+  *v = A(0,i), A(1,i), A(2,i);
+}
+void MatrixColumn(const Mat &A, int i, Vec4 *v) {
+  assert(A.numRows() == 4);
+  *v = A(0,i), A(1,i), A(2,i), A(3,i);
+}
+
 }  // namespace libmv
 
