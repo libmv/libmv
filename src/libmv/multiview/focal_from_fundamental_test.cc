@@ -205,7 +205,27 @@ TEST(FocalFromFundamental, TwoViewReconstruction) {
   EXPECT_NEAR(0, FrobeniusDistance(d.K1, K1_estimated), 1e-8);
   EXPECT_NEAR(0, FrobeniusDistance(d.K2, K2_estimated), 1e-8);
 
-  // TODO(pau): Recover R, t from F and K
+  // Compute essential matrix
+  Mat3 E_estimated;
+  EssentialFromFundamental(F_estimated, K1_estimated, K2_estimated,
+                           &E_estimated);
+
+  // Recover R, t from E and K
+  Vec2 x1, x2;
+  MatrixColumn(d.x1, 0, &x1);
+  MatrixColumn(d.x2, 0, &x2);
+  Mat3 R_estimated, R;
+  Vec3 t_estimated, t;
+  MotionFromEssentialAndCorrespondence(E_estimated,
+                                       K1_estimated, x1,
+                                       K2_estimated, x2,
+                                       &R_estimated, &t_estimated);
+
+  RelativeCameraMotion(d.R1, d.t1, d.R2, d.t2, &R, &t);
+  NormalizeL2(&t);
+
+  EXPECT_LE(FrobeniusDistance(R, R_estimated), 1e-8);
+  EXPECT_LE(DistanceL2(t, t_estimated), 1e-8);
 }
 
 }

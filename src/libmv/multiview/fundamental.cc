@@ -179,14 +179,39 @@ void EssentialFromFundamental(const Mat3 &F,
   *E = transpose(K2) * F_K1;
 }
 
+void RelativeCameraMotionBugged(const Mat3 &R1,
+                                const Vec3 &t1,
+                                const Mat3 &R2,
+                                const Vec3 &t2,
+                                Mat3 *R,
+                                Vec3 *t) {
+  *R = R2 * transpose(R1);
+  *t = t2 - (*R) * t1;
+ 
+using namespace std;
+cout << R1 << endl;
+cout << R2 << endl;
+cout << *R << endl; // This sometimes prints nan.
+}
+
 void RelativeCameraMotion(const Mat3 &R1,
                           const Vec3 &t1,
                           const Mat3 &R2,
                           const Vec3 &t2,
                           Mat3 *R,
                           Vec3 *t) {
-  *R = R2 * transpose(R1);
-  *t = t2 - (*R) * t1;
+  Mat R1g, R2g, Rg;
+  Vec t1g, t2g, tg;
+  R1g = R1;
+  R2g = R2;
+  t1g = t1;
+  t2g = t2;
+
+  Rg = R2g * transpose(R1g);
+  tg = t2g - Rg * t1g;
+
+  *R = Rg;
+  *t = tg;
 }
 
 // HZ 9.6 pag 257

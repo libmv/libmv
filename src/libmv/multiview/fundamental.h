@@ -34,7 +34,7 @@ void PreconditionerFromPoints(const Mat &points, Mat3 *T);
 
 void ApplyTransformationToPoints(const Mat &points,
                                  const Mat3 &T,
-                                 Mat *normalized_points);
+                                 Mat *transformed_points);
 
 double FundamentalFromCorrespondencesLinear(const Mat &x1,
                                             const Mat &x2,
