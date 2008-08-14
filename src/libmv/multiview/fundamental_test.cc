@@ -270,7 +270,6 @@ TEST(Fundamental, MotionFromEssential) {
   std::vector<Mat3> Rs;
   std::vector<Vec3> ts;
   MotionFromEssential(E, &Rs, &ts); 
-
   bool one_solution_is_correct = false;
   for (size_t i = 0; i < Rs.size(); ++i) {
     if(FrobeniusDistance(Rs[i], R) < 1e-8 && DistanceL2(ts[i], t) < 1e-8) {

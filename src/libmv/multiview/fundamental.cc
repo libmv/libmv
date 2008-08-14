@@ -224,7 +224,13 @@ void EssentialFromRt(const Mat3 &R1,
   Vec3 t;
   RelativeCameraMotion(R1, t1, R2, t2, &R, &t);
   Mat3 Tx = CrossProductMatrix(t);
-  *E = Tx * R;
+
+  Mat Tx_tmp, R_tmp, E_tmp;
+  Tx_tmp = Tx;
+  R_tmp = R;
+  E_tmp = Tx_tmp * R_tmp;
+  *E = E_tmp;
+//  *E = Tx * R; // This was also giving nans once in a while!
 }
 
 void MotionFromEssential(const Mat3 &E,
