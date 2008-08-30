@@ -26,14 +26,10 @@
 #include "libmv/numeric/numeric.h"
 #include "testing/testing.h"
 
-#include "libmv/multiview/generated.cc"
+//#include "libmv/multiview/generated.cc"
 
 namespace {
 using namespace libmv;
-
-TEST(Fundamental, FileGenerator) {
-  EXPECT_EQ(3, x);
-}
 
 TEST(Fundamental, FundamentalFromProjections) {
   // TODO(pau) Write test for FundamentalFromProjections

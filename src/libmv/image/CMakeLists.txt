@@ -4,51 +4,19 @@ ADD_LIBRARY(image image.cc image_io.cc convolve.cc image_pyramid.cc array_nd.cc
             image_sequence.cc image_sequence_io.cc image_sequence_filters.cc
             filtered_sequence.cc pyramid_sequence.cc)
 
-ADD_EXECUTABLE(tuple_test tuple_test.cc)
-TARGET_LINK_LIBRARIES(tuple_test gtest)
-ADD_TEST(tuple_test tuple_test)
+MACRO (IMAGE_TEST NAME)
+  LIBMV_TEST(${NAME} image)
+ENDMACRO (IMAGE_TEST)
 
-ADD_EXECUTABLE(array_nd_test array_nd_test.cc)
-TARGET_LINK_LIBRARIES(array_nd_test gtest image)
-ADD_TEST(array_nd_test array_nd_test)
-
-ADD_EXECUTABLE(image_test image_test.cc)
-TARGET_LINK_LIBRARIES(image_test image gtest)
-ADD_TEST(image_test image_test)
-
-ADD_EXECUTABLE(image_sequence_io_test image_sequence_io_test.cc)
-TARGET_LINK_LIBRARIES(image_sequence_io_test image gtest)
-ADD_TEST(image_sequence_io_test image_sequence_io_test)
-
-ADD_EXECUTABLE(image_io_test image_io_test.cc)
-TARGET_LINK_LIBRARIES(image_io_test image gtest)
-ADD_TEST(image_io_test image_io_test)
-
-ADD_EXECUTABLE(filtered_sequence_test filtered_sequence_test.cc)
-TARGET_LINK_LIBRARIES(filtered_sequence_test image gtest)
-ADD_TEST(filtered_sequence_test filtered_sequence_test)
-
-ADD_EXECUTABLE(image_sequence_filters_test image_sequence_filters_test.cc)
-TARGET_LINK_LIBRARIES(image_sequence_filters_test image flens gtest lapack atlas)
-ADD_TEST(image_sequence_filters_test image_sequence_filters_test)
-
-ADD_EXECUTABLE(pyramid_sequence_test pyramid_sequence_test.cc)
-TARGET_LINK_LIBRARIES(pyramid_sequence_test image flens gtest lapack atlas)
-ADD_TEST(pyramid_sequence_test pyramid_sequence_test)
-
-ADD_EXECUTABLE(convolve_test convolve_test.cc)
-TARGET_LINK_LIBRARIES(convolve_test image flens gtest lapack atlas)
-ADD_TEST(convolve_test convolve_test)
-
-ADD_EXECUTABLE(image_pyramid_test image_pyramid_test.cc)
-TARGET_LINK_LIBRARIES(image_pyramid_test image flens gtest lapack atlas)
-ADD_TEST(image_pyramid_test image_pyramid_test)
-
-ADD_EXECUTABLE(sample_test sample_test.cc)
-TARGET_LINK_LIBRARIES(sample_test image flens gtest lapack atlas)
-ADD_TEST(sample_test sample_test)
-
-ADD_EXECUTABLE(lru_cache_test lru_cache_test.cc)
-TARGET_LINK_LIBRARIES(lru_cache_test gtest)
-ADD_TEST(lru_cache_test lru_cache_test)
-
+IMAGE_TEST(array_nd)
+IMAGE_TEST(convolve)
+IMAGE_TEST(filtered_sequence)
+IMAGE_TEST(image)
+IMAGE_TEST(image_io)
+IMAGE_TEST(image_pyramid)
+IMAGE_TEST(image_sequence_filters)
+IMAGE_TEST(image_sequence_io)
+IMAGE_TEST(lru_cache)
+IMAGE_TEST(pyramid_sequence)
+IMAGE_TEST(sample)
+IMAGE_TEST(tuple)

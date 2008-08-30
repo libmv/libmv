@@ -79,7 +79,7 @@ scal(const int N, float alpha, float *X, int incX)
 }
 
 void
-scal(const int N, double alpha, double *X, int incX)
+scal(int N, double alpha, double *X, int incX)
 {
     cblas_dscal(N, alpha, X, incX);
 }

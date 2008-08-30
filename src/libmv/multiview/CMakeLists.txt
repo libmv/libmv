@@ -6,30 +6,18 @@ ADD_LIBRARY(multiview
             focal_from_fundamental.cc
             triangulation.cc)
 
-ADD_EXECUTABLE(projection_test projection_test.cc)
-TARGET_LINK_LIBRARIES(projection_test multiview numeric
-                      flens gtest lapack atlas)
-ADD_TEST(projection_test projection_test)
+ADD_LIBRARY(multiview_test_data
+            test_data_sets.cc)
 
-ADD_EXECUTABLE(triangulation_test
-               triangulation_test.cc
-               test_data_sets.cc)
-TARGET_LINK_LIBRARIES(triangulation_test multiview numeric
-                      flens gtest lapack atlas)
-ADD_TEST(triangulation_test triangulation_test)
+MACRO (MULTIVIEW_TEST NAME)
+  LIBMV_TEST(${NAME} "multiview_test_data;multiview;numeric")
+ENDMACRO (MULTIVIEW_TEST)
 
-ADD_EXECUTABLE(fundamental_test fundamental_test.cc
-               test_data_sets.cc generated.cc)
-TARGET_LINK_LIBRARIES(fundamental_test multiview numeric
-                      flens gtest lapack atlas)
-ADD_TEST(fundamental_test fundamental_test)
+MULTIVIEW_TEST(projection)
+MULTIVIEW_TEST(triangulation)
+MULTIVIEW_TEST(fundamental)
+MULTIVIEW_TEST(focal_from_fundamental)
 
-ADD_EXECUTABLE(focal_from_fundamental_test
-               focal_from_fundamental_test.cc
-               test_data_sets.cc)
-TARGET_LINK_LIBRARIES(focal_from_fundamental_test multiview numeric
-                      flens gtest lapack atlas)
-ADD_TEST(focal_from_fundamental_test focal_from_fundamental_test)
-
-ADD_GENERATED_SOURCE(generated.cc generator.py)
+# TODO(keir): Make tests that depend on generated.cc to use generated sources.
+#ADD_GENERATED_SOURCE(generated.cc generator.py)
 

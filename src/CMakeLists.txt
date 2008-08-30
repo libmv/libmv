@@ -1,41 +1,90 @@
-cmake_minimum_required(VERSION 2.2)
-if(COMMAND cmake_policy)
+# Copyright (c) 2007, 2008 libmv authors.
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to
+# deal in the Software without restriction, including without limitation the
+# rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+# sell copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+# IN THE SOFTWARE.
+
+CMAKE_MINIMUM_REQUIRED(VERSION 2.2)
+
+IF (COMMAND cmake_policy)
   cmake_policy(SET CMP0003 OLD)
   cmake_policy(SET CMP0005 OLD)
-endif(COMMAND cmake_policy)
+ENDIF (COMMAND cmake_policy)
 
-
-PROJECT(LIBMV)
+PROJECT(LIBMV C CXX Fortran)
 
 ENABLE_TESTING()
 
-#no-deprecated needed for gcc-4.3 on debian/testing
+# -Wno-deprecated needed for gcc-4.3 on debian/testing;
 # needed due to flens/refcounter.h including deprecated hash_map
 SET(CMAKE_CXX_FLAGS "-Wall -W -Wfatal-errors -Werror -Wno-deprecated")
 
-INCLUDE_DIRECTORIES(third_party/gtest
-	            third_party/gtest/include
-		    third_party/
-		    ${LIBMV_SOURCE_DIR}
-		    ${LIBMV_BINARY_DIR}
+SET(CMAKE_MODULE_PATH ${LIBMV_SOURCE_DIR}/CMakeModules)
+MESSAGE("CMAKE_MODULE_PATH = ${CMAKE_MODULE_PATH}")
+IF (NOT CMAKE_MODULE_PATH)
+  MESSAGE(FATAL_ERROR
+          "ERROR: export CMAKE_MODULE_PATH as your CMakeModules repository.")
+ELSE (NOT CMAKE_MODULE_PATH)
+  # Check for one of the find scripts for sanity.
+  FIND_FILE(LIBMV_CMAKE_MODULE_PATH_OK FindBLAS.cmake ${CMAKE_MODULE_PATH}
+            DOC "testing CMAKE_MODULE_PATH")
+  IF (NOT LIBMV_CMAKE_MODULE_PATH_OK)
+    MESSAGE(FATAL_ERROR "CMAKE_MODULE_PATH=${CMAKE_MODULE_PATH} invalid: FindBLAS.cmake not found.")
+  ENDIF (NOT LIBMV_CMAKE_MODULE_PATH_OK)
+ENDIF (NOT CMAKE_MODULE_PATH)
+MARK_AS_ADVANCED(LIBMV_CMAKE_MODULE_PATH_OK)
+
+SET(BLAS_FIND_REQUIRED true)
+include(FindBLAS)
+SET(LAPACK_FIND_REQUIRED true)
+include(FindLAPACK)
+
+INCLUDE_DIRECTORIES(
+  third_party/gtest
+	third_party/gtest/include
+	third_party/
+	${LIBMV_SOURCE_DIR}
+	${LIBMV_BINARY_DIR}
 )
 
-# Mac specific things.
-IF(APPLE)
+IF (APPLE)
     # Tell gtest not to use mac framworks.
     ADD_DEFINITIONS('-DGTEST_NOT_MAC_FRAMEWORK_MODE')
 
     # Tell FLENS to use Veclib.
     ADD_DEFINITIONS('-DVECLIB')
-ENDIF(APPLE)
+ENDIF (APPLE)
 
-
-MACRO(ADD_GENERATED_SOURCE generated_file python_generator)
+MACRO (ADD_GENERATED_SOURCE generated_file python_generator)
     ADD_CUSTOM_COMMAND(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${generated_file}
 	       COMMAND python ${CMAKE_CURRENT_SOURCE_DIR}/${python_generator}
 	       DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${python_generator})
-ENDMACRO(ADD_GENERATED_SOURCE)
+ENDMACRO (ADD_GENERATED_SOURCE)
 
+MACRO (LIBMV_TEST NAME EXTRA_LIBS)
+  ADD_EXECUTABLE(${NAME}_test ${NAME}_test.cc)
+  TARGET_LINK_LIBRARIES(${NAME}_test
+                        ${EXTRA_LIBS} # Extra libs MUST be first,
+                        flens         # otherwise GCC pukes.
+                        gtest
+                        ${BLAS_LIBRARIES}
+                        ${LAPACK_LIBRARIES})
+  ADD_TEST(${NAME}_test ${NAME}_test)
+ENDMACRO (LIBMV_TEST)
 
 ADD_SUBDIRECTORY(libmv)
 ADD_SUBDIRECTORY(testing)

@@ -1,7 +1,6 @@
-
 ADD_LIBRARY(flens
             blas.cc
-	    complex_helper.cc
+	          complex_helper.cc
             id.cc
             lapack.cc
             range.cc
@@ -11,7 +10,4 @@ ADD_LIBRARY(flens
             underscore.cc
 )
 
-ADD_EXECUTABLE(tinyvector_test tinyvector_test.cc)
-TARGET_LINK_LIBRARIES(tinyvector_test flens gtest lapack atlas)
-ADD_TEST(tinyvector_test tinyvector_test)
-	              
+LIBMV_TEST(tinyvector "")
