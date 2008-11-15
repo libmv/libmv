@@ -25,8 +25,6 @@ using namespace libmv;
 
 namespace {
 
-/* TODO(keir): Update this test. SVD in Eigen gives different number than
- * lapack (but does work).
 TEST(Numeric, Nullspace) {
   Mat A(3, 4);
   A << 0.76026643, 0.01799744, 0.55192142, 0.8699745,
@@ -34,15 +32,11 @@ TEST(Numeric, Nullspace) {
        0.51016811, 0.66528302, 0.54395496, 0.57794893;
   Vec x;
   double s = Nullspace(&A, &x);
-  EXPECT_NEAR(s, 0.122287, 1e-7);
-  EXPECT_NEAR(x(0), -0.05473917, 1e-7);
-  EXPECT_NEAR(x(1),  0.21822937, 1e-7);
-  EXPECT_NEAR(x(2), -0.80258116, 1e-7);
-  EXPECT_NEAR(x(3),  0.55248805, 1e-7);
+  EXPECT_NEAR(0.0, s, 1e-15);
+  EXPECT_NEAR(0.0, (A * x).norm(), 1e-15);
+  EXPECT_NEAR(1.0, x.norm(), 1e-15);
 }
-*/
 
-/* TODO(keir): Update this test.
 TEST(Numeric, TinyMatrixNullspace) {
   Mat34 A;
   A << 0.76026643, 0.01799744, 0.55192142, 0.8699745,
@@ -50,13 +44,22 @@ TEST(Numeric, TinyMatrixNullspace) {
        0.51016811, 0.66528302, 0.54395496, 0.57794893;
   Vec x;
   double s = Nullspace(&A, &x);
-  EXPECT_NEAR(s, 0.122287, 1e-7);
-  EXPECT_NEAR(x(0), -0.05473917, 1e-7);
-  EXPECT_NEAR(x(1),  0.21822937, 1e-7);
-  EXPECT_NEAR(x(2), -0.80258116, 1e-7);
-  EXPECT_NEAR(x(3),  0.55248805, 1e-7);
+  EXPECT_NEAR(0.0, s, 1e-15);
+  EXPECT_NEAR(0.0, (A * x).norm(), 1e-15);
+  EXPECT_NEAR(1.0, x.norm(), 1e-15);
 }
-*/
+
+TEST(Numeric, NullspaceMatchesLapackSVD) {
+  Mat43 A;
+  A << 0.76026643, 0.01799744, 0.55192142,
+       0.8699745,  0.42016166, 0.97863392,
+       0.33711682, 0.14479271, 0.51016811,
+       0.66528302, 0.54395496, 0.57794893;
+  Vec x;
+  double s = Nullspace(&A, &x);
+  EXPECT_NEAR(0.0, s, 1e-15);
+  EXPECT_NEAR(0.0, (A * x).norm(), 1e-15);
+}
 
 TEST(Numeric, TinyMatrixSquareTranspose) {
   Mat2 A;

@@ -8,7 +8,6 @@ using namespace std;
 #include "libmv/image/image.h"
 #include "libmv/image/image_io.h"
 #include "libmv/image/convolve.h"
-#include "third_party/flens/flens.h"
 #include "ui/imageviewer.h"
 #include "ui/scrubber.h"
 

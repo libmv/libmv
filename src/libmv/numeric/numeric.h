@@ -40,6 +40,7 @@ typedef Eigen::VectorXd Vec;
 typedef Eigen::Matrix<double, 2, 2> Mat2;
 typedef Eigen::Matrix<double, 3, 3> Mat3;
 typedef Eigen::Matrix<double, 3, 4> Mat34;
+typedef Eigen::Matrix<double, 3, 4> Mat43;
 typedef Eigen::Matrix<double, 4, 4> Mat4;
 
 typedef Eigen::Vector2d Vec2;
