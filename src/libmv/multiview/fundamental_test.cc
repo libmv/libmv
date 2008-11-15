@@ -39,8 +39,8 @@ TEST(Fundamental, FundamentalFromProjections) {
 TEST(Fundamental, PreconditionerFromPoints) {
   int n = 4;
   Mat points(2,n);
-  points = 0, 0, 1, 1,
-           0, 2, 1, 3; 
+  points << 0, 0, 1, 1,
+            0, 2, 1, 3; 
 
   Mat3 T;
   PreconditionerFromPoints(points, &T);
@@ -60,8 +60,8 @@ TEST(Fundamental, PreconditionerFromPoints) {
 TEST(Fundamental, FundamentalFromCorrespondencesLinear) {
   int n = 8;
   Mat x1(2,n);
-  x1 = 0, 0, 0, 1, 1, 1, 2, 2,
-       0, 1, 2, 0, 1, 2, 0, 1;
+  x1 << 0, 0, 0, 1, 1, 1, 2, 2,
+        0, 1, 2, 0, 1, 2, 0, 1;
 
   Mat x2(2,n);
   x2 = x1;
@@ -75,10 +75,10 @@ TEST(Fundamental, FundamentalFromCorrespondencesLinear) {
   Vec y_F_x(n);
   for (int i = 0; i < n; ++i) {
     Vec3 x, y, F_x;
-    x = x1(0, i), x1(1, i), 1;
-    y = x2(0, i), x2(1, i), 1;
+    x << x1(0, i), x1(1, i), 1;
+    y << x2(0, i), x2(1, i), 1;
     F_x = F * x;
-    y_F_x(i) = dot(y, F_x);
+    y_F_x(i) = y.dot(F_x);
   }
   EXPECT_NEAR(0, y_F_x(0), 1e-8);
   EXPECT_NEAR(0, y_F_x(1), 1e-8);
@@ -93,8 +93,8 @@ TEST(Fundamental, FundamentalFromCorrespondencesLinear) {
 TEST(Fundamental, FundamentalFromCorrespondences8Point) {
   int n = 8;
   Mat x1(2,n);
-  x1 = 0, 0, 0, 1, 1, 1, 2, 2,
-       0, 1, 2, 0, 1, 2, 0, 1;
+  x1 << 0, 0, 0, 1, 1, 1, 2, 2,
+        0, 1, 2, 0, 1, 2, 0, 1;
 
   Mat x2(2,n);
   x2 = x1;
@@ -108,10 +108,10 @@ TEST(Fundamental, FundamentalFromCorrespondences8Point) {
   Vec y_F_x(n);
   for (int i = 0; i < n; ++i) {
     Vec3 x, y, F_x;
-    x = x1(0, i), x1(1, i), 1;
-    y = x2(0, i), x2(1, i), 1;
+    x << x1(0, i), x1(1, i), 1;
+    y << x2(0, i), x2(1, i), 1;
     F_x = F * x;
-    y_F_x(i) = dot(y, F_x);
+    y_F_x(i) = y.dot(F_x);
   }
   EXPECT_NEAR(0, y_F_x(0), 1e-8);
   EXPECT_NEAR(0, y_F_x(1), 1e-8);
@@ -122,7 +122,7 @@ TEST(Fundamental, FundamentalFromCorrespondences8Point) {
   EXPECT_NEAR(0, y_F_x(6), 1e-8);
   EXPECT_NEAR(0, y_F_x(7), 1e-8);
 
-  EXPECT_NEAR(0, DeterminantSlow(F), 1e-8);
+  EXPECT_NEAR(0, Determinant(F), 1e-8);
 }
 
 TEST(Fundamental, FundamentalFromCorrespondencesLinearRealistic) {
@@ -149,14 +149,14 @@ TEST(Fundamental, FundamentalFromCorrespondencesLinearRealistic) {
   EXPECT_NEAR(F_gt_norm(2, 2), F_estimated_norm(2, 2), 1e-8);
 
   // Check fundamental properties.
-  int n = d.X.numCols();
+  int n = d.X.cols();
   Vec y_F_x(n);
   for (int i = 0; i < n; ++i) {
     Vec3 x, y, F_x;
-    x = d.x1(0, i), d.x1(1, i), 1;
-    y = d.x2(0, i), d.x2(1, i), 1;
+    x << d.x1(0, i), d.x1(1, i), 1;
+    y << d.x2(0, i), d.x2(1, i), 1;
     F_x = F_estimated * x;
-    y_F_x(i) = dot(y, F_x);
+    y_F_x(i) = y.dot(F_x);
   }
   EXPECT_NEAR(0, y_F_x(0), 1e-8);
   EXPECT_NEAR(0, y_F_x(1), 1e-8);
@@ -166,7 +166,7 @@ TEST(Fundamental, FundamentalFromCorrespondencesLinearRealistic) {
   EXPECT_NEAR(0, y_F_x(5), 1e-8);
   EXPECT_NEAR(0, y_F_x(6), 1e-8);
   EXPECT_NEAR(0, y_F_x(7), 1e-8);
-  EXPECT_NEAR(0, DeterminantSlow(F_estimated), 1e-8);
+  EXPECT_NEAR(0, Determinant(F_estimated), 1e-8);
 }
 
 TEST(Fundamental, FundamentalFromCorrespondences8PointRealistic) {
@@ -193,14 +193,14 @@ TEST(Fundamental, FundamentalFromCorrespondences8PointRealistic) {
   EXPECT_NEAR(F_gt_norm(2, 2), F_estimated_norm(2, 2), 1e-8);
 
   // Check fundamental properties.
-  int n = d.X.numCols();
+  int n = d.X.cols();
   Vec y_F_x(n);
   for (int i = 0; i < n; ++i) {
     Vec3 x, y, F_x;
-    x = d.x1(0, i), d.x1(1, i), 1;
-    y = d.x2(0, i), d.x2(1, i), 1;
+    x << d.x1(0, i), d.x1(1, i), 1;
+    y << d.x2(0, i), d.x2(1, i), 1;
     F_x = F_estimated * x;
-    y_F_x(i) = dot(y, F_x);
+    y_F_x(i) = y.dot(F_x);
   }
   EXPECT_NEAR(0, y_F_x(0), 1e-8);
   EXPECT_NEAR(0, y_F_x(1), 1e-8);
@@ -210,7 +210,7 @@ TEST(Fundamental, FundamentalFromCorrespondences8PointRealistic) {
   EXPECT_NEAR(0, y_F_x(5), 1e-8);
   EXPECT_NEAR(0, y_F_x(6), 1e-8);
   EXPECT_NEAR(0, y_F_x(7), 1e-8);
-  EXPECT_NEAR(0, DeterminantSlow(F_estimated), 1e-8);
+  EXPECT_NEAR(0, Determinant(F_estimated), 1e-8);
 }
 
 // 8 points in a cube is a degenerate configuration.
@@ -221,9 +221,9 @@ TEST(Fundamental, FundamentalFromCorrespondences8PointDegenerate) {
 
   // The 8 points of a cube and their projections.
   d.X.resize(3,8);
-  d.X = 0, 1, 0, 1, 0, 1, 0, 1,
-        0, 0, 1, 1, 0, 0, 1, 1,
-        0, 0, 0, 0, 1, 1, 1, 1;
+  d.X << 0, 1, 0, 1, 0, 1, 0, 1,
+         0, 0, 1, 1, 0, 0, 1, 1,
+         0, 0, 0, 0, 1, 1, 1, 1;
   Project(d.P1, d.X, &d.x1);
   Project(d.P2, d.X, &d.x2);
 

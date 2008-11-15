@@ -36,18 +36,18 @@ void OrthogonalViewsFundamental(Mat3 *F) {
   Mat3 K1, R1, K2, R2;
   Vec3 t1, t2;
   Mat34 P1, P2;
-  K1 = 1, 0, 0,
-       0, 1, 0,
-       0, 0, 1;
+  K1 << 1, 0, 0,
+        0, 1, 0,
+        0, 0, 1;
   K2 = K1;
-  R1 = 1, 0, 0,
-       0, 1, 0,
-       0, 0, 1;
-  R2 = 1, 0,  0,
-       0, 0, -1,
-       0, 1,  0;
-  t1 = 0, 0, 0;
-  t2 = -1, 1, 1;
+  R1 << 1, 0, 0,
+        0, 1, 0,
+        0, 0, 1;
+  R2 << 1, 0,  0,
+        0, 0, -1,
+        0, 1,  0;
+  t1 << 0, 0, 0;
+  t2 << -1, 1, 1;
 
   P_From_KRt(K1, R1, t1, &P1);
   P_From_KRt(K2, R2, t2, &P2);
@@ -72,7 +72,7 @@ TEST(FocalFromFundamental, EpipolesFromFundamental) {
 
 TEST(FocalFromFundamental, RotationToEliminateY) {
   Vec3 a, b;
-  a = 1, -1, 0;
+  a << 1, -1, 0;
   Mat3 T;
   RotationToEliminateY(a, &T);
   b = T * a;
@@ -106,30 +106,30 @@ TEST(FocalFromFundamental, FundamentalShiftPrincipalPoints) {
   Mat3 K1, K1_new, R1, K2, K2_new, R2;
   Vec3 t1, t2;
   Mat34 P1, P1_new, P2, P2_new;
-  p1 = 3, 4;
-  p1_new = 2, 1;
-  p2 = -2, 1;
-  p2_new = 4, -3;
-  K1 = 1, 0, p1(0),
-       0, 1, p1(1),
-       0, 0,     1;
-  K1_new = 1, 0, p1_new(0),
-           0, 1, p1_new(1),
-           0, 0,         1;
-  K2 = 1, 0, p2(0),
-       0, 1, p2(1),
-       0, 0,     1;
-  K2_new = 1, 0, p2_new(0),
-           0, 1, p2_new(1),
-           0, 0,         1;
-  R1 = 1, 0, 0,
-       0, 1, 0,
-       0, 0, 1;
-  R2 = 1, 0, 0,
-       0, 1, 0,
-       0, 0, 1;
-  t1 = 0, 0, 0;
-  t2 = 1, 0, 0;
+  p1 << 3, 4;
+  p1_new << 2, 1;
+  p2 << -2, 1;
+  p2_new << 4, -3;
+  K1 << 1, 0, p1(0),
+        0, 1, p1(1),
+        0, 0,     1;
+  K1_new << 1, 0, p1_new(0),
+            0, 1, p1_new(1),
+            0, 0,         1;
+  K2 << 1, 0, p2(0),
+        0, 1, p2(1),
+        0, 0,     1;
+  K2_new << 1, 0, p2_new(0),
+            0, 1, p2_new(1),
+            0, 0,         1;
+  R1 << 1, 0, 0,
+        0, 1, 0,
+        0, 0, 1;
+  R2 << 1, 0, 0,
+        0, 1, 0,
+        0, 0, 1;
+  t1 << 0, 0, 0;
+  t2 << 1, 0, 0;
 
   P_From_KRt(K1, R1, t1, &P1);
   P_From_KRt(K2, R2, t2, &P2);
@@ -162,7 +162,7 @@ TEST(FocalFromFundamental, FundamentalShiftPrincipalPoints) {
 TEST(FocalFromFundamental, FocalFromFundamental) {
   Mat3 F;
   Vec2 zero2;
-  zero2 = 0, 0;
+  zero2 << 0, 0;
   double f1, f2;
   OrthogonalViewsFundamental(&F);
   FocalFromFundamental(F, zero2, zero2, &f1, &f2);
@@ -174,8 +174,8 @@ TEST(FocalFromFundamental, TwoViewReconstruction) {
   // Two cameras at (0,0,-10) and (2,1,-10) looking towards z+.
   TwoViewDataSet d = TwoRealisticCameras();
   Vec2 p1, p2;
-  p1 = d.K1(0,2), d.K1(1,2);
-  p2 = d.K2(0,2), d.K2(1,2);
+  p1 << d.K1(0,2), d.K1(1,2);
+  p2 << d.K2(0,2), d.K2(1,2);
   double f1, f2;
   f1 = d.K1(0,0);
   f2 = d.K2(0,0);
@@ -196,12 +196,12 @@ TEST(FocalFromFundamental, TwoViewReconstruction) {
 
   // Build K matrices from the known principal points and the compted focals.
   Mat3 K1_estimated, K2_estimated;
-  K1_estimated = f1_estimated,            0, p1(0),
-                            0, f1_estimated, p1(1),
-                            0,            0,     1;
-  K2_estimated = f2_estimated,            0, p2(0),
-                            0, f2_estimated, p2(1),
-                            0,            0,     1;
+  K1_estimated << f1_estimated,            0, p1(0),
+                             0, f1_estimated, p1(1),
+                             0,            0,     1;
+  K2_estimated << f2_estimated,            0, p2(0),
+                             0, f2_estimated, p2(1),
+                             0,            0,     1;
   EXPECT_NEAR(0, FrobeniusDistance(d.K1, K1_estimated), 1e-8);
   EXPECT_NEAR(0, FrobeniusDistance(d.K2, K2_estimated), 1e-8);
 

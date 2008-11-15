@@ -10,4 +10,4 @@ ADD_LIBRARY(flens
             underscore.cc
 )
 
-LIBMV_TEST(tinyvector "")
+#LIBMV_TEST(tinyvector "")

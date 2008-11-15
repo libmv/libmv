@@ -12,8 +12,6 @@ using namespace std;
 #include "ui/imageviewer.h"
 #include "ui/scrubber.h"
 
-using libmv::_;
-
 ImageViewer::ImageViewer()
 {
   imageLabel = new QLabel;

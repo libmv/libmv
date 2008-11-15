@@ -33,16 +33,11 @@ void P_From_KRt(const Mat3 &K, const Mat3 &R, const Vec3 &t, Mat34 *P) {
 }
 
 void KRt_From_P(const Mat34 &P, Mat3 *Kp, Mat3 *Rp, Vec3 *tp) {
-  Mat K(3,3);
-  Mat R(3,3);
-  Vec t(3,3);
-
   // Decompose using the RQ decomposition HZ A4.1.1 pag.579.
-  Mat P_tmp;
-  P_tmp = P;
-  K = P_tmp(_, _(0, 2));
+  Mat3 K = P.block(0, 0, 3, 3);
 
-  Mat Q = Identity(3);
+  Mat3 Q;
+  Q.setIdentity();
 
   // Set K(2,1) to zero.
   if (K(2,1) != 0) {
@@ -51,11 +46,11 @@ void KRt_From_P(const Mat34 &P, Mat3 *Kp, Mat3 *Rp, Vec3 *tp) {
     double l = sqrt(c * c + s * s);
     c /= l; s /= l;
     Mat Qx(3,3);
-    Qx = 1, 0, 0,
+    Qx << 1, 0, 0,
          0, c, -s,
          0, s, c;
     K = K * Qx;
-    Q = transpose(Qx) * Q;
+    Q = Qx.transpose() * Q;
   }
   // Set K(2,0) to zero.
   if (K(2,0) != 0) {
@@ -64,11 +59,11 @@ void KRt_From_P(const Mat34 &P, Mat3 *Kp, Mat3 *Rp, Vec3 *tp) {
     double l = sqrt(c * c + s * s);
     c /= l; s /= l;
     Mat Qy(3,3);
-    Qy = c, 0, s,
-         0, 1, 0,
-        -s, 0, c;
+    Qy << c, 0, s,
+          0, 1, 0,
+         -s, 0, c;
     K = K * Qy;
-    Q = transpose(Qy) * Q;
+    Q = Qy.transpose() * Q;
   }
   // Set K(1,0) to zero.
   if (K(1,0) != 0) {
@@ -77,14 +72,14 @@ void KRt_From_P(const Mat34 &P, Mat3 *Kp, Mat3 *Rp, Vec3 *tp) {
     double l = sqrt(c * c + s * s);
     c /= l; s /= l;
     Mat Qz;
-    Qz = c,-s, 0,
-         s, c, 0,
-         0, 0, 1;
+    Qz << c,-s, 0,
+          s, c, 0,
+          0, 0, 1;
     K = K * Qz;
-    Q = transpose(Qz) * Q;
+    Q = Qz.transpose() * Q;
   }
 
-  R = Q;
+  Mat R = Q;
 
   // Ensure that the diagonal is positive.
   // TODO(pau) Change this to ensure that:
@@ -97,28 +92,29 @@ void KRt_From_P(const Mat34 &P, Mat3 *Kp, Mat3 *Rp, Vec3 *tp) {
   }
   if( K(1,1) < 0 ) {
     Mat S(3,3);
-    S = 1, 0, 0,
-        0,-1, 0,
-        0, 0, 1;
+    S << 1, 0, 0,
+         0,-1, 0,
+         0, 0, 1;
     K = K * S;
     R = S * R;
   }
   if( K(0,0) < 0 ) {
     Mat S(3,3);
-    S =-1, 0, 0,
-        0, 1, 0,
-        0, 0, 1;
+    S << -1, 0, 0,
+          0, 1, 0,
+          0, 0, 1;
     K = K * S;
     R = S * R;
   }
 
   // Compute translation.
   Vec p(3);
-  p = P(0,3), P(1,3), P(2,3);
+  p << P(0,3), P(1,3), P(2,3);
   // TODO(pau) This sould be done by a SolveLinearSystem(A, b, &x) call.
+  // TODO(keir) use the eigen LU solver syntax...
   Mat K1;
-  InverseSlow(K, &K1);
-  t = K1 * p;
+  Inverse(K, &K1);
+  Vec3 t = K1 * p;
 
   // scale K so that K(2,2) = 1
   K = K / K(2,2);
@@ -129,8 +125,8 @@ void KRt_From_P(const Mat34 &P, Mat3 *Kp, Mat3 *Rp, Vec3 *tp) {
 }
 
 void HomogeneousToEuclidean(const Mat &H, Mat *X) {
-  int d = H.numRows() - 1;
-  int n = H.numCols();
+  int d = H.rows() - 1;
+  int n = H.cols();
   X->resize(d, n);
   for (int i = 0; i < n; ++i) {
     double h = H(d, i);
@@ -142,17 +138,17 @@ void HomogeneousToEuclidean(const Mat &H, Mat *X) {
 
 void HomogeneousToEuclidean(const Vec3 &H, Vec2 *X) {
   double w = H(2);
-  *X = H(0) / w, H(1) / w;
+  *X << H(0) / w, H(1) / w;
 }
 
 void HomogeneousToEuclidean(const Vec4 &H, Vec3 *X) {
   double w = H(3);
-  *X = H(0) / w, H(1) / w, H(2) / w;
+  *X << H(0) / w, H(1) / w, H(2) / w;
 }
 
 void EuclideanToHomogeneous(const Mat &X, Mat *H) {
-  int d = X.numRows();
-  int n = X.numCols();
+  int d = X.rows();
+  int n = X.cols();
   H->resize(d + 1, n);
   for (int i = 0; i < n; ++i) {
     for (int j = 0; j < d; ++j) {
@@ -163,18 +159,17 @@ void EuclideanToHomogeneous(const Mat &X, Mat *H) {
 }
 
 void EuclideanToHomogeneous(const Vec2 &X, Vec3 *H) {
-  *H = X(0), X(1), 1;
+  *H << X(0), X(1), 1;
 };
 
 void EuclideanToHomogeneous(const Vec3 &X, Vec4 *H) {
-  *H = X(0), X(1), X(2), 1;
+  *H << X(0), X(1), X(2), 1;
 }
 
 void Project(const Mat34 &P, const Mat &X, Mat *x) {
-  Mat PP, XX, xx;
-  PP = P;
+  Mat XX;
   EuclideanToHomogeneous(X, &XX);
-  xx = PP * XX;
+  Mat xx = P * XX;
   HomogeneousToEuclidean(xx, x);
 }
 

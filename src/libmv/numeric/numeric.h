@@ -18,136 +18,102 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //
-// Matrix and vector classes, based on FLENS.
+// Matrix and vector classes, based on Eigen2.
 //
-// Avoid using flens classes directly; instead typedef them here.
+// Avoid using Eigen2 classes directly; instead typedef them here.
 
 #ifndef LIBMV_NUMERIC_NUMERIC_H
 #define LIBMV_NUMERIC_NUMERIC_H
 
-#include "third_party/flens/flens.h"
+#include <Eigen/Core>
+#include <Eigen/SVD>
+#include <Eigen/LU>
+#include <Eigen/Geometry>
+
+#include <iostream>
 
 namespace libmv {
 
-// These all use 0-indexing. This is different than upstream FLENS.
-typedef flens::GeMatrix<flens::FullStorage<double, flens::ColMajor> > Mat;
-typedef flens::DenseVector<flens::Array<double> >                     Vec;
+typedef Eigen::MatrixXd Mat;
+typedef Eigen::VectorXd Vec;
 
-typedef flens::TinyGeMatrix<flens::FixedSizeArray2D<double, 2, 2> > Mat2;
-typedef flens::TinyGeMatrix<flens::FixedSizeArray2D<double, 3, 3> > Mat3;
-typedef flens::TinyGeMatrix<flens::FixedSizeArray2D<double, 3, 4> > Mat34;
-typedef flens::TinyGeMatrix<flens::FixedSizeArray2D<double, 4, 4> > Mat4;
+typedef Eigen::Matrix<double, 2, 2> Mat2;
+typedef Eigen::Matrix<double, 3, 3> Mat3;
+typedef Eigen::Matrix<double, 3, 4> Mat34;
+typedef Eigen::Matrix<double, 4, 4> Mat4;
 
-typedef flens::TinyVector<flens::FixedSizeArray1D<double, 2> > Vec2;
-typedef flens::TinyVector<flens::FixedSizeArray1D<double, 3> > Vec3;
-typedef flens::TinyVector<flens::FixedSizeArray1D<double, 4> > Vec4;
+typedef Eigen::Vector2d Vec2;
+typedef Eigen::Vector3d Vec3;
+typedef Eigen::Vector4d Vec4;
 
-typedef flens::TinyVector<flens::FixedSizeArray1D<float, 2> > Vec2f;
-typedef flens::TinyVector<flens::FixedSizeArray1D<float, 3> > Vec3f;
-typedef flens::TinyVector<flens::FixedSizeArray1D<float, 4> > Vec4f;
+typedef Eigen::Vector2f Vec2f;
+typedef Eigen::Vector3f Vec3f;
+typedef Eigen::Vector4f Vec4f;
 
-typedef flens::TinyVector<flens::FixedSizeArray1D<int, 2> > Vec2i;
-typedef flens::TinyVector<flens::FixedSizeArray1D<int, 3> > Vec3i;
-typedef flens::TinyVector<flens::FixedSizeArray1D<int, 4> > Vec4i;
-
-
-// For matrix and vector views. Example: A(_(1,3), _(4,5)) is a 3x2 submatrix
-// of A, that can be manipulated (changes underlying A).
-using flens::_;
+typedef Eigen::Vector2i Vec2i;
+typedef Eigen::Vector3i Vec3i;
+typedef Eigen::Vector4i Vec4i;
 
 // Find U, s, and VT such that
 //
 //   A = U * diag(s) * VT
 //
-// Destroys A.
-inline void SVD(Mat *A, Vec *s, Mat *U, Mat *VT) {
-  svd(*A, *s, *U, *VT);
-}
-
-// Specialization for tiny matrices.
-template<class TA>
-inline void SVD(TA *A, Vec *s, Mat *U, Mat *VT) {
-  // TODO(keir): It's possible to eliminate this copying by pushing SVD support
-  // for tiny matrices and vectors into FLENS.
-  Mat Ap;
-  Ap = *A;
-  svd(Ap, *s, *U, *VT);
+template <typename TMat, typename TVec>
+inline void SVD(TMat *A, Vec *s, Mat *U, Mat *VT) {
+  assert(0);
 }
 
 // Solve the linear system Ax = 0 via SVD. Store the solution in x, such that
 // ||x|| = 1.0. Return the singluar value corresponding to the solution.
 // Destroys A and resizes x if necessary.
-template<class TMat, class TVec>
-inline double Nullspace(TMat *A, TVec *x)
-{
-  Mat U, VT;
-  Vec s;
-  SVD(A, &s, &U, &VT);
-
-  int m = A->numRows();
-  int n = A->numCols();
-  x->resize(n);
-  *x = VT(n-1, _);
-  return s(std::min(n-1,m-1));
+template <typename TMat, typename TVec>
+double Nullspace(TMat *A, TVec *nullspace) {
+  if (A->rows() >= A->cols()) {
+    Eigen::SVD<TMat> svd(*A);
+    nullspace->set(svd.matrixV().col(A->cols()-1));
+    return svd.singularValues()(A->cols()-1);
+  }
+  // Extend A with rows of zeros to make it square. It's a hack, but is
+  // necessary until Eigen supports SVD with more columns than rows.
+  Mat A_extended(A->cols(), A->cols());
+  A_extended.block(A->rows(), 0, A->cols() - A->rows(), A->cols()).setZero();
+  A_extended.block(0,0, A->rows(), A->cols()) = (*A);
+  return Nullspace(&A_extended, nullspace);
 }
 
 // In place transpose for square matrices.
 template<class TA>
 inline void TransposeInPlace(TA *A) {
-  for (int i = 0; i < A->numRows(); ++i) {
-    for (int j = i+1; j < A->numCols(); ++j) {
-      std::swap((*A)(i,j), (*A)(j,i));
-    }
-  }
+  *A = A->transpose().eval();
 }
 
 template<typename TVec>
 inline double NormL1(const TVec &x) {
-  double sum = 0;
-  for (int i = x.firstIndex(); i <= x.lastIndex(); ++i) {
-    sum += fabs(x(i));
-  }
-  return sum;
+  return x.cwise().abs().sum();
 }
 
 template<typename TVec>
 inline double NormL2(const TVec &x) {
-  double sum = 0;
-  for (int i = x.firstIndex(); i <= x.lastIndex(); ++i) {
-    sum += x(i) * x(i);
-  }
-  return sqrt(sum);
+  return x.norm();
 }
 
 template<typename TVec>
 inline double NormLInfinity(const TVec &x) {
-  double max = 0;
-  for (int i = x.firstIndex(); i <= x.lastIndex(); ++i) {
-    double a = fabs(x(i));
-    if (max < a) {
-      max = a;
-    }
-  }
-  return max;
+  return x.cwise().abs().maxCoeff();
 }
 
 template<typename TVec>
 inline double DistanceL1(const TVec &x, const TVec &y) {
-  TVec d;
-  d = x - y;
-  return NormL1(d);
+  return (x - y).cwise().abs().sum();
 }
+
 template<typename TVec>
 inline double DistanceL2(const TVec &x, const TVec &y) {
-  TVec d;
-  d = x - y;
-  return NormL2(d);
+  return (x - y).norm();
 }
 template<typename TVec>
 inline double DistanceLInfinity(const TVec &x, const TVec &y) {
-  TVec d;
-  d = x - y;
-  return NormLInfinity(d);
+  return (x - y).cwise().abs().maxCoeff();
 }
 
 // Normalize a vector with the L1 norm, and return the norm before it was
@@ -190,36 +156,38 @@ Mat3 RotationAroundY(double angle);
 Mat3 RotationAroundZ(double angle);
 
 // Return a diagonal matrix from a vector containg the diagonal values.
-Mat Diag(const Vec &x);
+template <typename TVec>
+inline Mat Diag(const TVec &x) {
+  return x.asDiagonal();
+}
 
 // Return the determinant of A computed by LU factorization.  A is destroyed.
 //double DeterminantLU(Mat *A);
 
-double DeterminantSlow(const Mat &A);
-double DeterminantSlow(const Mat3 &A);
-double Cofactor(const Mat &A, int i, int j);
-void Adjoint(const Mat &A, Mat *B);
-void InverseSlow(const Mat &A, Mat *I);
+template <typename TMat>
+inline double Determinant(const TMat &A) {
+  return A.determinant();
+}
 
-template<typename TMat>
-double FrobeniusNorm(const TMat &A) {
-  double norm = 0;
-  for (int i = 0; i < A.numRows(); ++i) {
-    for (int j = 0; j < A.numCols(); ++j) {
-      norm += Square(A(i, j));
-    }
-  }
-  return sqrt(norm);
+template <typename TMatA, typename TMatI>
+inline void Inverse(const TMatA &A, TMatI *I) {
+  I->set(A.inverse());
 }
 
 template<typename TMat>
-double FrobeniusDistance(const TMat &A, const TMat &B) {
-  TMat diff;
-  diff = A - B;
-  return FrobeniusNorm(diff);
+inline double FrobeniusNorm(const TMat &A) {
+  return sqrt(A.cwise().abs2().sum());
 }
 
-Vec3 CrossProduct(const Vec3 &x, const Vec3 &y);
+template<typename TMat>
+inline double FrobeniusDistance(const TMat &A, const TMat &B) {
+  return FrobeniusNorm(A - B);
+}
+
+inline Vec3 CrossProduct(const Vec3 &x, const Vec3 &y) {
+  return x.cross(y);
+}
+
 Mat3 CrossProductMatrix(const Vec3 &x);
 
 void MeanAndVarianceAlongRows(const Mat &A,

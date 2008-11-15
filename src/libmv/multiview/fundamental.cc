@@ -49,7 +49,7 @@ void FundamentalFromProjections(const Mat34 &P1, const Mat34 &P2, Mat3 *F)
   for (int i = 0; i < 3; ++i) {
     for (int j = 0; j < 3; ++j) {
       VerticalStack(X[j], Y[i], &XY);
-      (*F)(i, j) = DeterminantSlow(XY);
+      (*F)(i, j) = Determinant(XY);
     }
   }
 }
@@ -62,20 +62,20 @@ void PreconditionerFromPoints(const Mat &points, Mat3 *T) {
   double xfactor = sqrt(2 / variance(0));
   double yfactor = sqrt(2 / variance(1));
 
-  *T = xfactor, 0, -xfactor * mean(0),
-       0, yfactor, -yfactor * mean(1),
-       0, 0, 1;
+  *T << xfactor, 0,       -xfactor * mean(0),
+        0,       yfactor, -yfactor * mean(1),
+        0,       0,        1;
 }
 
 // TODO(pau) this can be done by matrix multiplication.
 void ApplyTransformationToPoints(const Mat &points,
                                  const Mat3 &T,
                                  Mat *transformed_points) {
-  int n = points.numCols();
+  int n = points.cols();
   transformed_points->resize(2,n);
   for (int i = 0; i < n; ++i) {
     Vec3 in, out;
-    in = points(0, i), points(1, i), 1;
+    in << points(0, i), points(1, i), 1;
     out = T * in;
     (*transformed_points)(0, i) = out(0);
     (*transformed_points)(1, i) = out(1);
@@ -86,12 +86,12 @@ void ApplyTransformationToPoints(const Mat &points,
 double FundamentalFromCorrespondencesLinear(const Mat &x1,
                                             const Mat &x2,
                                             Mat3 *F) {
-  assert(2 == x1.numRows());
-  assert(8 <= x1.numCols());
-  assert(x1.numRows() == x2.numRows());
-  assert(x1.numCols() == x2.numCols());
+  assert(2 == x1.rows());
+  assert(8 <= x1.cols());
+  assert(x1.rows() == x2.rows());
+  assert(x1.cols() == x2.cols());
 
-  int n = x1.numCols();
+  int n = x1.cols();
   Mat A(n, 9);
   for (int i = 0; i < n; ++i) {
     A(i, 0) = x2(0, i) * x1(0, i);
@@ -118,23 +118,21 @@ double FundamentalFromCorrespondencesLinear(const Mat &x1,
 
 // HZ 11.1.1 pag.280
 void EnforceFundamentalRank2Constraint(Mat3 *F) {
-  Mat U, Vt, d_Vt, U_d_Vt;
-  Vec d;
-  SVD(F, &d, &U, &Vt);
-  d(2) = 0;
-  d_Vt = Diag(d) * Vt;
-  U_d_Vt = U * d_Vt;
-  *F = U_d_Vt;
+  Eigen::SVD<Mat3> USV(*F);
+  Vec3 d = USV.singularValues();
+  d(2) = 0.0;
+  // TODO(keir): optimize to eliminate useless mults of 0.
+  *F = USV.matrixU() * d.asDiagonal() * USV.matrixV().transpose();
 }
 
 // HZ 11.2 pag.281 (x1 = x, x2 = x')
 double FundamentalFromCorrespondences8Point(const Mat &x1,
                                             const Mat &x2,
                                             Mat3 *F) {
-  assert(2 == x1.numRows());
-  assert(8 <= x1.numCols());
-  assert(x1.numRows() == x2.numRows());
-  assert(x1.numCols() == x2.numCols());
+  assert(2 == x1.rows());
+  assert(8 <= x1.cols());
+  assert(x1.rows() == x2.rows());
+  assert(x1.cols() == x2.cols());
 
   // Normalize the data.
   Mat3 T1, T2;
@@ -151,21 +149,16 @@ double FundamentalFromCorrespondences8Point(const Mat &x1,
   EnforceFundamentalRank2Constraint(F);
 
   // Denormalize the fundamental matrix.
-  Mat3 F_T1;
-  F_T1 = (*F) * T1; 
-  *F = transpose(T2) * F_T1; 
+  *F = T2.transpose() * (*F) * T1;
 
   return smaller_singular_value;
 }
 
 void NormalizeFundamental(const Mat3 F, Mat3 *F_normalized) {
-  Mat F_tmp;
-  F_tmp = F;
-  F_tmp /= FrobeniusNorm(F);
-  if(F_tmp(2,2) < 0) {
-    F_tmp *= -1;
+  F_normalized->set(F / FrobeniusNorm(F));
+  if((*F_normalized)(2,2) < 0) {
+    (*F_normalized) *= -1;
   }
-  *F_normalized = F_tmp;
 }
 
 
@@ -174,9 +167,7 @@ void EssentialFromFundamental(const Mat3 &F,
                               const Mat3 &K1,
                               const Mat3 &K2,
                               Mat3 *E) {
-  Mat3 F_K1;
-  F_K1 = F * K1;
-  *E = transpose(K2) * F_K1;
+  *E = K2.transpose() * F * K1;
 }
 
 void RelativeCameraMotionBugged(const Mat3 &R1,
@@ -185,7 +176,7 @@ void RelativeCameraMotionBugged(const Mat3 &R1,
                                 const Vec3 &t2,
                                 Mat3 *R,
                                 Vec3 *t) {
-  *R = R2 * transpose(R1);
+  *R = R2 * R1.transpose();
   *t = t2 - (*R) * t1;
  
 using namespace std;
@@ -200,18 +191,8 @@ void RelativeCameraMotion(const Mat3 &R1,
                           const Vec3 &t2,
                           Mat3 *R,
                           Vec3 *t) {
-  Mat R1g, R2g, Rg;
-  Vec t1g, t2g, tg;
-  R1g = R1;
-  R2g = R2;
-  t1g = t1;
-  t2g = t2;
-
-  Rg = R2g * transpose(R1g);
-  tg = t2g - Rg * t1g;
-
-  *R = Rg;
-  *t = tg;
+  *R = R2 * R1.transpose();
+  *t = t2 - (*R) * t1;
 }
 
 // HZ 9.6 pag 257
@@ -225,42 +206,37 @@ void EssentialFromRt(const Mat3 &R1,
   RelativeCameraMotion(R1, t1, R2, t2, &R, &t);
   Mat3 Tx = CrossProductMatrix(t);
 
-  Mat Tx_tmp, R_tmp, E_tmp;
-  Tx_tmp = Tx;
-  R_tmp = R;
-  E_tmp = Tx_tmp * R_tmp;
-  *E = E_tmp;
-//  *E = Tx * R; // This was also giving nans once in a while!
+  *E = Tx * R;  // With FLENS this gave nans; possibly investigate with Eigen!
 }
 
 void MotionFromEssential(const Mat3 &E,
                          std::vector<Mat3> *Rs,
                          std::vector<Vec3> *ts) {
-  Mat E_tmp(3,3), U(3,3), Vt(3,3), W(3,3), U_W, U_Wt, U_W_Vt, U_Wt_Vt;
-  Vec d(3), u3(3), m_u3(3);
-  E_tmp = E;
-
-  SVD(&E_tmp, &d, &U, &Vt);
+  Eigen::SVD<Mat3> USV(E);
+  Mat3 U =  USV.matrixU();
+  Vec3 d =  USV.singularValues();
+  Mat3 Vt = USV.matrixV().transpose();
 
   // Last column of U is undetermined since d = (a a 0).
-  if (DeterminantSlow(U) < 0) {
-    U(_, 2) *= -1;
+  if (Determinant(U) < 0) {
+    U.col(2) *= -1;
   }
   // Last row of Vt is undetermined since d = (a a 0).
-  if (DeterminantSlow(Vt) < 0) {
-    Vt(2, _) *= -1;
+  if (Determinant(Vt) < 0) {
+    Vt.row(2) *= -1;
   }
 
-  u3 = U(0,2), U(1,2), U(2,2);
+  Vec3 u3, m_u3;
+  u3 << U(0,2), U(1,2), U(2,2);
   m_u3 = -u3;
-  W = 0, -1, 0,
-      1,  0, 0,
-      0,  0, 1;
-  // TODO(pau) We need a MatrixMultiply(res, A1, A2, ..., An);
-  U_W = U * W;
-  U_Wt = U * transpose(W);
-  U_W_Vt = U_W * Vt;
-  U_Wt_Vt = U_Wt * Vt;
+
+  Mat3 W;
+  W << 0, -1, 0,
+       1,  0, 0,
+       0,  0, 1;
+
+  Mat3 U_W_Vt = U * W * Vt;
+  Mat3 U_Wt_Vt = U * W.transpose() * Vt;
 
   Rs->resize(4);
   ts->resize(4);
@@ -286,8 +262,8 @@ int MotionFromEssentialChooseSolution(const std::vector<Mat3> &Rs,
   Mat34 P1, P2;
   Mat3 R1;
   Vec3 t1;
-  R1 = Identity(3);
-  t1 = 0;
+  R1.setIdentity();
+  t1.setZero();
   P_From_KRt(K1, R1, t1, &P1);
   for (int i = 0; i < 4; ++i) {
     const Mat3 &R2 = Rs[i];

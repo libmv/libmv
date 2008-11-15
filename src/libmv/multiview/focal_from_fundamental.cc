@@ -44,9 +44,9 @@ void RotationToEliminateY(const Vec3 &x, Mat3 *T) {
   double r = sqrt(Square(x(0)) + Square(x(1)));
   double c =  x(0) / r;
   double s = -x(1) / r;
-  *T = c, -s, 0,
-       s,  c, 0,
-       0,  0, 1;
+  *T << c, -s, 0,
+        s,  c, 0,
+        0,  0, 1;
 }
 
 // Rotate each image to cause the y component of both epipoles to become zero.
@@ -65,7 +65,7 @@ void FundamentalAlignEpipolesToXAxis(const Mat3 &F, Mat3 *F_rotated) {
   RotationToEliminateY(e1, &T1);
   RotationToEliminateY(e2, &T2);
   T2_F = T2 * F;
-  *F_rotated = T2_F * transpose(T1);
+  *F_rotated = T2 * F * T1.transpose();
 }
 
 // Given a fundamental matrix of two cameras and their principal points,
@@ -77,21 +77,14 @@ void FundamentalShiftPrincipalPoints(const Mat3 &F,
                                      const Vec2 &p2,
                                      const Vec2 &p2_new,
                                      Mat3 *F_new) {
-  Mat T1(3,3), T2(3,3), T1_inv(3,3), T2_inv(3,3),
-      F_T1_inv(3,3), T2_inv_trans_F_T1_inv(3,3);
-  T1 = 1, 0, p1_new(0) - p1(0),
-       0, 1, p1_new(1) - p1(1),
-       0, 0,                 1;
-  T2 = 1, 0, p2_new(0) - p2(0),
-       0, 1, p2_new(1) - p2(1),
-       0, 0,                 1;
-  InverseSlow(T1, &T1_inv);
-  InverseSlow(T2, &T2_inv);
-  Mat F_tmp;
-  F_tmp = F;
-  F_T1_inv = F_tmp * T1_inv;
-  T2_inv_trans_F_T1_inv = transpose(T2_inv) * F_T1_inv;
-  *F_new = T2_inv_trans_F_T1_inv;
+  Mat3 T1, T2;
+  T1 << 1, 0, p1_new(0) - p1(0),
+        0, 1, p1_new(1) - p1(1),
+        0, 0,                 1;
+  T2 << 1, 0, p2_new(0) - p2(0),
+        0, 1, p2_new(1) - p2(1),
+        0, 0,                 1;
+  *F_new = T2.inverse().transpose() * F * T1.inverse();
 }
 
 void FocalFromFundamental(const Mat3 &F,
@@ -101,7 +94,7 @@ void FocalFromFundamental(const Mat3 &F,
                           double *f2) {
   Mat3 F_shifted, F_rotated;
   Vec2 zero2;
-  zero2 = 0,0;
+  zero2 << 0, 0;
   FundamentalShiftPrincipalPoints(F,
                                   principal_point1, zero2,
                                   principal_point2, zero2,
@@ -113,15 +106,14 @@ void FocalFromFundamental(const Mat3 &F,
   EpipolesFromFundamental(F_rotated, &e1, &e2);
 
   Mat3 T1, T2;
-  T1 = 1 / e1(2), 0,          0,
-               0, 1,          0,
-               0, 0, -1 / e1(0);
-  T2 = 1 / e2(2), 0,          0,
-               0, 1,          0,
-               0, 0, -1 / e2(0);
-  Mat3 T2_F, A;
-  T2_F = T2 * F_rotated;
-  A = T2_F * T1;
+  T1 << 1 / e1(2), 0,          0,
+                0, 1,          0,
+                0, 0, -1 / e1(0);
+  T2 << 1 / e2(2), 0,          0,
+                0, 1,          0,
+                0, 0, -1 / e2(0);
+
+  Mat3 A = T2 * F_rotated * T1;
 
   double a = A(0,0);
   double b = A(0,1);
@@ -134,7 +126,9 @@ void FocalFromFundamental(const Mat3 &F,
   double f2_square = - (a * b * Square(e2(0)))
                      / (a * b * Square(e2(2)) + c * d);
 
-  // TODO(pau) Should check that the squares are positive.
+  // TODO(keir) deterimne a sensible thing to do in this case.
+  assert(f1_square > 0.);
+  assert(f2_square > 0.);
   *f1 = sqrt(f1_square);
   *f2 = sqrt(f2_square);
 }

@@ -25,7 +25,7 @@ namespace libmv {
 
 Mat Identity(int n) {
   Mat I(n, n);
-  I = 0;
+  I.setZero();
   for (int i = 0; i < n; ++i) {
     I(i, i) = 1;
   }
@@ -33,176 +33,50 @@ Mat Identity(int n) {
 }
 
 Mat3 RotationAroundX(double angle) {
-  double c = cos(angle);
-  double s = sin(angle);
+  double c, s;
+  sincos(angle, &s, &c);
   Mat3 R;
-  R = 1, 0,  0,
-      0, c, -s,
-      0, s,  c;
+  R << 1,  0,  0,
+       0,  c, -s,
+       0,  s,  c;
   return R;
 }
 
 Mat3 RotationAroundY(double angle) {
-  double c = cos(angle);
-  double s = sin(angle);
+  double c, s;
+  sincos(angle, &s, &c);
   Mat3 R;
-  R =  c, 0, s,
-       0, 1, 0,
-      -s, 0, c;
+  R <<  c, 0, s,
+        0, 1, 0,
+       -s, 0, c;
   return R;
 }
 
 Mat3 RotationAroundZ(double angle) {
-  double c = cos(angle);
-  double s = sin(angle);
+  double c, s;
+  sincos(angle, &s, &c);
   Mat3 R;
-  R = c, -s, 0,
-      s,  c, 0,
-      0,  0, 1;
+  R << c, -s,  0,
+       s,  c,  0,
+       0,  0,  1;
   return R;
-}
-
-
-Mat Diag(const Vec &x) {
-  int n = x.length();
-  Mat A(n,n);
-  A = 0;
-  for (int i = 0; i < n; ++i) {
-    A(i,i) = x(i);
-  }
-  return A;
-}
-
-double DeterminantLU(Mat *A) {
-  assert(A->numRows() == A->numCols());
-  int n = A->numRows();
-
-  // This segfaults on pau's ubuntu.
-  flens::DenseVector<flens::Array<int> > P;
-  flens::trf(*A, P);
-
-  double det = 1;
-  for (int i = 0; i < n; ++i) {
-    det *= (*A)(i, i);
-  }
-  // TODO(pau): compute the sign of the permutation P.
-  double Psign = 1;
-
-  return Psign * det;
-}
-
-void MinorMatrix(const Mat &A, int i, int j, Mat *M) {
-  int n = A.numRows();
-  int m = A.numCols();
-  M->resize(n-1, m-1);
-
-  if (0 < i) {
-    if (0 < j) {
-      (*M)(_(0, i - 1), _(0, j - 1)) = A(_(    0, i - 1), _(    0, j - 1));
-    }
-    if (j < m - 1) {
-      (*M)(_(0, i - 1), _(j, m - 2)) = A(_(    0, i - 1), _(j + 1, m - 1));
-    }
-  }
-  if (i < n - 1) {
-    if (0 < j) {
-      (*M)(_(i, n - 2), _(0, j - 1)) = A(_(i + 1, n - 1), _(    0, j - 1));
-    }
-    if (j < m - 1) {
-      (*M)(_(i, n - 2), _(j, m - 2)) = A(_(i + 1, n - 1), _(j + 1, m - 1));
-    }
-  }
-}
-
-double DeterminantSlow(const Mat &A) {
-  assert(A.numRows() == A.numCols());
-  int n = A.numRows();
-  if (n == 1) {
-    return A(0, 0);
-  }
-
-  Mat minor_matrix;
-  double det = 0;
-  double sign = 1;
-  for (int i = 0; i < n; ++i) {
-    MinorMatrix(A, 0, i, &minor_matrix);
-    det += sign * A(0, i) * DeterminantSlow(minor_matrix);
-    sign *= -1;
-  }
-  return det;
-}
-
-double DeterminantSlow(const Mat3 &A) {
-  Mat tmp;
-  tmp = A;
-  return DeterminantSlow(tmp);
-}
-
-
-double Cofactor(const Mat &A, int i, int j) {
-  assert(A.numRows() == A.numCols());
-  int n = A.numRows();
-  if (n == 1) {
-    return 1;
-  }
-  else {
-    double sign;
-    if ((i + j) % 2) {
-      sign = -1;
-    } else {
-      sign = 1;
-    }
-    Mat M;
-    MinorMatrix(A, i, j, &M);
-    return sign * DeterminantSlow(M);
-  }
-}
-
-void Adjoint(const Mat &A, Mat *B) {
-  assert(A.numRows() == A.numCols());
-  int n = A.numRows();
-  B->resize(n, n);
-  for (int i = 0; i < n; ++i) {
-    for (int j = 0; j < n; ++j) {
-      (*B)(i, j) = Cofactor(A, i, j);
-    }
-  }
-}
-
-void InverseSlow(const Mat &A, Mat *I) {
-  assert(A.numRows() == A.numCols());
-  int n = A.numRows();
-  I->resize(n, n);
-
-  Adjoint(A, I);
-  TransposeInPlace(I);
-  *I = *I / DeterminantSlow(A);
-}
-
-Vec3 CrossProduct(const Vec3 &x, const Vec3 &y) {
-  Vec3 v;
-  v = x(1) * y(2) - x(2) * y(1),
-      x(2) * y(0) - x(0) * y(2),
-      x(0) * y(1) - x(1) * y(0);
-  return v;
 }
 
 Mat3 CrossProductMatrix(const Vec3 &x) {
   Mat3 X;
-  X =     0, -x(2),  x(1),
-       x(2),     0, -x(0),
-      -x(1),  x(0),     0;
+  X <<     0, -x(2),  x(1),
+        x(2),     0, -x(0),
+       -x(1),  x(0),     0;
   return X;
 }
-
 
 void MeanAndVarianceAlongRows(const Mat &A,
                               Vec *mean_pointer,
                               Vec *variance_pointer) {
   Vec &mean = *mean_pointer;
   Vec &variance = *variance_pointer;
-  int n = A.numRows();
-  int m = A.numCols();
+  int n = A.rows();
+  int m = A.cols();
   mean.resize(n);
   variance.resize(n);
 
@@ -223,38 +97,38 @@ void MeanAndVarianceAlongRows(const Mat &A,
 }
 
 void HorizontalStack(const Mat &left, const Mat &right, Mat *stacked) {
-  assert(left.numRows() == left.numRows());
-  int n = left.numRows();
-  int m1 = left.numCols();
-  int m2 = right.numCols();
+  assert(left.rows() == left.rows());
+  int n = left.rows();
+  int m1 = left.cols();
+  int m2 = right.cols();
 
   stacked->resize(n, m1 + m2);
-  (*stacked)(_, _(0, m1 - 1)) = left;
-  (*stacked)(_, _(m1, m1 + m2 - 1)) = right;
+  stacked->block(0, 0,  n, m1) = left;
+  stacked->block(0, m1, n, m2) = right;
 }
 
 void VerticalStack(const Mat &top, const Mat &bottom, Mat *stacked) {
-  assert(top.numCols() == bottom.numCols());
-  int n1 = top.numRows();
-  int n2 = bottom.numRows();
-  int m = top.numCols();
+  assert(top.cols() == bottom.cols());
+  int n1 = top.rows();
+  int n2 = bottom.rows();
+  int m = top.cols();
 
   stacked->resize(n1 + n2, m);
-  (*stacked)(_(0, n1 - 1), _) = top;
-  (*stacked)(_(n1, n1 + n2 - 1), _) = bottom;
+  stacked->block(0,  0, n1, m) = top;
+  stacked->block(n1, 0, n2, m) = bottom;
 }
 
 void MatrixColumn(const Mat &A, int i, Vec2 *v) {
-  assert(A.numRows() == 2);
-  *v = A(0,i), A(1,i);
+  assert(A.rows() == 2);
+  *v << A(0,i), A(1,i);
 }
 void MatrixColumn(const Mat &A, int i, Vec3 *v) {
-  assert(A.numRows() == 3);
-  *v = A(0,i), A(1,i), A(2,i);
+  assert(A.rows() == 3);
+  *v << A(0,i), A(1,i), A(2,i);
 }
 void MatrixColumn(const Mat &A, int i, Vec4 *v) {
-  assert(A.numRows() == 4);
-  *v = A(0,i), A(1,i), A(2,i), A(3,i);
+  assert(A.rows() == 4);
+  *v << A(0,i), A(1,i), A(2,i), A(3,i);
 }
 
 }  // namespace libmv

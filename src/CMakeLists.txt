@@ -48,14 +48,10 @@ ELSE (NOT CMAKE_MODULE_PATH)
 ENDIF (NOT CMAKE_MODULE_PATH)
 MARK_AS_ADVANCED(LIBMV_CMAKE_MODULE_PATH_OK)
 
-SET(BLAS_FIND_REQUIRED true)
-include(FindBLAS)
-SET(LAPACK_FIND_REQUIRED true)
-include(FindLAPACK)
-
 INCLUDE_DIRECTORIES(
   third_party/gtest
 	third_party/gtest/include
+	third_party/eigen2/
 	third_party/
 	${LIBMV_SOURCE_DIR}
 	${LIBMV_BINARY_DIR}
@@ -64,9 +60,6 @@ INCLUDE_DIRECTORIES(
 IF (APPLE)
     # Tell gtest not to use mac framworks.
     ADD_DEFINITIONS('-DGTEST_NOT_MAC_FRAMEWORK_MODE')
-
-    # Tell FLENS to use Veclib.
-    ADD_DEFINITIONS('-DVECLIB')
 ENDIF (APPLE)
 
 MACRO (ADD_GENERATED_SOURCE generated_file python_generator)
@@ -79,10 +72,7 @@ MACRO (LIBMV_TEST NAME EXTRA_LIBS)
   ADD_EXECUTABLE(${NAME}_test ${NAME}_test.cc)
   TARGET_LINK_LIBRARIES(${NAME}_test
                         ${EXTRA_LIBS} # Extra libs MUST be first,
-                        flens         # otherwise GCC pukes.
-                        gtest
-                        ${BLAS_LIBRARIES}
-                        ${LAPACK_LIBRARIES})
+                        gtest)
   ADD_TEST(${NAME}_test ${NAME}_test)
 ENDMACRO (LIBMV_TEST)
 

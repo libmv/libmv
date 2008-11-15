@@ -32,7 +32,7 @@ namespace {
 TEST(Convolve, ComputeGaussianKernel) {
   Vec kernel, derivative;
   ComputeGaussianKernel(1, &kernel, &derivative);
-  EXPECT_EQ(7, kernel.length());
+  EXPECT_EQ(7, kernel.size());
   // TODO(keir): Put in a more thorough test here!
 }
 
@@ -49,7 +49,7 @@ TEST(Convolve, BoxFilterHorizontal) {
   im.Fill(1);
   BoxFilterHorizontal(im, 3, &filtered);
   Vec kernel(3);
-  kernel = 1.;
+  kernel.setConstant(1.);
   ConvolveHorizontal(im, kernel, &convolved);
   EXPECT_EQ(filtered(5, 5), 3);
   EXPECT_TRUE(filtered == convolved);

@@ -33,7 +33,7 @@ using namespace libmv;
 TEST(Triangulation, TriangulateDLT) {
   TwoViewDataSet d = TwoRealisticCameras();
 
-  for (int i = 0; i < d.X.numCols(); ++i) {
+  for (int i = 0; i < d.X.cols(); ++i) {
     Vec2 x1, x2;
     MatrixColumn(d.x1, i, &x1);
     MatrixColumn(d.x2, i, &x2);

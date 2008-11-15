@@ -56,7 +56,7 @@ void WriteOutputImage(const FloatImage &image,
   }
 
   Vec3 green;
-  green = 0, 1, 0;
+  green << 0, 1, 0;
   for (; !features.Done(); features.Next()) {
     DrawFeature(*features.feature(), green, &output_image);
   }
