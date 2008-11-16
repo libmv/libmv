@@ -94,8 +94,6 @@ int main(int argc, char **argv) {
   ImagePyramid *pyramid = pyramid_sequence->Pyramid(0);
   KLTContext::FeatureList features;
   klt.DetectGoodFeatures(pyramid->Level(0), &features);
-//  WriteOutputImage(pyramid->Level(0), klt, features,
-//                   (files[0]+".out.ppm").c_str());
   int i = 0;
   for (KLTContext::FeatureList::iterator it = features.begin();
        it != features.end(); ++it, ++i) {
@@ -103,6 +101,12 @@ int main(int argc, char **argv) {
   }
 
   CorrespondencesView<KLTPointFeature> klt_correspondences(&correspondences);
+  if (FLAGS_debug_images) {
+    WriteOutputImage(
+        pyramid_sequence->Pyramid(0)->Level(0),
+        klt_correspondences.ScanFeaturesForImage(0),
+        (files[0]+".out.ppm").c_str());
+  }
   // TODO(keir): Use correspondences here!
   for (size_t i = 1; i < files.size(); ++i) {
     printf("Tracking %2zd features in %s\n", features.size(), files[i].c_str());
@@ -119,10 +123,12 @@ int main(int argc, char **argv) {
       }
     }
 
-    WriteOutputImage(
-        pyramid_sequence->Pyramid(i)->Level(0),
-        klt_correspondences.ScanFeaturesForImage(i),
-        (files[i]+".out.ppm").c_str());
+    if (FLAGS_debug_images) {
+      WriteOutputImage(
+          pyramid_sequence->Pyramid(i)->Level(0),
+          klt_correspondences.ScanFeaturesForImage(i),
+          (files[i]+".out.ppm").c_str());
+    }
   }
 
   // XXX
