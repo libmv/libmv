@@ -23,12 +23,8 @@
 namespace libmv {
 
 void P_From_KRt(const Mat3 &K, const Mat3 &R, const Vec3 &t, Mat34 *P) {
-  for (int i = 0; i < 3; ++i) {
-    for (int j = 0; j < 3; ++j) {
-      (*P)(i,j) = R(i,j);
-    }
-    (*P)(i,3) = t(i);
-  }
+  P->block(0, 0, 3, 3) = R;
+  P->col(3) = t;
   (*P) = K * (*P);
 }
 
@@ -169,12 +165,11 @@ void EuclideanToHomogeneous(const Vec3 &X, Vec4 *H) {
 void Project(const Mat34 &P, const Mat &X, Mat *x) {
   Mat XX;
   EuclideanToHomogeneous(X, &XX);
-  Mat xx = P * XX;
-  HomogeneousToEuclidean(xx, x);
+  HomogeneousToEuclidean(P * XX, x);
 }
 
 double Depth(const Mat3 &R, const Vec3 &t, const Vec3 &X) {
-  return R(2,0) * X(0) + R(2,1) * X(1) + R(2,2) * X(2) + t(2);
+  return (R*X + t)(2);
 }
 
 
