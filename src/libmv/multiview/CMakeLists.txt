@@ -3,6 +3,8 @@ ADD_DEFINITIONS(-DTHIS_SOURCE_DIR=\\"${CMAKE_CURRENT_SOURCE_DIR}\\")
 ADD_LIBRARY(multiview
             projection.cc
             fundamental.cc
+            robust_fundamental.cc
+            robust_estimation.cc
             focal_from_fundamental.cc
             triangulation.cc)
 
@@ -17,6 +19,7 @@ MULTIVIEW_TEST(projection)
 MULTIVIEW_TEST(triangulation)
 MULTIVIEW_TEST(fundamental)
 MULTIVIEW_TEST(focal_from_fundamental)
+MULTIVIEW_TEST(robust_fundamental)
 
 # TODO(keir): Make tests that depend on generated.cc to use generated sources.
 #ADD_GENERATED_SOURCE(generated.cc generator.py)

@@ -31,7 +31,7 @@ ENABLE_TESTING()
 
 # -Wno-deprecated needed for gcc-4.3 on debian/testing;
 # needed due to flens/refcounter.h including deprecated hash_map
-SET(CMAKE_CXX_FLAGS "-Wall -W -Wfatal-errors -Werror -Wno-deprecated")
+SET(CMAKE_CXX_FLAGS "-Wall -W -Wfatal-errors -Werror -Wno-deprecated -Wno-sign-compare")
 
 SET(CMAKE_MODULE_PATH ${LIBMV_SOURCE_DIR}/CMakeModules)
 MESSAGE("CMAKE_MODULE_PATH = ${CMAKE_MODULE_PATH}")
