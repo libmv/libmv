@@ -226,28 +226,20 @@ void MotionFromEssential(const Mat3 &E,
     Vt.row(2) *= -1;
   }
 
-  Vec3 u3, m_u3;
-  u3 << U(0,2), U(1,2), U(2,2);
-  m_u3 = -u3;
-
   Mat3 W;
-  W << 0, -1, 0,
-       1,  0, 0,
-       0,  0, 1;
+  W << 0, -1,  0,
+       1,  0,  0,
+       0,  0,  1;
 
   Mat3 U_W_Vt = U * W * Vt;
   Mat3 U_Wt_Vt = U * W.transpose() * Vt;
 
   Rs->resize(4);
   ts->resize(4);
-  (*Rs)[0] = U_W_Vt;
-  (*ts)[0] = u3;
-  (*Rs)[1] = U_W_Vt;
-  (*ts)[1] = m_u3;
-  (*Rs)[2] = U_Wt_Vt;
-  (*ts)[2] = u3;
-  (*Rs)[3] = U_Wt_Vt;
-  (*ts)[3] = m_u3;
+  (*Rs)[0] = U_W_Vt;  (*ts)[0] =  U.col(2);
+  (*Rs)[1] = U_W_Vt;  (*ts)[1] = -U.col(2);
+  (*Rs)[2] = U_Wt_Vt; (*ts)[2] =  U.col(2);
+  (*Rs)[3] = U_Wt_Vt; (*ts)[3] = -U.col(2);
 }
 
 int MotionFromEssentialChooseSolution(const std::vector<Mat3> &Rs,
