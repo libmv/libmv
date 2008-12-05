@@ -38,9 +38,8 @@ RobustFitter::~RobustFitter() {}
 // Chum, O. and Matas. J.: Optimal Randomized RANSAC, PAMI, August 2008
 // http://cmp.felk.cvut.cz/~chum/papers/chum-pami08.pdf
 //
-// Capel, D.P., An Effective Bail-out Test for RANSAC Consensus Scoring,
-// BMVC05.
-// www.comp.leeds.ac.uk/bmvc2008/proceedings/2005/papers/224/Capel224.pdf
+// Capel, D.P., An Effective Bail-out Test for RANSAC Consensus Scoring, BMVC05.
+// http://www.comp.leeds.ac.uk/bmvc2008/proceedings/2005/papers/224/Capel224.pdf
 //
 // The bailout technique used is the one from Capel's paper. The technique in
 // the Chum paper is considerably more involved to implement for only marginal
