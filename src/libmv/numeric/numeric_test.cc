@@ -329,4 +329,18 @@ TEST(Numeric, InplaceProduct) {
   EXPECT_NEAR(1, K(1,1), 1e-8);
 }
 
+// This does unexpected things.
+// Keir: Not with eigen2!
+TEST(Numeric, ExtractColumns) {
+  Mat2X A(2, 5);
+  A << 1, 2, 3, 4, 5,
+       6, 7, 8, 9, 10;
+  Vec2i columns;
+  columns << 0, 2;
+  Mat2X extracted = ExtractColumns(A, columns);
+  EXPECT_NEAR(1, extracted(0,0), 1e-15);
+  EXPECT_NEAR(3, extracted(0,1), 1e-15);
+  EXPECT_NEAR(6, extracted(1,0), 1e-15);
+  EXPECT_NEAR(8, extracted(1,1), 1e-15);
+}
 }  // namespace

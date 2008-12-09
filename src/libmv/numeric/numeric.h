@@ -43,6 +43,9 @@ typedef Eigen::Matrix<double, 3, 4> Mat34;
 typedef Eigen::Matrix<double, 4, 3> Mat43;
 typedef Eigen::Matrix<double, 4, 4> Mat4;
 
+typedef Eigen::Matrix<double, 2, Eigen::Dynamic> Mat2X;
+typedef Eigen::Matrix<double, 3, Eigen::Dynamic> Mat3X;
+
 typedef Eigen::Vector2d Vec2;
 typedef Eigen::Vector3d Vec3;
 typedef Eigen::Vector4d Vec4;
@@ -50,6 +53,8 @@ typedef Eigen::Vector4d Vec4;
 typedef Eigen::Vector2f Vec2f;
 typedef Eigen::Vector3f Vec3f;
 typedef Eigen::Vector4f Vec4f;
+
+typedef Eigen::VectorXi VecXi;
 
 typedef Eigen::Vector2i Vec2i;
 typedef Eigen::Vector3i Vec3i;
@@ -201,6 +206,15 @@ void VerticalStack(const Mat &top, const Mat &bottom, Mat *stacked);
 void MatrixColumn(const Mat &A, int i, Vec2 *v);
 void MatrixColumn(const Mat &A, int i, Vec3 *v);
 void MatrixColumn(const Mat &A, int i, Vec4 *v);
+
+template <typename TMat, typename TCols>
+TMat ExtractColumns(const TMat &A, TCols columns) {
+  TMat compressed(A.rows(), columns.size());
+  for (int i = 0; i < columns.size(); ++i) {
+    compressed.col(i) = A.col(columns[i]);
+  }
+  return compressed;
+}
 
 }  // namespace mv
 
