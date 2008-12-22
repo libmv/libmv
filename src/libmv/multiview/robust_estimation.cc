@@ -33,6 +33,22 @@ Model::~Model() {}
 Fitter::~Fitter() {}
 RobustFitter::~RobustFitter() {}
 
+// A random subset of the integers [0, total), in random order.
+VecXi PickSubset(int num_samples, int total) {
+  int i = 0;
+  std::set<int> sample_set;
+  VecXi samples(num_samples);
+  while (sample_set.size() < num_samples) {
+    int sample_set_size = sample_set.size();
+    int random_value_in_range = rand() % total;
+    sample_set.insert(random_value_in_range);
+    if (sample_set_size != sample_set.size()) {
+      samples[i++] = random_value_in_range;
+    }
+  }
+  return samples;
+}
+
 // From the following papers:
 //
 // Chum, O. and Matas. J.: Optimal Randomized RANSAC, PAMI, August 2008
@@ -53,27 +69,31 @@ double SigmaApprox(int num_inliers, int num_sampled, int num_total) {
     (num_total - num_sampled) / (num_total - 1);
 }
 
-// THIS CODE TOTALLY NOT WORKING!
-Model *RobustFitter::Fit(Fitter *fitter, int total_samples) {
+template<typename Model, typename Fitter, typename Classifier, typename TMat>
+Model FitRobustly(TMat &samples, Classifier classifier) {
   int iteration = 0;
-  int max_iterations = 10000;  // A big number.
-  int min_samples = fitter->MinimumSamples();
+  int max_iterations = 10000;
   int best_num_inliers = 0;
-  best_cost_ = 1e300;  // Another big number.
-  double best_inlier_ratio = 0;
+  int min_samples = Fitter::MinimumSamples();
+  int total_samples = samples.cols();
+  double best_cost = HUGE_VAL;
+  double best_inlier_ratio = 0.0;
 
-  while (iteration < max_iterations) {
-    std::vector<int> samples;
-    PickSubset(min_samples, total_samples, &samples);
+  while (iteration++ < max_iterations) {
+    VecXi subset_indices = PickSubset(min_samples, total_samples);
+    TMat subset = ExtractColumns(subset_indices, samples);
 
-    std::vector<Model *> models;
-    fitter->Fit(samples, &models);
+    std::vector<Model> models;
+    Fitter::Fit(samples, &models);
 
-    std::vector<int> inliers;
     for (int i = 0; i < models.size(); ++i) {
-
       // Compute costs for each fit, possibly bailing early if the model looks
       // like it does not promise to beat the current best.
+      //
+      // XXX This section must be strategized. Maybe not as a 'classifier'
+      // though; perhaps the entire scoring system should change to a strategy.
+      //
+      // possible outputs include 'discard this model'.
       int inliers = 0;
       double cost = 0;
       for (int j = 0; j < total_samples; ++j) {
@@ -82,74 +102,40 @@ Model *RobustFitter::Fit(Fitter *fitter, int total_samples) {
         models[i]->Cost(j, &cost_j, &is_inlier);
         cost += cost_j;
         inliers += is_inlier;
-
-        // Skip fancy early-break for now.
-        continue;
-
-        // TODO(keir): Tune this knob!
-        const double zconf = +2.3;  // This is a knob in the paper based on confidence.
-        double sigma = sqrt(SigmaApprox(best_num_inliers, j+1, total_samples));
-        int min_inliers_to_continue =
-            floor((j+1) * best_inlier_ratio - zconf * sigma);
-        if (inliers < min_inliers_to_continue) {
-          cost = 1e300;
-          printf("aborted at %d of %d samples. sigma=%g, min_inl=%d\n",
-                  j, total_samples, sigma, min_inliers_to_continue);
-          break;
-        }
       }
 
-      if (cost < best_cost_) {
-        best_cost_ = cost;
-        inlier_samples_.clear();
-        inlier_samples_.insert(inlier_samples_.begin(),
-                               samples.begin(),
-                               samples.end());
+      if (cost < best_cost) {
+        best_cost = cost;
+        // XXX
+        ///inlier_samples_.clear();
+        ///inlier_samples_.insert(inlier_samples_.begin(),
+///                               samples.begin(),
+  ///                             samples.end());
         best_inlier_ratio = inliers;
         best_inlier_ratio /= total_samples;
         best_num_inliers = inliers;
-        best_model_ = models[i];
+        ///best_model_ = models[i];  // XXX fixme
         models[i] = NULL;
         printf("new best score %g with %d of %d samples inlying.\n",
-            best_cost_, best_num_inliers, total_samples);
+            best_cost, best_num_inliers, total_samples);
         // TODO(keir): Add refinement (Lo-RANSAC) here.
       }
     }
 
-    for (int i = 0; i < models.size(); ++i) {
-      delete models[i];
-    }
-
     const double desired_certainty = 0.05;
     double needed_iterations = log(desired_certainty)
-                              / log(1 - pow(best_inlier_ratio, min_samples));
-    if (needed_iterations > 1000) {
-      max_iterations = 1000;
-    } else {
-      max_iterations = needed_iterations;
-    }
+                             / log(1 - pow(best_inlier_ratio, min_samples));
+    max_iterations = std::min(needed_iterations, 10000.);
 
     printf("num=%g, denom=%g\n",
            log(desired_certainty),
            log(1 - pow(best_inlier_ratio, min_samples)));
 
     printf("max_iterations=%d, best_inlier_ratio=%g\n", max_iterations, best_inlier_ratio);
-
-    iteration++;
-
   }
 
-  return best_model_;
-}
-
-void RobustFitter::PickSubset(int num_samples,
-                                 int total,
-                                 std::vector<int> *samples) {
-  std::set<int> sample_set;
-  while (sample_set.size() < num_samples) {
-    sample_set.insert(rand() % total);
-  }
-  samples->insert(samples->begin(), sample_set.begin(), sample_set.end());
+  ///return best_model_;  // XXX fixme
+  //return Model;
 }
 
 } // namespace libmv

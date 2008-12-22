@@ -23,7 +23,7 @@
 namespace libmv {
 
 void P_From_KRt(const Mat3 &K, const Mat3 &R, const Vec3 &t, Mat34 *P) {
-  P->block(0, 0, 3, 3) = R;
+  P->block<3, 3>(0, 0) = R;
   P->col(3) = t;
   (*P) = K * (*P);
 }
@@ -169,7 +169,7 @@ void Project(const Mat34 &P, const Mat &X, Mat *x) {
 }
 
 double Depth(const Mat3 &R, const Vec3 &t, const Vec3 &X) {
-  return (R*X + t)(2);
+  return (R*X)(2) + t(2);
 }
 
 

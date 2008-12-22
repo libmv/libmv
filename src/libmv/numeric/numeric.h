@@ -28,6 +28,7 @@
 #include <Eigen/Core>
 #include <Eigen/SVD>
 #include <Eigen/LU>
+#include <Eigen/Cholesky>
 #include <Eigen/Geometry>
 
 #include <iostream>
@@ -45,6 +46,8 @@ typedef Eigen::Matrix<double, 4, 4> Mat4;
 
 typedef Eigen::Matrix<double, 2, Eigen::Dynamic> Mat2X;
 typedef Eigen::Matrix<double, 3, Eigen::Dynamic> Mat3X;
+typedef Eigen::Matrix<double, Eigen::Dynamic, 2> MatX2;
+typedef Eigen::Matrix<double, Eigen::Dynamic, 3> MatX3;
 
 typedef Eigen::Vector2d Vec2;
 typedef Eigen::Vector3d Vec3;

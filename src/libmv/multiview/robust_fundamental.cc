@@ -26,6 +26,7 @@
 
 namespace libmv {
 
+  /* XXX FIXME
 struct FundamentalModel : public Model {
  public:
   virtual ~FundamentalModel() {};
@@ -53,7 +54,6 @@ struct FundamentalModel : public Model {
       *is_inlier = true;
       *cost = sampson_error;
     }
-
   }
 
   const Mat &all_x1s_;
@@ -61,6 +61,7 @@ struct FundamentalModel : public Model {
   Mat3 F;
 };
 
+// Simple linear fitter.
 class FundamentalFitter : public Fitter {
  public:
   virtual ~FundamentalFitter() {};
@@ -71,13 +72,8 @@ class FundamentalFitter : public Fitter {
     return 8;
   }
   virtual void Fit(const std::vector<int> &samples, std::vector<Model *> *models) {
-    Mat x1s(2, samples.size());
-    Mat x2s(2, samples.size());
-    for (int i = 0; i < samples.size(); ++i) {
-      printf("picked sample %d\n", samples[i]);
-      x1s.col(i) = all_x1s_.col(samples[i]);
-      x2s.col(i) = all_x2s_.col(samples[i]);
-    }
+    Mat x1s = ExtractColumns(all_x1s_, samples);
+    Mat x2s = ExtractColumns(all_x2s_, samples);
     Mat3 F;
     FundamentalFromCorrespondences8Point(x1s, x2s, &F);
     models->push_back(new FundamentalModel(all_x1s_, all_x2s_, F));
@@ -85,14 +81,20 @@ class FundamentalFitter : public Fitter {
   const Mat &all_x1s_;
   const Mat &all_x2s_;
 };
+*/
 
 double FundamentalFromCorrespondences8PointRobust(const Mat &x1,
                                                   const Mat &x2,
                                                   Mat3 *F) {
+  (void) x1;
+  (void) x2;
+  (void) F;
+  /* XXX FIXME
   RobustFitter robust_fitter;
   FundamentalFitter fundamental_fitter(x1, x2);
   Model *F_model = robust_fitter.Fit(&fundamental_fitter, x1.cols());
   *F = static_cast<FundamentalModel *>(F_model)->F;
+  */
   return 0.0;  // This doesn't mean much for the robust case.
 }
 

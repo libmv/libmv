@@ -21,9 +21,6 @@
 #ifndef TESTING_TESTING_H_
 #define TESTING_TESTING_H_
 
-// The base testing interface, used by the libmv unit tests. Currently it is
-// based on testsoon (from http://testsoon.sf.net)
-
 #include "third_party/gtest/include/gtest/gtest.h"
 
 #endif  // TESTING_TESTING_H_
