@@ -38,7 +38,8 @@ using namespace libmv;
 //
 
 struct LineModel {
-  double Cost(Vec2 &xy) {
+  // Perhaps "Error" doesn't belong in the model. Squared error for now.
+  double Error(const Vec2 &xy) {
     double x = xy(0);
     double y = xy(1);
     double line_y = a*x + b;
@@ -49,7 +50,7 @@ struct LineModel {
 };
 
 struct LineFitter {
-  static void Fit(Mat2X &samples, std::vector<LineModel> *models) {
+  void Fit(Mat2X &samples, std::vector<LineModel> *models) {
     // Standard least squares solution.
     MatX2 X(samples.cols(), 2);
     X.col(0).setOnes();
@@ -61,50 +62,47 @@ struct LineFitter {
     LineModel line = {ba(1), ba(0)};
     models->push_back(line);
   }
-  static int MinimumSamples() {
+  int MinimumSamples() {
     return 2;
   }
 };
 
-  // XXX fixme
-  /*
-struct ThresholdClassifier {
-  ThresholdClassifier(double threshold)
-    : threshold_(threshold) {}
-
-  bool IsOutlier(Vec2 &xy, LineModel &model) {
-    return model->Cost(xy) > threshold;
-  }
-  double threshold_;
-};
-*/
-
+// Since the line fitter isn't so simple, test it in isolation.
 TEST(LineFitter, ItWorks) {
   Mat2X xy(2, 5);
   // y = 2x + 1
   xy << 1, 2, 3, 4,  5,
         3, 5, 7, 9, 11;
   std::vector<LineModel> models;
-  LineFitter::Fit(xy, &models);
+  LineFitter fitter;
+  fitter.Fit(xy, &models);
   ASSERT_EQ(1, models.size());
   EXPECT_NEAR(2.0, models[0].a, 1e-9);
   EXPECT_NEAR(1.0, models[0].b, 1e-9);
 }
 
-TEST(RobustLineFitter, SimpleCase) {
+TEST(RobustLineFitter, OutlierFree) {
   Mat2X xy(2, 5);
   // y = 2x + 1
+  xy << 1, 2, 3, 4,  5,
+        3, 5, 7, 9, 11;
+
+  LineModel model = 
+    Estimate<LineModel>(xy, LineFitter(), ThresholdClassifier(4), MLECost(4));
+  EXPECT_NEAR(2.0, model.a, 1e-9);
+  EXPECT_NEAR(1.0, model.b, 1e-9);
+}
+
+TEST(RobustLineFitter, OneOutlier) {
+  Mat2X xy(2, 6);
+  // y = 2x + 1 with an outlier
   xy << 1, 2, 3, 4,  5, /* outlier! */  100,
         3, 5, 7, 9, 11, /* outlier! */ -123;
 
-  /*
-  LineFitter::Fit(xy, &models);
-  // XXX fixme
-  ///Estimate<LineModel, LineFitter, ThresholdClassifier>(
-  ASSERT_EQ(1, models.size());
-  EXPECT_NEAR(2.0, models[0].a, 1e-9);
-  EXPECT_NEAR(1.0, models[0].b, 1e-9);
-  */
+  LineModel model = 
+    Estimate<LineModel>(xy, LineFitter(), ThresholdClassifier(4), MLECost(4));
+  EXPECT_NEAR(2.0, model.a, 1e-9);
+  EXPECT_NEAR(1.0, model.b, 1e-9);
 }
 
 }  // namespace

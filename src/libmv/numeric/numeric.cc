@@ -107,17 +107,6 @@ void HorizontalStack(const Mat &left, const Mat &right, Mat *stacked) {
   stacked->block(0, m1, n, m2) = right;
 }
 
-void VerticalStack(const Mat &top, const Mat &bottom, Mat *stacked) {
-  assert(top.cols() == bottom.cols());
-  int n1 = top.rows();
-  int n2 = bottom.rows();
-  int m = top.cols();
-
-  stacked->resize(n1 + n2, m);
-  stacked->block(0,  0, n1, m) = top;
-  stacked->block(n1, 0, n2, m) = bottom;
-}
-
 void MatrixColumn(const Mat &A, int i, Vec2 *v) {
   assert(A.rows() == 2);
   *v << A(0,i), A(1,i);

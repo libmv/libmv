@@ -26,75 +26,54 @@
 
 namespace libmv {
 
-  /* XXX FIXME
-struct FundamentalModel : public Model {
+struct FundamentalModel {
  public:
-  virtual ~FundamentalModel() {};
+  FundamentalModel() {}
+  FundamentalModel(Mat3 F) : F(F) {}
 
-  FundamentalModel(const Mat &x1s, const Mat &x2s, Mat3 F)
-    : all_x1s_(x1s), all_x2s_(x2s), F(F) {}
-
-  virtual void Cost(int sample, double *cost, bool *is_inlier) {
-    Vec3 x1; x1.start(2) = all_x1s_.col(sample); x1(2) = 1.0;
-    Vec3 x2; x2.start(2) = all_x2s_.col(sample); x2(2) = 1.0;
-    *is_inlier = false;
+  template<typename TVec>
+  double Error(TVec x1x2) {
+    Vec3 x1; x1.start(2) = x1x2.start(2); x1(2) = 1.0;
+    Vec3 x2; x2.start(2) = x1x2.end(2);   x2(2) = 1.0;
 
     // Approximation of true error; page 287 of HZ equation 11.9. This avoids
     // triangulating the point, relying only on the entries in F.
     double sampson_error = (x1.transpose() * F * x2)(0,0)
-         / ((F*x1).norm2() + (F.transpose()*x2).norm2());
+         / ((F * x1).norm2() + (F.transpose() * x2).norm2());
 
-    sampson_error = sampson_error*sampson_error;
-    printf("sampson(%d)=%g\n", sample, sampson_error);
-
-    // TODO(keir): Abstract this knob! In libmv1 this was adaptive.
-    const double threshold = 1.0;
-    *cost = threshold;
-    if (sampson_error < threshold) {
-      *is_inlier = true;
-      *cost = sampson_error;
-    }
+    double sampson_error2 = sampson_error * sampson_error;
+    printf("sampson error^2 = %g\n", sampson_error2);
+    return sampson_error2;
   }
-
-  const Mat &all_x1s_;
-  const Mat &all_x2s_;
   Mat3 F;
 };
 
 // Simple linear fitter.
-class FundamentalFitter : public Fitter {
+class FundamentalFitter {
  public:
-  virtual ~FundamentalFitter() {};
-  FundamentalFitter(const Mat &all_x1s, const Mat &all_x2s)
-    : all_x1s_(all_x1s), all_x2s_(all_x2s) {}
-
-  virtual int MinimumSamples() {
+  void Fit(Mat4X &x1x2, std::vector<FundamentalModel> *models) {
+    Mat3 F;
+    int n = x1x2.cols();
+    Mat2X x1s(2, n); x1x2.block(0, 0, 2, n);
+    Mat2X x2s(2, n); x1x2.block(2, 0, 2, n);
+    FundamentalFromCorrespondences8Point(x1s, x2s, &F);
+    models->push_back(FundamentalModel(F));
+  }
+  int MinimumSamples() {
     return 8;
   }
-  virtual void Fit(const std::vector<int> &samples, std::vector<Model *> *models) {
-    Mat x1s = ExtractColumns(all_x1s_, samples);
-    Mat x2s = ExtractColumns(all_x2s_, samples);
-    Mat3 F;
-    FundamentalFromCorrespondences8Point(x1s, x2s, &F);
-    models->push_back(new FundamentalModel(all_x1s_, all_x2s_, F));
-  }
-  const Mat &all_x1s_;
-  const Mat &all_x2s_;
 };
-*/
 
 double FundamentalFromCorrespondences8PointRobust(const Mat &x1,
                                                   const Mat &x2,
                                                   Mat3 *F) {
-  (void) x1;
-  (void) x2;
-  (void) F;
-  /* XXX FIXME
-  RobustFitter robust_fitter;
-  FundamentalFitter fundamental_fitter(x1, x2);
-  Model *F_model = robust_fitter.Fit(&fundamental_fitter, x1.cols());
-  *F = static_cast<FundamentalModel *>(F_model)->F;
-  */
+  Mat4X x1x2;
+  VerticalStack(x1, x2, &x1x2);
+  FundamentalModel model = Estimate<FundamentalModel>(x1x2,
+                                                      FundamentalFitter(),
+                                                      ThresholdClassifier(4),
+                                                      MLECost(4));
+  *F = model.F;
   return 0.0;  // This doesn't mean much for the robust case.
 }
 

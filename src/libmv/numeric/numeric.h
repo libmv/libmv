@@ -46,8 +46,10 @@ typedef Eigen::Matrix<double, 4, 4> Mat4;
 
 typedef Eigen::Matrix<double, 2, Eigen::Dynamic> Mat2X;
 typedef Eigen::Matrix<double, 3, Eigen::Dynamic> Mat3X;
+typedef Eigen::Matrix<double, 4, Eigen::Dynamic> Mat4X;
 typedef Eigen::Matrix<double, Eigen::Dynamic, 2> MatX2;
 typedef Eigen::Matrix<double, Eigen::Dynamic, 3> MatX3;
+typedef Eigen::Matrix<double, Eigen::Dynamic, 4> MatX4;
 
 typedef Eigen::Vector2d Vec2;
 typedef Eigen::Vector3d Vec3;
@@ -204,7 +206,18 @@ void MeanAndVarianceAlongRows(const Mat &A,
                               Vec *variance_pointer);
 
 void HorizontalStack(const Mat &left, const Mat &right, Mat *stacked);
-void VerticalStack(const Mat &top, const Mat &bottom, Mat *stacked);
+
+template<typename TTop, typename TBot, typename TStacked>
+void VerticalStack(const TTop &top, const TBot &bottom, TStacked *stacked) {
+  assert(top.cols() == bottom.cols());
+  int n1 = top.rows();
+  int n2 = bottom.rows();
+  int m = top.cols();
+
+  stacked->resize(n1 + n2, m);
+  stacked->block(0,  0, n1, m) = top;
+  stacked->block(n1, 0, n2, m) = bottom;
+}
 
 void MatrixColumn(const Mat &A, int i, Vec2 *v);
 void MatrixColumn(const Mat &A, int i, Vec3 *v);
