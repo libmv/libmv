@@ -74,7 +74,9 @@ MACRO (LIBMV_TEST NAME EXTRA_LIBS)
   TARGET_LINK_LIBRARIES(${NAME}_test
                         ${EXTRA_LIBS} # Extra libs MUST be first,
                         glog
-                        gtest)
+                        gflags
+                        gtest
+                        pthread)
   ADD_TEST(${NAME}_test ${NAME}_test)
 ENDMACRO (LIBMV_TEST)
 

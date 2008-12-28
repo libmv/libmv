@@ -24,6 +24,7 @@
 #include <set>
 #include <vector>
 
+#include "third_party/glog/src/glog/logging.h"
 #include "libmv/numeric/numeric.h"
 
 namespace libmv {
@@ -87,13 +88,12 @@ Model Estimate(TMat &samples, Fitter fitter, Classifier classifier,
   while (iteration++ < max_iterations) {
     VecXi subset_indices = PickSubset(min_samples, total_samples);
     TMat subset = ExtractColumns(samples, subset_indices);
-    std::cout << "samples: (" << subset_indices.size() << ") "
-              << subset_indices << std::endl;
+    VLOG(1) << "Random subset: (" << subset_indices.size() << ") "
+             << subset_indices;
 
     std::vector<Model> models;
     fitter.Fit(subset, &models);
-
-    printf("fit!\n");
+    VLOG(1) << "Fitted subset; found " << models.size() << " models.";
 
     for (int i = 0; i < models.size(); ++i) {
       // Compute costs for each fit, possibly bailing early if the model looks
@@ -111,18 +111,20 @@ Model Estimate(TMat &samples, Fitter fitter, Classifier classifier,
         bool is_inlier = classifier.IsInlier(error_j);
         cost += cost_j;
         num_inliers += is_inlier ? 1 : 0;
-        //printf("error_j=%g, cost_j=%g, is_inlier=%d, cost=%g, num_inliers=%d\n",
-        //       error_j, cost_j, is_inlier, cost, num_inliers);
+        VLOG(4) << "error_j=" << error_j
+                << " cost_j=" << cost_j
+                << " is_inlier=" << is_inlier;
       }
-      printf("cost=%g, num_inliers=%d\n", cost, num_inliers);
+      VLOG(3) << "Fit cost: " << cost << ", number of inliers: " << num_inliers;
 
       if (cost < best_cost) {
         best_cost = cost;
         best_inlier_ratio = num_inliers / float(total_samples);
         best_num_inliers = num_inliers;
         best_model = models[i];
-        //printf("new best score %g with %d of %d samples inlying.\n",
-        //    best_cost, best_num_inliers, total_samples);
+        VLOG(2) << "New best cost: " << best_cost << " with "
+                << best_num_inliers << " inlying of "
+                << total_samples << " total samples.";
         // TODO(keir): Add refinement (Lo-RANSAC) here.
       }
     }
@@ -133,12 +135,8 @@ Model Estimate(TMat &samples, Fitter fitter, Classifier classifier,
     max_iterations = std::min(static_cast<int>(needed_iterations),
                               really_max_iterations);
 
-    printf("num=%g, denom=%g\n",
-           log(desired_certainty),
-           log(1 - pow(best_inlier_ratio, min_samples)));
-
-    printf("max_iterations=%d, best_inlier_ratio=%g\n",
-           max_iterations, best_inlier_ratio);
+    VLOG(1) << "Max iterations needed given best inlier ratio: "
+            << max_iterations << "; best inlier ratio: " << best_inlier_ratio;
   }
 
   return best_model;
