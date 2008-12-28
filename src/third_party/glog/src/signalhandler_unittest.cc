@@ -20,6 +20,8 @@ void* DieInThread(void*) {
   // Use volatile to prevent from these to be optimized away.
   volatile int a = 0;
   volatile int b = 1 / a;
+  (void) b;
+  return NULL;
 }
 
 void WriteToStdout(const char* data, int size) {

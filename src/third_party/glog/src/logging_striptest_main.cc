@@ -28,6 +28,7 @@ struct A { };
 std::ostream &operator<<(std::ostream &str, const A&) {return str;}
 
 int main(int argc, char* argv[]) {
+  (void) argc;
   FLAGS_logtostderr = true;
   InitGoogleLogging(argv[0]);
   LOG(INFO) << "TESTMESSAGE INFO";

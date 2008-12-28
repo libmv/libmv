@@ -6,8 +6,8 @@
 #include <iostream>
 #include <fstream>
 #include <string>
-#include <gtest.h>
 #include "glog/logging.h"
+#include "googletest.h"
 #include "demangle.h"
 #include "config.h"
 
@@ -42,6 +42,7 @@ TEST(Demangle, CornerCases) {
 
 TEST(Demangle, FromFile) {
   string test_file = FLAGS_test_srcdir + "/src/demangle_unittest.txt";
+  fprintf(stderr, "File: %s\n", test_file.c_str());
   ifstream f(test_file.c_str());  // The file should exist.
   EXPECT_FALSE(f.fail());
 
@@ -62,11 +63,10 @@ TEST(Demangle, FromFile) {
 }
 
 int main(int argc, char **argv) {
-#ifdef HAVE_LIB_GFLAGS
-  ParseCommandLineFlags(&argc, &argv, true);
-#endif
-  FLAGS_logtostderr = true;
+  system("pwd");
   InitGoogleLogging(argv[0]);
+  FLAGS_logtostderr = true;
+  ParseCommandLineFlags(&argc, &argv, true);
   if (FLAGS_demangle_filter) {
     // Read from cin and write to cout.
     string line;

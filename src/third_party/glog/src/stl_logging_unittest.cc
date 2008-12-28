@@ -145,6 +145,8 @@ void TestSTLLogging() {
 }
 
 int main(int argc, char** argv) {
+  (void) argc;
+  (void) argv;
   TestSTLLogging();
   std::cout << "PASS\n";
   return 0;

@@ -41,9 +41,7 @@
 #include <inttypes.h>           // a third place for uint16_t or u_int16_t
 #endif
 
-#if 0
 #include <gflags/gflags.h>
-#endif
 
 namespace google {
 
@@ -1269,7 +1267,10 @@ class NullStream : public LogMessage::LogStream {
 // converted to LogStream and the message will be computed and then
 // quietly discarded.
 template<class T>
-inline NullStream& operator<<(NullStream &str, const T &value) { return str; }
+inline NullStream& operator<<(NullStream &str, const T &value) {
+  (void) value;
+  return str;
+}
 
 // Similar to NullStream, but aborts the program (without stack
 // trace), like LogMessageFatal.

@@ -91,9 +91,16 @@ static void BM_Check2(int n) {
 BENCHMARK(BM_Check2);
 
 static void CheckFailure(int a, int b, const char* file, int line, const char* msg) {
+  (void) a;
+  (void) b;
+  (void) file;
+  (void) line;
+  (void) msg;
 }
 
 int main(int argc, char **argv) {
+  google::ParseCommandLineFlags(&argc, &argv, true);
+
   // Test some basics before InitGoogleLogging:
   CaptureTestStderr();
   LogWithLevels(FLAGS_v, FLAGS_stderrthreshold,
@@ -368,6 +375,7 @@ class TestLogSinkImpl : public LogSink {
                     const char* base_filename, int line,
                     const struct tm* tm_time,
                     const char* message, size_t message_len) {
+    (void) full_filename;
     errors.push_back(
       ToString(severity, base_filename, line, tm_time, message, message_len));
   }
@@ -574,6 +582,8 @@ struct MyLogger : public base::Logger {
                      time_t timestamp,
                      const char* message,
                      int length) {
+    (void) should_flush;
+    (void) timestamp;
     data.append(message, length);
   }
 
@@ -833,6 +843,7 @@ class TestWaitingLogSink : public LogSink {
                     const char* base_filename, int line,
                     const struct tm* tm_time,
                     const char* message, size_t message_len) {
+    (void) full_filename;
     // Push it to Writer thread if we are the original logging thread.
     // Note: Something like ThreadLocalLogSink is a better choice
     //       to do thread-specific LogSink logic for real.
@@ -903,10 +914,14 @@ void MyCheck(bool a, bool b) {
 }
 
 struct UserDefinedClass {
-  bool operator==(const UserDefinedClass& rhs) const { return true; }
+  bool operator==(const UserDefinedClass& rhs) const {
+    (void) rhs;
+    return true;
+  }
 };
 
 inline ostream& operator<<(ostream& out, const UserDefinedClass& u) {
+  (void) u;
   out << "OK";
   return out;
 }

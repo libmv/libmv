@@ -17,16 +17,16 @@
 #include <fcntl.h>
 #include <unistd.h>
 
-#include "base/commandlineflags.h"
+#include "config.h"
+#include "third_party/gflags/gflags.h"
 
 using std::map;
 using std::string;
 using std::vector;
 
-DEFINE_string(test_tmpdir, "/tmp", "Dir we use for temp files");
-DEFINE_string(test_srcdir, ".",
-              "Source-dir root, needed to find glog_unittest_flagfile");
-DEFINE_int32(benchmark_iters, 100000000, "Number of iterations per benchmark");
+DECLARE_string(test_tmpdir);
+DECLARE_string(test_srcdir);
+DECLARE_int32(benchmark_iters);
 
 _START_GOOGLE_NAMESPACE_
 
@@ -91,7 +91,7 @@ extern void (*g_logging_fail_func)();
 
 static bool g_called_abort;
 static jmp_buf g_jmp_buf;
-static void CalledAbort() {
+void CalledAbort() {
   g_called_abort = true;
   longjmp(g_jmp_buf, 1);
 }
@@ -129,7 +129,7 @@ vector<void (*)()> g_testlist;  // the tests to run
   void Test_##a##_##b::RunTest()
 
 
-static int RUN_ALL_TESTS() {
+int RUN_ALL_TESTS() {
   vector<void (*)()>::const_iterator it;
   for (it = g_testlist.begin(); it != g_testlist.end(); ++it) {
     (*it)();
@@ -151,7 +151,7 @@ class BenchmarkRegisterer {
   }
 };
 
-static void RunSpecifiedBenchmarks() {
+void RunSpecifiedBenchmarks() {
   int iter_cnt = FLAGS_benchmark_iters;
   puts("Benchmark\tTime(ns)\tIterations");
   for (map<string, void (*)(int)>::const_iterator iter = g_benchlist.begin();
@@ -230,7 +230,7 @@ static void CaptureTestOutput(int fd, const string & filename) {
   CHECK(s_captured_streams[fd] == NULL);
   s_captured_streams[fd] = new CapturedStream(fd, filename);
 }
-static void CaptureTestStderr() {
+void CaptureTestStderr() {
   CaptureTestOutput(STDERR_FILENO, FLAGS_test_tmpdir + "/captured.err");
 }
 // Return the size (in bytes) of a file
@@ -282,7 +282,7 @@ static string GetCapturedTestOutput(int fd) {
   return content;
 }
 // Get the captured stderr of a test as a string.
-static string GetCapturedTestStderr() {
+string GetCapturedTestStderr() {
   return GetCapturedTestOutput(STDERR_FILENO);
 }
 
@@ -380,7 +380,7 @@ static void WriteToFile(const string& body, const string& file) {
   fclose(fp);
 }
 
-static bool MungeAndDiffTestStderr(const string& golden_filename) {
+bool MungeAndDiffTestStderr(const string& golden_filename) {
   CapturedStream* cap = s_captured_streams[STDERR_FILENO];
   CHECK(cap) << ": did you forget CaptureTestStderr()?";
 
@@ -432,7 +432,8 @@ struct FlagSaver {
 // TODO(hamaji): Make it portable.
 class Thread {
  public:
-  ~Thread() {}
+  virtual ~Thread() {}
+  void SetJoinable(bool joinable) {(void) joinable;}
   void Start() {
     pthread_create(&th_, NULL, &Thread::InvokeThread, this);
   }
@@ -453,7 +454,7 @@ class Thread {
 };
 
 // TODO(hamaji): Make it portable.
-static void SleepForMilliseconds(int t) {
+void SleepForMilliseconds(int t) {
   usleep(t * 1000);
 }
 

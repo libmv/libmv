@@ -15,6 +15,7 @@ TEST(sync_val_compare_and_swap, utilities) {
 }
 
 int main(int argc, char **argv) {
+  (void) argc;
   InitGoogleLogging(argv[0]);
 
   CHECK_EQ(RUN_ALL_TESTS(), 0);

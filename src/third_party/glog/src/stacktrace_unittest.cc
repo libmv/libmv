@@ -111,10 +111,9 @@ void CheckStackTrace(int i)  { for (int j = i; j >= 0; j--) CheckStackTrace1(j);
 
 int main(int argc, char ** argv) {
   FLAGS_logtostderr = true;
+  ParseCommandLineFlags(&argc, &argv, true);
   InitGoogleLogging(argv[0]);
-  
   CheckStackTrace(0);
-  
   printf("PASS\n");
   return 0;
 }

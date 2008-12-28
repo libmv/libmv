@@ -110,9 +110,10 @@ static void *g_pc_to_symbolize;
 static char g_symbolize_buffer[4096];
 static char *g_symbolize_result;
 
-static void EmptySignalHandler(int signo) {}
+static void EmptySignalHandler(int signo) {(void) signo;}
 
 static void SymbolizeSignalHandler(int signo) {
+  (void) signo;
   if (Symbolize(g_pc_to_symbolize, g_symbolize_buffer,
                 sizeof(g_symbolize_buffer))) {
     g_symbolize_result = g_symbolize_buffer;
@@ -165,7 +166,8 @@ static const char *SymbolizeStackConsumption(void *pc, int *stack_consumed) {
   memset(altstack, kAlternateStackFillValue, kAlternateStackSize);
 
   // Set up the alt-signal-stack (and save the older one).
-  stack_t sigstk = {};  // Zero-clear.
+  stack_t sigstk;
+  memset(&sigstk, 0, sizeof(sigstk));
   stack_t old_sigstk;
   sigstk.ss_sp = altstack;
   sigstk.ss_size = kAlternateStackSize;
@@ -173,7 +175,8 @@ static const char *SymbolizeStackConsumption(void *pc, int *stack_consumed) {
   CHECK_ERR(sigaltstack(&sigstk, &old_sigstk));
 
   // Set up SIGUSR1 and SIGUSR2 signal handlers (and save the older ones).
-  struct sigaction sa = {};  // Zero-clear;
+  struct sigaction sa;
+  memset(&sa, 0, sizeof(sa));
   struct sigaction old_sa1, old_sa2;
   sigemptyset(&sa.sa_mask);
   sa.sa_flags = SA_ONSTACK;
@@ -306,6 +309,7 @@ void ATTRIBUTE_NOINLINE TestWithReturnAddress() {
 }
 
 int main(int argc, char **argv) {
+  (void) argc;
   FLAGS_logtostderr = true;
   InitGoogleLogging(argv[0]);
 #ifdef HAVE_SYMBOLIZE
