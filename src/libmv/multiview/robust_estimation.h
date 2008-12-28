@@ -98,12 +98,8 @@ Model Estimate(TMat &samples, Fitter fitter, Classifier classifier,
     for (int i = 0; i < models.size(); ++i) {
       // Compute costs for each fit, possibly bailing early if the model looks
       // like it does not promise to beat the current best.
-      //
-      // XXX This section must be strategized. Maybe not as a 'classifier'
-      // though; perhaps the entire scoring system should change to a strategy.
-      //
-      // Possible outputs include 'discard this model'.
       int num_inliers = 0;
+      double inlier_error = 0;
       double cost = 0;
       for (int j = 0; j < total_samples; ++j) {
         double error_j = models[i].Error(samples.col(j));
@@ -111,9 +107,11 @@ Model Estimate(TMat &samples, Fitter fitter, Classifier classifier,
         bool is_inlier = classifier.IsInlier(error_j);
         cost += cost_j;
         num_inliers += is_inlier ? 1 : 0;
+        inlier_error += is_inlier ? error_j : 0;
         VLOG(4) << "error_j=" << error_j
                 << " cost_j=" << cost_j
                 << " is_inlier=" << is_inlier;
+        // TODO(keir): Add hypergometric early-breakout.
       }
       VLOG(3) << "Fit cost: " << cost << ", number of inliers: " << num_inliers;
 
@@ -124,12 +122,14 @@ Model Estimate(TMat &samples, Fitter fitter, Classifier classifier,
         best_model = models[i];
         VLOG(2) << "New best cost: " << best_cost << " with "
                 << best_num_inliers << " inlying of "
-                << total_samples << " total samples.";
+                << total_samples << " total samples. Inlier error:"
+                << inlier_error;
         // TODO(keir): Add refinement (Lo-RANSAC) here.
       }
     }
 
-    const double desired_certainty = 0.05;
+    // TODO(keir): This is a knob that likely should be exposed.
+    const double desired_certainty = 0.03;
     double needed_iterations = log(desired_certainty)
                              / log(1 - pow(best_inlier_ratio, min_samples));
     max_iterations = std::min(static_cast<int>(needed_iterations),
@@ -157,7 +157,6 @@ struct MLECost {
   }
   double threshold_;
 };
-
 
 } // namespace libmv
 
