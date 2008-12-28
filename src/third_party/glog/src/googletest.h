@@ -352,7 +352,7 @@ static string Munge(const string& filename) {
   while (fgets(buf, 4095, fp)) {
     string line = MungeLine(buf);
     char null_str[256];
-    sprintf(null_str, "%p", NULL);
+    sprintf(null_str, "%p", (void*) NULL);
     StringReplace(&line, "__NULLP__", null_str);
 
     char errmsg_buf[100];
@@ -432,7 +432,7 @@ struct FlagSaver {
 // TODO(hamaji): Make it portable.
 class Thread {
  public:
-  void SetJoinable(bool joinable) {}
+  ~Thread() {}
   void Start() {
     pthread_create(&th_, NULL, &Thread::InvokeThread, this);
   }

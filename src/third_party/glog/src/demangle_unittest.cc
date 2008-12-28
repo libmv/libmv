@@ -6,9 +6,9 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <gtest.h>
 #include "glog/logging.h"
 #include "demangle.h"
-#include "googletest.h"
 #include "config.h"
 
 DEFINE_bool(demangle_filter, false, "Run demangle_unittest in filter mode");

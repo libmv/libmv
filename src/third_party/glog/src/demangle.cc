@@ -203,6 +203,7 @@ static bool ParseCharClass(State *state, const char *char_class) {
 
 // This function is used for handling an optional non-terminal.
 static bool Optional(bool status) {
+  (void) status;
   return true;
 }
 

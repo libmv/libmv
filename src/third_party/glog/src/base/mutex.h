@@ -129,7 +129,7 @@ class Mutex {
   MutexType mutex_;
 
   // Catch the error of writing Mutex when intending MutexLock.
-  Mutex(Mutex *ignored) {}
+  Mutex(Mutex *ignored) {(void) ignored;}
   // Disallow "evil" constructors
   Mutex(const Mutex&);
   void operator=(const Mutex&);

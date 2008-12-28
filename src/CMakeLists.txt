@@ -50,9 +50,10 @@ MARK_AS_ADVANCED(LIBMV_CMAKE_MODULE_PATH_OK)
 
 INCLUDE_DIRECTORIES(
   third_party/gtest
+  third_party/glog/src
 	third_party/gtest/include
-	third_party/eigen2/
-	third_party/
+	third_party/eigen2
+	third_party
 	${LIBMV_SOURCE_DIR}
 	${LIBMV_BINARY_DIR}
 )
@@ -72,6 +73,7 @@ MACRO (LIBMV_TEST NAME EXTRA_LIBS)
   ADD_EXECUTABLE(${NAME}_test ${NAME}_test.cc)
   TARGET_LINK_LIBRARIES(${NAME}_test
                         ${EXTRA_LIBS} # Extra libs MUST be first,
+                        glog
                         gtest)
   ADD_TEST(${NAME}_test ${NAME}_test)
 ENDMACRO (LIBMV_TEST)

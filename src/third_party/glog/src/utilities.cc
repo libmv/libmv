@@ -35,6 +35,7 @@ typedef void DebugWriter(const char*, void*);
 static const int kPrintfPointerFieldWidth = 2 + 2 * sizeof(void*);
 
 static void DebugWriteToStderr(const char* data, void *unused) {
+  (void) unused;
   // This one is signal-safe.
   write(STDERR_FILENO, data, strlen(data));
 }
@@ -56,6 +57,7 @@ static void DumpPCAndSymbol(DebugWriter *writerfn, void *arg, void *pc,
   writerfn(buf, arg);
 }
 
+/* Keir: Unused; comment out to silence GCC.
 // Print a program counter and the corresponding stack frame size.
 static void DumpPCAndFrameSize(DebugWriter *writerfn, void *arg, void *pc,
                                int framesize, const char * const prefix) {
@@ -69,6 +71,7 @@ static void DumpPCAndFrameSize(DebugWriter *writerfn, void *arg, void *pc,
   }
   writerfn(buf, arg);
 }
+*/
 
 static void DumpPC(DebugWriter *writerfn, void *arg, void *pc,
                    const char * const prefix) {
@@ -101,7 +104,8 @@ static void DumpStackTraceAndExit() {
 
   // Set the default signal handler for SIGABRT, to avoid invoking our
   // own signal handler installed by InstallFailedSignalHandler().
-  struct sigaction sig_action = {};  // Zero-clear.
+  struct sigaction sig_action;
+  memset(&sig_action, 0, sizeof(sig_action));
   sigemptyset(&sig_action.sa_mask);
   sig_action.sa_handler = SIG_DFL;
   sigaction(SIGABRT, &sig_action, NULL);

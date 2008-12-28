@@ -466,6 +466,7 @@ struct DummyClassToDefineOperator {};
 // defined classes which have operator<< (e.g., stl_logging.h).
 inline std::ostream& operator<<(
     std::ostream& out, const google::DummyClassToDefineOperator& dummy) {
+  (void) dummy;
   return out;
 }
 
