@@ -63,7 +63,6 @@ TEST(Demangle, FromFile) {
 }
 
 int main(int argc, char **argv) {
-  system("pwd");
   InitGoogleLogging(argv[0]);
   FLAGS_logtostderr = true;
   ParseCommandLineFlags(&argc, &argv, true);

@@ -30,10 +30,12 @@
 #include <iostream>
 
 #include <gtest/gtest.h>
+#include "third_party/gflags/gflags.h"
 
 int main(int argc, char **argv) {
   std::cout << "Running main() from gtest_main.cc\n";
-
   testing::InitGoogleTest(&argc, argv);
+  google::ParseCommandLineFlags(&argc, &argv, true);
+
   return RUN_ALL_TESTS();
 }
