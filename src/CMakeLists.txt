@@ -59,8 +59,8 @@ INCLUDE_DIRECTORIES(
 )
 
 IF (APPLE)
-    # Tell gtest not to use mac framworks.
-    ADD_DEFINITIONS('-DGTEST_NOT_MAC_FRAMEWORK_MODE')
+  # Tell gtest not to use mac framworks.
+  ADD_DEFINITIONS('-DGTEST_NOT_MAC_FRAMEWORK_MODE')
 ENDIF (APPLE)
 
 MACRO (ADD_GENERATED_SOURCE generated_file python_generator)
@@ -72,10 +72,10 @@ ENDMACRO (ADD_GENERATED_SOURCE)
 MACRO (LIBMV_TEST NAME EXTRA_LIBS)
   ADD_EXECUTABLE(${NAME}_test ${NAME}_test.cc)
   TARGET_LINK_LIBRARIES(${NAME}_test
-                        ${EXTRA_LIBS} # Extra libs MUST be first,
-                        glog
+                        ${EXTRA_LIBS} # Extra libs MUST be first.
+                        gtest 
                         gflags
-                        gtest
+                        glog
                         pthread)
   ADD_TEST(${NAME}_test ${NAME}_test)
 ENDMACRO (LIBMV_TEST)
