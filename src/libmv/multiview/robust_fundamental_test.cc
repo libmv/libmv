@@ -26,10 +26,10 @@
 #include "libmv/multiview/test_data_sets.h"
 #include "libmv/numeric/numeric.h"
 #include "testing/testing.h"
-
-// TODO(keir): Finish this! It is totally incomplete.
+#include "third_party/glog/src/glog/logging.h"
 
 namespace {
+
 using namespace libmv;
 
 TEST(RobustFundamental, FundamentalFromCorrespondences8PointRobust) {
@@ -45,8 +45,9 @@ TEST(RobustFundamental, FundamentalFromCorrespondences8PointRobust) {
   }
 
   Mat3 F;
-  // TODO(keir): This is freezing on an infinite loop in SVD. FIXME!
-  //FundamentalFromCorrespondences8PointRobust(x1, x2, &F);
+  FundamentalFromCorrespondences8PointRobust(x1, x2, &F);
+
+  // FIXME: This doesn't actually check the value of F!
 
   Vec y_F_x(n);
   for (int i = 0; i < n; ++i) {
@@ -56,34 +57,54 @@ TEST(RobustFundamental, FundamentalFromCorrespondences8PointRobust) {
     F_x = F * x;
     y_F_x(i) = y.dot(F_x);
   }
-  EXPECT_NEAR(0, y_F_x(0), 1e-8);
-  EXPECT_NEAR(0, y_F_x(1), 1e-8);
-  EXPECT_NEAR(0, y_F_x(2), 1e-8);
-  EXPECT_NEAR(0, y_F_x(3), 1e-8);
-  EXPECT_NEAR(0, y_F_x(4), 1e-8);
-  EXPECT_NEAR(0, y_F_x(5), 1e-8);
-  EXPECT_NEAR(0, y_F_x(6), 1e-8);
-  EXPECT_NEAR(0, y_F_x(7), 1e-8);
-
+  EXPECT_MATRIX_NEAR_ZERO(y_F_x, 1e-8);
   EXPECT_NEAR(0, Determinant(F), 1e-8);
 }
 
-// TODO(keir): Finish this! It is totally incomplete. The test is broken at the
-// moment.
-/*
+TEST(Fundamental, FundamentalFromCorrespondences8PointRealisticNoOutliers) {
+  TwoViewDataSet d = TwoRealisticCameras();
+
+  Mat3 F_estimated;
+  FundamentalFromCorrespondences8PointRobust(d.x1, d.x2, &F_estimated);
+
+  // Normalize.
+  Mat3 F_gt_norm, F_estimated_norm;
+  NormalizeFundamental(d.F, &F_gt_norm);
+  NormalizeFundamental(F_estimated, &F_estimated_norm);
+  LOG(INFO) << "F_gt_norm =\n" << F_gt_norm;
+  LOG(INFO) << "F_estimated_norm =\n" << F_estimated_norm;
+
+  EXPECT_MATRIX_NEAR(F_gt_norm, F_estimated_norm, 1e-8);
+
+  // Check fundamental properties.
+  int n = d.X.cols();
+  Vec y_F_x(n);
+  for (int i = 0; i < n; ++i) {
+    Vec3 x, y;
+    x << d.x1(0, i), d.x1(1, i), 1;
+    y << d.x2(0, i), d.x2(1, i), 1;
+    y_F_x(i) = y.dot(F_estimated * x);
+  }
+  EXPECT_MATRIX_NEAR_ZERO(y_F_x, 1e-8);
+  EXPECT_NEAR(0, Determinant(F_estimated), 1e-8);
+}
+
 TEST(Fundamental, FundamentalFromCorrespondences8PointRealistic) {
   TwoViewDataSet d = TwoRealisticCameras();
 
-  d.X.set(Mat::Random(3, 50));
-  std::cout << d.X << std::endl;
+  d.X.set(3*Mat::Random(3, 50));
+  LOG(INFO) << "X = \n" << d.X;
 
   Project(d.P1, d.X, &d.x1);
   Project(d.P2, d.X, &d.x2);
-  std::cout << "x1::::" << d.x1 << std::endl;
+  LOG(INFO) << "x1 = \n" << d.x1;
+  LOG(INFO) << "x2 = \n" << d.x2;
 
+  //Mat x1s = d.x1;
+  //Mat x2s = d.x2;
   Mat x1s, x2s;
-  HorizontalStack(d.x1, Mat::Random(2, 50), &x1s);
-  HorizontalStack(d.x2, Mat::Random(2, 50), &x2s);
+  HorizontalStack(d.x1, 400*Mat::Random(2, 20), &x1s);
+  HorizontalStack(d.x2, 400*Mat::Random(2, 20), &x2s);
 
   // Compute fundamental matrix from correspondences.
   Mat3 F_estimated;
@@ -93,38 +114,23 @@ TEST(Fundamental, FundamentalFromCorrespondences8PointRealistic) {
   Mat3 F_gt_norm, F_estimated_norm;
   NormalizeFundamental(d.F, &F_gt_norm);
   NormalizeFundamental(F_estimated, &F_estimated_norm);
-  
+  LOG(INFO) << "F_gt_norm =\n" << F_gt_norm;
+  LOG(INFO) << "F_estimated_norm =\n" << F_estimated_norm;
+
   // Compare with ground truth.
-  EXPECT_NEAR(F_gt_norm(0, 0), F_estimated_norm(0, 0), 1e-8);
-  EXPECT_NEAR(F_gt_norm(0, 1), F_estimated_norm(0, 1), 1e-8);
-  EXPECT_NEAR(F_gt_norm(0, 2), F_estimated_norm(0, 2), 1e-8);
-  EXPECT_NEAR(F_gt_norm(1, 0), F_estimated_norm(1, 0), 1e-8);
-  EXPECT_NEAR(F_gt_norm(1, 1), F_estimated_norm(1, 1), 1e-8);
-  EXPECT_NEAR(F_gt_norm(1, 2), F_estimated_norm(1, 2), 1e-8);
-  EXPECT_NEAR(F_gt_norm(2, 0), F_estimated_norm(2, 0), 1e-8);
-  EXPECT_NEAR(F_gt_norm(2, 1), F_estimated_norm(2, 1), 1e-8);
-  EXPECT_NEAR(F_gt_norm(2, 2), F_estimated_norm(2, 2), 1e-8);
+  EXPECT_MATRIX_NEAR(F_gt_norm, F_estimated_norm, 1e-8);
 
   // Check fundamental properties.
   int n = d.X.cols();
   Vec y_F_x(n);
   for (int i = 0; i < n; ++i) {
-    Vec3 x, y, F_x;
+    Vec3 x, y;
     x << d.x1(0, i), d.x1(1, i), 1;
     y << d.x2(0, i), d.x2(1, i), 1;
-    F_x = F_estimated * x;
-    y_F_x(i) = y.dot(F_x);
+    y_F_x(i) = y.dot(F_estimated * x);
   }
-  EXPECT_NEAR(0, y_F_x(0), 1e-8);
-  EXPECT_NEAR(0, y_F_x(1), 1e-8);
-  EXPECT_NEAR(0, y_F_x(2), 1e-8);
-  EXPECT_NEAR(0, y_F_x(3), 1e-8);
-  EXPECT_NEAR(0, y_F_x(4), 1e-8);
-  EXPECT_NEAR(0, y_F_x(5), 1e-8);
-  EXPECT_NEAR(0, y_F_x(6), 1e-8);
-  EXPECT_NEAR(0, y_F_x(7), 1e-8);
+  EXPECT_MATRIX_NEAR_ZERO(y_F_x, 1e-8);
   EXPECT_NEAR(0, Determinant(F_estimated), 1e-8);
 }
-*/
 
 } // namespace

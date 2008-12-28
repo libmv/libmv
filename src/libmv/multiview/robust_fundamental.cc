@@ -23,6 +23,7 @@
 #include "libmv/numeric/numeric.h"
 #include "libmv/multiview/fundamental.h"
 #include "libmv/multiview/robust_estimation.h"
+#include "third_party/glog/src/glog/logging.h"
 
 namespace libmv {
 
@@ -42,7 +43,7 @@ struct FundamentalModel {
          / ((F * x1).norm2() + (F.transpose() * x2).norm2());
 
     double sampson_error2 = sampson_error * sampson_error;
-    printf("sampson error^2 = %g\n", sampson_error2);
+    VLOG(4) << "Sampson error^2 = " << sampson_error2;
     return sampson_error2;
   }
   Mat3 F;
@@ -54,8 +55,8 @@ class FundamentalFitter {
   void Fit(Mat4X &x1x2, std::vector<FundamentalModel> *models) {
     Mat3 F;
     int n = x1x2.cols();
-    Mat2X x1s(2, n); x1x2.block(0, 0, 2, n);
-    Mat2X x2s(2, n); x1x2.block(2, 0, 2, n);
+    Mat2X x1s(x1x2.block(0, 0, 2, n));
+    Mat2X x2s(x1x2.block(2, 0, 2, n));
     FundamentalFromCorrespondences8Point(x1s, x2s, &F);
     models->push_back(FundamentalModel(F));
   }
@@ -71,8 +72,8 @@ double FundamentalFromCorrespondences8PointRobust(const Mat &x1,
   VerticalStack(x1, x2, &x1x2);
   FundamentalModel model = Estimate<FundamentalModel>(x1x2,
                                                       FundamentalFitter(),
-                                                      ThresholdClassifier(4),
-                                                      MLECost(4));
+                                                      ThresholdClassifier(1),
+                                                      MLECost(1));
   *F = model.F;
   return 0.0;  // This doesn't mean much for the robust case.
 }
