@@ -22,5 +22,28 @@
 #define TESTING_TESTING_H_
 
 #include "third_party/gtest/include/gtest/gtest.h"
+#include "libmv/numeric/numeric.h"
+
+#define EXPECT_MATRIX_NEAR(a, b, tolerance) \
+do { \
+  ASSERT_EQ(a.rows(), b.rows()) << "Matrix rows don't match:"; \
+  ASSERT_EQ(a.cols(), b.cols()) << "Matrix cols don't match."; \
+  for (int r = 0; r < a.rows(); ++r) { \
+    for (int c = 0; c < a.cols(); ++c) { \
+      EXPECT_NEAR(a(r, c), b(r, c), tolerance) \
+        << "r=" << r << ", c=" << c << "."; \
+    } \
+  } \
+} while(false);
+
+#define EXPECT_MATRIX_NEAR_ZERO(a, tolerance) \
+do { \
+  for (int r = 0; r < a.rows(); ++r) { \
+    for (int c = 0; c < a.cols(); ++c) { \
+      EXPECT_NEAR(0.0, a(r, c), tolerance) \
+        << "r=" << r << ", c=" << c << "."; \
+    } \
+  } \
+} while(false);
 
 #endif  // TESTING_TESTING_H_
