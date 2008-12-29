@@ -66,6 +66,30 @@ TEST(Numeric, NullspaceMatchesLapackSVD) {
   EXPECT_NEAR(-0.7371931, x(2), 1e-8);
 }
 
+TEST(Numeric, Nullspace2) {
+  Mat43 A;
+  A << 0.76026643, 0.01799744, 0.55192142,
+       0.8699745,  0.42016166, 0.97863392,
+       0.33711682, 0.14479271, 0.51016811,
+       0.66528302, 0.54395496, 0.57794893;
+  Vec3 x1, x2;
+  double s = Nullspace2(&A, &x1, &x2);
+  EXPECT_NEAR(1.0, x1.norm(), 1e-15);
+  EXPECT_NEAR(0.206694992663, s, 1e-9);
+  EXPECT_NEAR(0.206694992663, (A * x1).norm(), 1e-9);
+
+  EXPECT_NEAR( 0.64999717, x1(0), 1e-8);
+  EXPECT_NEAR( 0.18452646, x1(1), 1e-8);
+  EXPECT_NEAR(-0.7371931, x1(2), 1e-8);
+
+  if (x2(0) < 0) {
+    x2 *= -1;
+  }
+  EXPECT_NEAR( 0.34679618, x2(0), 1e-8);
+  EXPECT_NEAR(-0.93519689, x2(1), 1e-8);
+  EXPECT_NEAR( 0.07168809, x2(2), 1e-8);
+}
+
 TEST(Numeric, TinyMatrixSquareTranspose) {
   Mat2 A;
   A << 1.0, 2.0, 3.0, 4.0;

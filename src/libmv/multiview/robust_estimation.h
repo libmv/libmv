@@ -93,7 +93,7 @@ Model Estimate(TMat &samples, Fitter fitter, Classifier classifier,
 
     std::vector<Model> models;
     fitter.Fit(subset, &models);
-    VLOG(1) << "Fitted subset; found " << models.size() << " models.";
+    VLOG(1) << "Fitted subset; found " << models.size() << " model(s).";
 
     for (int i = 0; i < models.size(); ++i) {
       // Compute costs for each fit, possibly bailing early if the model looks

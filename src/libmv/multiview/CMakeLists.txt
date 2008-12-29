@@ -6,6 +6,7 @@ ADD_LIBRARY(multiview
             robust_fundamental.cc
             robust_estimation.cc
             focal_from_fundamental.cc
+            sixpointnview.cc
             triangulation.cc)
 
 ADD_LIBRARY(multiview_test_data

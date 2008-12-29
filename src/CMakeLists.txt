@@ -51,11 +51,11 @@ MARK_AS_ADVANCED(LIBMV_CMAKE_MODULE_PATH_OK)
 INCLUDE_DIRECTORIES(
   third_party/gtest
   third_party/glog/src
-	third_party/gtest/include
-	third_party/eigen2
-	third_party
-	${LIBMV_SOURCE_DIR}
-	${LIBMV_BINARY_DIR}
+  third_party/gtest/include
+  third_party/eigen2
+  third_party
+  ${LIBMV_SOURCE_DIR}
+  ${LIBMV_BINARY_DIR}
 )
 
 IF (APPLE)
@@ -65,8 +65,8 @@ ENDIF (APPLE)
 
 MACRO (ADD_GENERATED_SOURCE generated_file python_generator)
     ADD_CUSTOM_COMMAND(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${generated_file}
-	       COMMAND python ${CMAKE_CURRENT_SOURCE_DIR}/${python_generator}
-	       DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${python_generator})
+       COMMAND python ${CMAKE_CURRENT_SOURCE_DIR}/${python_generator}
+       DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${python_generator})
 ENDMACRO (ADD_GENERATED_SOURCE)
 
 MACRO (LIBMV_TEST NAME EXTRA_LIBS)

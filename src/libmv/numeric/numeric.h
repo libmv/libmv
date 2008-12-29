@@ -41,8 +41,10 @@ typedef Eigen::VectorXd Vec;
 typedef Eigen::Matrix<double, 2, 2> Mat2;
 typedef Eigen::Matrix<double, 3, 3> Mat3;
 typedef Eigen::Matrix<double, 3, 4> Mat34;
+typedef Eigen::Matrix<double, 3, 5> Mat35;
 typedef Eigen::Matrix<double, 4, 3> Mat43;
 typedef Eigen::Matrix<double, 4, 4> Mat4;
+typedef Eigen::Matrix<double, 4, 6> Mat46;
 
 typedef Eigen::Matrix<double, 2, Eigen::Dynamic> Mat2X;
 typedef Eigen::Matrix<double, 3, Eigen::Dynamic> Mat3X;
@@ -54,6 +56,7 @@ typedef Eigen::Matrix<double, Eigen::Dynamic, 4> MatX4;
 typedef Eigen::Vector2d Vec2;
 typedef Eigen::Vector3d Vec3;
 typedef Eigen::Vector4d Vec4;
+typedef Eigen::Matrix<double, 5, 1> Vec5;
 
 typedef Eigen::Vector2f Vec2f;
 typedef Eigen::Vector3f Vec3f;
@@ -90,6 +93,28 @@ double Nullspace(TMat *A, TVec *nullspace) {
   A_extended.block(A->rows(), 0, A->cols() - A->rows(), A->cols()).setZero();
   A_extended.block(0,0, A->rows(), A->cols()) = (*A);
   return Nullspace(&A_extended, nullspace);
+}
+
+// Solve the linear system Ax = 0 via SVD. Finds two solutions, x1 and x2, such
+// that x1 is the best solution and x2 is the next best solution (in the L2
+// norm sense). Store the solution in x1 and x2, such that ||x|| = 1.0. Return
+// the singluar value corresponding to the solution x1.  Destroys A and resizes
+// x if necessary.
+template <typename TMat, typename TVec1, typename TVec2>
+double Nullspace2(TMat *A, TVec1 *x1, TVec2 *x2) {
+  if (A->rows() >= A->cols()) {
+    Eigen::SVD<TMat> svd(*A);
+    Mat V = svd.matrixV();
+    x1->set(V.col(A->cols()-1));
+    x2->set(V.col(A->cols()-2));
+    return svd.singularValues()(A->cols()-1);
+  }
+  // Extend A with rows of zeros to make it square. It's a hack, but is
+  // necessary until Eigen supports SVD with more columns than rows.
+  Mat A_extended(A->cols(), A->cols());
+  A_extended.block(A->rows(), 0, A->cols() - A->rows(), A->cols()).setZero();
+  A_extended.block(0,0, A->rows(), A->cols()) = (*A);
+  return Nullspace2(&A_extended, x1, x2);
 }
 
 // In place transpose for square matrices.

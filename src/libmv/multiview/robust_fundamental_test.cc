@@ -100,8 +100,6 @@ TEST(Fundamental, FundamentalFromCorrespondences8PointRealistic) {
   LOG(INFO) << "x1 = \n" << d.x1;
   LOG(INFO) << "x2 = \n" << d.x2;
 
-  //Mat x1s = d.x1;
-  //Mat x2s = d.x2;
   Mat x1s, x2s;
   HorizontalStack(d.x1, 400*Mat::Random(2, 20), &x1s);
   HorizontalStack(d.x2, 400*Mat::Random(2, 20), &x2s);
