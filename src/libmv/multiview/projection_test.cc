@@ -27,70 +27,55 @@
 namespace {
 using namespace libmv;
 
-TEST(Fundamental, P_From_KRt) {
-  Mat34 P;
-  Mat3 K, R;
-  Vec3 t;
-
+TEST(Projection, P_From_KRt) {
+  Mat3 K, Kp;
   K << 10,  1, 30,
         0, 20, 40,
         0,  0,  1;
+
+  Mat3 R, Rp;
   R << 1, 0, 0,
        0, 1, 0,
        0, 0, 1;
-  t << 1, 2, 3;
-  P_From_KRt(K, R, t, &P);
-  KRt_From_P(P, &K, &R, &t);
-  EXPECT_NEAR(10, K(0,0), 1e-8);
-  EXPECT_NEAR( 1, K(0,1), 1e-8);
-  EXPECT_NEAR(30, K(0,2), 1e-8);
-  EXPECT_NEAR( 0, K(1,0), 1e-8);
-  EXPECT_NEAR(20, K(1,1), 1e-8);
-  EXPECT_NEAR(40, K(1,2), 1e-8);
-  EXPECT_NEAR( 0, K(2,0), 1e-8);
-  EXPECT_NEAR( 0, K(2,1), 1e-8);
-  EXPECT_NEAR( 1, K(2,2), 1e-8);
-  EXPECT_NEAR( 1, R(0,0), 1e-8);
-  EXPECT_NEAR( 0, R(0,1), 1e-8);
-  EXPECT_NEAR( 0, R(0,2), 1e-8);
-  EXPECT_NEAR( 0, R(1,0), 1e-8);
-  EXPECT_NEAR( 1, R(1,1), 1e-8);
-  EXPECT_NEAR( 0, R(1,2), 1e-8);
-  EXPECT_NEAR( 0, R(2,0), 1e-8);
-  EXPECT_NEAR( 0, R(2,1), 1e-8);
-  EXPECT_NEAR( 1, R(2,2), 1e-8);
-  EXPECT_NEAR( 1, t(0), 1e-8);
-  EXPECT_NEAR( 2, t(1), 1e-8);
-  EXPECT_NEAR( 3, t(2), 1e-8);
 
-  // This is for testing that det(R) = 1, which is not the current behaviour
-  // of KRt_From_P
-/*  P =-1, 0, 0, 0,
-      0, 1, 0, 0,
-      0, 0, 1, 0;
-  KRt_From_P(P, &K, &R, &t);
-  EXPECT_NEAR( 1, K(0,0), 1e-8);
-  EXPECT_NEAR( 0, K(0,1), 1e-8);
-  EXPECT_NEAR( 0, K(0,2), 1e-8);
-  EXPECT_NEAR( 0, K(1,0), 1e-8);
-  EXPECT_NEAR(-1, K(1,1), 1e-8);
-  EXPECT_NEAR( 0, K(1,2), 1e-8);
-  EXPECT_NEAR( 0, K(2,0), 1e-8);
-  EXPECT_NEAR( 0, K(2,1), 1e-8);
-  EXPECT_NEAR( 1, K(2,2), 1e-8);
-  EXPECT_NEAR(-1, R(0,0), 1e-8);
-  EXPECT_NEAR( 0, R(0,1), 1e-8);
-  EXPECT_NEAR( 0, R(0,2), 1e-8);
-  EXPECT_NEAR( 0, R(1,0), 1e-8);
-  EXPECT_NEAR(-1, R(1,1), 1e-8);
-  EXPECT_NEAR( 0, R(1,2), 1e-8);
-  EXPECT_NEAR( 0, R(2,0), 1e-8);
-  EXPECT_NEAR( 0, R(2,1), 1e-8);
-  EXPECT_NEAR( 1, R(2,2), 1e-8);
-  EXPECT_NEAR( 0, t(0), 1e-8);
-  EXPECT_NEAR( 0, t(1), 1e-8);
-  EXPECT_NEAR( 0, t(2), 1e-8);
-  */
+  Vec3 t, tp;
+  t << 1, 2, 3;
+
+  Mat34 P;
+  P_From_KRt(K, R, t, &P);
+  KRt_From_P(P, &Kp, &Rp, &tp);
+
+  EXPECT_MATRIX_NEAR(K, Kp, 1e-8);
+  EXPECT_MATRIX_NEAR(R, Rp, 1e-8);
+  EXPECT_MATRIX_NEAR(t, tp, 1e-8);
+
+  // TODO(keir): Change the code to ensure det(R) == 1, which is not currently
+  // the case. Also add a test for that here.
+}
+
+TEST(Projection, Projection) {
+  Mat3X X(3, 4);
+  X << 1, 0, 0, 1,
+       0, 1, 0, 1,
+       0, 0, 1, 1;
+
+  Mat4X HX(4, 4);
+  HX << 1, 0, 0, 1,
+        0, 1, 0, 1,
+        0, 0, 1, 1,
+        1, 1, 1, 1;
+
+  Mat34 P;
+  P << 1, 0, 0, 100,
+       1, 2, 3, 100,
+       0, 0, 1, 100;
+
+  Mat2X x(2, 4);
+  x << 101 / 100., 100 / 100., 100 / 101., 101 / 101.,
+       101 / 100., 102 / 100., 103 / 101., 106 / 101.;
+
+  EXPECT_MATRIX_NEAR(x, Project(P, X),  1e-16);
+  EXPECT_MATRIX_NEAR(x, Project(P, HX), 1e-16);
 }
 
 } // namespace
