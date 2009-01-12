@@ -122,7 +122,7 @@ TEST(Fundamental, FundamentalFromCorrespondences8Point) {
   EXPECT_NEAR(0, y_F_x(6), 1e-8);
   EXPECT_NEAR(0, y_F_x(7), 1e-8);
 
-  EXPECT_NEAR(0, Determinant(F), 1e-8);
+  EXPECT_NEAR(0, F.determinant(), 1e-8);
 }
 
 TEST(Fundamental, FundamentalFromCorrespondencesLinearRealistic) {
@@ -158,15 +158,8 @@ TEST(Fundamental, FundamentalFromCorrespondencesLinearRealistic) {
     F_x = F_estimated * x;
     y_F_x(i) = y.dot(F_x);
   }
-  EXPECT_NEAR(0, y_F_x(0), 1e-8);
-  EXPECT_NEAR(0, y_F_x(1), 1e-8);
-  EXPECT_NEAR(0, y_F_x(2), 1e-8);
-  EXPECT_NEAR(0, y_F_x(3), 1e-8);
-  EXPECT_NEAR(0, y_F_x(4), 1e-8);
-  EXPECT_NEAR(0, y_F_x(5), 1e-8);
-  EXPECT_NEAR(0, y_F_x(6), 1e-8);
-  EXPECT_NEAR(0, y_F_x(7), 1e-8);
-  EXPECT_NEAR(0, Determinant(F_estimated), 1e-8);
+  EXPECT_MATRIX_NEAR_ZERO(y_F_x, 1e-8);
+  EXPECT_NEAR(0, F_estimated.determinant(), 1e-8);
 }
 
 TEST(Fundamental, FundamentalFromCorrespondences8PointRealistic) {
@@ -202,15 +195,8 @@ TEST(Fundamental, FundamentalFromCorrespondences8PointRealistic) {
     F_x = F_estimated * x;
     y_F_x(i) = y.dot(F_x);
   }
-  EXPECT_NEAR(0, y_F_x(0), 1e-8);
-  EXPECT_NEAR(0, y_F_x(1), 1e-8);
-  EXPECT_NEAR(0, y_F_x(2), 1e-8);
-  EXPECT_NEAR(0, y_F_x(3), 1e-8);
-  EXPECT_NEAR(0, y_F_x(4), 1e-8);
-  EXPECT_NEAR(0, y_F_x(5), 1e-8);
-  EXPECT_NEAR(0, y_F_x(6), 1e-8);
-  EXPECT_NEAR(0, y_F_x(7), 1e-8);
-  EXPECT_NEAR(0, Determinant(F_estimated), 1e-8);
+  EXPECT_MATRIX_NEAR_ZERO(y_F_x, 1e-8);
+  EXPECT_NEAR(0, F_estimated.determinant(), 1e-8);
 }
 
 // 8 points in a cube is a degenerate configuration.

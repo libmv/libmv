@@ -49,7 +49,7 @@ void FundamentalFromProjections(const Mat34 &P1, const Mat34 &P2, Mat3 *F)
   for (int i = 0; i < 3; ++i) {
     for (int j = 0; j < 3; ++j) {
       VerticalStack(X[j], Y[i], &XY);
-      (*F)(i, j) = Determinant(XY);
+      (*F)(i, j) = XY.determinant();
     }
   }
 }
@@ -218,11 +218,11 @@ void MotionFromEssential(const Mat3 &E,
   Mat3 Vt = USV.matrixV().transpose();
 
   // Last column of U is undetermined since d = (a a 0).
-  if (Determinant(U) < 0) {
+  if (U.determinant() < 0) {
     U.col(2) *= -1;
   }
   // Last row of Vt is undetermined since d = (a a 0).
-  if (Determinant(Vt) < 0) {
+  if (Vt.determinant() < 0) {
     Vt.row(2) *= -1;
   }
 
