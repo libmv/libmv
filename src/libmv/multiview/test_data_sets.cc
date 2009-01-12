@@ -18,6 +18,8 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
+#include <cmath>
+
 #include "libmv/numeric/numeric.h"
 #include "libmv/multiview/projection.h"
 #include "libmv/multiview/fundamental.h"
@@ -50,6 +52,44 @@ TwoViewDataSet TwoRealisticCameras() {
   Project(d.P1, d.X, &d.x1);
   Project(d.P2, d.X, &d.x2);
   
+  return d;
+}
+
+// TODO(keir): Make this more configurable.
+const int fx     =  1000;
+const int fy     =  1000;
+const int cx     =   500;
+const int cy     =   500;
+const double dist   =  1.5;
+const double jitter_amount = 0.01;
+
+NViewDataSet NRealisticCameras(int nviews, int npoints) {
+  NViewDataSet d;
+  d.n = nviews;
+
+  d.X.resize(3, npoints);
+  d.X.setRandom();
+  d.X *= 0.6;
+
+  for (int i = 0; i < nviews; ++i) {
+    Vec3 camera_center, t, jitter, lookdir;
+
+    double theta = i * 2 * M_PI / nviews;
+    camera_center << sin(theta), 0.0, cos(theta);
+    camera_center *= dist;
+    d.C[i] = camera_center;
+
+    jitter.setRandom();
+    jitter *= jitter_amount / camera_center.norm();
+    lookdir = -camera_center + jitter;
+
+    d.K[i] << fx,  0, cx,
+               0, fy, cy,
+               0,  0,  1;
+    d.R[i] = LookAt(lookdir);
+    d.t[i] = -d.R[i] * camera_center;
+    d.x[i].set(Project(d.P(i), d.X));
+  }
   return d;
 }
 

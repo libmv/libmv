@@ -24,6 +24,8 @@
 #include <vector>
 
 #include "libmv/numeric/numeric.h"
+#include "libmv/multiview/fundamental.h"
+#include "libmv/multiview/projection.h"
 
 namespace libmv {
 
@@ -39,6 +41,40 @@ struct TwoViewDataSet {
 
 // Two cameras at (-1,-1,-10) and (2,1,-10) looking approximately towards z+.
 TwoViewDataSet TwoRealisticCameras();
+
+// An N-view metric dataset (with N < 10). An important difference between this
+// and the other reconstruction data types is that all points are seen by all
+// cameras.
+#define N 10
+struct NViewDataSet {
+  Mat3 K[N];   // Internal parameters (fx, fy, etc).
+  Mat3 R[N];   // Rotation.
+  Vec3 t[N];   // Translation.
+  Vec3 C[N];   // Camera centers.
+  Mat3X X;     // 3D points.
+  Mat2X x[N];  // Projected points; may have noise added.
+
+  int n;  // Actual number of cameras.
+
+  Mat34 P(int i) {
+    assert(i < N);
+    return K[i] * HStack(R[i], t[i]);
+  }
+  Mat3 F(int i, int j) {
+    Mat3 F_;
+    FundamentalFromProjections(P(i), P(j), &F_);
+    return F_;
+  }
+  void Reproject() {
+    for (int i = 0; i < n; ++i) {
+      x[i] = Project(P(i), X);
+    }
+  }
+  // TODO(keir): Add gaussian jitter functions.
+};
+#undef N
+
+NViewDataSet NRealisticCameras(int nviews, int npoints);
 
 } // namespace libmv
 
