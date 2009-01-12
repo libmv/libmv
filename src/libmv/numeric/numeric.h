@@ -25,11 +25,12 @@
 #ifndef LIBMV_NUMERIC_NUMERIC_H
 #define LIBMV_NUMERIC_NUMERIC_H
 
-#include <Eigen/Core>
-#include <Eigen/SVD>
-#include <Eigen/LU>
+#include <Eigen/Array>
 #include <Eigen/Cholesky>
+#include <Eigen/Core>
 #include <Eigen/Geometry>
+#include <Eigen/LU>
+#include <Eigen/SVD>
 
 #include <iostream>
 
@@ -191,23 +192,14 @@ Mat3 RotationAroundX(double angle);
 Mat3 RotationAroundY(double angle);
 Mat3 RotationAroundZ(double angle);
 
+// Make a rotation matrix such that center becomes the direction of the
+// positive z-axis, and y is oriented close to up.
+Mat3 LookAt(Vec3 center);
+
 // Return a diagonal matrix from a vector containg the diagonal values.
 template <typename TVec>
 inline Mat Diag(const TVec &x) {
   return x.asDiagonal();
-}
-
-// Return the determinant of A computed by LU factorization.  A is destroyed.
-//double DeterminantLU(Mat *A);
-
-template <typename TMat>
-inline double Determinant(const TMat &A) {
-  return A.determinant();
-}
-
-template <typename TMatA, typename TMatI>
-inline void Inverse(const TMatA &A, TMatI *I) {
-  I->set(A.inverse());
 }
 
 template<typename TMat>
@@ -229,6 +221,60 @@ Mat3 CrossProductMatrix(const Vec3 &x);
 void MeanAndVarianceAlongRows(const Mat &A,
                               Vec *mean_pointer,
                               Vec *variance_pointer);
+
+// Since it is not possible to typedef privately here, use a macro.
+// Always take dynamic columns if either side is dynamic.
+#define COLS \
+  ((ColsLeft == Eigen::Dynamic || ColsRight == Eigen::Dynamic) \
+   ? Eigen::Dynamic : (ColsLeft + ColsRight))
+
+// Same as above, except that prefer fixed size if either is fixed.
+#define ROWS \
+  ((RowsLeft == Eigen::Dynamic && RowsRight == Eigen::Dynamic) \
+   ? Eigen::Dynamic \
+   : ((RowsLeft == Eigen::Dynamic) \
+      ? RowsRight \
+      : RowsLeft \
+     ) \
+  )
+
+// TODO(keir): Add a static assert if both rows are at compiletime.
+template<typename T, int RowsLeft, int RowsRight, int ColsLeft, int ColsRight>
+Eigen::Matrix<T, ROWS, COLS>
+HStack(const Eigen::Matrix<T, RowsLeft,  ColsLeft>  &left,
+       const Eigen::Matrix<T, RowsRight, ColsRight> &right) {
+  assert(left.rows() == right.rows());
+  int n = left.rows();
+  int m1 = left.cols();
+  int m2 = right.cols();
+
+  Eigen::Matrix<T, ROWS, COLS> stacked(n, m1 + m2);
+  stacked.block(0, 0,  n, m1) = left;
+  stacked.block(0, m1, n, m2) = right;
+  return stacked;
+}
+
+// Reuse the above macros by swapping the order of Rows and Cols. Nasty, but
+// the duplication is worse.
+// TODO(keir): Add a static assert if both rows are at compiletime.
+// TODO(keir): Mail eigen list about making this work for general expressions
+// rather than only matrix types.
+template<typename T, int RowsLeft, int RowsRight, int ColsLeft, int ColsRight>
+Eigen::Matrix<T, COLS, ROWS>
+VStack(const Eigen::Matrix<T, ColsLeft,  RowsLeft>  &top,
+       const Eigen::Matrix<T, ColsRight, RowsRight> &bottom) {
+  assert(top.cols() == bottom.cols());
+  int n1 = top.rows();
+  int n2 = bottom.rows();
+  int m = top.cols();
+
+  Eigen::Matrix<T, COLS, ROWS> stacked(n1 + n2, m);
+  stacked.block(0,  0, n1, m) = top;
+  stacked.block(n1, 0, n2, m) = bottom;
+  return stacked;
+}
+#undef COLS
+#undef ROWS
 
 void HorizontalStack(const Mat &left, const Mat &right, Mat *stacked);
 

@@ -62,6 +62,17 @@ Mat3 RotationAroundZ(double angle) {
   return R;
 }
 
+Mat3 LookAt(Vec3 center) {
+  Vec3 zc = center.normalized();
+  Vec3 xc = Vec3::UnitY().cross(zc).normalized();
+  Vec3 yc = zc.cross(xc);
+  Mat3 R;
+  R.row(0) = xc;
+  R.row(1) = yc;
+  R.row(2) = zc;
+  return R;
+}
+
 Mat3 CrossProductMatrix(const Vec3 &x) {
   Mat3 X;
   X <<     0, -x(2),  x(1),

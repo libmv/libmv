@@ -80,7 +80,7 @@ TEST(Numeric, Nullspace2) {
 
   EXPECT_NEAR( 0.64999717, x1(0), 1e-8);
   EXPECT_NEAR( 0.18452646, x1(1), 1e-8);
-  EXPECT_NEAR(-0.7371931, x1(2), 1e-8);
+  EXPECT_NEAR(-0.7371931,  x1(2), 1e-8);
 
   if (x2(0) < 0) {
     x2 *= -1;
@@ -132,7 +132,7 @@ TEST(Numeric, Determinant) {
   Mat A(2, 2);
   A <<  1, 2,
        -1, 3;
-  double detA = Determinant(A);
+  double detA = A.determinant();
   EXPECT_NEAR(5, detA, 1e-8); 
   
   Mat B(4,4);
@@ -140,14 +140,14 @@ TEST(Numeric, Determinant) {
         4,  5,  6,  7,
         8,  9, 10, 11,
        12, 13, 14, 15;
-  double detB = Determinant(B);
+  double detB = B.determinant();
   EXPECT_NEAR(0, detB, 1e-8); 
 
   Mat3 C;
   C <<  0, 1, 2,
         3, 4, 5,
         6, 7, 1;
-  double detC = Determinant(C);
+  double detC = C.determinant();
   EXPECT_NEAR(21, detC, 1e-8); 
 }
 
@@ -155,8 +155,7 @@ TEST(Numeric, Inverse) {
   Mat A(2, 2), A1;
   A <<  1, 2,
        -1, 3;
-  Inverse(A, &A1);
-  Mat I = A * A1;
+  Mat I = A * A.inverse();
 
   EXPECT_NEAR(1, I(0,0), 1e-8); 
   EXPECT_NEAR(0, I(0,1), 1e-8); 
@@ -168,8 +167,7 @@ TEST(Numeric, Inverse) {
         4,  5,  6,  7,
         8,  9,  2, 11,
        12, 13, 14,  4;
-  Inverse(B, &B1);
-  Mat I2 = B * B1;
+  Mat I2 = B * B.inverse();
   EXPECT_NEAR(1, I2(0,0), 1e-8); 
   EXPECT_NEAR(0, I2(0,1), 1e-8); 
   EXPECT_NEAR(0, I2(0,2), 1e-8); 
@@ -209,6 +207,46 @@ TEST(Numeric, HorizontalStack) {
   EXPECT_EQ(2, z(1,0));
   EXPECT_EQ(3, z(0,1));
   EXPECT_EQ(4, z(1,1));
+}
+
+TEST(Numeric, HStack) {
+  Mat x(2,1), y(2,1), z(2, 2);
+  x << 1, 2;
+  y << 3, 4;
+  z << 1, 3,
+       2, 4;
+  Vec2 xC = x, yC = y;
+
+  Mat2 xy = HStack(x,  y);
+  EXPECT_MATRIX_EQ(z, xy);
+
+  EXPECT_MATRIX_EQ(z, HStack(x,  y));
+  EXPECT_MATRIX_EQ(z, HStack(x,  yC));
+  EXPECT_MATRIX_EQ(z, HStack(xC, y));
+  EXPECT_MATRIX_EQ(z, HStack(xC, yC));
+}
+
+// TODO(keir): Need some way of verifying that the compile time types of the
+// resulting stacked matrices properly propagate the fixed dimensions.
+TEST(Numeric, VStack) {
+  Mat x(2,2), y(2,2), z(4, 2);
+  x << 1, 2,
+       3, 4;
+  y << 10, 20,
+       30, 40;
+  z <<  1,  2,
+        3,  4,
+       10, 20,
+       30, 40;
+  Mat2 xC = x, yC = y;
+
+  Mat xy = VStack(x,  y);
+  EXPECT_MATRIX_EQ(z, xy);
+
+  EXPECT_MATRIX_EQ(z, VStack(x,  y));
+  EXPECT_MATRIX_EQ(z, VStack(x,  yC));
+  EXPECT_MATRIX_EQ(z, VStack(xC, y));
+  EXPECT_MATRIX_EQ(z, VStack(xC, yC));
 }
 
 TEST(Numeric, VerticalStack) {
@@ -299,8 +337,7 @@ TEST(Numeric, Mat3MatProduct) {
 
 // This gives a compile error.
 TEST(Numeric, Vec3Negative) {
-  Vec3 y;
-  y << 1, 2, 3;
+  Vec3 y; y << 1, 2, 3;
   Vec3 x = -y;
   EXPECT_EQ(-1, x(0));
   EXPECT_EQ(-2, x(1));
@@ -325,8 +362,7 @@ TEST(Numeric, DeterminantLU7) {
         0, 0, 1, 0, 0,
         0, 0, 0, 1, 0,
         0, 0, 0, 0, 1;
-  double detA = Determinant(A);
-  EXPECT_NEAR(1, detA, 1e-8); 
+  EXPECT_NEAR(1, A.determinant(), 1e-8); 
 }
 
 // This segfaults inside lapack.
@@ -334,8 +370,7 @@ TEST(Numeric, DeterminantLU) {
   Mat A(2, 2);
   A <<  1, 2,
        -1, 3;
-  double detA = Determinant(A);
-  EXPECT_NEAR(5, detA, 1e-8); 
+  EXPECT_NEAR(5, A.determinant(), 1e-8); 
 }
 
 // This does unexpected things.
@@ -346,25 +381,31 @@ TEST(Numeric, InplaceProduct) {
        0, 1;
   S << 1, 0,
        0, 1;
-  K = K * S; // This sets K to zero without warning!
-  EXPECT_NEAR(1, K(0,0), 1e-8);
-  EXPECT_NEAR(0, K(0,1), 1e-8);
-  EXPECT_NEAR(0, K(1,0), 1e-8);
-  EXPECT_NEAR(1, K(1,1), 1e-8);
+  K = K * S;
+  EXPECT_MATRIX_NEAR(Mat2::Identity(), K, 1e-8);
 }
 
-// This does unexpected things.
-// Keir: Not with eigen2!
 TEST(Numeric, ExtractColumns) {
   Mat2X A(2, 5);
   A << 1, 2, 3, 4, 5,
        6, 7, 8, 9, 10;
-  Vec2i columns;
-  columns << 0, 2;
+  Vec2i columns; columns << 0, 2;
   Mat2X extracted = ExtractColumns(A, columns);
   EXPECT_NEAR(1, extracted(0,0), 1e-15);
   EXPECT_NEAR(3, extracted(0,1), 1e-15);
   EXPECT_NEAR(6, extracted(1,0), 1e-15);
   EXPECT_NEAR(8, extracted(1,1), 1e-15);
 }
+
+TEST(Numeric, LookAt) {
+  // Simple orthogonality check.
+  Vec3 e; e << 1, 2, 3;
+  Mat3 R = LookAt(e), I = Mat3::Identity();
+  Mat3 RRT = R*R.transpose();
+  Mat3 RTR = R.transpose()*R;
+
+  EXPECT_MATRIX_NEAR(I, RRT, 1e-15);
+  EXPECT_MATRIX_NEAR(I, RTR, 1e-15);
+}
+
 }  // namespace
