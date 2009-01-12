@@ -22,6 +22,7 @@ MULTIVIEW_TEST(fundamental)
 MULTIVIEW_TEST(focal_from_fundamental)
 MULTIVIEW_TEST(robust_fundamental)
 MULTIVIEW_TEST(robust_estimation)
+MULTIVIEW_TEST(sixpointnview)
 
 # TODO(keir): Make tests that depend on generated.cc to use generated sources.
 #ADD_GENERATED_SOURCE(generated.cc generator.py)
