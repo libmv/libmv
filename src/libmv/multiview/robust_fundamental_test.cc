@@ -58,10 +58,10 @@ TEST(RobustFundamental, FundamentalFromCorrespondences8PointRobust) {
     y_F_x(i) = y.dot(F_x);
   }
   EXPECT_MATRIX_NEAR_ZERO(y_F_x, 1e-8);
-  EXPECT_NEAR(0, Determinant(F), 1e-8);
+  EXPECT_NEAR(0, F.determinant(), 1e-8);
 }
 
-TEST(Fundamental, FundamentalFromCorrespondences8PointRealisticNoOutliers) {
+TEST(RobustFundamental, FundamentalFromCorrespondences8PointRealisticNoOutliers) {
   TwoViewDataSet d = TwoRealisticCameras();
 
   Mat3 F_estimated;
@@ -86,10 +86,10 @@ TEST(Fundamental, FundamentalFromCorrespondences8PointRealisticNoOutliers) {
     y_F_x(i) = y.dot(F_estimated * x);
   }
   EXPECT_MATRIX_NEAR_ZERO(y_F_x, 1e-8);
-  EXPECT_NEAR(0, Determinant(F_estimated), 1e-8);
+  EXPECT_NEAR(0, F_estimated.determinant(), 1e-8);
 }
 
-TEST(Fundamental, FundamentalFromCorrespondences8PointRealistic) {
+TEST(RobustFundamental, FundamentalFromCorrespondences8PointRealistic) {
   TwoViewDataSet d = TwoRealisticCameras();
 
   d.X.set(3*Mat::Random(3, 50));
@@ -128,7 +128,7 @@ TEST(Fundamental, FundamentalFromCorrespondences8PointRealistic) {
     y_F_x(i) = y.dot(F_estimated * x);
   }
   EXPECT_MATRIX_NEAR_ZERO(y_F_x, 1e-8);
-  EXPECT_NEAR(0, Determinant(F_estimated), 1e-8);
+  EXPECT_NEAR(0, F_estimated.determinant(), 1e-8);
 }
 
 } // namespace
