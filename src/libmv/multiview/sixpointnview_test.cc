@@ -41,6 +41,21 @@ TEST(SixPointNView, ThreeView) {
   SixPointNView(xs, &reconstructions);
 
   LOG(INFO) << "Got " << reconstructions.size() << " reconstructions.";
+  for (int i = 0; i < reconstructions.size(); ++i) {
+    Mat4X X = reconstructions[i].X;
+    for (int j = 0; j < 3; ++j) {
+      Mat34 &P = reconstructions[i].P[j];
+      Mat2X x = Project(P, X);
+      Mat2X error = x - d.x[j];
+      LOG(INFO) << "Camera: " << j << "has errors: \n"
+                << "error: \n" << error.colwise().norm();
+      // Note that this error bound could probably be made smaller, but it
+      // would require preconditioning the points to make them distributed
+      // around 0 with magnitude sqrt(2), rather than the test data
+      // distribution which has points from roughly 0 to 1000.
+      EXPECT_MATRIX_NEAR_ZERO(error, 1e-10);
+    }
+  }
 }
 
 } // namespace

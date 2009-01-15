@@ -17,6 +17,13 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
+//
+// Projective reconstruction from six points of N views. For the case N = 3,
+// the number of measurements exactly matches the degrees of freedom for the
+// trifocal tensor (18); this method is one way to calculate the trifocal
+// tensor.
+//
+// TODO(keir): Add a reference to Frederik's paper here.
 
 #ifndef _LIBMV_MULTIVIEW_SIXPOINTNVIEW_H_
 #define _LIBMV_MULTIVIEW_SIXPOINTNVIEW_H_
@@ -28,8 +35,8 @@
 namespace libmv {
 
 struct SixPointReconstruction {
-  std::vector<Mat34> Ps;
-  Mat46 Xs;
+  std::vector<Mat34> P;
+  Mat46 X;
 };
 
 // Form a projective reconstruction from 6 points visible in N views. This

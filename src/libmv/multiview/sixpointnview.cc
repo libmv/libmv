@@ -43,8 +43,9 @@ static void FivePointCameraPencil(const TMatP &points, TMatA *A, TMatB *B) {
   Mat34 tmpA = five_points;
   Mat34 tmpB = five_points;
   for (int r = 0; r < 3; ++r) {
-    tmpA.row(r) = five_points.row(r).cwise() * v1.start(4);
-    tmpB.row(r) = five_points.row(r).cwise() * v2.start(4);
+    // The last component of v1 and v2 is ignored, because it is a scale factor.
+    tmpA.row(r) = five_points.row(r).cwise() * v1.start(4).transpose();
+    tmpB.row(r) = five_points.row(r).cwise() * v2.start(4).transpose();
   }
   Mat3 Hinv = H.inverse();
   *A = Hinv * tmpA;
@@ -87,7 +88,7 @@ void SixPointNView(const Mat2X &points,
 
   // Convert to homogenous coordinates.
   Mat3X hpoints(3, points.cols());
-  hpoints.block(0, 0, 2, nviews) = points;
+  hpoints.block(0, 0, 2, 6*nviews) = points;
   hpoints.row(2).setOnes();
 
   // See equation (7.2) p179 of HZ; this is the DLT for solving cameras.
@@ -147,7 +148,6 @@ void SixPointNView(const Mat2X &points,
   // Check each solution for alpha.
   reconstructions->resize(nroots);
   for (int ia=0; ia<nroots; ia++) {
-    VLOG(2) << "#################### Alpha" << ia << " ###################";
     alpha = alphas[ia];
 
     double e;
@@ -159,16 +159,17 @@ void SixPointNView(const Mat2X &points,
 
     SixPointReconstruction &pr = (*reconstructions)[ia];
 
-    // The world position of the first five points are the standard P^3 basis.
-    pr.Xs.block<4, 4>(0, 0).setIdentity();
-    pr.Xs.col(4).setOnes();
+    // The world position of the first five points, X1 through X5, are the
+    // standard P^3 basis.
+    pr.X.block<4, 4>(0, 0).setIdentity();
+    pr.X.col(4).setOnes();
 
     // Find X6 from the chi vector.
     Vec4 Xp = CalcX6FromDesignMat(a, b, c, d, e);
-    pr.Xs.col(5) = Xp;
+    pr.X.col(5) = Xp;
 
     // Find P for each camera by finding suitable values of u,v.
-    pr.Ps.resize(nviews);
+    pr.P.resize(nviews);
     for (int i = 0; i < nviews; ++i) {
       // Project X6 with A and B. DO NOT NORMALIZE, it breaks the next step.
       Vec3 AX = As[i] * Xp;
@@ -187,7 +188,7 @@ void SixPointNView(const Mat2X &points,
       double mu = munu[0];
       double nu = munu[1];
 
-      pr.Ps[i] = mu*As[i] + nu*Bs[i];
+      pr.P[i] = mu*As[i] + nu*Bs[i];
     }
   }
   delete [] As;
