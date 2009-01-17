@@ -34,6 +34,8 @@ class BaseArray {
 template <typename T, int N>
 class ArrayND : public BaseArray {
  public:
+  typedef T Scalar;
+
   /// Type for the multidimensional indices.
   typedef Tuple<int,N> Index;
 
@@ -140,6 +142,11 @@ class ArrayND : public BaseArray {
     assert(N == 2);
     int shape[] = {s0,s1};
     Resize(shape);
+  }
+
+  // Match Eigen2's API.
+  void resize(int rows, int cols) {
+    Resize(rows, cols);
   }
 
   /// Resize a 3D array to shape (s0,s1,s2).
@@ -357,6 +364,12 @@ class Array3D : public ArrayND<T, 3> {
     return Base::Shape(2);
   }
 
+  // Match Eigen2's API so that Array3D's and Mat*'s can work together via
+  // template magic.
+  int rows() const { return Height(); }
+  int cols() const { return Width(); }
+  int depth() const { return Depth(); }
+
   /// Enable accessing with 2 indices for grayscale images.
   T &operator()(int i0, int i1, int i2 = 0) {
     assert(0 <= i0 && i0 < Height());
@@ -386,9 +399,9 @@ class Array3Df : public Array3D<float> {
 };
 
 void SplitChannels(const Array3Df input,
-                          Array3Df *channel0,
-                          Array3Df *channel1,
-                          Array3Df *channel2);
+                   Array3Df *channel0,
+                   Array3Df *channel1,
+                   Array3Df *channel2);
 
 template <typename AArrayType, typename BArrayType, typename CArrayType>
 void MultiplyElements( const AArrayType &a, 
