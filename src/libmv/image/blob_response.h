@@ -78,7 +78,6 @@ inline void BlobResponse(const TImage &integral_image,
       // Clamp negative determinants, which indicate an edge rather than a blob.
       Scalar response = (determinant < 0.0) ? 0 : determinant;
       (*blob_response)(r / scale, c / scale) = response;
-      //(*blob_response)(r / scale, c / scale) = Dxy;
     }
   }
 }
