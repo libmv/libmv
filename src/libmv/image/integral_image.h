@@ -18,8 +18,13 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
+#ifndef LIBMV_IMAGE_INTEGRAL_IMAGE_H
+#define LIBMV_IMAGE_INTEGRAL_IMAGE_H
+
 #include "libmv/image/array_nd.h"
 #include "third_party/glog/src/glog/logging.h"
+
+namespace libmv {
 
 // Create a summed area table: http://en.wikipedia.org/wiki/Summed_Area_Table
 template <typename TImage, typename TIntegralImage>
@@ -88,3 +93,7 @@ inline typename TImage::Scalar BoxIntegral(const TImage &integral_image,
   assert (sum >= 0);
   return sum;
 }
+
+}  // namespace libmv
+
+#endif  // LIBMV_IMAGE_INTEGRAL_IMAGE_H

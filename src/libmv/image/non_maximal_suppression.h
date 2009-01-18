@@ -50,9 +50,9 @@ inline bool IsLocalMax3D(const TArray &f, int width, int x, int y, int z) {
   using std::min;
   assert(width % 2 == 1);
   int r = width / 2;
-  for (int xx = max(0, x - r); xx <= min(x + r, f.depth() - 1); ++xx) {
-    for (int yy = max(0, y - r); yy <= min(y + r, f.rows() - 1); ++yy) {
-      for (int zz = max(0, z - r); zz <= min(z + r, f.cols() - 1); ++zz) {
+  for (int xx = max(0, x - r); xx <= min(x + r, f.Shape(0) - 1); ++xx) {
+    for (int yy = max(0, y - r); yy <= min(y + r, f.Shape(1) - 1); ++yy) {
+      for (int zz = max(0, z - r); zz <= min(z + r, f.Shape(2) - 1); ++zz) {
         if (f(x, y, z) <= f(xx, yy, zz) &&
             ((xx != x) && (yy != y) && (zz != z))) {
           return false;
@@ -72,16 +72,16 @@ inline void FindLocalMaxima3D(const TArray &f,
                               TCallback *callback) {
   typedef typename TArray::Scalar Scalar;
 
-  for (int x = 0; x < f.depth(); x += width) {
-    for (int y = 0; y < f.rows(); y += width) {
-      for (int z = 0; z < f.cols(); z += width) {
+  for (int x = 0; x < f.Shape(0); x += width) {
+    for (int y = 0; y < f.Shape(1); y += width) {
+      for (int z = 0; z < f.Shape(2); z += width) {
 
         // Scan the pixels in this block to find the extremum.
-        int x_max, y_max, z_max;
+        int x_max = -1, y_max = -1, z_max = -1;
         Scalar max_val = Scalar(-HUGE_VAL);
-        for (int xx = x; xx < std::min(x + width, f.depth()); ++xx) {
-          for (int yy = y; yy < std::min(y + width, f.rows()); ++yy) {
-            for (int zz = z; zz < std::min(z + width, f.cols()); ++zz) {
+        for (int xx = x; xx < std::min(x + width, f.Shape(0)); ++xx) {
+          for (int yy = y; yy < std::min(y + width, f.Shape(1)); ++yy) {
+            for (int zz = z; zz < std::min(z + width, f.Shape(2)); ++zz) {
               if (f(xx, yy, zz) > max_val) {
                 max_val = f(xx, yy, zz);
                 x_max = xx;
@@ -91,8 +91,9 @@ inline void FindLocalMaxima3D(const TArray &f,
             }
           }
         }
+          
         // Check if the found extremum is an extremum across block boundaries.
-        if (IsLocalMax3D(f, width, x_max, y_max, z_max)) {
+        if (x_max != -1 && IsLocalMax3D(f, width, x_max, y_max, z_max)) {
           (*callback)(x_max, y_max, z_max, max_val);
         }
       }

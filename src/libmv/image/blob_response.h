@@ -26,17 +26,19 @@
 #include "libmv/numeric/numeric.h"
 #include "libmv/image/integral_image.h"
 
+namespace libmv {
+
 // Compute the 'interestingness' of an image at a certain scale
 // Compute an approximate hessian for each pixel for the image used to generate
 // integral_image. integral_image must be an integral image as computed by
 // IntegralImage(). The typical gaussian filters are replaced with box filter
 // approximations. If downsample_hessian_by is set to something other than 1,
 // the result is downsampled before storing in hessian_image.
-template<typename TImage>
+template<typename TImage, typename TBlobResponse>
 inline void BlobResponse(const TImage &integral_image,
                          int lobe_size,
                          int scale,
-                         TImage *blob_response) {
+                         TBlobResponse *blob_response) {
   typedef typename TImage::Scalar Scalar;
 
   // See Figure 5 (on page 5) from the SURF paper. The filter size is
@@ -82,4 +84,5 @@ inline void BlobResponse(const TImage &integral_image,
   }
 }
 
+}  // namespace libmv
 #endif  // LIBMV_IMAGE_BLOB_RESPONSE_H
