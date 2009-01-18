@@ -53,7 +53,7 @@ TEST(SixPointNView, ThreeView) {
       // would require preconditioning the points to make them distributed
       // around 0 with magnitude sqrt(2), rather than the test data
       // distribution which has points from roughly 0 to 1000.
-      EXPECT_MATRIX_NEAR_ZERO(error, 1e-10);
+      EXPECT_MATRIX_NEAR_ZERO(error, 1e-9);
     }
   }
 }
