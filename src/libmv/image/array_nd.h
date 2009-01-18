@@ -27,8 +27,7 @@
 
 namespace libmv {
 
-class BaseArray {
-};
+class BaseArray {};
 
 /// A multidimensional array class.
 template <typename T, int N>
@@ -37,50 +36,26 @@ class ArrayND : public BaseArray {
   typedef T Scalar;
 
   /// Type for the multidimensional indices.
-  typedef Tuple<int,N> Index;
+  typedef Tuple<int, N> Index;
 
   /// Create an empty array.
-  ArrayND()
-      : shape_(0), strides_(0), data_(NULL) {
-    Resize(Index(0));
-  }
+  ArrayND() : data_(NULL) { Resize(Index(0)); }
 
-  /// Create an array with the shape.
-  ArrayND(const Index &shape)
-      : shape_(0), strides_(0), data_(NULL) {
-    Resize(shape);
-  }
+  /// Create an array with the specified shape.
+  ArrayND(const Index &shape) : data_(NULL) { Resize(shape); }
 
-  /// Create an array with the shape.
-  ArrayND(int *shape)
-      : shape_(0), strides_(0), data_(NULL) {
-    Resize(shape);
-  }
+  /// Create an array with the specified shape.
+  ArrayND(int *shape) : data_(NULL) { Resize(shape); }
 
-  /// Copy constructor copies pixel data.
-  ArrayND(const ArrayND<T, N> &b)
-      : shape_(0), strides_(0), data_(NULL) {
+  /// Copy constructor.
+  ArrayND(const ArrayND<T, N> &b) : data_(NULL) {
     ResizeLike(b);
     std::memcpy(Data(), b.Data(), sizeof(T) * Size());
   }
 
-  /// Crate a 1D array of lenght s0.
-  ArrayND(int s0)
-      : shape_(0), strides_(0), data_(NULL) {
-    Resize(s0);
-  }
-
-  /// Crate a 2D array of shape (s0, s1).
-  ArrayND(int s0, int s1)
-      : shape_(0), strides_(0), data_(NULL) {
-    Resize(s0, s1);
-  }
-
-  /// Crate a 3D array of shape (s0, s1, s2).
-  ArrayND(int s0, int s1, int s2)
-      : shape_(0), strides_(0), data_(NULL) {
-    Resize(s0, s1, s2);
-  }
+  ArrayND(int s0) : data_(NULL) { Resize(s0); }
+  ArrayND(int s0, int s1) : data_(NULL) { Resize(s0, s1); }
+  ArrayND(int s0, int s1, int s2) : data_(NULL) { Resize(s0, s1, s2); }
 
   /// Destructor deletes pixel data.
   ~ArrayND() {
@@ -89,6 +64,7 @@ class ArrayND : public BaseArray {
 
   /// Assignation copies pixel data.
   ArrayND &operator=(const ArrayND<T, N> &b) {
+    assert(this != &b);
     ResizeLike(b);
     std::memcpy(Data(), b.Data(), sizeof(T) * Size());
     return *this;
@@ -104,7 +80,7 @@ class ArrayND : public BaseArray {
 
   /// Create an array of shape s.
   void Resize(const Index &new_shape) {
-    if (shape_ == new_shape) { 
+    if (data_ != NULL && shape_ == new_shape) { 
       // Don't bother realloacting if the shapes match.
       return;
     }
@@ -254,6 +230,9 @@ class ArrayND : public BaseArray {
 
   /// 3D specialization.
   T &operator()(int i0, int i1, int i2) {
+    assert(0 <= i0 && i0 < Shape(0));
+    assert(0 <= i1 && i1 < Shape(1));
+    assert(0 <= i2 && i2 < Shape(2));
     return *( Data() + Offset(i0,i1,i2) );
   }
 
@@ -446,7 +425,7 @@ template <typename TA, typename TB, typename TC>
 void MultiplyElements(const ArrayND<TA, 3> &a,
                       const ArrayND<TB, 3> &b,
                       ArrayND<TC, 3> *c) {
-  //Specialization for N==3
+  // Specialization for N==3
   c->ResizeLike(a);
   assert(a.Shape(0) == b.Shape(0));
   assert(a.Shape(1) == b.Shape(1));

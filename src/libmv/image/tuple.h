@@ -25,37 +25,29 @@
 
 namespace libmv {
 
-/// A vector of elements with fixed lenght and deep copy semantics.
-template <typename T,int N>
+// A vector of elements with fixed lenght and deep copy semantics.
+template <typename T, int N>
 class Tuple {
  public:
-  enum {SIZE=N};
-  /// Custruct a tuple with unitialized data.
+  enum { SIZE = N };
   Tuple() {}
-
-  /// Custruct and initialize the tuple to a constant value.
   Tuple(T initial_value) { Reset(initial_value); }
 
-  /// Custruct and initialize the tuple from an array of values.
   template <typename D>
   Tuple(D *values) { Reset(values); }
 
-  /// Copy constructor.  Does a deep copy.
   template <typename D>
   Tuple(const Tuple<D,N> &b) { Reset(b); }
 
-  /// Assign operator.  Does a deep copy.
   template <typename D>
   Tuple& operator=(const Tuple<D,N>& b) {
     Reset(b);
     return *this;
   }
 
-  /// Sets the tuple values from another tuple.
   template <typename D>
-  void Reset(const Tuple<D,N>& b) { Reset(b.Data()); }
+  void Reset(const Tuple<D, N>& b) { Reset(b.Data()); }
 
-  /// Sets the tuple values from a pointer.
   template <typename D>
   void Reset(D *values) {
     for(int i=0;i<N;i++) {
@@ -63,29 +55,25 @@ class Tuple {
     }
   }
 
-  /// Sets the tuple values to a constant value.
+  // Set all tuple values to the same thing.
   void Reset(T value) {
     for(int i=0;i<N;i++) {
       data_[i] = value;
     }
   }
 
-  /// Pointer to the first element of the tuple.
+  // Pointer to the first element.
   T *Data() { return &data_[0]; }
-
-  /// Constant pointer to the first element of the tuple.
   const T *Data() const { return &data_[0]; }
 
-  /// Access the i's element of the tuple.
   T &operator()(int i) { return data_[i]; }
-
-  /// Access the i's element of the tuple as a constant value.
   const T &operator()(int i) const { return data_[i]; }
 
   bool operator==(const Tuple<T, N> &other) const {
     for (int i = 0; i < N; ++i) {
-      if ((*this)(i) != other(i))
+      if ((*this)(i) != other(i)) {
         return false;
+      }
     }
     return true;
   }
@@ -93,13 +81,10 @@ class Tuple {
     return !(*this == other);
   }
 
-
  private:
-  /// The tuple of elements.
   T data_[N];
 };
 
 }  // namespace libmv
-
 
 #endif  // LIBMV_IMAGE_TUPLE_H
