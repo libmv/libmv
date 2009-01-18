@@ -31,8 +31,8 @@ namespace {
 
 TEST(SimpleCase, OnePeak) {
   Array3Df peak(21, 21);
-  Array3Df integral_image(51, 51);
-  Array3Df response(51, 51);
+  Array3Df integral_image;
+  Array3Df response;
   peak.Fill(0.0);
   peak(10, 10) = 1.0;
   IntegralImage(peak, &integral_image);
@@ -43,8 +43,8 @@ TEST(SimpleCase, OnePeak) {
 
 TEST(SimpleCase, TwoPeaks) {
   Array3Df peak(21, 21);
-  Array3Df integral_image(51, 51);
-  Array3Df response(51, 51);
+  Array3Df integral_image;
+  Array3Df response;
   peak.Fill(0.0);
   peak(5, 5) = 1.0;
   peak(11, 11) = 1.0;
@@ -53,6 +53,24 @@ TEST(SimpleCase, TwoPeaks) {
   PrintArray(response);
   EXPECT_TRUE(IsLocalMax2D(response, 3, 5, 5));
   EXPECT_TRUE(IsLocalMax2D(response, 3, 11, 11));
+  EXPECT_EQ(21, response.rows());
+  EXPECT_EQ(21, response.cols());
+}
+
+TEST(SimpleCase, TwoPeaksScaled) {
+  Array3Df peak(40, 40);
+  Array3Df integral_image;
+  Array3Df response;
+  peak.Fill(0.0);
+  peak(20, 22) = 1.0;
+  peak(10, 14) = 1.0;
+  IntegralImage(peak, &integral_image);
+  BlobResponse(integral_image, 3, 2, &response);
+  PrintArray(response);
+  EXPECT_TRUE(IsLocalMax2D(response, 3, 10, 11));
+  EXPECT_TRUE(IsLocalMax2D(response, 3, 5, 7));
+  EXPECT_EQ(20, response.rows());
+  EXPECT_EQ(20, response.cols());
 }
 
 }  // namespace
