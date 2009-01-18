@@ -139,8 +139,10 @@ class ArrayND : public BaseArray {
 
   /// Resize a 2D array to shape (s0,s1).
   void Resize(int s0, int s1) {
-    assert(N == 2);
-    int shape[] = {s0,s1};
+    int shape[N] = {s0, s1};
+    for (int i = 2; i < N; ++i) {
+      shape[i] = 1;
+    }
     Resize(shape);
   }
 
