@@ -39,6 +39,9 @@ namespace libmv {
 typedef Eigen::MatrixXd Mat;
 typedef Eigen::VectorXd Vec;
 
+typedef Eigen::MatrixXf Matf;
+typedef Eigen::VectorXf Vecf;
+
 typedef Eigen::Matrix<double, 2, 2> Mat2;
 typedef Eigen::Matrix<double, 3, 3> Mat3;
 typedef Eigen::Matrix<double, 3, 4> Mat34;
@@ -68,6 +71,13 @@ typedef Eigen::VectorXi VecXi;
 typedef Eigen::Vector2i Vec2i;
 typedef Eigen::Vector3i Vec3i;
 typedef Eigen::Vector4i Vec4i;
+
+typedef Eigen::Matrix<float,
+                      Eigen::Dynamic,
+                      Eigen::Dynamic,
+                      Eigen::RowMajor> RMatf;
+
+using Eigen::Map;
 
 // Find U, s, and VT such that
 //
