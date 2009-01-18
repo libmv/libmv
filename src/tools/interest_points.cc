@@ -86,6 +86,7 @@ void WriteOutputImage(const FloatImage &image,
 int main(int argc, char **argv) {
   google::SetUsageMessage("Track a sequence.");
   google::ParseCommandLineFlags(&argc, &argv, true);
+  google::InitGoogleLogging(argv[0]);
 
   if (argc != 2) {
     LOG(ERROR) << "Missing an image.";
