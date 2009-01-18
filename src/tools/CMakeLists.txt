@@ -1,6 +1,16 @@
 ADD_EXECUTABLE(track track.cc)
 TARGET_LINK_LIBRARIES(track image correspondence image gflags glog)
 
+
+ADD_EXECUTABLE(interest_points interest_points.cc)
+TARGET_LINK_LIBRARIES(interest_points
+                      numeric
+                      image
+                      pthread
+                      gflags
+                      glog
+                      )
+
 ADD_EXECUTABLE(experimental experimental.cc)
 TARGET_LINK_LIBRARIES(experimental
                       multiview_test_data
