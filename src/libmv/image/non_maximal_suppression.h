@@ -27,6 +27,23 @@
 #include "libmv/numeric/numeric.h"
 
 template<typename TArray>
+inline bool IsLocalMax2D(const TArray &f, int width, int x, int y) {
+  typedef typename TArray::Scalar Scalar;
+  using std::max;
+  using std::min;
+  assert(width % 2 == 1);
+  int r = width / 2;
+  for (int xx = max(0, x - r); xx <= min(x + r, f.rows() - 1); ++xx) {
+    for (int yy = max(0, y - r); yy <= min(y + r, f.cols() - 1); ++yy) {
+      if (f(x, y) <= f(xx, yy) && ((xx != x) && (yy != y) )) {
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
+template<typename TArray>
 inline bool IsLocalMax3D(const TArray &f, int width, int x, int y, int z) {
   typedef typename TArray::Scalar Scalar;
   using std::max;

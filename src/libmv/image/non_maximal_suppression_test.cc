@@ -48,6 +48,25 @@ TEST(IsLocalMax3D, CompeteingMaxesInOneBlock) {
   EXPECT_TRUE(IsLocalMax3D(A, 3, 3, 3, 3));
 }
 
+TEST(IsLocalMax2D, AllZerosAreNotMaxima) {
+  Array3Df A(5, 5);
+  A.Fill(0.0);
+  for (int x = 0; x < 5; ++x) {
+    for (int y = 0; y < 5; ++y) {
+      EXPECT_FALSE(IsLocalMax2D(A, 3, x, y));
+    }
+  }
+}
+
+TEST(IsLocalMax2D, CompeteingMaxesInOneBlock) {
+  Array3Df A(5, 5);
+  A.Fill(0.0);
+  A(2, 2) = 1.0;  // This is max within the 3x3 block.
+  A(3, 3) = 3.0;  // But the real max, here, is in another block.
+
+  EXPECT_FALSE(IsLocalMax2D(A, 3, 2, 2));
+  EXPECT_TRUE(IsLocalMax2D(A, 3, 3, 3));
+}
 struct StoreResults {
  public:
   void operator() (int x, int y, int z, float value) {
