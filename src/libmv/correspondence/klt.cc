@@ -251,6 +251,8 @@ static void ComputeTrackingEquation(const Array3Df &image_and_gradient1,
 //   [gxy gyy] [dy] = [ey]
 //
 // for dx and dy.  Borrowed from Stan Birchfield's KLT implementation.
+//
+// TODO(keir): Replace this with calls to eigen (faster, more stable).
 static bool SolveTrackingEquation(float gxx, float gxy, float gyy,
                                   float ex, float ey,
                                   float min_determinant,
