@@ -91,6 +91,7 @@ inline void SVD(TMat *A, Vec *s, Mat *U, Mat *VT) {
 // Solve the linear system Ax = 0 via SVD. Store the solution in x, such that
 // ||x|| = 1.0. Return the singluar value corresponding to the solution.
 // Destroys A and resizes x if necessary.
+// TODO(maclean): Take the SVD of the transpose instead of this zero padding.
 template <typename TMat, typename TVec>
 double Nullspace(TMat *A, TVec *nullspace) {
   if (A->rows() >= A->cols()) {
