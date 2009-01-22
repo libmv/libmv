@@ -25,7 +25,7 @@ IF (COMMAND cmake_policy)
   cmake_policy(SET CMP0005 OLD)
 ENDIF (COMMAND cmake_policy)
 
-PROJECT(LIBMV C CXX Fortran)
+PROJECT(LIBMV C CXX)
 
 ENABLE_TESTING()
 
