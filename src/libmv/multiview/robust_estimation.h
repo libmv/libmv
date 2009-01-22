@@ -34,6 +34,7 @@ namespace libmv {
 // could be unlimited!
 // TODO(keir): Implement smarter O(nlogn) method for this which is independent
 // of total size. Surprisingly tricky!
+// Consider: http://stackoverflow.com/questions/136474/best-way-to-pick-a-random-subset-from-a-collection
 VecXi PickSubset(int num_samples, int total) {
   int i = 0;
   std::set<int> sample_set;
