@@ -44,7 +44,13 @@ int ReadPnm(const char *filename, FloatImage *image) {
   return res;
 }
 
-//TODO(pau): should ignore comment lines.
+// TODO(maclean): Ignore comments to allow loading PNM's made by Gimp (and
+// others).
+// TODO(maclean): Add support for PNG and JPG via libjpeg and libpng. Will
+// require some cmake hackery and #define madness though.  Consider examples at
+// http://trac.astrometry.net/browser/trunk/src/astrometry/util/cairoutils.c
+// TODO(maclean): Consider making this templated to support loading into both
+// Eigen and Array3D's.
 int ReadPnmStream(FILE *file, ByteImage *im) {
   int magicnumber, width, height, depth, maxval;
   int res;
@@ -90,6 +96,8 @@ int WritePnm(const ByteImage &im, const char *filename) {
   return res;
 }
 
+// TODO(maclean) Look into using StringPiece here (do a codesearch) to allow
+// passing both strings and const char *'s.
 int WritePnm(const FloatImage &image, const char *filename) {
   ByteImage byte_image;
   FloatArrayToScaledByteArray(image, &byte_image);
