@@ -25,7 +25,7 @@ using namespace libmv;
 
 namespace {
 
-TEST(Numeric, Nullspace) {
+TEST(Numeric, DynamicSizedNullspace) {
   Mat A(3, 4);
   A << 0.76026643, 0.01799744, 0.55192142, 0.8699745,
        0.42016166, 0.97863392, 0.33711682, 0.14479271,
@@ -37,7 +37,7 @@ TEST(Numeric, Nullspace) {
   EXPECT_NEAR(1.0, x.norm(), 1e-15);
 }
 
-TEST(Numeric, TinyMatrixNullspace) {
+TEST(Numeric, FixedSizeMatrixNullspace) {
   Mat34 A;
   A << 0.76026643, 0.01799744, 0.55192142, 0.8699745,
        0.42016166, 0.97863392, 0.33711682, 0.14479271,
