@@ -43,6 +43,7 @@ typedef Eigen::MatrixXf Matf;
 typedef Eigen::VectorXf Vecf;
 
 typedef Eigen::Matrix<double, 2, 2> Mat2;
+typedef Eigen::Matrix<double, 2, 3> Mat23;
 typedef Eigen::Matrix<double, 3, 3> Mat3;
 typedef Eigen::Matrix<double, 3, 4> Mat34;
 typedef Eigen::Matrix<double, 3, 5> Mat35;
@@ -78,6 +79,8 @@ typedef Eigen::Matrix<float,
                       Eigen::RowMajor> RMatf;
 
 using Eigen::Map;
+using Eigen::Dynamic;
+using Eigen::Matrix;
 
 // Find U, s, and VT such that
 //
