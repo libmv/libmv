@@ -22,8 +22,7 @@
 #include "libmv/image/non_maximal_suppression.h"
 #include "testing/testing.h"
 
-using libmv::Array3Df;
-
+namespace libmv {
 namespace {
 
 TEST(IsLocalMax3D, AllZerosAreNotMaxima) {
@@ -67,16 +66,6 @@ TEST(IsLocalMax2D, CompeteingMaxesInOneBlock) {
   EXPECT_FALSE(IsLocalMax2D(A, 3, 2, 2));
   EXPECT_TRUE(IsLocalMax2D(A, 3, 3, 3));
 }
-struct StoreResults {
- public:
-  void operator() (int x, int y, int z, float value) {
-    (void) value;
-    results.push_back(x);
-    results.push_back(y);
-    results.push_back(z);
-  }
-  std::vector<int> results;
-};
 
 // TODO(keir): These tests rely on the order of the maxima; rejig them to be
 // independ of returned order.
@@ -85,12 +74,12 @@ TEST(FindLocalMaxima3D, EasyCase) {
   A.Fill(0.0);
   A(1, 1, 1) = 1.0;
 
-  StoreResults results;
+  std::vector<Vec3i> results;
   FindLocalMaxima3D(A, 3, &results);
-  EXPECT_EQ(1, results.results[0]);
-  EXPECT_EQ(1, results.results[1]);
-  EXPECT_EQ(1, results.results[2]);
-  EXPECT_EQ(3, results.results.size());
+  EXPECT_EQ(1, results[0][0]);
+  EXPECT_EQ(1, results[0][1]);
+  EXPECT_EQ(1, results[0][2]);
+  EXPECT_EQ(1, results.size());
 }
 
 TEST(FindLocalMaxima3D, CompeteingMaxesInOneBlock) {
@@ -99,12 +88,12 @@ TEST(FindLocalMaxima3D, CompeteingMaxesInOneBlock) {
   A(2, 2, 2) = 1.0;  // This is max within the 3x3x3 block.
   A(3, 3, 3) = 3.0;  // But the real max, here, is in another block.
 
-  StoreResults results;
+  std::vector<Vec3i> results;
   FindLocalMaxima3D(A, 3, &results);
-  EXPECT_EQ(3, results.results[0]);
-  EXPECT_EQ(3, results.results[1]);
-  EXPECT_EQ(3, results.results[2]);
-  EXPECT_EQ(3, results.results.size());
+  EXPECT_EQ(3, results[0][0]);
+  EXPECT_EQ(3, results[0][1]);
+  EXPECT_EQ(3, results[0][2]);
+  EXPECT_EQ(1, results.size());
 }
 
 TEST(FindLocalMaxima3D, MultipleMaxes) {
@@ -115,15 +104,15 @@ TEST(FindLocalMaxima3D, MultipleMaxes) {
 
   A(15, 13, 12) = 1.0;
 
-  StoreResults results;
+  std::vector<Vec3i> results;
   FindLocalMaxima3D(A, 3, &results);
-  EXPECT_EQ(3, results.results[0]);
-  EXPECT_EQ(3, results.results[1]);
-  EXPECT_EQ(3, results.results[2]);
-  EXPECT_EQ(15, results.results[3]);
-  EXPECT_EQ(13, results.results[4]);
-  EXPECT_EQ(12, results.results[5]);
-  EXPECT_EQ(6, results.results.size());
+  EXPECT_EQ(3, results[0][0]);
+  EXPECT_EQ(3, results[0][1]);
+  EXPECT_EQ(3, results[0][2]);
+  EXPECT_EQ(15, results[1][0]);
+  EXPECT_EQ(13, results[1][1]);
+  EXPECT_EQ(12, results[1][2]);
+  EXPECT_EQ(2, results.size());
 }
 
 TEST(FindLocalMaxima3D, MultipleMaxesInSameBlock) {
@@ -132,14 +121,15 @@ TEST(FindLocalMaxima3D, MultipleMaxesInSameBlock) {
   A(0, 0, 0) = 1.0;  // This is a local max within a 3x3x3 block.
   A(2, 2, 2) = 3.0;  // And so is this (but the radii are close).
 
-  StoreResults results;
+  std::vector<Vec3i> results;
   FindLocalMaxima3D(A, 3, &results);
-  EXPECT_EQ(0, results.results[0]);
-  EXPECT_EQ(0, results.results[1]);
-  EXPECT_EQ(0, results.results[2]);
-  EXPECT_EQ(2, results.results[3]);
-  EXPECT_EQ(2, results.results[4]);
-  EXPECT_EQ(2, results.results[5]);
-  EXPECT_EQ(6, results.results.size());
+  EXPECT_EQ(0, results[0][0]);
+  EXPECT_EQ(0, results[0][1]);
+  EXPECT_EQ(0, results[0][2]);
+  EXPECT_EQ(2, results[1][0]);
+  EXPECT_EQ(2, results[1][1]);
+  EXPECT_EQ(2, results[1][2]);
+  EXPECT_EQ(2, results.size());
 }
+}  // namespace libmv
 }  // namespace

@@ -22,9 +22,12 @@
 #define LIBMV_IMAGE_NON_MAXIMAL_SUPPRESSION_H
 
 #include <cmath>
+#include <vector>
 
 #include "third_party/glog/src/glog/logging.h"
 #include "libmv/numeric/numeric.h"
+
+namespace libmv {
 
 template<typename TArray>
 inline bool IsLocalMax2D(const TArray &f, int width, int x, int y) {
@@ -66,10 +69,10 @@ inline bool IsLocalMax3D(const TArray &f, int width, int x, int y, int z) {
 // Find the local maximums of f(x, y, z) within boxes of width^3. Call callback
 // for each absolute extremum within any cube box of size width x width x
 // width. Callback is of the form void(int x, int y, int z, Scalar value);
-template<typename TArray, typename TCallback>
+template<typename TArray>
 inline void FindLocalMaxima3D(const TArray &f,
                               int width,
-                              TCallback *callback) {
+                              std::vector<Vec3i> *maxima) {
   typedef typename TArray::Scalar Scalar;
 
   assert(width % 2 == 1);
@@ -97,11 +100,14 @@ inline void FindLocalMaxima3D(const TArray &f,
           
         // Check if the found extremum is an extremum across block boundaries.
         if (x_max != -1 && IsLocalMax3D(f, width, x_max, y_max, z_max)) {
-          (*callback)(x_max, y_max, z_max, max_val);
+          Vec3i xyz; xyz << x_max, y_max, z_max;
+          maxima->push_back(xyz);
         }
       }
     }
   }
 }
+
+}  // namespace libmv
 
 #endif  // LIBMV_IMAGE_NON_MAXIMAL_SUPPRESSION_H

@@ -28,6 +28,7 @@
 #include "libmv/image/array_nd.h"
 #include "libmv/image/blob_response.h"
 #include "libmv/image/derivative.h"
+#include "libmv/image/image_io.h"
 #include "libmv/image/integral_image.h"
 #include "libmv/image/non_maximal_suppression.h"
 #include "third_party/glog/src/glog/logging.h"
@@ -36,7 +37,7 @@ namespace libmv {
 
 template<typename TImage, typename TOctave>
 void MakeSURFOctave(const TImage &integral_image, 
-                    int intervals,
+                    int num_intervals,
                     int lobe_start,
                     int lobe_increment,
                     int scale,
@@ -44,17 +45,17 @@ void MakeSURFOctave(const TImage &integral_image,
   assert(lobe_increment % 2 == 0);
   int rows = integral_image.rows();
   int cols = integral_image.cols();
-  octave->Resize(intervals, rows / scale, cols / scale);
+  octave->Resize(num_intervals, rows / scale, cols / scale);
   for (int i = 0, lobe_size = lobe_start;
-       i < intervals; ++i, lobe_size += lobe_increment) {
+       i < num_intervals; ++i, lobe_size += lobe_increment) {
     VLOG(1) << "Filtering interval " << i
             << " with lobe size " << lobe_size;
     // Map a row-major eigen matrix into the array to avoid copying.
     // TODO(keir): Really, the right way to do this is to add some sort of
     // slicing semantics to the array class. Add slicing!
-    Map<RMatf> blob_response(octave->Data() + octave->Offset(i, 0, 0),
-                             rows, cols);
-    BlobResponse(integral_image, lobe_size, scale, &blob_response);
+    Map<RMatf> blobiness(octave->Data() + octave->Offset(i, 0, 0),
+        rows / scale, cols / scale);
+    BlobResponse(integral_image, lobe_size, scale, &blobiness);
   }
 }
 
@@ -62,76 +63,92 @@ void MakeSURFOctave(const TImage &integral_image,
 template<typename TArray>
 inline Vec3 RefineMaxima3D(const TArray &f, int x, int y, int z) {
   Vec3 maxima;
-  Hessian3D(f, x, y, z).lu().solve(-Gradient3D(f, x, y, z), &maxima);
+  if (!Hessian3D(f, x, y, z).lu().solve(-Gradient3D(f, x, y, z), &maxima)) {
+    maxima << 100, 100, 100; // Force abandoning ill-conditioned extremum.
+  }
   return maxima;
+
 }
 
-struct StoreResults {
- public:
-  StoreResults(int max_x) : max_x(max_x), rejected(0) {}
-  void operator() (int x, int y, int z, float value) {
-    (void) value;
-    // Only take maxima which are not at the top or bottom of scale space.
-    if (x != 0 && x < max_x-1) {
-      Vec3i position;
-      //position << x << y << z;
-      position(0) = x;
-      position(1) = y;
-      position(2) = z;
-      points.push_back(position);
-    } else {
-      rejected++;
-    }
-  }
-  int max_x;
-  std::vector<Vec3i> points;
-  int rejected;
-};
+float GaussianScaleForInterval(float interval,
+                               int lobe_start,
+                               int lobe_increment) {
+  // XXX fixme; should this have a *9 or something?
+  // The magic number is from the paper; a gaussian filter with sigma = 1.2 is
+  // roughly equivalent to the box filter approximation with kernel size 9x9
+  // pixels.
+  return (lobe_start + interval*lobe_increment) * 1.2 / 9.0;
+}
 
 // Detect features. Each result colum stores x, y, s.
 template<typename TImage>
-Mat3X DetectFeatures(const TImage image) {
-  Matf integral_image;
-  IntegralImage(image, &integral_image);
+void DetectFeatures(const TImage integral_image,
+                    int num_intervals,
+                    int lobe_start,
+                    int lobe_increment,
+                    int scale,
+                    std::vector<Vec3f> *features) {
 
-  // Only a single octave for now.
-  int intervals = 4;
   Array3Df blob_responses;
-  //MakeSURFOctave(integral_image, intervals, 3, 2, 1, &blob_responses);
-  MakeSURFOctave(integral_image, intervals, 9, 8, 1, &blob_responses);
+  MakeSURFOctave(integral_image,
+                 num_intervals,
+                 lobe_start,
+                 lobe_increment,
+                 scale,
+                 &blob_responses);
 
-  StoreResults results(intervals);
-  FindLocalMaxima3D(blob_responses, 5, &results);
+  std::vector<Vec3i> maxima;
+  FindLocalMaxima3D(blob_responses, 3, &maxima);
 
   // Refine the results.
-  int n = results.points.size();
-  std::vector<Vec3f> intermediate_points;
-  for (int i = 0; i < n; ++i) {
-    Vec3 delta = RefineMaxima3D(blob_responses,
-                                results.points[i](0),
-                                results.points[i](1),
-                                results.points[i](2));
-    if (delta.norm() < 0.5) {
-      // Only take points that are already close to the right spot.
-      Vec3 updated = delta;
-      updated(0) += double(results.points[i](0));
-      updated(1) += double(results.points[i](1));
-      updated(2) += double(results.points[i](2));
-      //intermediate_points.push_back(results.points[i] + delta);
-      intermediate_points.push_back(updated);
-      // mult by scale.
-    } else {
-      results.rejected++;
+  int rejected = 0;
+  for (int i = 0; i < maxima.size(); ++i) {
+    // Reject points on the boundary of scalespace.
+    int x = maxima[i](0), y = maxima[i](1), z = maxima[i](2);
+    if ( 0 == x || x == blob_responses.Shape(0)-1 ||
+         0 == y || y == blob_responses.Shape(1)-1 ||
+         0 == z || z == blob_responses.Shape(2)-1) {
+      rejected++;
+      continue;
     }
+    Vec3 delta = RefineMaxima3D(blob_responses, x, y, z);
+    // Reject points that are not close to the right spot.
+    if (delta.norm() > 0.5) {
+      rejected++;
+      continue;
+    }
+    Vec3f updated = delta + maxima[i].cast<float>();
+    updated(0) = GaussianScaleForInterval(updated(0),
+                                          lobe_start,
+                                          lobe_increment);
+    updated(1) *= scale;
+    updated(2) *= scale;
+    features->push_back(updated);
   }
-  n = intermediate_points.size();
-  Mat3X points(3, n);
-  for (int i = 0; i < n; ++i) {
-    points.col(i) = intermediate_points[i];
+  LOG(INFO) << "Found " << features->size() << " interest points.";
+  LOG(INFO) << "Rejected " << rejected << " local maxima.";
+}
+
+// Detect features. Each result colum stores x, y, s.
+template<typename TImage>
+void MultiscaleDetectFeatures(const TImage image,
+                              int num_octaves,
+                              int num_intervals,
+                              std::vector<Vec3f> *features) {
+  Matf integral_image;
+  IntegralImage(image, &integral_image);
+  int scale = 1;
+  int lobe_start = 3;
+  int lobe_increment = 2;
+  for (int i = 0; i < num_octaves; ++i) {
+    DetectFeatures(integral_image,
+                   num_intervals,
+                   lobe_start, lobe_increment, scale,
+                   features);
+    scale *= 2;
+    lobe_start += lobe_increment;
+    lobe_increment *= 2;
   }
-  LOG(INFO) << "Found " << n << " interest points.";
-  LOG(INFO) << "Rejected " << results.rejected << " local maxima.";
-  return points;
 }
 
 }  // namespace libmv

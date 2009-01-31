@@ -41,8 +41,8 @@ void DrawFeature(const TVec2 &point,
   assert(image->Depth() == 3);
 
   const int cross_width = 5;
-  int x = lround(point(0));
   int y = lround(point(1));
+  int x = lround(point(2));
   if (!image->Contains(y,x)) {
     return;
   }
@@ -64,7 +64,7 @@ void DrawFeature(const TVec2 &point,
 }
 
 void WriteOutputImage(const FloatImage &image,
-                      Mat3X points,
+                      const std::vector<Vec3f> &points,
                       const char *output_filename) {
   FloatImage output_image(image.Height(), image.Width(), 3);
   for (int i = 0; i < image.Height(); ++i) {
@@ -77,8 +77,8 @@ void WriteOutputImage(const FloatImage &image,
 
   Vec3 green;
   green << 0, 1, 0;
-  for (int i = 0; i < points.cols(); ++i) {
-    DrawFeature(points.block<2,1>(1, i), green, &output_image);
+  for (int i = 0; i < points.size(); ++i) {
+    DrawFeature(points[i], green, &output_image);
   }
   WritePnm(output_image, output_filename);
 }
@@ -101,8 +101,9 @@ int main(int argc, char **argv) {
     return 0;
   }
 
-  Mat3X points = DetectFeatures(image);
-  WriteOutputImage(image, points, (filename + ".out.ppm").c_str());
+  std::vector<Vec3f> features;
+  MultiscaleDetectFeatures(image, 3, 4, &features);
+  WriteOutputImage(image, features, (filename + ".out.ppm").c_str());
   return 0;
 }
 
