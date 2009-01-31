@@ -126,4 +126,20 @@ TEST(FindLocalMaxima3D, MultipleMaxes) {
   EXPECT_EQ(6, results.results.size());
 }
 
+TEST(FindLocalMaxima3D, MultipleMaxesInSameBlock) {
+  Array3Df A(20, 20, 20);
+  A.Fill(0.0);
+  A(0, 0, 0) = 1.0;  // This is a local max within a 3x3x3 block.
+  A(2, 2, 2) = 3.0;  // And so is this (but the radii are close).
+
+  StoreResults results;
+  FindLocalMaxima3D(A, 3, &results);
+  EXPECT_EQ(0, results.results[0]);
+  EXPECT_EQ(0, results.results[1]);
+  EXPECT_EQ(0, results.results[2]);
+  EXPECT_EQ(2, results.results[3]);
+  EXPECT_EQ(2, results.results[4]);
+  EXPECT_EQ(2, results.results[5]);
+  EXPECT_EQ(6, results.results.size());
+}
 }  // namespace

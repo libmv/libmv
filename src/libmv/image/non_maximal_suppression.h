@@ -72,16 +72,19 @@ inline void FindLocalMaxima3D(const TArray &f,
                               TCallback *callback) {
   typedef typename TArray::Scalar Scalar;
 
-  for (int x = 0; x < f.Shape(0); x += width) {
-    for (int y = 0; y < f.Shape(1); y += width) {
-      for (int z = 0; z < f.Shape(2); z += width) {
+  assert(width % 2 == 1);
+  int blocksize = width / 2 + 1;
+
+  for (int x = 0; x < f.Shape(0); x += blocksize) {
+    for (int y = 0; y < f.Shape(1); y += blocksize) {
+      for (int z = 0; z < f.Shape(2); z += blocksize) {
 
         // Scan the pixels in this block to find the extremum.
         int x_max = -1, y_max = -1, z_max = -1;
         Scalar max_val = Scalar(-HUGE_VAL);
-        for (int xx = x; xx < std::min(x + width, f.Shape(0)); ++xx) {
-          for (int yy = y; yy < std::min(y + width, f.Shape(1)); ++yy) {
-            for (int zz = z; zz < std::min(z + width, f.Shape(2)); ++zz) {
+        for (int xx = x; xx < std::min(x + blocksize, f.Shape(0)); ++xx) {
+          for (int yy = y; yy < std::min(y + blocksize, f.Shape(1)); ++yy) {
+            for (int zz = z; zz < std::min(z + blocksize, f.Shape(2)); ++zz) {
               if (f(xx, yy, zz) > max_val) {
                 max_val = f(xx, yy, zz);
                 x_max = xx;
