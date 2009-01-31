@@ -49,8 +49,7 @@ class LevenbergMarquardt {
     GRADIENT_TOO_SMALL,
     // XXX Add others.
   };
-  LevenbergMarquardt(const Function &f)
-  : f_(f), df_(f) {}
+  LevenbergMarquardt(const Function &f) : f_(f), df_(f) {}
 
   // Do the minimization.
   Parameters operator()(const Parameters &x0) {
