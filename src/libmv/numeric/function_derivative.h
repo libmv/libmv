@@ -28,45 +28,62 @@
 namespace libmv {
 
 // Numeric derivative of a function.
+// TODO(keir): Consider adding a quadratic approximation.
 
-template<typename Function, typename Parameters>
-Matrix<typename Function::MatrixType::RealScalar,
-       Function::MatrixType::RowsAtCompileTime,
-       Parameters::RowsAtCompileTime>
-Jacobian(const Function &f, const Parameters &x) {
-  typedef typename Parameters::RealScalar Scalar;
-  typedef typename Function::MatrixType FMatrixType;
-  typedef Matrix<typename Function::MatrixType::RealScalar,
-                 Function::MatrixType::RowsAtCompileTime,
-                 Parameters::RowsAtCompileTime> JMatrixType;
+template<typename Function, bool central_diff=true>
+class NumericJacobian {
+ public:
+  typedef typename Function::XMatrixType Parameters;
+  typedef typename Function::XMatrixType::RealScalar XScalar;
+  typedef typename Function::FMatrixType FMatrixType;
+  typedef Matrix<typename Function::FMatrixType::RealScalar,
+                 Function::FMatrixType::RowsAtCompileTime,
+                 Function::XMatrixType::RowsAtCompileTime>
+          JMatrixType;
 
-  // Empirically determined constant.
-  Parameters eps = x.cwise().abs() * Scalar(1e-4);
-  // To handle cases where a paremeter is exactly zero, instead use the mean
-  // eps for the other dimensions.
-  Scalar mean_eps = eps.sum() / eps.rows();
-  if (mean_eps == Scalar(0)) {
-    mean_eps = 1e-8; // ~sqrt(machine precision).
-  }
-  // TODO(keir): Elimininate this needless function evaluation.
-  FMatrixType fx = f(x);
-  int rows = fx.rows();
-  int cols = x.rows();
-  JMatrixType jacobian(rows, cols);
-  Parameters x_plus_delta = x;
-  for (int c = 0; c < cols; ++c) {
-    if (eps(c) == Scalar(0)) {
-      eps(c) = mean_eps;
+  NumericJacobian(const Function &f) : f_(f) {}
+
+  // TODO(keir): Perhaps passing the jacobian back by value is not a good idea.
+  JMatrixType operator()(const Parameters &x) {
+    // Empirically determined constant.
+    Parameters eps = x.cwise().abs() * XScalar(1e-5);
+    // To handle cases where a paremeter is exactly zero, instead use the mean
+    // eps for the other dimensions.
+    XScalar mean_eps = eps.sum() / eps.rows();
+    if (mean_eps == XScalar(0)) {
+      // TODO(keir): Do something better here.
+      mean_eps = 1e-8; // ~sqrt(machine precision).
     }
-    x_plus_delta(c) = x(c) + eps(c);
-    jacobian.col(c) = f(x_plus_delta);
-    x_plus_delta(c) = x(c) - eps(c);
-    jacobian.col(c) -= f(x_plus_delta);
-    x_plus_delta(c) = x(c);
-    jacobian.col(c) = jacobian.col(c) / (2*eps(c));
+    // TODO(keir): Elimininate this needless function evaluation for the
+    // central difference case.
+    FMatrixType fx = f_(x);
+    const int rows = fx.rows();
+    const int cols = x.rows();
+    JMatrixType jacobian(rows, cols);
+    Parameters x_plus_delta = x;
+    for (int c = 0; c < cols; ++c) {
+      if (eps(c) == XScalar(0)) {
+        eps(c) = mean_eps;
+      }
+      x_plus_delta(c) = x(c) + eps(c);
+      jacobian.col(c) = f_(x_plus_delta);
+
+      XScalar one_over_h = 1 / eps(c);
+      if (central_diff) {
+        x_plus_delta(c) = x(c) - eps(c);
+        jacobian.col(c) -= f_(x_plus_delta);
+        one_over_h /= 2;
+      } else {
+        jacobian.col(c) -= fx;
+      }
+      x_plus_delta(c) = x(c);
+      jacobian.col(c) = jacobian.col(c) * one_over_h;
+    }
+    return jacobian;
   }
-  return jacobian;
-}
+ private:
+  const Function &f_;
+};
 
 }  // namespace libmv
 

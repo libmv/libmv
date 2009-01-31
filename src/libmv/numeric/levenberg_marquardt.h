@@ -32,81 +32,97 @@
 namespace libmv {
 
 // TODO(keir): Optional number of iterations, etc.
-template<typename Function, typename Parameters>
-Parameters LevenburgMarquardt(const Function &f, const Parameters &x0) {
-  typedef typename Parameters::RealScalar Scalar;
-  typedef typename Function::MatrixType FVec;
-  typedef Matrix<typename Function::MatrixType::RealScalar,
-                 Function::MatrixType::RowsAtCompileTime,
-                 Parameters::RowsAtCompileTime> JMat;
-  typedef Matrix<typename JMat::RealScalar, 
-                 JMat::ColsAtCompileTime, 
-                 JMat::ColsAtCompileTime> AMat;
-  Parameters x = x0;
-  JMat J = Jacobian(f, x0);
-  AMat A = J.transpose() * J;
-  FVec error = -f(x);
-  Parameters g = J.transpose() * error;
-  Scalar u = Scalar(100*A.diagonal().maxCoeff());
-  Scalar e1 = Scalar(1e-16);
-  Scalar e2 = e1;
-  int v = 2;
-  int iteration = 0;
-  int max_iterations = 100;
-  bool stop = g.cwise().abs().maxCoeff() < e2;
+template<typename Function,
+         typename Jacobian = NumericJacobian<Function> >
+class LevenbergMarquardt {
+ public:
+  typedef typename Function::XMatrixType::RealScalar Scalar;
+  typedef typename Function::FMatrixType FVec;
+  typedef typename Function::XMatrixType Parameters;
+  typedef Matrix<typename Function::FMatrixType::RealScalar,
+                 Function::FMatrixType::RowsAtCompileTime,
+                 Function::XMatrixType::RowsAtCompileTime> JMatrixType;
+  typedef Matrix<typename JMatrixType::RealScalar, 
+                 JMatrixType::ColsAtCompileTime, 
+                 JMatrixType::ColsAtCompileTime> AMatrixType;
+  enum Status {
+    GRADIENT_TOO_SMALL,
+    // XXX Add others.
+  };
+  LevenbergMarquardt(const Function &f)
+  : f_(f), df_(f) {}
 
-  Parameters dx, x_new;
-  while (!stop && iteration < max_iterations) {
-    iteration++;
-    int inner_iteration = 0;
-    LOG(INFO) << "iteration: " << iteration;
-    LOG(INFO) << "||f(x)||: " << f(x).norm();
-    LOG(INFO) << "max(g): " << g.cwise().abs().maxCoeff();
-    LOG(INFO) << "u: " << u;
-    LOG(INFO) << "v: " << v;
-    while (1) {
-      // The LDLT variant is failing in weird ways; find out why!
-      AMat A_augmented =
-          A + u*AMat::Identity(J.cols(), J.cols());
-      // TODO(keir): Below line should work.
-      //if (!A_augmented.ldlt().solve(g, &dx)) {
-      //if (!A_augmented.lu().solve(g, &dx)) {
-      if (!A_augmented.svd().solve(g, &dx)) {
-        LOG(ERROR) << "Solving failed. A Matrix:\n" << A_augmented;
-        LOG(ERROR) << "dx:\n" << g;
-        return x;
-      }
-      LOG(INFO) << "x: " << x.transpose();
-      LOG(INFO) << "dx: " << dx.transpose();
-      if (dx.norm() <= e2 * x.norm()) {
-        stop = true;
-        break;
-      } 
-      x_new = x + dx;
-      Scalar rho((error.norm2() - f(x_new).norm2()) / dx.dot(u*dx + g));
-      if (rho > 0) {
-        // Accept the step. Update gradients and error.
-        x = x_new;
-        J = Jacobian(f, x);
-        A = J.transpose() * J;
-        error = -f(x);
-        g = J.transpose() * error;
-        stop = g.cwise().abs().maxCoeff() < e2;
-        Scalar tmp = Scalar(2*rho-1);
-        u = u*std::max(1/3., 1 - (tmp*tmp*tmp));
-        v = 2;
-      } else {
-        // Keep going in this direction.
-        u *= v;
-        v *= 2;
-      }
-      if (stop or rho > 0 or inner_iteration > 100) {
-        break;
+  // Do the minimization.
+  Parameters operator()(const Parameters &x0) {
+    Parameters x = x0;
+    JMatrixType J = df_(x0);
+    AMatrixType A = J.transpose() * J;
+    FVec error = -f_(x);
+    Parameters g = J.transpose() * error;
+    Scalar u = Scalar(100*A.diagonal().maxCoeff());
+    Scalar e1 = Scalar(1e-16);
+    Scalar e2 = e1;
+    int v = 2;
+    int iteration = 0;
+    int max_iterations = 100;
+    bool stop = g.cwise().abs().maxCoeff() < e2;
+
+    Parameters dx, x_new;
+    while (!stop && iteration < max_iterations) {
+      iteration++;
+      int inner_iteration = 0;
+      LOG(INFO) << "iteration: " << iteration;
+      LOG(INFO) << "||f(x)||: " << f_(x).norm();
+      LOG(INFO) << "max(g): " << g.cwise().abs().maxCoeff();
+      LOG(INFO) << "u: " << u;
+      LOG(INFO) << "v: " << v;
+      while (1) {
+        AMatrixType A_augmented =
+            A + u*AMatrixType::Identity(J.cols(), J.cols());
+        // TODO(keir): LDLt fails because it doesn't pivot; fix this in Eigen!
+        //if (!A_augmented.ldlt().solve(g, &dx)) {
+        //if (!A_augmented.svd().solve(g, &dx)) {
+        //if (!A_augmented.qr().solve(g, &dx)) {
+        if (!A_augmented.lu().solve(g, &dx)) {
+          LOG(ERROR) << "Solving failed. A Matrix:\n" << A_augmented;
+          LOG(ERROR) << "dx:\n" << g;
+          return x;
+        }
+        LOG(INFO) << "x: " << x.transpose();
+        LOG(INFO) << "dx: " << dx.transpose();
+        if (dx.norm() <= e2 * x.norm()) {
+          stop = true;
+          break;
+        } 
+        x_new = x + dx;
+        Scalar rho((error.norm2() - f_(x_new).norm2()) / dx.dot(u*dx + g));
+        if (rho > 0) {
+          // Accept the step. Update gradients and error.
+          x = x_new;
+          J = df_(x);
+          A = J.transpose() * J;
+          error = -f_(x);
+          g = J.transpose() * error;
+          stop = g.cwise().abs().maxCoeff() < e2;
+          Scalar tmp = Scalar(2*rho-1);
+          u = u*std::max(1/3., 1 - (tmp*tmp*tmp));
+          v = 2;
+        } else {
+          // Keep going in this direction.
+          u *= v;
+          v *= 2;
+        }
+        if (stop or rho > 0 or inner_iteration > 100) {
+          break;
+        }
       }
     }
+    return x;
   }
-  return x;
-}
+ private:
+  const Function &f_;
+  Jacobian df_;
+};
 
 }  // namespace mv
 

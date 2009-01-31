@@ -28,17 +28,18 @@ namespace {
 
 class F {
  public:
-  typedef Vec2 MatrixType;
+  typedef Vec2 FMatrixType;
+  typedef Vec3 XMatrixType;
   Vec2 operator()(const Vec3 &x) const {
     Vec2 fx;
     fx << 0.19*x(0) + 0.19*x(1)*x(1) + x(2),
-          5*sin(x(0)) + 7*cos(x(1));
+          3*sin(x(0)) + 2*cos(x(1));
     return fx;
   }
   Mat23 J(const Vec3 &x) const {
     Mat23 jacobian;
     jacobian << 0.19, 2*0.19*x(1), 1.0,
-                5*cos(x(0)), -7*sin(x(1)), 0;
+                3*cos(x(0)), -2*sin(x(1)), 0;
     return jacobian;
   }
 };
@@ -46,26 +47,11 @@ class F {
 TEST(FunctionDerivative, SimpleCase) {
   Vec3 x; x << 0.76026643, 0.01799744, 0.55192142;
   F f;
-  Mat23 J = Jacobian(f, x);
-
-  EXPECT_MATRIX_NEAR(f.J(x), Jacobian(f, x), 1e-8);
+  NumericJacobian<F> J(f);
+  EXPECT_MATRIX_NEAR(f.J(x), J(x), 1e-8);
+  NumericJacobian<F, false> J_forward(f);
+  // Forward difference is very inaccurate.
+  EXPECT_MATRIX_NEAR(f.J(x), J_forward(x), 1e-5);
 }
-
-class Tricky {
- public:
-  typedef Vec2 MatrixType;
-  Vec2 operator()(const Vec3 &x) const {
-    Vec2 fx;
-    fx << 0.19*x(0) + 0.19*x(1)*x(1) + x(2),
-          5*sin(x(0)) + 7*cos(x(1));
-    return fx;
-  }
-  Mat23 J(const Vec3 &x) const {
-    Mat23 jacobian;
-    jacobian << 0.19, 2*0.19*x(1), 1.0,
-                5*cos(x(0)), -7*sin(x(1)), 0;
-    return jacobian;
-  }
-};
 
 }  // namespace

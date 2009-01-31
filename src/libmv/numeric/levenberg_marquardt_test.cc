@@ -27,7 +27,8 @@ namespace {
 
 class F {
  public:
-  typedef Vec4 MatrixType;
+  typedef Vec4 FMatrixType;
+  typedef Vec3 XMatrixType;
   Vec4 operator()(const Vec3 &x) const {
     double x1 = x.x() - 2;
     double y1 = x.y() - 5;
@@ -40,10 +41,11 @@ class F {
   }
 };
 
-TEST(FunctionDerivative, SimpleCase) {
+TEST(LevenbergMarquardt, SimpleCase) {
   Vec3 x; x << 0.76026643, -30.01799744, 0.55192142;
   F f;
-  Vec3 min_x = LevenburgMarquardt(f, x);
+  LevenbergMarquardt<F> lm(f);
+  Vec3 min_x = lm(x);
   Vec3 expected_min_x;
   expected_min_x << 2, 5, 0;
 
