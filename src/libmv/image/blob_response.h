@@ -49,25 +49,28 @@ inline void BlobResponse(const TImage &integral_image,
   const int W = 3*L;
   Scalar inverse_area = Scalar(1.0) / W / W;
 
-  LOG(INFO) << "Area: " << W * W;
-  LOG(INFO) << "kernel width W= " << W;
+  LOG(INFO) << "Filtering a " << integral_image.cols()
+            << "x" << integral_image.rows()
+            << " image with a kernel size: " << W << "x" << W;
 
   blob_response->resize(integral_image.rows() / scale,
                         integral_image.cols() / scale);
   int B = W / 2;
-  for (int r = B; r < integral_image.rows() - B; r += scale) {
-    for (int c = B; c < integral_image.cols() - B; c += scale) {
+  // Make the top left border so that UnsafeBoxIntegral is in bounds.
+  for (int r = B + 1; r < integral_image.rows() - B; r += scale) {
+    for (int c = B + 1; c < integral_image.cols() - B; c += scale) {
       // Compute filter responses, which approximate filtering by the
       // derivative of a gaussian kernel (like in the KLT code).
+      const TImage &ii = integral_image;
       Scalar Dxx, Dxy, Dyy;
-      Dxx =   BoxIntegral(integral_image, r - L + 1, c - B,     2*L - 1, W)
-            - BoxIntegral(integral_image, r - L + 1, c - L / 2, 2*L - 1, L)*3;
-      Dyy =   BoxIntegral(integral_image, r - B,     c - L + 1, W, 2*L - 1)
-            - BoxIntegral(integral_image, r - L / 2, c - L + 1, L, 2*L - 1)*3;
-      Dxy = + BoxIntegral(integral_image, r - L, c + 1, L, L)
-            + BoxIntegral(integral_image, r + 1, c - L, L, L)
-            - BoxIntegral(integral_image, r - L, c - L, L, L)
-            - BoxIntegral(integral_image, r + 1, c + 1, L, L);
+      Dxx =   UnsafeBoxIntegral(ii, r - L + 1, c - B,     2*L - 1, W)
+            - UnsafeBoxIntegral(ii, r - L + 1, c - L / 2, 2*L - 1, L)*3;
+      Dyy =   UnsafeBoxIntegral(ii, r - B,     c - L + 1, W, 2*L - 1)
+            - UnsafeBoxIntegral(ii, r - L / 2, c - L + 1, L, 2*L - 1)*3;
+      Dxy = + UnsafeBoxIntegral(ii, r - L, c + 1, L, L)
+            + UnsafeBoxIntegral(ii, r + 1, c - L, L, L)
+            - UnsafeBoxIntegral(ii, r - L, c - L, L, L)
+            - UnsafeBoxIntegral(ii, r + 1, c + 1, L, L);
 
       // Filter size should not affect response, so normalize by area.
       Dxx *= inverse_area;

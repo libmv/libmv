@@ -75,8 +75,8 @@ inline void IntegralImage(const TImage &image, TIntegralImage *integral_image) {
 //
 template <typename TImage>
 inline typename TImage::Scalar BoxIntegral(const TImage &integral_image,
-                                  int row, int col,
-                                  int rows, int cols) {
+                                           int row, int col,
+                                           int rows, int cols) {
   // The subtraction by one for row/col is because row/col is inclusive.
   int r1 = std::min(row,          integral_image.rows()) - 1;
   int c1 = std::min(col,          integral_image.cols()) - 1;
@@ -88,6 +88,30 @@ inline typename TImage::Scalar BoxIntegral(const TImage &integral_image,
   T B(0); if (r1 >= 0 && c2 >= 0) B = integral_image(r1, c2);
   T C(0); if (r2 >= 0 && c1 >= 0) C = integral_image(r2, c1);
   T D(0); if (r2 >= 0 && c2 >= 0) D = integral_image(r2, c2);
+
+  T sum = A - B - C + D;
+  assert (sum >= 0);
+  return sum;
+}
+
+// Same as above but does no bounds checking, and requires row and col to be
+// equal to or greater than 1.
+template <typename TImage>
+inline typename TImage::Scalar UnsafeBoxIntegral(const TImage &integral_image,
+                                                 int row, int col,
+                                                 int rows, int cols) {
+  // The subtraction by one for row/col is because row/col is inclusive.
+  int r1 = row - 1;
+  int c1 = col - 1;
+  int r2 = row + rows - 1;
+  int c2 = col + cols - 1;
+  assert(r1 >= 0); assert(c1 >= 0); assert(r2 >= 0); assert(c2 >= 0);
+  
+  typedef typename TImage::Scalar T;
+  T A = integral_image(r1, c1);
+  T B = integral_image(r1, c2);
+  T C = integral_image(r2, c1);
+  T D = integral_image(r2, c2);
 
   T sum = A - B - C + D;
   assert (sum >= 0);

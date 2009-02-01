@@ -117,20 +117,19 @@ void DetectFeatures(const TImage integral_image,
     if (!RefineMaxima3D(blob_responses, x, y, z, &delta)) {
       rejected++; continue;
     }
-    // Reject points which have to be refined too far.
+    // Reject points which have refinements that move far away.
     double parameter_maxima_max_refinement_distance = 0.7;
     if (delta.norm() > parameter_maxima_max_refinement_distance) {
       rejected++; continue;
     }
-    Vec3f updated = maxima[i].cast<float>() + delta;
-    updated(0) = GaussianScaleForInterval(updated(0),
-                                          lobe_start,
-                                          lobe_increment);
-    updated(1) *= scale;
-    updated(2) *= scale;
-    features->push_back(updated);
+    // 'src' is for (sigma, row, column).
+    Vec3f src = maxima[i].cast<float>() + delta;
+    src(0) = GaussianScaleForInterval(src(0), lobe_start, lobe_increment);
+    src(1) *= scale;
+    src(2) *= scale;
+    features->push_back(src);
   }
-  LOG(INFO) << "Found " << features->size() << " interest points.";
+  LOG(INFO) << "Found " << maxima.size() - rejected << " interest points.";
   LOG(INFO) << "Rejected " << rejected << " local maxima.";
 }
 
@@ -154,6 +153,8 @@ void MultiscaleDetectFeatures(const TImage image,
     lobe_start += lobe_increment;
     lobe_increment *= 2;
   }
+  LOG(INFO) << "Multi scale fast hessian found " << features->size()
+            << " features.";
 }
 
 }  // namespace libmv
