@@ -117,10 +117,10 @@ int main(int argc, char **argv) {
     float x = features[i](2);
     LOG(INFO) << "x = " << x << " y = " << y << " scale = " << scale;
     USURFDescriptor<4, 5>(integral_image,
-                    features[i](2),
-                    features[i](1),
-                    features[i](0),
-                    &descriptor);
+                          features[i](2),
+                          features[i](1),
+                          features[i](0),
+                          &descriptor);
     VLOG(1) << "Descriptor: " << descriptor.transpose();
   }
   return 0;
