@@ -25,18 +25,6 @@
 
 namespace libmv {
 
-// Zero mean Gaussian.
-double Gaussian(double x, double sigma) {
-  return 1/sqrt(2*M_PI*sigma*sigma) * exp(-(x*x/2/sigma/sigma));
-}
-double GaussianDerivative(double x, double sigma) {
-  return -x / sigma / sigma * Gaussian(x, sigma);
-}
-// Solve the inverse of the Gaussian for positive x.
-double GaussianInversePositive(double y, double sigma) {
-  return sqrt(-2 * sigma * sigma * log(y * sigma * sqrt(2*M_PI)));
-}
-
 // Compute a Gaussian kernel and derivative, such that you can take the
 // derivitave of an image by convolving with the kernel horizontally then the
 // derivative vertically to get (eg) the y derivative.

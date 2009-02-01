@@ -73,6 +73,9 @@ inline void IntegralImage(const TImage &image, TIntegralImage *integral_image) {
 //     |            |          |     |
 //     +------------+----------+-----+
 //
+// This version adds implicit zeros extending infinitely away in all
+// directions, so any row, col, rows, cols combo will work. It is slower than
+// the below version however.
 template <typename TImage>
 inline typename TImage::Scalar BoxIntegral(const TImage &integral_image,
                                            int row, int col,

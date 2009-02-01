@@ -26,6 +26,7 @@
 #include "libmv/image/image.h"
 #include "libmv/image/image_io.h"
 #include "libmv/image/surf.h"
+#include "libmv/image/surf_descriptor.h"
 #include "third_party/gflags/gflags.h"
 #include "third_party/glog/src/glog/logging.h"
 
@@ -105,6 +106,23 @@ int main(int argc, char **argv) {
   std::vector<Vec3f> features;
   MultiscaleDetectFeatures(image, 4, 4, &features);
   WriteOutputImage(image, features, (filename + ".out.ppm").c_str());
+  LOG(INFO) << "Extracting feature descriptors.";
+  Matf integral_image;
+  IntegralImage(image, &integral_image);
+  LOG(INFO) << "Extracting feature descriptors.";
+  for (int i = 0; i < features.size(); ++i) {
+    Matrix<float, 64, 1> descriptor;
+    float scale = features[i](0);
+    float y = features[i](1);
+    float x = features[i](2);
+    LOG(INFO) << "x = " << x << " y = " << y << " scale = " << scale;
+    USURFDescriptor<4, 5>(integral_image,
+                    features[i](2),
+                    features[i](1),
+                    features[i](0),
+                    &descriptor);
+    VLOG(1) << "Descriptor: " << descriptor.transpose();
+  }
   return 0;
 }
 
