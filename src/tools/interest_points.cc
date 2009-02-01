@@ -40,7 +40,8 @@ void DrawFeature(const TVec2 &point,
                  Array3Df *image) {
   assert(image->Depth() == 3);
 
-  const int cross_width = 5;
+  //const int cross_width = lround(9*point(0)/1.2);
+  const int cross_width = lround(point(0));
   int y = lround(point(1));
   int x = lround(point(2));
   if (!image->Contains(y,x)) {
@@ -102,7 +103,7 @@ int main(int argc, char **argv) {
   }
 
   std::vector<Vec3f> features;
-  MultiscaleDetectFeatures(image, 3, 4, &features);
+  MultiscaleDetectFeatures(image, 4, 4, &features);
   WriteOutputImage(image, features, (filename + ".out.ppm").c_str());
   return 0;
 }

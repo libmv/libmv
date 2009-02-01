@@ -61,23 +61,19 @@ void MakeSURFOctave(const TImage &integral_image,
 
 // Do a single newton step toward the maximum.
 template<typename TArray>
-inline Vec3 RefineMaxima3D(const TArray &f, int x, int y, int z) {
-  Vec3 maxima;
-  if (!Hessian3D(f, x, y, z).lu().solve(-Gradient3D(f, x, y, z), &maxima)) {
-    maxima << 100, 100, 100; // Force abandoning ill-conditioned extremum.
-  }
-  return maxima;
-
+inline bool RefineMaxima3D(const TArray &f, int x, int y, int z, Vec3 *xp) {
+  return Hessian3D(f, x, y, z).lu().solve(-Gradient3D(f, x, y, z), xp);
 }
 
 float GaussianScaleForInterval(float interval,
                                int lobe_start,
                                int lobe_increment) {
-  // XXX fixme; should this have a *9 or something?
   // The magic number is from the paper; a gaussian filter with sigma = 1.2 is
   // roughly equivalent to the box filter approximation with kernel size 9x9
   // pixels.
-  return (lobe_start + interval*lobe_increment) * 1.2 / 9.0;
+  float lobe_size = lobe_start + interval*lobe_increment;
+  float filter_width = 3*lobe_size;
+  return filter_width * 1.2 / 9.0;
 }
 
 // Detect features. Each result colum stores x, y, s.
@@ -98,7 +94,8 @@ void DetectFeatures(const TImage integral_image,
                  &blob_responses);
 
   std::vector<Vec3i> maxima;
-  FindLocalMaxima3D(blob_responses, 3, &maxima);
+  int parameter_maxima_region = 7;
+  FindLocalMaxima3D(blob_responses, parameter_maxima_region, &maxima);
 
   // Refine the results.
   int rejected = 0;
@@ -108,16 +105,24 @@ void DetectFeatures(const TImage integral_image,
     if ( 0 == x || x == blob_responses.Shape(0)-1 ||
          0 == y || y == blob_responses.Shape(1)-1 ||
          0 == z || z == blob_responses.Shape(2)-1) {
-      rejected++;
-      continue;
+      rejected++; continue;
     }
-    Vec3 delta = RefineMaxima3D(blob_responses, x, y, z);
-    // Reject points that are not close to the right spot.
-    if (delta.norm() > 0.5) {
-      rejected++;
-      continue;
+    // Reject anything that's not blobby enough.
+    double parameter_maxima_threshold = 0.004;
+    if (blob_responses(x, y, z) < parameter_maxima_threshold) {
+      rejected++; continue;
     }
-    Vec3f updated = delta + maxima[i].cast<float>();
+    // Reject saddle points.
+    Vec3 delta;
+    if (!RefineMaxima3D(blob_responses, x, y, z, &delta)) {
+      rejected++; continue;
+    }
+    // Reject points which have to be refined too far.
+    double parameter_maxima_max_refinement_distance = 0.7;
+    if (delta.norm() > parameter_maxima_max_refinement_distance) {
+      rejected++; continue;
+    }
+    Vec3f updated = maxima[i].cast<float>() + delta;
     updated(0) = GaussianScaleForInterval(updated(0),
                                           lobe_start,
                                           lobe_increment);
