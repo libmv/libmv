@@ -29,14 +29,14 @@ namespace libmv {
 // TODO(keir): Find a better place for these functions. gaussian.h in numeric?
 
 // Zero mean Gaussian.
-double Gaussian(double x, double sigma) {
+inline double Gaussian(double x, double sigma) {
   return 1/sqrt(2*M_PI*sigma*sigma) * exp(-(x*x/2/sigma/sigma));
 }
-double GaussianDerivative(double x, double sigma) {
+inline double GaussianDerivative(double x, double sigma) {
   return -x / sigma / sigma * Gaussian(x, sigma);
 }
 // Solve the inverse of the Gaussian for positive x.
-double GaussianInversePositive(double y, double sigma) {
+inline double GaussianInversePositive(double y, double sigma) {
   return sqrt(-2 * sigma * sigma * log(y * sigma * sqrt(2*M_PI)));
 }
 
