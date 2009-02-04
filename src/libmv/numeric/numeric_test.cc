@@ -397,6 +397,25 @@ TEST(Numeric, ExtractColumns) {
   EXPECT_NEAR(8, extracted(1,1), 1e-15);
 }
 
+TEST(Numeric, RotationRodrigues) {
+  Vec3 x, y, z;
+  x << 1, 0, 0;
+  y << 0, 1, 0;
+  z << 0, 0, 1;
+
+  Mat3 rodrigues_x = RotationRodrigues(x);
+  Mat3 rodrigues_y = RotationRodrigues(y);
+  Mat3 rodrigues_z = RotationRodrigues(z);
+
+  Mat3 Rx = RotationAroundX(1);
+  Mat3 Ry = RotationAroundY(1);
+  Mat3 Rz = RotationAroundZ(1);
+
+  EXPECT_MATRIX_NEAR(Rx, rodrigues_x, 1e-15);
+  EXPECT_MATRIX_NEAR(Ry, rodrigues_y, 1e-15);
+  EXPECT_MATRIX_NEAR(Rz, rodrigues_z, 1e-15);
+}
+
 TEST(Numeric, LookAt) {
   // Simple orthogonality check.
   Vec3 e; e << 1, 2, 3;

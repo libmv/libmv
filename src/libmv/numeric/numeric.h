@@ -206,6 +206,11 @@ Mat3 RotationAroundX(double angle);
 Mat3 RotationAroundY(double angle);
 Mat3 RotationAroundZ(double angle);
 
+// Returns the rotation matrix of a rotation of angle |axis| around axis.
+// This is computed using the Rodrigues formula, see:
+//  http://mathworld.wolfram.com/RodriguesRotationFormula.html
+Mat3 RotationRodrigues(const Vec3 &axis);
+
 // Make a rotation matrix such that center becomes the direction of the
 // positive z-axis, and y is oriented close to up.
 Mat3 LookAt(Vec3 center);

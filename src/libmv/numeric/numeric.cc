@@ -62,6 +62,16 @@ Mat3 RotationAroundZ(double angle) {
   return R;
 }
 
+
+Mat3 RotationRodrigues(const Vec3 &axis) {
+  double theta = axis.norm();
+  Vec3 w = axis / theta;
+  Mat3 W = CrossProductMatrix(w);
+
+  return Mat3::Identity() + sin(theta) * W + (1 - cos(theta)) * W * W;
+}
+
+
 Mat3 LookAt(Vec3 center) {
   Vec3 zc = center.normalized();
   Vec3 xc = Vec3::UnitY().cross(zc).normalized();
