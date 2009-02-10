@@ -45,4 +45,22 @@ TEST(KdTree, Build) {
   EXPECT_EQ(3, points[2][1]);
 }
 
+TEST(KdTree, MoreVariantAxis) {
+  Vec2 points[3];
+  points[0] << 30, 1;
+  points[1] << 20, 2;
+  points[2] << 10, 3;
+
+  KdTree<Vec2> tree;
+  tree.Build(points, 3, 2);
+
+  EXPECT_EQ(5, tree.NumNodes());
+  EXPECT_EQ(10, points[0][0]);
+  EXPECT_EQ( 3, points[0][1]);
+  EXPECT_EQ(20, points[1][0]);
+  EXPECT_EQ( 2, points[1][1]);
+  EXPECT_EQ(30, points[2][0]);
+  EXPECT_EQ( 1, points[2][1]);
+}
+
 }  // namespace

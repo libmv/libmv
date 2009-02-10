@@ -39,6 +39,10 @@ class KdTree {
     Point *end;
     KdNode *left_child;
     KdNode *right_child;
+
+    bool IsLeaf() {
+      return left_child == NULL;
+    }
   };
 
   struct AxisComparison {
@@ -54,7 +58,7 @@ class KdTree {
   void Build(Point *points, int n, int k) {
     nodes_.clear();
     k_ = k;
-    CreateNode(points, points + n, 0);
+    CreateNode(points, points + n);
   }
 
   int NumNodes() {
@@ -70,31 +74,55 @@ class KdTree {
 
 
  private:
-  KdNode *CreateNode(Point *begin, Point *end, int depth) {
-    if (begin >= end) {
-      return NULL;
-    }
+  KdNode *CreateNode(Point *begin, Point *end) {
+    int num_points = end - begin;
+
+    if (num_points <= 0) { return NULL; }
 
     // Create the node.
     nodes_.resize(nodes_.size() + 1);
     KdNode &node = nodes_[nodes_.size() - 1];
-    node.axis = depth % k_;
     node.begin = begin;
     node.end = end;
 
-    if (end - begin > 1) {
+    if (num_points == 1) {
+      node.left_child = node.right_child = NULL; 
+    } else {
       // Partition points.
+      node.axis = MoreVariantAxis(begin, end);
       AxisComparison comp(node.axis);
-      Point *pivot = begin + (end - begin) / 2;
+      Point *pivot = begin + num_points / 2;
       std::nth_element(begin, pivot, end, comp);
       node.value = (*pivot)[node.axis];
 
       // Create sub-trees.
-      node.left_child = CreateNode(begin, pivot, depth + 1);
-      node.right_child = CreateNode(pivot, end, depth + 1);
-    }
-
+      node.left_child = CreateNode(begin, pivot);
+      node.right_child = CreateNode(pivot, end);
+    } 
     return &node;
+  }
+
+  int MoreVariantAxis(Point *begin, Point *end) {
+    // Compute variances.
+    Vec mean = Vec::Zero(k_);
+    Vec mean2 = Vec::Zero(k_);
+    for (Point *p = begin; p < end; ++p) {
+      for (int i = 0; i < k_; ++i) {
+        Scalar x = (*p)[i];
+        mean[i] += x;
+        mean2[i] += x * x;
+      }
+    }
+    
+    int num_points = end - begin;
+    mean /= num_points;
+    mean2 /= num_points;
+    Vec variance = mean2 - mean.cwise().square();
+
+    // Find the largest.
+    int more_variant_axis;
+    variance.maxCoeff(&more_variant_axis);
+    return more_variant_axis;
   }
 
  private:
