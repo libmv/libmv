@@ -33,7 +33,11 @@ namespace libmv {
 
 // TODO(keir): Optional number of iterations, etc.
 template<typename Function,
-         typename Jacobian = NumericJacobian<Function> >
+         typename Jacobian = NumericJacobian<Function>,
+         typename Solver = Eigen::SVD<
+           Matrix<typename Function::FMatrixType::RealScalar, 
+                  Function::XMatrixType::RowsAtCompileTime,
+                  Function::XMatrixType::RowsAtCompileTime> > >
 class LevenbergMarquardt {
  public:
   typedef typename Function::XMatrixType::RealScalar Scalar;
@@ -45,82 +49,104 @@ class LevenbergMarquardt {
   typedef Matrix<typename JMatrixType::RealScalar, 
                  JMatrixType::ColsAtCompileTime, 
                  JMatrixType::ColsAtCompileTime> AMatrixType;
-  enum Status {
-    GRADIENT_TOO_SMALL,
-    // XXX Add others.
-  };
-  LevenbergMarquardt(const Function &f) : f_(f), df_(f) {}
 
-  // Do the minimization.
+  // TODO(keir): Some of these knobs can be derived from each other and
+  // removed, instead of requiring the user to set them.
+  enum Status {
+    NOT_STARTED,
+    RUNNING,
+    GRADIENT_TOO_SMALL,            // eps > max(J'*f(x))
+    RELATIVE_STEP_SIZE_TOO_SMALL,  // eps > ||dx|| / ||x||
+    ERROR_TOO_SMALL,               // eps > ||f(x)||
+    HIT_MAX_ITERATIONS,
+    SINGULAR_NORMAL_EQUATIONS,     // Can't solve J'J*dx = J'e
+  };
+
+  LevenbergMarquardt(const Function &f)
+      : f_(f), df_(f),
+        status_(NOT_STARTED),
+        gradient_threshold_(1e-16),
+        relative_step_threshold_(1e-16),
+        error_threshold_(1e-16) {}
+
+  Status Update(const Parameters &x,
+                JMatrixType *J, AMatrixType *A, FVec *error, Parameters *g) {
+    *J = df_(x);
+    *A = (*J).transpose() * (*J);
+    *error = -f_(x);
+    *g = (*J).transpose() * *error;
+    return g->cwise().abs().maxCoeff() < gradient_threshold_
+           ? GRADIENT_TOO_SMALL : RUNNING;
+  }
+
   Parameters operator()(const Parameters &x0) {
-    Parameters x = x0;
-    JMatrixType J = df_(x0);
-    AMatrixType A = J.transpose() * J;
-    FVec error = -f_(x);
-    Parameters g = J.transpose() * error;
-    Scalar u = Scalar(100*A.diagonal().maxCoeff());
-    Scalar e1 = Scalar(1e-16);
-    Scalar e2 = e1;
-    int v = 2;
-    int iteration = 0;
-    int max_iterations = 100;
-    bool stop = g.cwise().abs().maxCoeff() < e2;
+    Parameters x;
+    JMatrixType J;
+    AMatrixType A;
+    FVec error;
+    Parameters g;
+
+    int max_iterations = 100;  // XXX make parameter.
+
+    x = x0;
+    status_ = Update(x, &J, &A, &error, &g);
+
+    Scalar initial_scale_factor = 100;  // XXX make parameter.
+    Scalar u = Scalar(initial_scale_factor*A.diagonal().maxCoeff());
+    Scalar v = 2;
 
     Parameters dx, x_new;
-    while (!stop && iteration < max_iterations) {
-      iteration++;
-      int inner_iteration = 0;
-      LOG(INFO) << "iteration: " << iteration;
+    for (int i = 0; status_ == RUNNING && i < max_iterations; ++i) {
+      LOG(INFO) << "iteration: " << i;
       LOG(INFO) << "||f(x)||: " << f_(x).norm();
       LOG(INFO) << "max(g): " << g.cwise().abs().maxCoeff();
       LOG(INFO) << "u: " << u;
       LOG(INFO) << "v: " << v;
-      while (1) {
-        AMatrixType A_augmented =
-            A + u*AMatrixType::Identity(J.cols(), J.cols());
-        // TODO(keir): LDLt fails because it doesn't pivot; fix this in Eigen!
-        //if (!A_augmented.ldlt().solve(g, &dx)) {
-        //if (!A_augmented.svd().solve(g, &dx)) {
-        //if (!A_augmented.qr().solve(g, &dx)) {
-        if (!A_augmented.lu().solve(g, &dx)) {
-          LOG(ERROR) << "Solving failed. A Matrix:\n" << A_augmented;
-          LOG(ERROR) << "dx:\n" << g;
-          return x;
-        }
-        LOG(INFO) << "x: " << x.transpose();
-        LOG(INFO) << "dx: " << dx.transpose();
-        if (dx.norm() <= e2 * x.norm()) {
-          stop = true;
+
+      AMatrixType A_augmented = A + u*AMatrixType::Identity(J.cols(), J.cols());
+      Solver solver(A);
+      bool solved = solver.solve(g, &dx);
+      if (!solved) LOG(ERROR) << "Failed to solve";
+      if (solved && dx.norm() <= gradient_threshold_ * x.norm()) {
+          status_ = RELATIVE_STEP_SIZE_TOO_SMALL;
           break;
-        } 
+      } 
+      if (solved) {
         x_new = x + dx;
+        // Rho is the ratio of the actual reduction in error to the reduction
+        // in error that would be obtained if the problem was linear.
         Scalar rho((error.norm2() - f_(x_new).norm2()) / dx.dot(u*dx + g));
         if (rho > 0) {
-          // Accept the step. Update gradients and error.
+          // Accept the Gauss-Newton step because the linear model fits well.
           x = x_new;
-          J = df_(x);
-          A = J.transpose() * J;
-          error = -f_(x);
-          g = J.transpose() * error;
-          stop = g.cwise().abs().maxCoeff() < e2;
+          status_ = Update(x, &J, &A, &error, &g);
           Scalar tmp = Scalar(2*rho-1);
           u = u*std::max(1/3., 1 - (tmp*tmp*tmp));
-          v = 2;
-        } else {
-          // Keep going in this direction.
-          u *= v;
           v *= 2;
-        }
-        if (stop or rho > 0 or inner_iteration > 100) {
-          break;
-        }
-      }
+          continue;
+        } 
+      } 
+      // Reject the update because either the normal equations failed to solve
+      // or the local linear model was not good (rho < 0). Instead, increase u
+      // to move closer to gradient descent.
+      u *= v;
+      v *= 2;
     }
     return x;
+  }
+
+  Status status() {
+    return status_;
   }
  private:
   const Function &f_;
   Jacobian df_;
+  Status status_;
+
+  // Solver parameters. These should really be in a parameters class.
+  Scalar gradient_threshold_;       // eps > max(J'*f(x))
+  Scalar relative_step_threshold_;  // eps > ||dx|| / ||x||
+  Scalar error_threshold_;          // eps > ||f(x)||
 };
 
 }  // namespace mv
