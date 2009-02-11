@@ -32,7 +32,8 @@
 namespace libmv {
 
 template<typename TImage>
-typename TImage::Scalar HarrX(const TImage &integral_image, int row, int col, int scale) {
+typename TImage::Scalar HarrX(const TImage &integral_image,
+                              int row, int col, int scale) {
   // Ignore the center strip for odd scales.
   int HW = scale / 2, W = scale;
   int C = W % 2;
@@ -41,7 +42,8 @@ typename TImage::Scalar HarrX(const TImage &integral_image, int row, int col, in
 }
 
 template<typename TImage>
-typename TImage::Scalar HarrY(const TImage &integral_image, int row, int col, int scale) {
+typename TImage::Scalar HarrY(const TImage &integral_image,
+                              int row, int col, int scale) {
   // Ignore the center strip for odd scales.
   int HW = scale / 2, W = scale;
   int C = W % 2;
