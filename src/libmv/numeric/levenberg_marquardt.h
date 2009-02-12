@@ -19,6 +19,12 @@
 // IN THE SOFTWARE.
 //
 // A simple implementation of levenberg marquardt.
+//
+// [1] K. Madsen, H. Nielsen, O. Tingleoff. Methods for Non-linear Least
+// Squares Problems.
+// http://www2.imm.dtu.dk/pubdb/views/edoc_download.php/3215/pdf/imm3215.pdf
+//
+// TODO(keir): Cite the Lourakis' dogleg paper.
 
 #ifndef LIBMV_NUMERIC_LEVENBERG_MARQUARDT_H
 #define LIBMV_NUMERIC_LEVENBERG_MARQUARDT_H
@@ -31,7 +37,6 @@
 
 namespace libmv {
 
-// TODO(keir): Optional number of iterations, etc.
 template<typename Function,
          typename Jacobian = NumericJacobian<Function>,
          typename Solver = Eigen::SVD<
@@ -53,50 +58,72 @@ class LevenbergMarquardt {
   // TODO(keir): Some of these knobs can be derived from each other and
   // removed, instead of requiring the user to set them.
   enum Status {
-    NOT_STARTED,
     RUNNING,
     GRADIENT_TOO_SMALL,            // eps > max(J'*f(x))
     RELATIVE_STEP_SIZE_TOO_SMALL,  // eps > ||dx|| / ||x||
     ERROR_TOO_SMALL,               // eps > ||f(x)||
     HIT_MAX_ITERATIONS,
-    SINGULAR_NORMAL_EQUATIONS,     // Can't solve J'J*dx = J'e
   };
 
   LevenbergMarquardt(const Function &f)
-      : f_(f), df_(f),
-        status_(NOT_STARTED),
-        gradient_threshold_(1e-16),
-        relative_step_threshold_(1e-16),
-        error_threshold_(1e-16) {}
+      : f_(f), df_(f) {}
 
-  Status Update(const Parameters &x,
+  struct SolverParameters {
+   SolverParameters()
+       : gradient_threshold(1e-16),
+         relative_step_threshold(1e-16),
+         error_threshold(1e-16),
+         initial_scale_factor(1e-3),
+         max_iterations(100) {}
+    Scalar gradient_threshold;       // eps > max(J'*f(x))
+    Scalar relative_step_threshold;  // eps > ||dx|| / ||x||
+    Scalar error_threshold;          // eps > ||f(x)||
+    Scalar initial_scale_factor;     // Initial u for solving normal equations.
+    int    max_iterations;           // Maximum number of solver iterations.
+  };
+
+  struct Results {
+    Scalar error_magnitude;     // ||f(x)||
+    Scalar gradient_magnitude;  // ||J'f(x)||
+    int    iterations;
+    Status status;
+  };
+
+  Status Update(const Parameters &x, const SolverParameters &params,
                 JMatrixType *J, AMatrixType *A, FVec *error, Parameters *g) {
     *J = df_(x);
     *A = (*J).transpose() * (*J);
     *error = -f_(x);
     *g = (*J).transpose() * *error;
-    return g->cwise().abs().maxCoeff() < gradient_threshold_
-           ? GRADIENT_TOO_SMALL : RUNNING;
+    if (g->cwise().abs().maxCoeff() < params.gradient_threshold) {
+      return GRADIENT_TOO_SMALL;
+    } else if (error->norm() < params.error_threshold) {
+      return ERROR_TOO_SMALL;
+    }
+    return RUNNING;
   }
 
-  Parameters operator()(const Parameters &x0) {
-    Parameters x;
+  Results minimize(Parameters *x_and_min) {
+    SolverParameters params;
+    minimize(params, x_and_min);
+  }
+
+  Results minimize(const SolverParameters &params, Parameters *x_and_min) {
+    Parameters &x = *x_and_min;
     JMatrixType J;
     AMatrixType A;
     FVec error;
     Parameters g;
 
-    int max_iterations = 100;  // XXX make parameter.
+    Results results;
+    results.status = Update(x, params, &J, &A, &error, &g);
 
-    x = x0;
-    status_ = Update(x, &J, &A, &error, &g);
-
-    Scalar initial_scale_factor = 100;  // XXX make parameter.
-    Scalar u = Scalar(initial_scale_factor*A.diagonal().maxCoeff());
+    Scalar u = Scalar(params.initial_scale_factor*A.diagonal().maxCoeff());
     Scalar v = 2;
 
     Parameters dx, x_new;
-    for (int i = 0; status_ == RUNNING && i < max_iterations; ++i) {
+    int i;
+    for (i = 0; results.status == RUNNING && i < params.max_iterations; ++i) {
       LOG(INFO) << "iteration: " << i;
       LOG(INFO) << "||f(x)||: " << f_(x).norm();
       LOG(INFO) << "max(g): " << g.cwise().abs().maxCoeff();
@@ -104,25 +131,26 @@ class LevenbergMarquardt {
       LOG(INFO) << "v: " << v;
 
       AMatrixType A_augmented = A + u*AMatrixType::Identity(J.cols(), J.cols());
-      Solver solver(A);
+      Solver solver(A_augmented);
       bool solved = solver.solve(g, &dx);
       if (!solved) LOG(ERROR) << "Failed to solve";
-      if (solved && dx.norm() <= gradient_threshold_ * x.norm()) {
-          status_ = RELATIVE_STEP_SIZE_TOO_SMALL;
+      if (solved && dx.norm() <= params.relative_step_threshold * x.norm()) {
+          results.status = RELATIVE_STEP_SIZE_TOO_SMALL;
           break;
       } 
       if (solved) {
         x_new = x + dx;
         // Rho is the ratio of the actual reduction in error to the reduction
         // in error that would be obtained if the problem was linear.
+        // See [1] for details.
         Scalar rho((error.norm2() - f_(x_new).norm2()) / dx.dot(u*dx + g));
         if (rho > 0) {
           // Accept the Gauss-Newton step because the linear model fits well.
           x = x_new;
-          status_ = Update(x, &J, &A, &error, &g);
+          results.status = Update(x, params, &J, &A, &error, &g);
           Scalar tmp = Scalar(2*rho-1);
           u = u*std::max(1/3., 1 - (tmp*tmp*tmp));
-          v *= 2;
+          v = 2;
           continue;
         } 
       } 
@@ -132,21 +160,18 @@ class LevenbergMarquardt {
       u *= v;
       v *= 2;
     }
-    return x;
+    if (i == params.max_iterations) {
+      results.status = HIT_MAX_ITERATIONS;
+    }
+    results.error_magnitude = error.norm();
+    results.gradient_magnitude = g.norm();
+    results.iterations = i;
+    return results;
   }
 
-  Status status() {
-    return status_;
-  }
  private:
   const Function &f_;
   Jacobian df_;
-  Status status_;
-
-  // Solver parameters. These should really be in a parameters class.
-  Scalar gradient_threshold_;       // eps > max(J'*f(x))
-  Scalar relative_step_threshold_;  // eps > ||dx|| / ||x||
-  Scalar error_threshold_;          // eps > ||f(x)||
 };
 
 }  // namespace mv
