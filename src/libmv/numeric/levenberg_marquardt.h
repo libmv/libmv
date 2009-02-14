@@ -160,7 +160,7 @@ class LevenbergMarquardt {
       u *= v;
       v *= 2;
     }
-    if (i == params.max_iterations) {
+    if (results.status == RUNNING) {
       results.status = HIT_MAX_ITERATIONS;
     }
     results.error_magnitude = error.norm();
