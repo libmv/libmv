@@ -32,8 +32,9 @@ class Feature;
 class PointFeature;
 class LineFeature;
 
-typedef int ImageID; // TODO(keir): Decide if simple numbers are good enough.
-typedef int TrackID; // TODO(keir): Decide if simple numbers are good enough.
+ // TODO(keir): Decide if simple numbers are good enough.
+typedef int ImageID;
+typedef int TrackID;
 
 class Correspondences {
  public:
@@ -44,27 +45,14 @@ class Correspondences {
   class Iterator {
     friend class Correspondences;
    public:
-    ImageID image() const {
-      return iter_.left();
-    }
-    TrackID track() const {
-      return iter_.right();
-    }
-    Feature *feature() const {
-      return iter_.edge();
-    }
-    bool Done() {
-      return iter_.Done();
-    }
-    void Next() {
-      iter_.Next();
-    }
-    void DeleteFeature() {
-      iter_.DeleteEdge();
-    }
+    ImageID image()    const { return iter_.left(); }
+    TrackID track()    const { return iter_.right(); }
+    Feature *feature() const { return iter_.edge(); }
+    bool Done()        const { return iter_.Done(); }
+    void Next()              { iter_.Next(); }
+    void DeleteFeature()     { iter_.DeleteEdge(); }
    private:
-    Iterator(CorrespondenceGraph::Iterator iter)
-        : iter_(iter) {}
+    Iterator(CorrespondenceGraph::Iterator iter) : iter_(iter) {}
     CorrespondenceGraph::Iterator iter_;
   };
 
@@ -96,18 +84,12 @@ class CorrespondencesView {
   class Iterator {
     friend class CorrespondencesView<SpecificFeature>;
    public:
-    ImageID image() const {
-      return iter_.image();
-    }
-    TrackID track() const {
-      return iter_.track();
-    }
+    ImageID image() const { return iter_.image(); }
+    TrackID track() const { return iter_.track(); }
     SpecificFeature *feature() const {
       return static_cast<SpecificFeature *>(iter_.feature());
     }
-    bool Done() {
-      return iter_.Done();
-    }
+    bool Done() { return iter_.Done(); }
     void Next() {
       if (!iter_.Done()) {
         iter_.Next();
