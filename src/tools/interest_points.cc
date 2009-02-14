@@ -27,8 +27,7 @@
 #include "libmv/image/image_io.h"
 #include "libmv/image/surf.h"
 #include "libmv/image/surf_descriptor.h"
-#include "third_party/gflags/gflags.h"
-#include "third_party/glog/src/glog/logging.h"
+#include "libmv/tools/tool.h"
 
 using namespace libmv;
 using namespace std;
@@ -86,9 +85,7 @@ void WriteOutputImage(const FloatImage &image,
 }
 
 int main(int argc, char **argv) {
-  google::SetUsageMessage("Track a sequence.");
-  google::ParseCommandLineFlags(&argc, &argv, true);
-  google::InitGoogleLogging(argv[0]);
+  libmv::Init("track a sequence", &argc, &argv);
 
   if (argc != 2) {
     LOG(ERROR) << "Missing an image.";
@@ -125,5 +122,3 @@ int main(int argc, char **argv) {
   }
   return 0;
 }
-
-

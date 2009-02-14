@@ -21,17 +21,14 @@
 // Random stuff for experimentation.
 
 #include "libmv/multiview/test_data_sets.h"
-#include "third_party/gflags/gflags.h"
-#include "third_party/glog/src/glog/logging.h"
+#include "libmv/tools/tool.h"
 
 DEFINE_int32(views, 3, "Number of views to generate.");
 
 using namespace libmv;
 
 int main(int argc, char **argv) {
-  google::InitGoogleLogging("");
-  google::SetUsageMessage("");
-  google::ParseCommandLineFlags(&argc, &argv, true);
+  libmv::Init("", &argc, &argv);
 
   int nviews = FLAGS_views;
   int npoints = 8;
@@ -44,5 +41,3 @@ int main(int argc, char **argv) {
   }
   return 0;
 }
-
-
