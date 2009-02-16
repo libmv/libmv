@@ -53,6 +53,17 @@ TEST(ReadPnm, Pgm) {
   EXPECT_EQ(image(0,1), (unsigned char)0);
 }
 
+TEST(ReadPnm, PgmComments) {
+  Array3Du image;
+  string pgm_filename = string(THIS_SOURCE_DIR) + "/image_test/two_pixels_gray.pgm";
+  EXPECT_TRUE(ReadPnm(pgm_filename.c_str(), &image));
+  EXPECT_EQ(2, image.Width());
+  EXPECT_EQ(1, image.Height());
+  EXPECT_EQ(1, image.Depth());
+  EXPECT_EQ(image(0,0), (unsigned char)255);
+  EXPECT_EQ(image(0,1), (unsigned char)0);
+}
+
 TEST(ReadPnm, PgmFloat) {
   FloatImage image;
   string pgm_filename = string(THIS_SOURCE_DIR) + "/image_test/two_pixels.pgm";

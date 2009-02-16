@@ -44,16 +44,23 @@ int ReadPnm(const char *filename, FloatImage *image) {
   return res;
 }
 
-// TODO(maclean): Ignore comments to allow loading PNM's made by Gimp (and
-// others).
 // TODO(maclean): Add support for PNG and JPG via libjpeg and libpng. Will
 // require some cmake hackery and #define madness though.  Consider examples at
 // http://trac.astrometry.net/browser/trunk/src/astrometry/util/cairoutils.c
 // TODO(maclean): Consider making this templated to support loading into both
 // Eigen and Array3D's.
+// Comment handling as per the description provided at http://netpbm.sourceforge.net/doc/pgm.html
+// and http://netpbm.sourceforge.net/doc/pbm.html
 int ReadPnmStream(FILE *file, ByteImage *im) {
-  int magicnumber, width, height, depth, maxval;
+
+  const int NUM_VALUES = 3 ;
+  const int INT_BUFFER_SIZE = 256 ;
+
+  int magicnumber, depth ;
+  char intBuffer[INT_BUFFER_SIZE];
+  int values[NUM_VALUES], valuesIndex = 0, intIndex = 0, inToken = 0 ;
   int res;
+  // values[0] = width, values[1] = height, values[2] = maxValue
 
   // Check magic number.
   res = fscanf(file, "P%d", &magicnumber);
@@ -68,17 +75,53 @@ int ReadPnmStream(FILE *file, ByteImage *im) {
     return 0;
   }
 
-  // Read sizes.
-  res = fscanf(file, "%d %d %d", &width, &height, &maxval);
-  if (res != 3 || maxval > 255) {
-    return 0;
+  // the following loop parses the PNM header one character at a time, looking for
+  // the int tokens width, height and maxValues (in that order), and discarding
+  // all comment (everything from '#' to '\n' inclusive), where comments *may occur
+  // inside tokens*. Each token must be terminate with a whitespace character, and only
+  // one whitespace char is eaten after the third int token is parsed.
+  while (valuesIndex < NUM_VALUES)
+  {
+    char nextChar ;
+    res = fread(&nextChar,1,1,file);
+    if (res == 0) return 0 ; // read failed, EOF?
+
+    if (isspace(nextChar))
+    {
+      if (inToken) // we were reading a token, so this white space delimits it
+      {
+        inToken = 0 ;
+        intBuffer[intIndex] = 0 ; // NULL-terminate the string
+        values[valuesIndex++] = atoi(intBuffer);
+        intIndex = 0 ; // reset for next int token
+//        if (valuesIndex == 3 && values[2] > 65535) return 0 ; // use this line if image class aloows 2-byte grey-scale
+        if (valuesIndex == 3 && values[2] > 255) return 0 ; // to conform with current image class
+      }
+    }
+    else if (isdigit(nextChar))
+    {
+      inToken = 1 ; // in case it's not already set
+      intBuffer[intIndex++] = nextChar ;
+      if (intIndex == INT_BUFFER_SIZE) return 0 ; // tokens should never be this long
+    }
+    else if (nextChar == '#')
+    {
+      do // eat all characters from input stream until newline
+      {
+        res = fread(&nextChar,1,1,file);
+      } while (res == 1 && nextChar != '\n') ;
+      if (res == 0) return 0 ; // read failed, EOF?
+    }
+    else // encountered a non-whitepace, non-digit outside a comment - bail out
+    {
+      return 0 ;
+    }
   }
 
-  // Read last white space.
-  fseek(file, 1, SEEK_CUR);
+//  if (values[2] > 255 && magicnumber == 5) depth = 2 ;
 
   // Read pixels.
-  im->Resize(height, width, depth);
+  im->Resize(values[1],values[0], depth);
   res = fread(im->Data(), 1, im->Size(), file);
   if (res != im->Size()) {
     return 0;
