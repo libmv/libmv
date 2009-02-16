@@ -24,6 +24,7 @@
 #include <cmath>
 
 #include "libmv/numeric/numeric.h"
+#include "libmv/logging/logging.h"
 
 namespace libmv {
 
@@ -84,6 +85,17 @@ class NumericJacobian {
  private:
   const Function &f_;
 };
+
+template<typename Function, typename Jacobian>
+bool CheckJacobian(const Function &f, const typename Function::XMatrixType &x) {
+  Jacobian j_analytic(f);
+  NumericJacobian<Function> j_numeric(f);
+
+  typename NumericJacobian<Function>::JMatrixType J_numeric = j_numeric(x);
+  typename NumericJacobian<Function>::JMatrixType J_analytic = j_analytic(x);
+  LG << J_numeric - J_analytic;
+  return true;
+}
 
 }  // namespace libmv
 

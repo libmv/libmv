@@ -30,6 +30,7 @@
 #define LIBMV_NUMERIC_DOGLEG_H
 
 #include <cmath>
+#include <cstdio>
 
 #include "libmv/numeric/numeric.h"
 #include "libmv/numeric/function_derivative.h"
@@ -39,7 +40,7 @@ namespace libmv {
 
 template<typename Function,
          typename Jacobian = NumericJacobian<Function>,
-         typename Solver = Eigen::SVD<
+         typename Solver = Eigen::LU<
            Matrix<typename Function::FMatrixType::RealScalar, 
                   Function::XMatrixType::RowsAtCompileTime,
                   Function::XMatrixType::RowsAtCompileTime> > >
@@ -61,6 +62,7 @@ class Dogleg {
     RUNNING,
     GRADIENT_TOO_SMALL,            // eps > max(J'*f(x))
     RELATIVE_STEP_SIZE_TOO_SMALL,  // eps > ||dx|| / ||x||
+    TRUST_REGION_TOO_SMALL,        // eps > radius / ||x||
     ERROR_TOO_SMALL,               // eps > ||f(x)||
     HIT_MAX_ITERATIONS,
   };
@@ -71,7 +73,7 @@ class Dogleg {
     STEEPEST_DESCENT,
   };
 
-  LevenbergMarquardt(const Function &f)
+  Dogleg(const Function &f)
       : f_(f), df_(f) {}
 
   struct SolverParameters {
@@ -79,8 +81,8 @@ class Dogleg {
        : gradient_threshold(1e-16),
          relative_step_threshold(1e-16),
          error_threshold(1e-16),
-         initial_trust_radius(1e-3),
-         max_iterations(100) {}
+         initial_trust_radius(1e0),
+         max_iterations(500) {}
     Scalar gradient_threshold;       // eps > max(J'*f(x))
     Scalar relative_step_threshold;  // eps > ||dx|| / ||x||
     Scalar error_threshold;          // eps > ||f(x)||
@@ -98,8 +100,9 @@ class Dogleg {
   Status Update(const Parameters &x, const SolverParameters &params,
                 JMatrixType *J, AMatrixType *A, FVec *error, Parameters *g) {
     *J = df_(x);
+    // TODO(keir): In the case of m = n, avoid computing A and just do J^-1 directly.
     *A = (*J).transpose() * (*J);
-    *error = -f_(x);
+    *error = f_(x);
     *g = (*J).transpose() * *error;
     if (g->cwise().abs().maxCoeff() < params.gradient_threshold) {
       return GRADIENT_TOO_SMALL;
@@ -120,16 +123,19 @@ class Dogleg {
     if (dx_gn.norm() < radius) {
       *dx_dl = dx_gn;
       return GAUSS_NEWTON;
+
     } else if (alpha * dx_sd.norm2() > radius) {
       *dx_dl = (radius / dx_sd.norm()) * dx_sd;
       return STEEPEST_DESCENT;
+
     } else {
       Parameters a = alpha * dx_sd;
       const Parameters &b = dx_gn;
       b_minus_a = a - b;
-      Scalar Mbma2 = b_minus_a.norm2()
-      Scalar Ma2 = a.norm2()
+      Scalar Mbma2 = b_minus_a.norm2();
+      Scalar Ma2 = a.norm2();
       Scalar c = a.dot(b_minus_a);
+      Scalar radius2 = radius*radius;
       if (c <= 0) {
         *beta = (-c + sqrt(c*c + Mbma2*(radius2 - Ma2)))/(Mbma2);
       } else {
@@ -143,7 +149,7 @@ class Dogleg {
 
   Results minimize(Parameters *x_and_min) {
     SolverParameters params;
-    minimize(params, x_and_min);
+    return minimize(params, x_and_min);
   }
 
   Results minimize(const SolverParameters &params, Parameters *x_and_min) {
@@ -157,15 +163,22 @@ class Dogleg {
     results.status = Update(x, params, &J, &A, &error, &g);
 
     Scalar radius = params.initial_trust_radius;
-    Scalar radius2 = radius*radius;
     bool x_updated = true;
 
     Parameters x_new;
     Parameters dx_sd;  // Steepest descent step.
     Parameters dx_dl;  // Dogleg step.
     Parameters dx_gn;  // Gauss-Newton step.
-    for (int i = 0;
-         results.status == RUNNING && i < params.max_iterations; ++i) {
+      printf("iteration     ||f(x)||      max(g)       radius\n");
+    int i = 0;
+    for (; results.status == RUNNING && i < params.max_iterations; ++i) {
+      printf("%9d %12g %12g %12g\n",
+          i, f_(x).norm(), g.cwise().abs().maxCoeff(), radius);
+
+      //LG << "iteration: " << i;
+      //LG << "||f(x)||: " << f_(x).norm();
+      //LG << "max(g): " << g.cwise().abs().maxCoeff();
+      //LG << "radius: " << radius;
       Scalar alpha = g.norm2() / (J*g).lazy().norm2();  // Eqn 3.19 from [1]
 
       // Solve for steepest descent direction dx_sd.
@@ -177,10 +190,11 @@ class Dogleg {
         // singular and there are many solutions. Solving that involves the SVD
         // and is slower, but should still work.
         Solver solver(A);
-        if (!solver.solve(g, &dx_gn)) {
+        if (!solver.solve(-g, &dx_gn)) {
           LOG(ERROR) << "Failed to solve normal eqns. TODO: Solve via SVD.";
           return results;
         }
+        x_updated = false;
       }
 
       // Solve for dogleg direction dx_dl.
@@ -197,39 +211,28 @@ class Dogleg {
       Scalar actual = f_(x).norm2() - f_(x_new).norm2();
       Scalar predicted;
       if (step == GAUSS_NEWTON) {
-        predicted_change = f_(x).norm2();
+        predicted = f_(x).norm2();
       } else if (step == STEEPEST_DESCENT) {
-        predicted_change = radius * (2*alpha*g.norm() - radius) / 2 / alpha;
+        predicted = radius * (2*alpha*g.norm() - radius) / 2 / alpha;
       } else if (step == DOGLEG) {
-        predicted_change = 0.5 * alpha * (1-beta)*(1-beta)*g.norm2() + beta*(2-beta)*f_(x).norm2()
+        predicted = 0.5 * alpha * (1-beta)*(1-beta)*g.norm2() + beta*(2-beta)*f_(x).norm2();
       }
-      rho = actual / predicted;
+      Scalar rho = actual / predicted;
 
       if (rho > 0) {
         // Accept update because the linear model is a good fit.
         x = x_new;
-
-      if (solved) {
-        x_new = x + dx;
-        // Rho is the ratio of the actual reduction in error to the reduction
-        // in error that would be obtained if the problem was linear.
-        // See [1] for details.
-        Scalar rho((error.norm2() - f_(x_new).norm2()) / dx.dot(u*dx + g));
-        if (rho > 0) {
-          // Accept the Gauss-Newton step because the linear model fits well.
-          x = x_new;
-          results.status = Update(x, params, &J, &A, &error, &g);
-          Scalar tmp = Scalar(2*rho-1);
-          u = u*std::max(1/3., 1 - (tmp*tmp*tmp));
-          v = 2;
-          continue;
-        } 
-      } 
-      // Reject the update because either the normal equations failed to solve
-      // or the local linear model was not good (rho < 0). Instead, increase u
-      // to move closer to gradient descent.
-      u *= v;
-      v *= 2;
+        results.status = Update(x, params, &J, &A, &error, &g);
+        x_updated = true;
+      }
+      if (rho > 0.75) {
+        radius = std::max(radius, 3*dx_dl.norm());
+      } else if (rho < 0.25) {
+        radius /= 2;
+        if (radius < e3 * (x.norm() + e3)) {
+          results.status = TRUST_REGION_TOO_SMALL;
+        }
+      }
     }
     if (results.status == RUNNING) {
       results.status = HIT_MAX_ITERATIONS;

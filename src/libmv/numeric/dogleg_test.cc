@@ -44,9 +44,9 @@ class F {
 TEST(Dogleg, SimpleCase) {
   Vec3 x; x << 0.76026643, -30.01799744, 0.55192142;
   F f;
-  LevenbergMarquardt<F>::SolverParameters params;
-  LevenbergMarquardt<F> lm(f);
-  LevenbergMarquardt<F>::Results results = lm.minimize(params, &x);
+  Dogleg<F>::SolverParameters params;
+  Dogleg<F> lm(f);
+  Dogleg<F>::Results results = lm.minimize(params, &x);
   Vec3 expected_min_x; expected_min_x << 2, 5, 0;
 
   EXPECT_MATRIX_NEAR(expected_min_x, x, 1e-5);
@@ -59,8 +59,8 @@ class F32 {
   typedef Vec2 FMatrixType;
   typedef Vec2 XMatrixType;
   Vec2 operator()(const Vec2 &x) const {
-    double x1 = x1;
-    double x2 = 10*x1/(x1 + 0.1) + 2*x2*x2
+    double x1 = x(0);
+    double x2 = 10*x(0)/(x(0) + 0.1) + 2*x(1)*x(1);
     Vec2 fx; fx << x1, x2;
     return fx;
   }
@@ -70,19 +70,20 @@ class JF32 {
  public:
   JF32(const F32 &f) { (void) f; }
   Mat2 operator()(const Vec2 &x) {
-    Mat2 J; J >> 1,                      0,
-                 1./pow(x(1) + 0.1, 2),  4*x(2)*x(2);
+    Mat2 J; J << 1,                      0,
+                 1./pow(x(0) + 0.1, 2),  4*x(1)*x(1);
+    return J;
   }
 };
 
 TEST(Dogleg, Example32) {
-  Vec3 x; x << 3, 1;
+  //Vec2 x; x << 3, 1;
+  Vec2 x; x << 0.5, 0.5;
   F32 f;
-  JF32 j;
-  Dogleg<F32, J32>::SolverParameters params;
-  Dogleg<F32, J32> dogleg(f);
-  Dogleg<F32, J32>::Results results = dogleg.minimize(params, &x);
-  Vec3 expected_min_x; expected_min_x << 0, 0;
+  CheckJacobian<F32, JF32>(f, x);
+  Dogleg<F32, JF32> dogleg(f);
+  Dogleg<F32, JF32>::Results results = dogleg.minimize(&x);
+  Vec2 expected_min_x; expected_min_x << 0, 0;
 
   EXPECT_MATRIX_NEAR(expected_min_x, x, 1e-5);
 }
