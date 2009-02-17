@@ -56,8 +56,6 @@ class Dogleg {
                  JMatrixType::ColsAtCompileTime, 
                  JMatrixType::ColsAtCompileTime> AMatrixType;
 
-  // TODO(keir): Some of these knobs can be derived from each other and
-  // removed, instead of requiring the user to set them.
   enum Status {
     RUNNING,
     GRADIENT_TOO_SMALL,            // eps > max(J'*f(x))
@@ -124,7 +122,7 @@ class Dogleg {
       *dx_dl = dx_gn;
       return GAUSS_NEWTON;
 
-    } else if (alpha * dx_sd.norm2() > radius) {
+    } else if (alpha * dx_sd.norm() > radius) {
       *dx_dl = (radius / dx_sd.norm()) * dx_sd;
       return STEEPEST_DESCENT;
 
@@ -172,7 +170,7 @@ class Dogleg {
       printf("iteration     ||f(x)||      max(g)       radius\n");
     int i = 0;
     for (; results.status == RUNNING && i < params.max_iterations; ++i) {
-      printf("%9d %12g %12g %12g\n",
+      printf("%9d %12g %12g %12g",
           i, f_(x).norm(), g.cwise().abs().maxCoeff(), radius);
 
       //LG << "iteration: " << i;
@@ -182,7 +180,7 @@ class Dogleg {
       Scalar alpha = g.norm2() / (J*g).lazy().norm2();  // Eqn 3.19 from [1]
 
       // Solve for steepest descent direction dx_sd.
-      dx_sd = -alpha * g;
+      dx_sd = -g;
 
       // Solve for Gauss-Newton direction dx_gn.
       if (x_updated) {
@@ -199,7 +197,8 @@ class Dogleg {
 
       // Solve for dogleg direction dx_dl.
       Scalar beta;
-      Step step = SolveDoglegDirection(dx_sd, dx_gn, radius, alpha, &dx_dl, &beta);
+      Step step = SolveDoglegDirection(dx_sd, dx_gn, radius, alpha,
+                                       &dx_dl, &beta);
 
       Scalar e3 = params.relative_step_threshold;
       if (dx_dl.norm() < e3*(x.norm() + e3)) {
@@ -215,9 +214,16 @@ class Dogleg {
       } else if (step == STEEPEST_DESCENT) {
         predicted = radius * (2*alpha*g.norm() - radius) / 2 / alpha;
       } else if (step == DOGLEG) {
-        predicted = 0.5 * alpha * (1-beta)*(1-beta)*g.norm2() + beta*(2-beta)*f_(x).norm2();
+        predicted = 0.5 * alpha * (1-beta)*(1-beta)*g.norm2() +
+                    beta*(2-beta)*f_(x).norm2();
       }
       Scalar rho = actual / predicted;
+
+      if (step == GAUSS_NEWTON) printf("  GAUSS");
+      if (step == STEEPEST_DESCENT) printf("   STEE");
+      if (step == DOGLEG) printf("   DOGL");
+
+      printf(" %12g %12g %12g\n", rho, actual, predicted);
 
       if (rho > 0) {
         // Accept update because the linear model is a good fit.
@@ -250,4 +256,4 @@ class Dogleg {
 
 }  // namespace mv
 
-#endif  // LIBMV_NUMERIC_LEVENBERG_MARQUARDT_H
+#endif  // LIBMV_NUMERIC_DOGLEG_H
