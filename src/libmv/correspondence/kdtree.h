@@ -27,6 +27,79 @@
 
 namespace libmv {
 
+// A simple priority cue used to sort the nodes to explore for A-knn.
+// Low priority values are poped first.
+// TODO(pau): if we are going to use this anywhere else, put it on a separate file.
+template<typename Value, typename Priority>
+class PriorityQueue {
+ public:
+  struct Node {
+    Value value;
+    Priority priority;
+    Node(Value v, Priority p) : value(v), priority(p) {}
+    bool operator<(const Node &b) {
+      return priority > b.priority;
+    }
+  };
+
+  bool IsEmpty() const { return nodes_.empty(); }
+  size_t Size() const { return nodes_.size(); }
+
+  Value Top() { return nodes_.front().value; }
+  Priority TopPriority() { return nodes_.front().priority; }
+  
+  void Push(Value v, Priority p) {
+    nodes_.push_back(Node(v,p));
+    std::push_heap(nodes_.begin(), nodes_.end());
+  }
+
+  Value Pop() {
+    Value top = Top();
+    std::pop_heap(nodes_.begin(), nodes_.end());
+    nodes_.pop_back();
+    return top;
+  }
+
+ private:
+  std::vector<Node> nodes_;
+};
+
+
+// A sorted list of points and their distances to the query.
+template<typename Point, typename Scalar>
+class KnnSortedList {
+ public:
+  KnnSortedList(int k) : k_(k) {}
+
+  // Adds a point into the sorted list of neighbors
+  void AddNeighbor(const Point &p, Scalar distance) {
+    if (Size() < K()) {
+      points_.push_back(p);
+      distances_.push_back(distance);
+    } else if (distance < distances_.back()) {
+      points_.back() = p;
+      distances_.back() = distance;
+    }
+
+    int i = Size() - 2;
+    while (i >= 0 && distance < distances_[i]) {
+      std::swap(points_[i], points_[i + 1]);
+      std::swap(distances_[i], distances_[i + 1]);
+      --i;
+    }
+  }
+
+  int K() { return k_; }
+  int Size() { return points_.size(); }
+  Point Neighbor(int i) { return points_[i]; }
+  Scalar Distance(int i) { return distances_[i]; }
+
+ private:
+  int k_;
+  std::vector<Point> points_;
+  std::vector<Scalar> distances_;
+};
+
 
 // A simple Kd-tree for fast approximate nearest neighbor search.
 template <typename Point, typename Scalar=double>
@@ -37,12 +110,6 @@ class KdTree {
     Scalar value;
     Point *begin;
     Point *end;
-    KdNode *left_child;
-    KdNode *right_child;
-
-    bool IsLeaf() {
-      return left_child == NULL;
-    }
   };
 
   struct AxisComparison {
@@ -55,39 +122,90 @@ class KdTree {
   };
 
  public:
-  void Build(Point *points, int n, int k) {
-    nodes_.clear();
-    k_ = k;
-    CreateNode(points, points + n);
+  void Build(Point *points, int num_points, int num_dims, int max_levels) {
+    num_dims_ = num_dims;
+
+    // Compute the number of levels such that any leafs has at least 1 point.
+    // This is num_leafs < num_points, with num_leafs = 2**(num_levels - 1).
+    int l = int(floor(log(num_points) / log(2))) + 1;
+    num_levels_ = std::min(l, max_levels);
+
+    // Allocate room for all the nodes at once.
+    nodes_.resize((1 << num_levels_) - 1);
+    
+    // Recursively create the nodes.
+    CreateNode(0, points, points + num_points);
   }
 
-  int NumNodes() {
-    return nodes_.size();
-  }
+  int NumNodes() { return nodes_.size(); }
+  int NumLevels() { return num_levels_; }
 
   void PrintNodes() {
     for (int i = 0; i < nodes_.size(); ++i) {
-      printf("Node %d: axis=%d  value=%g  num_points=%d\n",
-             i, nodes_[i].axis, nodes_[i].value, nodes_[i].end - nodes_[i].begin);
+      printf("Node %d: axis=%d  value=%g  num_points=%d\n", i, nodes_[i].axis,
+             nodes_[i].value, nodes_[i].end - nodes_[i].begin);
+    }
+  }
+
+  // TODO(pau) Add a condition for stopping when best k are found.
+  void ApproximateKnnBestBinFirst(const Point &query,
+                                  int max_leafs,
+                                  KnnSortedList<Point *,Scalar> *neighbors) {
+    int num_explored_leafs = 0;
+    PriorityQueue<int, Scalar> queue;
+    queue.Push(0, 0); // Push root node.
+
+    while (!queue.IsEmpty() && num_explored_leafs < max_leafs) {
+      int i = queue.Pop();
+
+      // Go down to leaf.
+      while (!IsLeaf(i)) {
+        Scalar margin = query[nodes_[i].axis] - nodes_[i].value;
+        if (margin < 0) {
+          queue.Push(RightChild(i), -margin);
+          i = LeftChild(i);
+        } else {
+          queue.Push(LeftChild(i), margin);
+          i = RightChild(i);
+        }
+      }
+
+      // Explore leaf.
+      for (Point *p = nodes_[i].begin; p < nodes_[i].end; ++p) {
+        Scalar distance = L2Distance2(*p, query);
+        neighbors->AddNeighbor(p, distance);
+      }
+      num_explored_leafs++;
     }
   }
 
 
  private:
-  KdNode *CreateNode(Point *begin, Point *end) {
-    int num_points = end - begin;
+  int LeftChild(int i) {
+    return 2 * i + 1;
+  }
+  int RightChild(int i) {
+    return 2 * i + 2;
+  }
+  int Parent(int i) {
+    return (i - 1) / 2;
+  }
+  bool IsLeaf(int i) {
+    return i >= NumNodes() / 2; // Note NumNodes() is odd.
+  }
 
-    if (num_points <= 0) { return NULL; }
+  void CreateNode(int i, Point *begin, Point *end) {
+    int num_points = end - begin;
+    assert(num_points > 0);
 
     // Create the node.
-    nodes_.resize(nodes_.size() + 1);
-    KdNode &node = nodes_[nodes_.size() - 1];
+    KdNode &node = nodes_[i];
     node.begin = begin;
     node.end = end;
 
-    if (num_points == 1) {
-      node.left_child = node.right_child = NULL; 
-    } else {
+    if (!IsLeaf(i)) {
+      assert(num_points >= 2);
+
       // Partition points.
       node.axis = MoreVariantAxis(begin, end);
       AxisComparison comp(node.axis);
@@ -96,18 +214,17 @@ class KdTree {
       node.value = (*pivot)[node.axis];
 
       // Create sub-trees.
-      node.left_child = CreateNode(begin, pivot);
-      node.right_child = CreateNode(pivot, end);
+      CreateNode(LeftChild(i), begin, pivot);
+      CreateNode(RightChild(i), pivot, end);
     } 
-    return &node;
   }
 
   int MoreVariantAxis(Point *begin, Point *end) {
     // Compute variances.
-    Vec mean = Vec::Zero(k_);
-    Vec mean2 = Vec::Zero(k_);
+    Vec mean = Vec::Zero(num_dims_);
+    Vec mean2 = Vec::Zero(num_dims_);
     for (Point *p = begin; p < end; ++p) {
-      for (int i = 0; i < k_; ++i) {
+      for (int i = 0; i < num_dims_; ++i) {
         Scalar x = (*p)[i];
         mean[i] += x;
         mean2[i] += x * x;
@@ -125,9 +242,20 @@ class KdTree {
     return more_variant_axis;
   }
 
+
+  Scalar L2Distance2(const Point &p, const Point &q) {
+    Scalar distance = 0;
+    for (int i = 0; i < num_dims_; ++i) {
+      Scalar diff = p[i] - q[i];
+      distance += diff * diff;
+    }
+    return distance;
+  }
+
  private:
   std::vector<KdNode> nodes_;
-  int k_;
+  int num_dims_;
+  int num_levels_;
 };
 
 
