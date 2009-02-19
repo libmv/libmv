@@ -4,6 +4,7 @@
 #define GOOGLETEST_H__
 
 #include <ctype.h>
+#include <cstdlib>
 #include <setjmp.h>
 #include <time.h>
 

@@ -22,6 +22,8 @@
 #define LIBMV_IMAGE_ARRAY_ND_H
 
 #include <cassert>
+#include <cstdio>
+#include <cstring>
 
 #include "libmv/image/tuple.h"
 
