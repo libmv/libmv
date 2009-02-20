@@ -79,9 +79,11 @@ void RawLog__(LogSeverity severity, const char* file, int line,
 // Hack to propagate time information into this module so that
 // this module does not have to directly call localtime_r(),
 // which could allocate memory.
-extern "C" {
-  struct ::tm;
-};
+
+// TODO(keir): Investigate this flaw with upstream glog.
+//extern "C" {
+//  struct ::tm;
+//};
 void RawLog__SetLastTime(const struct ::tm& t);
 
 }

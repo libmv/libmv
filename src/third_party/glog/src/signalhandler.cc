@@ -13,6 +13,11 @@
 #ifdef HAVE_UCONTEXT_H
 # include <ucontext.h>
 #endif
+// TODO(keir): This almost certainly needs to be put into a proper configure
+// check.
+# ifndef REG_EIP
+#  define REG_EIP REG_RIP
+# endif
 #include <algorithm>
 
 _START_GOOGLE_NAMESPACE_
