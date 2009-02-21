@@ -22,6 +22,7 @@
 #include <vector>
 
 #include "libmv/image/cached_image_sequence.h"
+#include "libmv/image/image_io.h"
 #include "libmv/image/image_sequence_io.h"
 #include "testing/testing.h"
 
@@ -34,9 +35,21 @@ using libmv::Array3Df;
 namespace {
 
 TEST(ImageSequenceIO, FromFiles) {
+  Array3Df image1(1, 2);
+  Array3Df image2(1, 2);
+  image1(0,0) = 1.f;
+  image1(0,1) = 0.f;
+  image2(0,0) = 0.f;
+  image2(0,1) = 1.f;
+
+  std::string image1_fn = FLAGS_test_tmpdir + "/1.pgm";
+  std::string image2_fn = FLAGS_test_tmpdir + "/2.pgm";
+  WritePnm(image1, image1_fn.c_str());
+  WritePnm(image2, image2_fn.c_str());
+
   std::vector<std::string> files;
-  files.push_back(std::string(THIS_SOURCE_DIR) + "/image_test/two_pixels.pgm");
-  files.push_back(std::string(THIS_SOURCE_DIR) + "/image_test/two_pixels_gray.pgm");
+  files.push_back(image1_fn);
+  files.push_back(image2_fn);
   ImageCache cache;
   ImageSequence *sequence = ImageSequenceFromFiles(files, &cache);
   EXPECT_EQ(2, sequence->Length());
@@ -54,8 +67,8 @@ TEST(ImageSequenceIO, FromFiles) {
   EXPECT_EQ(2, image->Width());
   EXPECT_EQ(1, image->Height());
   EXPECT_EQ(1, image->Depth());
-  EXPECT_EQ((*image)(0,0), 1.0f);
-  EXPECT_NEAR((*image)(0,1), 0.5f, 0.002);
+  EXPECT_EQ((*image)(0,0), 0.f);
+  EXPECT_EQ((*image)(0,1), 1.f);
 
   sequence->Unpin(0);
   sequence->Unpin(1);

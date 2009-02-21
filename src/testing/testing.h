@@ -22,7 +22,10 @@
 #define TESTING_TESTING_H_
 
 #include "third_party/gtest/include/gtest/gtest.h"
+#include "third_party/gflags/gflags.h"
 #include "libmv/numeric/numeric.h"
+
+DECLARE_string(test_tmpdir);
 
 #define EXPECT_MATRIX_NEAR(a, b, tolerance) \
 do { \
