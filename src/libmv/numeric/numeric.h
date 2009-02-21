@@ -326,9 +326,11 @@ template <typename TMat, typename TDest>
 void reshape(const TMat &a, int rows, int cols, TDest *b) {
   assert(a.rows()*a.cols() == rows*cols);
   b->resize(rows, cols);
-  for (int i = 0; i < rows; i++)
-    for (int j = 0; j < cols; j++)
+  for (int i = 0; i < rows; i++) {
+    for (int j = 0; j < cols; j++) {
       (*b)(i, j) = a[cols*i + j];
+    }
+  }
 }
 
 }  // namespace mv
