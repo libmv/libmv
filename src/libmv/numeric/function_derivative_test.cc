@@ -47,9 +47,9 @@ class F {
 TEST(FunctionDerivative, SimpleCase) {
   Vec3 x; x << 0.76026643, 0.01799744, 0.55192142;
   F f;
-  NumericJacobian<F> J(f);
+  NumericJacobian<F, CENTRAL> J(f);
   EXPECT_MATRIX_NEAR(f.J(x), J(x), 1e-8);
-  NumericJacobian<F, false> J_forward(f);
+  NumericJacobian<F, FORWARD> J_forward(f);
   // Forward difference is very inaccurate.
   EXPECT_MATRIX_NEAR(f.J(x), J_forward(x), 1e-5);
 }

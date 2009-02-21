@@ -31,7 +31,12 @@ namespace libmv {
 // Numeric derivative of a function.
 // TODO(keir): Consider adding a quadratic approximation.
 
-template<typename Function, bool central_diff=true>
+enum NumericJacobianMode {
+  CENTRAL,
+  FORWARD,
+};
+
+template<typename Function, NumericJacobianMode mode=CENTRAL>
 class NumericJacobian {
  public:
   typedef typename Function::XMatrixType Parameters;
@@ -70,7 +75,7 @@ class NumericJacobian {
       jacobian.col(c) = f_(x_plus_delta);
 
       XScalar one_over_h = 1 / eps(c);
-      if (central_diff) {
+      if (mode == CENTRAL) {
         x_plus_delta(c) = x(c) - eps(c);
         jacobian.col(c) -= f_(x_plus_delta);
         one_over_h /= 2;
