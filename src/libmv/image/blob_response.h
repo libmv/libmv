@@ -55,6 +55,9 @@ inline void BlobResponse(const TImage &integral_image,
 
   blob_response->resize(integral_image.rows() / scale,
                         integral_image.cols() / scale);
+  // TODO(keir): Re-enable the below line once eigen trunk is merged.
+  //blob_response->fill(0.);  // TODO(keir): Make border clearing smarter.
+
   int B = W / 2;
   // Make the top left border so that UnsafeBoxIntegral is in bounds.
   for (int r = B + 1; r < integral_image.rows() - B; r += scale) {

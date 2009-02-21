@@ -152,6 +152,13 @@ class ArrayND : public BaseArray {
     }
   }
 
+  // Match Eigen's API.
+  void fill(T value) {
+    for (int i = 0; i < Size(); ++i) {
+      Data()[i] = value;
+    }
+  }
+
   /// Return a tuple containing the lenght of each axis.
   const Index &Shape() const {
     return shape_;
