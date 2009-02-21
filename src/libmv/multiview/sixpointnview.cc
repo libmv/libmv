@@ -17,6 +17,13 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
+// 
+// Compute a projective reconstruction from N views of six points. Based on:
+//
+// [1] Frederik Schaffalitzky, Andrew Zisserman, Richard I. Hartley, Philip H.
+// S. Torr. A Six Point Solution for Structure and Motion.  Lecture Notes In
+// Computer Science; Vol. 1842 archive Proceedings of the 6th European
+// Conference on Computer Vision-Part I pp 632-648, 2000.
 
 #include <set>
 #include <vector>
