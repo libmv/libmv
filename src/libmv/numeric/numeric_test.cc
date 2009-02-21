@@ -427,4 +427,13 @@ TEST(Numeric, LookAt) {
   EXPECT_MATRIX_NEAR(I, RTR, 1e-15);
 }
 
+TEST(Numeric, Reshape) {
+  Vec4 x; x << 1, 2, 3, 4;
+  Mat2 M, M_expected;
+  reshape(x, 2, 2, &M);
+  M_expected << 1, 2,
+                3, 4;
+  EXPECT_MATRIX_NEAR(M_expected, M, 1e-15);
+}
+
 }  // namespace
