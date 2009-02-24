@@ -118,6 +118,36 @@ void KRt_From_P(const Mat34 &P, Mat3 *Kp, Mat3 *Rp, Vec3 *tp) {
   *tp = t;
 }
 
+void K_From_AbsoluteConic(const Mat3 &W, Mat3 *K) {
+  // To compute upper-triangular Cholesky, we flip the indices of the input matrix,  // compute lower-triangular Cholesky, and then unflip the result.
+  Mat3 dual = W.inverse();
+  Mat3 flipped_dual;
+  for (int i = 0; i < 3; ++i) {
+    for (int j = 0; j < 3; ++j) {
+      flipped_dual(i,j) = dual(2 - i, 2 - j);
+    }
+  }
+
+  Eigen::LLT<Mat3> llt(flipped_dual);
+  Mat3 L = llt.matrixL();
+
+  for (int i = 0; i < 3; ++i) {
+    for (int j = 0; j < 3; ++j) {
+      (*K)(i,j) = L(2 - i, 2 - j);
+    }
+  }
+
+  // Resolve sign ambiguities assuming positive diagonal.
+//  for (int j = 0; j < 3; ++j) {
+//    if ((*K)(j, j) < 0) {
+//      for (int i = 0; i < 3; ++i) {
+//        (*K)(i, j) = -(*K)(i, j);
+//      }
+//    }
+//  }
+}
+
+
 void HomogeneousToEuclidean(const Mat &H, Mat *X) {
   int d = H.rows() - 1;
   int n = H.cols();

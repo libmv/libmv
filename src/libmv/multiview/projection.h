@@ -30,6 +30,8 @@ namespace libmv {
 void P_From_KRt(const Mat3 &K, const Mat3 &R, const Vec3 &t, Mat34 *P);
 void KRt_From_P(const Mat34 &P, Mat3 *K, Mat3 *R, Vec3 *t);
 
+void K_From_AbsoluteConic(const Mat3 &W, Mat3 *K);
+
 void HomogeneousToEuclidean(const Mat &H, Mat *X);
 void HomogeneousToEuclidean(const Vec3 &H, Vec2 *X);
 void HomogeneousToEuclidean(const Vec4 &H, Vec3 *X);

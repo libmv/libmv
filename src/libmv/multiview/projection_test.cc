@@ -53,6 +53,34 @@ TEST(Projection, P_From_KRt) {
   // the case. Also add a test for that here.
 }
 
+TEST(Projection, K_From_AbsoluteConic) {
+  Mat3 K, Kp;
+  K << 10,  1, 30,
+        0, 20, 40,
+        0,  0,  1;
+
+  Mat3 w = (K * K.transpose()).inverse();
+  K_From_AbsoluteConic(w, &Kp);
+
+  EXPECT_MATRIX_NEAR(K, Kp, 1e-8);
+}
+
+// Tests that K computed from the IAC has positive elements in its diagonal.
+TEST(Projection, K_From_AbsoluteConic_SignedDiagonal) {
+  Mat3 K, Kpositive, Kp;
+  K << 10,   1, 30,
+        0, -20, 40,
+        0,   0,  -1;
+  Kpositive << 10, -1, -30,  // K with column signs changed so that the 
+                0, 20, -40,  // diagonal is positive.
+                0,  0,   1;
+
+  Mat3 w = (K * K.transpose()).inverse();
+  K_From_AbsoluteConic(w, &Kp);
+
+  EXPECT_MATRIX_NEAR(Kpositive, Kp, 1e-8);
+}
+
 TEST(Projection, Projection) {
   Mat3X X(3, 4);
   X << 1, 0, 0, 1,
