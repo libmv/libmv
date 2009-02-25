@@ -20,37 +20,38 @@
 
 #include <iostream>
 
-#include "libmv/multiview/projection.h"
-#include "libmv/numeric/numeric.h"
+#include "libmv/multiview/autocalibration.h"
 #include "testing/testing.h"
 
 namespace {
 using namespace libmv;
 
-TEST(Projection, P_From_KRt) {
+TEST(Projection, K_From_AbsoluteConic) {
   Mat3 K, Kp;
   K << 10,  1, 30,
         0, 20, 40,
         0,  0,  1;
 
-  Mat3 R, Rp;
-  R << 1, 0, 0,
-       0, 1, 0,
-       0, 0, 1;
-
-  Vec3 t, tp;
-  t << 1, 2, 3;
-
-  Mat34 P;
-  P_From_KRt(K, R, t, &P);
-  KRt_From_P(P, &Kp, &Rp, &tp);
+  Mat3 w = (K * K.transpose()).inverse();
+  K_From_AbsoluteConic(w, &Kp);
 
   EXPECT_MATRIX_NEAR(K, Kp, 1e-8);
-  EXPECT_MATRIX_NEAR(R, Rp, 1e-8);
-  EXPECT_MATRIX_NEAR(t, tp, 1e-8);
+}
 
-  // TODO(keir): Change the code to ensure det(R) == 1, which is not currently
-  // the case. Also add a test for that here.
+// Tests that K computed from the IAC has positive elements in its diagonal.
+TEST(Projection, K_From_AbsoluteConic_SignedDiagonal) {
+  Mat3 K, Kpositive, Kp;
+  K << 10,   1, 30,
+        0, -20, 40,
+        0,   0,  -1;
+  Kpositive << 10, -1, -30,  // K with column signs changed so that the 
+                0, 20, -40,  // diagonal is positive.
+                0,  0,   1;
+
+  Mat3 w = (K * K.transpose()).inverse();
+  K_From_AbsoluteConic(w, &Kp);
+
+  EXPECT_MATRIX_NEAR(Kpositive, Kp, 1e-8);
 }
 
 } // namespace

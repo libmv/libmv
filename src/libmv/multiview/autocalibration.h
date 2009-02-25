@@ -18,39 +18,17 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
-#include <iostream>
+#ifndef LIBMV_MULTIVIEW_AUTOCALIBRATION_H_
+#define LIBMV_MULTIVIEW_AUTOCALIBRATION_H_
 
-#include "libmv/multiview/projection.h"
+#include <vector>
+
 #include "libmv/numeric/numeric.h"
-#include "testing/testing.h"
 
-namespace {
-using namespace libmv;
+namespace libmv {
 
-TEST(Projection, P_From_KRt) {
-  Mat3 K, Kp;
-  K << 10,  1, 30,
-        0, 20, 40,
-        0,  0,  1;
+void K_From_AbsoluteConic(const Mat3 &W, Mat3 *K);
 
-  Mat3 R, Rp;
-  R << 1, 0, 0,
-       0, 1, 0,
-       0, 0, 1;
+} // namespace libmv
 
-  Vec3 t, tp;
-  t << 1, 2, 3;
-
-  Mat34 P;
-  P_From_KRt(K, R, t, &P);
-  KRt_From_P(P, &Kp, &Rp, &tp);
-
-  EXPECT_MATRIX_NEAR(K, Kp, 1e-8);
-  EXPECT_MATRIX_NEAR(R, Rp, 1e-8);
-  EXPECT_MATRIX_NEAR(t, tp, 1e-8);
-
-  // TODO(keir): Change the code to ensure det(R) == 1, which is not currently
-  // the case. Also add a test for that here.
-}
-
-} // namespace
+#endif  // LIBMV_MULTIVIEW_AUTOCALIBRATION_H_
