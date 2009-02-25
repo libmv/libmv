@@ -170,8 +170,32 @@ void MatchViewer::resizeGL(int width, int height) {
   glViewport(0, 0, width, height);
 }
 
+int MatchViewer::ImageUnderPointer(QMouseEvent *event) {
+  float x, y;
+  PlaneFromScreen(event->x(), event->y(), &x, &y);
+
+  for (int i = 0; i < screen_images_.size(); ++i) {
+    if (screen_images_[i].Contains(x, y)) {
+      return i;
+    }
+  }
+  return -1; 
+}
+
 void MatchViewer::mousePressEvent(QMouseEvent *event) {
   lastPos = event->pos();
+  
+  // Set mouse drag behavior.
+  mouse_drag_behavior_ = NONE;
+  if (event->modifiers() & Qt::ShiftModifier) {
+    int i = ImageUnderPointer(event);
+    if (i >= 0) {
+      dragging_image_ = i;
+      mouse_drag_behavior_ = MOVE_IMAGE;
+    }
+  } else {
+    mouse_drag_behavior_ = MOVE_VIEW;
+  }
 }
 
 void MatchViewer::mouseMoveEvent(QMouseEvent *event) {
@@ -180,7 +204,15 @@ void MatchViewer::mouseMoveEvent(QMouseEvent *event) {
   PlaneFromScreen(event->x(), event->y(), &x1, &y1);
 
   if (event->buttons() & Qt::LeftButton) {
-    SetTransformation(tx + x0 - x1, ty + y0 - y1, zoom);
+    if (mouse_drag_behavior_ == MOVE_IMAGE) {
+      // Move the first image under the pointer.
+      screen_images_[dragging_image_].posx += x1 - x0;
+      screen_images_[dragging_image_].posy += y1 - y0;
+      updateGL();
+    } else if (mouse_drag_behavior_ == MOVE_VIEW) {
+      // Move view.
+      SetTransformation(tx + x0 - x1, ty + y0 - y1, zoom); 
+    }
   }
   lastPos = event->pos();
 }

@@ -29,9 +29,7 @@
 // A widget displaying multiple images on a plane.
 //  - Dragging moves the plane.
 //  - Scrolling zooms.
-// In the future:
 //  - Shift-dragging moves the selected image.
-//  - Shift-scrolling scales the selected image.
 class MatchViewer : public QGLWidget {
   Q_OBJECT
 
@@ -40,7 +38,14 @@ class MatchViewer : public QGLWidget {
     int width, height;
     float posx, posy;
     float scale;
+
+    bool Contains(float x, float y) {
+      return posx < x && x < posx + width
+          && posy < y && y < posy + height;
+    }
   };
+
+  typedef enum {NONE, MOVE_VIEW, MOVE_IMAGE} MouseDragBehavior;
 
 
  public:
@@ -56,16 +61,19 @@ class MatchViewer : public QGLWidget {
   void SetTransformation(float tx_, float ty_, float zoom_);
 
  protected:
+  // Drawing.
   void initializeGL();
   void paintGL();
   void resizeGL(int width, int height);
+  void SetUpGlCamera();
+  void DrawImages();
+
+  // Mouse.
   void mousePressEvent(QMouseEvent *event);
   void mouseMoveEvent(QMouseEvent *event);
   void wheelEvent(QWheelEvent *event);
+  int ImageUnderPointer(QMouseEvent *event);
 
-  // Drawing methods.
-  void SetUpGlCamera();
-  void DrawImages();
 
   // Coordinate systems.
   void PlaneFromScreen(float xw, float yw, float *xi, float *yi);
@@ -75,6 +83,9 @@ class MatchViewer : public QGLWidget {
  private:
   std::vector<OnScreenImage> screen_images_;
 
+  MouseDragBehavior mouse_drag_behavior_;
+  int dragging_image_;
+  
   float tx;    /// Top left corner of the window in plane coordinates.
   float ty;
   float zoom;  /// Window pixels per plane pixel.
