@@ -18,12 +18,14 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
-#ifndef TOOLS_TVR_MATCH_VIEWER_H_
-#define TOOLS_TVR_MATCH_VIEWER_H_
+#ifndef UI_TVR_MATCH_VIEWER_H_
+#define UI_TVR_MATCH_VIEWER_H_
 
 
 #include <QGLWidget>
 #include <vector>
+
+#include "ui/tvr/features.h"
 
 
 // A widget displaying multiple images on a plane.
@@ -58,6 +60,7 @@ class MatchViewer : public QGLWidget {
  public slots:
   void SetImages(const QImage *images, int n);
   void AddImage(const QImage &im);
+  void SetFeatures(int image_index, SurfFeatureSet *features);
   void SetTransformation(float tx_, float ty_, float zoom_);
 
  protected:
@@ -67,6 +70,8 @@ class MatchViewer : public QGLWidget {
   void resizeGL(int width, int height);
   void SetUpGlCamera();
   void DrawImages();
+  void DrawFeatures(int image_index);
+
 
   // Mouse.
   void mousePressEvent(QMouseEvent *event);
@@ -82,6 +87,7 @@ class MatchViewer : public QGLWidget {
 
  private:
   std::vector<OnScreenImage> screen_images_;
+  std::vector<SurfFeatureSet *> feature_sets_;
 
   MouseDragBehavior mouse_drag_behavior_;
   int dragging_image_;
@@ -93,4 +99,4 @@ class MatchViewer : public QGLWidget {
   QPoint lastPos;
 };
 
-#endif // TOOLS_TVR_MATCH_VIEWER_H_
+#endif // UI_TVR_MATCH_VIEWER_H_

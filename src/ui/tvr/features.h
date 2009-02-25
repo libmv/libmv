@@ -19,49 +19,18 @@
 // IN THE SOFTWARE.
 
 
-#ifndef UI_TVR_MAIN_WINWOW_H_
-#define UI_TVR_MAIN_WINWOW_H_
+#ifndef UI_TVR_FEATURES_H_
+#define UI_TVR_FEATURES_H_
 
-
-#include <QMainWindow>
-#include <QMenu>
-#include <QAction>
-
-#include "ui/tvr/features.h"
-#include "ui/tvr/match_viewer.h"
-
-
-class TvrMainWindow : public QMainWindow {
-  Q_OBJECT
-
- public:
-  TvrMainWindow(QWidget *parent = 0);
-  ~TvrMainWindow();
-
- public slots:
-  void OpenImages();
-  void ComputeFeatures();
-  void ComputeFeatures(int image_index);
-//TODO(pau) implement: void ComputeCandidateMatches();
-//          and:       void ComputeRobustMatches();
-
- private:
-  void CreateActions();
-  void CreateMenus();
-  void SynchronizeDepthmapList();
-  
- private:
-  // Data.
-  QImage images_[2];
-  SurfFeatureSet surf_feature_sets_[2];
-
-  // Qt widgets, menus and actions.
-  QMenu *file_menu_;
-  QAction *open_images_action_;
-  QMenu *matching_menu_;
-  QAction *compute_features_action_;
-
-  MatchViewer *viewer_;
+// TODO(pau): Move this to libmv, or remove it as soon as libmv has something
+//            equivalent.
+struct SurfFeature {
+  float x, y, scale, orientation;
+  float descriptor[64];
 };
 
-#endif // UI_TVR_MAIN_WINWOW_H_
+struct SurfFeatureSet {
+  std::vector<SurfFeature> features;
+};
+
+#endif //UI_TVR_FEATURES_H_

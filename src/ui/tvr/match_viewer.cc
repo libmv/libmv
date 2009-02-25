@@ -40,6 +40,7 @@ MatchViewer::~MatchViewer() {
 void MatchViewer::SetImages(const QImage *images, int n) {
   // TODO(pau): Should free Opengl textures also!
   screen_images_.clear();
+  feature_sets_.clear();
   for (int i = 0; i < n; ++i) {
     AddImage(images[i]);
   }
@@ -91,7 +92,13 @@ void MatchViewer::AddImage( const QImage &im ) {
   }
 
   screen_images_.push_back(oi);
+  feature_sets_.push_back(NULL);
 
+  updateGL();
+}
+
+void MatchViewer::SetFeatures(int image_index, SurfFeatureSet *features) {
+  feature_sets_[image_index] = features;
   updateGL();
 }
 
@@ -157,6 +164,32 @@ void MatchViewer::DrawImages() {
     glEnd();
     glDisable(GL_TEXTURE_2D);
 
+    DrawFeatures(i);
+
+    glPopMatrix();
+  }
+}
+
+void MatchViewer::DrawFeatures(int image_index) {
+  if (!feature_sets_[image_index]) {
+    return;
+  }
+  
+  std::vector<SurfFeature> &features = feature_sets_[image_index]->features;
+  for (int i = 0; i < features.size(); ++i) {
+    glPushMatrix();
+    glTranslatef(features[i].x, features[i].y, 0);
+    glScalef(features[i].scale, features[i].scale, features[i].scale);
+    // TODO(pau) when surf orientation will be detected, ensure that this is
+    //           turning in the right sense and the right units (deg vs rad).
+    glRotatef(features[i].orientation, 0, 0, 1);
+    glBegin(GL_LINES);
+    glVertex2f(-1, -1); glVertex2f( 1, -1); // Square Box.
+    glVertex2f( 1, -1); glVertex2f( 1,  1);
+    glVertex2f( 1,  1); glVertex2f(-1,  1);
+    glVertex2f(-1,  1); glVertex2f(-1, -1);
+    glVertex2f(0,  0); glVertex2f(0, -1);   // Vertical line to see orientation.
+    glEnd();
     glPopMatrix();
   }
 }

@@ -23,6 +23,8 @@
 #include "main_window.h"
 
 int main(int argc, char *argv[]) {
+  //TODO(pau) init glog
+  
   QApplication app(argc, argv);
   TvrMainWindow window;
   window.show();
