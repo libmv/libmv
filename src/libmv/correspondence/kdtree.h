@@ -29,7 +29,8 @@ namespace libmv {
 
 // A simple priority cue used to sort the nodes to explore for A-knn.
 // Low priority values are poped first.
-// TODO(pau): if we are going to use this anywhere else, put it on a separate file.
+// TODO(pau): if we are going to use this anywhere else, put it on a separate
+//            file.
 template<typename Value, typename Priority>
 class PriorityQueue {
  public:
@@ -66,14 +67,14 @@ class PriorityQueue {
 
 
 // A sorted list of points and their distances to the query.
-template<typename Point, typename Scalar>
+template<typename Point, typename Scalar=double>
 class KnnSortedList {
  public:
   KnnSortedList(int k) : k_(k) {}
 
   // Adds a point into the sorted list of neighbors
   void AddNeighbor(const Point &p, Scalar distance) {
-    if (Size() < K()) {
+    if (!Full()) {
       points_.push_back(p);
       distances_.push_back(distance);
     } else if (distance < distances_.back()) {
@@ -91,8 +92,10 @@ class KnnSortedList {
 
   int K() { return k_; }
   int Size() { return points_.size(); }
+  bool Full() { return Size() >= K(); }
   Point Neighbor(int i) { return points_[i]; }
   Scalar Distance(int i) { return distances_[i]; }
+  Scalar FarthestDistance() { return Distance(Size() - 1); }
 
  private:
   int k_;
@@ -138,6 +141,7 @@ class KdTree {
   }
 
   int NumNodes() { return nodes_.size(); }
+  int NumLeafs() { return (NumNodes() + 1) / 2; }
   int NumLevels() { return num_levels_; }
 
   void PrintNodes() {
@@ -147,15 +151,23 @@ class KdTree {
     }
   }
 
-  // TODO(pau) Add a condition for stopping when best k are found.
-  void ApproximateKnnBestBinFirst(const Point &query,
-                                  int max_leafs,
-                                  KnnSortedList<Point *,Scalar> *neighbors) {
+  // Finds the k nearest neighbors of query using the best bin first strategy.
+  // It stops searching when the knn are found, or when it has explored
+  // max_leafs leafs.  Returns the number of explored leafs.
+  int ApproximateKnnBestBinFirst(const Point &query,
+                                 int max_leafs,
+                                 KnnSortedList<Point *,Scalar> *neighbors) {
     int num_explored_leafs = 0;
     PriorityQueue<int, Scalar> queue;
     queue.Push(0, 0); // Push root node.
 
     while (!queue.IsEmpty() && num_explored_leafs < max_leafs) {
+      // Stop if best node is farther than worst neighbor found so far.
+      if (neighbors->Full()
+          && queue.TopPriority() >= neighbors->FarthestDistance()) {
+        break;
+      }
+      
       int i = queue.Pop();
 
       // Go down to leaf.
@@ -177,6 +189,7 @@ class KdTree {
       }
       num_explored_leafs++;
     }
+    return num_explored_leafs;
   }
 
 

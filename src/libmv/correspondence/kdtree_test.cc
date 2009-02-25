@@ -56,6 +56,14 @@ TEST(KnnSortedList, Size) {
   EXPECT_EQ(9, knn.K());
 }
 
+TEST(KnnSortedList, FarthestDistance) {
+  KnnSortedList<int, float> knn(9);
+  knn.AddNeighbor(1, 1.0f);
+  knn.AddNeighbor(3, 3.0f);
+  knn.AddNeighbor(2, 2.0f);
+  EXPECT_EQ(3.0f, knn.FarthestDistance());
+}
+
 TEST(KnnSortedList, SortAList) {
   KnnSortedList<int, float> knn(3);
   knn.AddNeighbor(2, 2.0f);
@@ -128,7 +136,7 @@ TEST(KdTree, ApproximateKnnBestBinFirstSimple) {
   Vec2 query;
   query << 1.1, 1.2;
 
-  KnnSortedList<Vec2 *, double> neighbors(1);
+  KnnSortedList<Vec2 *> neighbors(1);
   tree.ApproximateKnnBestBinFirst(query, 1000, &neighbors);
   Vec2 p = *neighbors.Neighbor(0);
   EXPECT_EQ(1, p[0]);
@@ -151,10 +159,10 @@ TEST(KdTree, ApproximateKnnBestBinFirstSimpleComplete) {
   queries[2] << 2, 1.4;
   queries[3] << 1.8, 1.7;
 
-  KnnSortedList<Vec2 *, double> neighbors0(1);
-  KnnSortedList<Vec2 *, double> neighbors1(1);
-  KnnSortedList<Vec2 *, double> neighbors2(1);
-  KnnSortedList<Vec2 *, double> neighbors3(1);
+  KnnSortedList<Vec2 *> neighbors0(1);
+  KnnSortedList<Vec2 *> neighbors1(1);
+  KnnSortedList<Vec2 *> neighbors2(1);
+  KnnSortedList<Vec2 *> neighbors3(1);
   tree.ApproximateKnnBestBinFirst(queries[0], 1000, &neighbors0);
   tree.ApproximateKnnBestBinFirst(queries[1], 1000, &neighbors1);
   tree.ApproximateKnnBestBinFirst(queries[2], 1000, &neighbors2);
@@ -187,8 +195,9 @@ TEST(KdTree, ApproximateKnnBestBinFirstBig) {
   
   Vec2 query;
   query << 5.4, 5.2;
-  KnnSortedList<Vec2 *, double> knn(4);
-  tree.ApproximateKnnBestBinFirst(query, N * N, &knn);
+  KnnSortedList<Vec2 *> knn(4);
+  int num_explored_leafs
+      = tree.ApproximateKnnBestBinFirst(query, tree.NumLeafs(), &knn);
   Vec2 p0 = *knn.Neighbor(0);
   Vec2 p1 = *knn.Neighbor(1);
   Vec2 p2 = *knn.Neighbor(2);
@@ -202,6 +211,8 @@ TEST(KdTree, ApproximateKnnBestBinFirstBig) {
   EXPECT_EQ(6, p2[1]);
   EXPECT_EQ(6, p3[0]);
   EXPECT_EQ(6, p3[1]);
+  EXPECT_LE(num_explored_leafs, 9);
+                             // 9 has been found by testing the code itself :(
 }
 
 }  // namespace
