@@ -1,9 +1,9 @@
 #########################
 # Qt
-FIND_PACKAGE(Qt4)
-ADD_DEFINITIONS( ${QT_DEFINITIONS} )
-INCLUDE_DIRECTORIES( ${QT_INCLUDES} )
-LINK_DIRECTORIES( ${QT_LIBRARY_DIR} )
+FIND_PACKAGE(Qt4 REQUIRED)
+FIND_PACKAGE(OpenGL REQUIRED)
+SET(QT_USE_QTOPENGL ON)
+INCLUDE(${QT_USE_FILE})
 #########################
 
 SET(imageviewer_SOURCES main.cc imageviewer.cc scrubber.cc)
@@ -16,3 +16,4 @@ TARGET_LINK_LIBRARIES(imageviewer image
                       ${QT_QTGUI_LIBRARY}
                       ${QT_QTOPENGL_LIBRARY})
 
+ADD_SUBDIRECTORY(tvr)
