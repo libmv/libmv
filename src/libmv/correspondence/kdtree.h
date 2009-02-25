@@ -151,12 +151,26 @@ class KdTree {
     }
   }
 
+  // Finds the nearest neighbors of query using the best bin first strategy.
+  // It stops searching when it's found, or when it has explored max_leafs leafs.
+  // Returns the number of explored leafs.
+  int ApproximateNearestNeighborBestBinFirst(const Point &query,
+                                             int max_leafs,
+                                             Point **nearest_neigbor,
+                                             Scalar *distance) {
+    KnnSortedList<Point *, Scalar> knn(1);
+    int leafs = ApproximateKnnBestBinFirst(query, max_leafs, &knn);
+    *nearest_neigbor = knn.Neighbor(0);
+    *distance = knn.Distance(0);
+    return leafs;
+  }
+
   // Finds the k nearest neighbors of query using the best bin first strategy.
   // It stops searching when the knn are found, or when it has explored
   // max_leafs leafs.  Returns the number of explored leafs.
   int ApproximateKnnBestBinFirst(const Point &query,
                                  int max_leafs,
-                                 KnnSortedList<Point *,Scalar> *neighbors) {
+                                 KnnSortedList<Point *, Scalar> *neighbors) {
     int num_explored_leafs = 0;
     PriorityQueue<int, Scalar> queue;
     queue.Push(0, 0); // Push root node.

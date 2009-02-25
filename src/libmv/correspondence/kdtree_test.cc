@@ -123,7 +123,7 @@ TEST(KdTree, MoreVariantAxis) {
   EXPECT_EQ( 1, points[3][1]);
 }
 
-TEST(KdTree, ApproximateKnnBestBinFirstSimple) {
+TEST(KdTree, ApproximateNearestNeighborBestBinFirst) {
   Vec2 points[4];
   points[0] << 1, 1;
   points[1] << 1, 2;
@@ -137,13 +137,15 @@ TEST(KdTree, ApproximateKnnBestBinFirstSimple) {
   query << 1.1, 1.2;
 
   KnnSortedList<Vec2 *> neighbors(1);
-  tree.ApproximateKnnBestBinFirst(query, 1000, &neighbors);
-  Vec2 p = *neighbors.Neighbor(0);
-  EXPECT_EQ(1, p[0]);
-  EXPECT_EQ(1, p[1]);
+  Vec2 *nn;
+  double distance;
+  tree.ApproximateNearestNeighborBestBinFirst(query, 1000, &nn, &distance);
+  EXPECT_EQ(1, (*nn)[0]);
+  EXPECT_EQ(1, (*nn)[1]);
+  EXPECT_NEAR(0.1 * 0.1 + 0.2 * 0.2, distance, 1e-10);
 }
 
-TEST(KdTree, ApproximateKnnBestBinFirstSimpleComplete) {
+TEST(KdTree, ApproximateKnnBestBinFirstSmall) {
   Vec2 points[4];
   points[0] << 1, 1;
   points[1] << 1, 2;
