@@ -67,7 +67,7 @@ void USURFDescriptor(const TImage &integral_image,
   int done_dims = 0;
   for (int row = -half_region; row < half_region; row += samples_per_block) {
     for (int col = -half_region; col < half_region; col += samples_per_block) {
-      Vec4f components;
+      Vec4f components(0,0,0,0);
       for (int r = row; r < row + samples_per_block; ++r) {
         for (int c = col; c < col + samples_per_block; ++c) {
           int sample_row = lround(y + scale*r);
