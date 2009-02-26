@@ -19,50 +19,21 @@
 // IN THE SOFTWARE.
 
 
-#ifndef UI_TVR_MAIN_WINWOW_H_
-#define UI_TVR_MAIN_WINWOW_H_
-
-
-#include <QMainWindow>
-#include <QMenu>
-#include <QAction>
-
 #include "ui/tvr/features.h"
-#include "ui/tvr/tvr_document.h"
-#include "ui/tvr/match_viewer.h"
 
+void FindCandidateMatches(const SurfFeatureSet &left,
+                          const SurfFeatureSet &right,
+                          std::vector<Match> *matches) {
+  for (size_t i = 0; i < left.features.size(); ++i) {
+    size_t j, k;
+    float distance; 
+    right.tree.ApproximateNearestNeighborBestBinFirst(left.features[i],
+                                                      100, &j, &distance);
+    left.tree.ApproximateNearestNeighborBestBinFirst(right.features[j],
+                                                      100, &k, &distance);
+    if (i == k) {
+      matches->push_back(Match(i, j));
+    }
+  }
+}
 
-class TvrMainWindow : public QMainWindow {
-  Q_OBJECT
-
- public:
-  TvrMainWindow(QWidget *parent = 0);
-  ~TvrMainWindow();
-
- public slots:
-  void OpenImages();
-  void ComputeFeatures();
-  void ComputeFeatures(int image_index);
-  void ComputeCandidateMatches();
-//TODO(pau) implement:  void ComputeRobustMatches();
-
- private:
-  void CreateActions();
-  void CreateMenus();
-  void SynchronizeDepthmapList();
-  
- private:
-  // Data.
-  TvrDocument document_;
-
-  // Qt widgets, menus and actions.
-  QMenu *file_menu_;
-  QAction *open_images_action_;
-  QMenu *matching_menu_;
-  QAction *compute_features_action_;
-  QAction *compute_candidate_matches_;
-
-  MatchViewer *viewer_;
-};
-
-#endif // UI_TVR_MAIN_WINWOW_H_

@@ -25,10 +25,9 @@
 #include <QGLWidget>
 #include <vector>
 
-#include "ui/tvr/features.h"
+#include "ui/tvr/tvr_document.h"
 
-
-// A widget displaying multiple images on a plane.
+// A widget displaying two images on a plane, with surf features and matches.
 //  - Dragging moves the plane.
 //  - Scrolling zooms.
 //  - Shift-dragging moves the selected image.
@@ -58,9 +57,8 @@ class MatchViewer : public QGLWidget {
   QSize sizeHint() const;
 
  public slots:
-  void SetImages(const QImage *images, int n);
-  void AddImage(const QImage &im);
-  void SetFeatures(int image_index, SurfFeatureSet *features);
+  void SetDocument(TvrDocument *doc);
+  void UpdateScreenImage(int index);
   void SetTransformation(float tx_, float ty_, float zoom_);
 
  protected:
@@ -69,9 +67,9 @@ class MatchViewer : public QGLWidget {
   void paintGL();
   void resizeGL(int width, int height);
   void SetUpGlCamera();
-  void DrawImages();
+  void DrawImage(int i);
   void DrawFeatures(int image_index);
-
+  void DrawCandidateMatches();
 
   // Mouse.
   void mousePressEvent(QMouseEvent *event);
@@ -79,22 +77,20 @@ class MatchViewer : public QGLWidget {
   void wheelEvent(QWheelEvent *event);
   int ImageUnderPointer(QMouseEvent *event);
 
-
   // Coordinate systems.
   void PlaneFromScreen(float xw, float yw, float *xi, float *yi);
   void ScreenFromPlane(float xi, float yi, float *xw, float *yw);
 
-
+  
  private:
-  std::vector<OnScreenImage> screen_images_;
-  std::vector<SurfFeatureSet *> feature_sets_;
+  TvrDocument *document_;
+  OnScreenImage screen_images_[2];
 
   MouseDragBehavior mouse_drag_behavior_;
   int dragging_image_;
   
-  float tx;    /// Top left corner of the window in plane coordinates.
-  float ty;
-  float zoom;  /// Window pixels per plane pixel.
+  float tx, ty;  // Top left corner of the window in plane coordinates.
+  float zoom;    // Window pixels per plane pixel.
 
   QPoint lastPos;
 };

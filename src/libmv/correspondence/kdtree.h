@@ -24,6 +24,10 @@
 
 #include <vector>
 #include <algorithm>
+#include <cmath>
+#include <cassert>
+
+#include "libmv/numeric/numeric.h"
 
 namespace libmv {
 
@@ -140,11 +144,11 @@ class KdTree {
     CreateNode(0, points, points + num_points);
   }
 
-  int NumNodes() { return nodes_.size(); }
-  int NumLeafs() { return (NumNodes() + 1) / 2; }
-  int NumLevels() { return num_levels_; }
+  int NumNodes() const { return nodes_.size(); }
+  int NumLeafs() const { return (NumNodes() + 1) / 2; }
+  int NumLevels() const { return num_levels_; }
 
-  void PrintNodes() {
+  void PrintNodes() const {
     for (int i = 0; i < nodes_.size(); ++i) {
       printf("Node %d: axis=%d  value=%g  num_points=%d\n", i, nodes_[i].axis,
              nodes_[i].value, nodes_[i].end - nodes_[i].begin);
@@ -156,11 +160,11 @@ class KdTree {
   // Returns the number of explored leafs.
   int ApproximateNearestNeighborBestBinFirst(const Point &query,
                                              int max_leafs,
-                                             Point **nearest_neigbor,
-                                             Scalar *distance) {
+                                             size_t *nearest_neigbor_index,
+                                             Scalar *distance) const {
     KnnSortedList<Point *, Scalar> knn(1);
     int leafs = ApproximateKnnBestBinFirst(query, max_leafs, &knn);
-    *nearest_neigbor = knn.Neighbor(0);
+    *nearest_neigbor_index = knn.Neighbor(0) - nodes_[0].begin;
     *distance = knn.Distance(0);
     return leafs;
   }
@@ -170,7 +174,7 @@ class KdTree {
   // max_leafs leafs.  Returns the number of explored leafs.
   int ApproximateKnnBestBinFirst(const Point &query,
                                  int max_leafs,
-                                 KnnSortedList<Point *, Scalar> *neighbors) {
+                                 KnnSortedList<Point *, Scalar> *neighbors) const {
     int num_explored_leafs = 0;
     PriorityQueue<int, Scalar> queue;
     queue.Push(0, 0); // Push root node.
@@ -208,16 +212,16 @@ class KdTree {
 
 
  private:
-  int LeftChild(int i) {
+  int LeftChild(int i) const {
     return 2 * i + 1;
   }
-  int RightChild(int i) {
+  int RightChild(int i) const {
     return 2 * i + 2;
   }
-  int Parent(int i) {
+  int Parent(int i) const {
     return (i - 1) / 2;
   }
-  bool IsLeaf(int i) {
+  bool IsLeaf(int i) const {
     return i >= NumNodes() / 2; // Note NumNodes() is odd.
   }
 
@@ -270,7 +274,7 @@ class KdTree {
   }
 
 
-  Scalar L2Distance2(const Point &p, const Point &q) {
+  Scalar L2Distance2(const Point &p, const Point &q) const {
     Scalar distance = 0;
     for (int i = 0; i < num_dims_; ++i) {
       Scalar diff = p[i] - q[i];

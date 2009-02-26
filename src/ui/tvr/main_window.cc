@@ -48,10 +48,15 @@ void TvrMainWindow::CreateActions() {
           this, SLOT(OpenImages()));
   
   compute_features_action_ = new QAction(tr("&Compute Features..."), this);
-  compute_features_action_->setShortcut(tr("Ctrl+C"));
   compute_features_action_->setStatusTip(tr("Compute Surf Features"));
   connect(compute_features_action_, SIGNAL(triggered()),
           this, SLOT(ComputeFeatures()));
+  
+  compute_candidate_matches_ = new QAction(tr("&Compute Candidate Matches..."),
+                                           this);
+  compute_candidate_matches_->setStatusTip(tr("Compute Candidate Matches"));
+  connect(compute_candidate_matches_, SIGNAL(triggered()),
+          this, SLOT(ComputeCandidateMatches()));
 }
 
 void TvrMainWindow::CreateMenus() {
@@ -59,17 +64,18 @@ void TvrMainWindow::CreateMenus() {
   file_menu_->addAction(open_images_action_);
   matching_menu_ = menuBar()->addMenu(tr("&Matching"));
   matching_menu_->addAction(compute_features_action_);
+  matching_menu_->addAction(compute_candidate_matches_);
 }
 
 void TvrMainWindow::OpenImages() {
-  QStringList filenames = QFileDialog::getOpenFileNames(this, "Select Images",
-      "", "Image Files (*.png *.jpg *.bmp *.pgm *.xpm)");
+  QStringList filenames = QFileDialog::getOpenFileNames(this,
+      "Select Two Images", "", "Image Files (*.png *.jpg *.bmp *.pgm *.xpm)");
 
   for (int i = 0; i < 2; ++i) {
-    images_[i].load(filenames[i]);
+    document_.images[i].load(filenames[i]);
   }
 
-  viewer_->SetImages(images_, 2);
+  viewer_->SetDocument(&document_);
 }
 
 void TvrMainWindow::ComputeFeatures() {
@@ -79,9 +85,10 @@ void TvrMainWindow::ComputeFeatures() {
 }
   
 void TvrMainWindow::ComputeFeatures(int image_index) {
-  QImage &qimage = images_[image_index];
+  QImage &qimage = document_.images[image_index];
   int width = qimage.width(), height = qimage.height();
-
+  SurfFeatureSet &fs = document_.feature_sets[image_index];
+      
   // Convert to gray-scale.
   libmv::Array3Df image(height, width, 1);
   for (int y = 0; y < height; ++y) {
@@ -95,19 +102,19 @@ void TvrMainWindow::ComputeFeatures(int image_index) {
   }
 
   // Detect features.
-  std::vector<libmv::Vec3f> features;
-  libmv::MultiscaleDetectFeatures(image, 4, 4, &features);
-  surf_feature_sets_[image_index].features.resize(features.size());
+  std::vector<libmv::Vec3f> detections;
+  libmv::MultiscaleDetectFeatures(image, 4, 4, &detections);
+  fs.features.resize(detections.size());
 
 
   // Compute descriptors and fill surf_feature_set structure.
   libmv::Matf integral_image;
   libmv::IntegralImage(image, &integral_image);
-  for (int i = 0; i < features.size(); ++i) {
-    SurfFeature &f = surf_feature_sets_[image_index].features[i];
-    f.x = features[i](2);
-    f.y = features[i](1);
-    f.scale = features[i](0);
+  for (int i = 0; i < detections.size(); ++i) {
+    SurfFeature &f = fs.features[i];
+    f.x = detections[i](2);
+    f.y = detections[i](1);
+    f.scale = detections[i](0);
     f.orientation = 0;
     libmv::Matrix<float, 64, 1> descriptor;
     libmv::USURFDescriptor<4, 5>(integral_image, f.x, f.y, f.scale,
@@ -117,6 +124,16 @@ void TvrMainWindow::ComputeFeatures(int image_index) {
     }
   }
 
-  viewer_->SetFeatures(image_index, &surf_feature_sets_[image_index]);
+  // Build the kd-tree.
+  fs.tree.Build(&fs.features[0], fs.features.size(), 64, 10);
+
+  viewer_->updateGL();
 }
 
+void TvrMainWindow::ComputeCandidateMatches() {
+  FindCandidateMatches(document_.feature_sets[0],
+                       document_.feature_sets[1],
+                       &document_.candidate_matches);
+  
+  viewer_->updateGL();
+}

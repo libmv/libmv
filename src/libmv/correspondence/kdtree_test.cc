@@ -136,12 +136,11 @@ TEST(KdTree, ApproximateNearestNeighborBestBinFirst) {
   Vec2 query;
   query << 1.1, 1.2;
 
-  KnnSortedList<Vec2 *> neighbors(1);
-  Vec2 *nn;
+  size_t nni;
   double distance;
-  tree.ApproximateNearestNeighborBestBinFirst(query, 1000, &nn, &distance);
-  EXPECT_EQ(1, (*nn)[0]);
-  EXPECT_EQ(1, (*nn)[1]);
+  tree.ApproximateNearestNeighborBestBinFirst(query, 1000, &nni, &distance);
+  EXPECT_EQ(1, points[nni][0]);
+  EXPECT_EQ(1, points[nni][1]);
   EXPECT_NEAR(0.1 * 0.1 + 0.2 * 0.2, distance, 1e-10);
 }
 

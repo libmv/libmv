@@ -27,7 +27,7 @@
 
 
 MatchViewer::MatchViewer(QWidget *parent)
-: QGLWidget(parent) {
+: QGLWidget(parent), document_(NULL) {
   tx = 0;
   ty = 0;
   zoom = 1;
@@ -37,19 +37,19 @@ MatchViewer::~MatchViewer() {
   makeCurrent();
 }
 
-void MatchViewer::SetImages(const QImage *images, int n) {
-  // TODO(pau): Should free Opengl textures also!
-  screen_images_.clear();
-  feature_sets_.clear();
-  for (int i = 0; i < n; ++i) {
-    AddImage(images[i]);
+void MatchViewer::SetDocument(TvrDocument *doc) {
+  document_ = doc;
+  
+  for (int i = 0; i < 2; ++i) {
+    UpdateScreenImage(i);
   }
 }
 
-void MatchViewer::AddImage( const QImage &im ) {
-  OnScreenImage oi;
+void MatchViewer::UpdateScreenImage(int index) {
+  OnScreenImage &oi = screen_images_[index];
+  QImage &im = document_->images[index];
 
-  glGenTextures( 1, &oi.textureID );
+  glGenTextures(1, &oi.textureID);
 
   oi.width = im.width();
   oi.height = im.height();
@@ -82,23 +82,15 @@ void MatchViewer::AddImage( const QImage &im ) {
 
   delete [] data;
 
-  if (screen_images_.size() == 0) {
+  if (index == 0) {
     oi.posx = 0;
     oi.posy = 0;
   } else {
-    int l = screen_images_.size();
-    oi.posx = screen_images_[l - 1].posx + screen_images_[l - 1].width + 10;
-    oi.posy = screen_images_[l - 1].posy;
+    OnScreenImage &prev = screen_images_[index - 1];
+    oi.posx = prev.posx + prev.width + 10;
+    oi.posy = prev.posy;
   }
 
-  screen_images_.push_back(oi);
-  feature_sets_.push_back(NULL);
-
-  updateGL();
-}
-
-void MatchViewer::SetFeatures(int image_index, SurfFeatureSet *features) {
-  feature_sets_[image_index] = features;
   updateGL();
 }
 
@@ -146,36 +138,32 @@ void MatchViewer::SetUpGlCamera() {
   glLoadIdentity();
 }
 
-void MatchViewer::DrawImages() {
-  for( int i=0; i<screen_images_.size(); i++ ) {
-    OnScreenImage &si = screen_images_[i];
+void MatchViewer::DrawImage(int i) {
+  OnScreenImage &si = screen_images_[i];
 
-    glMatrixMode(GL_MODELVIEW);
-    glPushMatrix();
-    glTranslatef(si.posx, si.posy, 0);
+  glMatrixMode(GL_MODELVIEW);
+  glPushMatrix();
+  glTranslatef(si.posx, si.posy, 0);
 
-    glEnable(GL_TEXTURE_2D);
-    glBindTexture(GL_TEXTURE_2D, si.textureID);
-    glBegin(GL_QUADS);
-    glTexCoord2d(0, 0); glVertex2d(0, 0);
-    glTexCoord2d(1, 0); glVertex2d(si.width, 0);
-    glTexCoord2d(1, 1); glVertex2d(si.width, si.height);
-    glTexCoord2d(0, 1); glVertex2d(0, si.height);
-    glEnd();
-    glDisable(GL_TEXTURE_2D);
+  glEnable(GL_TEXTURE_2D);
+  glBindTexture(GL_TEXTURE_2D, si.textureID);
+  glBegin(GL_QUADS);
+  glTexCoord2d(0, 0); glVertex2d(0, 0);
+  glTexCoord2d(1, 0); glVertex2d(si.width, 0);
+  glTexCoord2d(1, 1); glVertex2d(si.width, si.height);
+  glTexCoord2d(0, 1); glVertex2d(0, si.height);
+  glEnd();
+  glDisable(GL_TEXTURE_2D);
 
-    DrawFeatures(i);
+  DrawFeatures(i);
 
-    glPopMatrix();
-  }
+  glPopMatrix();
 }
 
 void MatchViewer::DrawFeatures(int image_index) {
-  if (!feature_sets_[image_index]) {
-    return;
-  }
+  std::vector<SurfFeature> &features =
+      document_->feature_sets[image_index].features;
   
-  std::vector<SurfFeature> &features = feature_sets_[image_index]->features;
   for (int i = 0; i < features.size(); ++i) {
     glPushMatrix();
     glTranslatef(features[i].x, features[i].y, 0);
@@ -194,9 +182,35 @@ void MatchViewer::DrawFeatures(int image_index) {
   }
 }
 
+void MatchViewer::DrawCandidateMatches() {
+  std::vector<SurfFeature> &left = document_->feature_sets[0].features;
+  std::vector<SurfFeature> &right = document_->feature_sets[1].features;
+  std::vector<Match> &matches = document_->candidate_matches;
+
+  float x0 = screen_images_[0].posx;
+  float y0 = screen_images_[0].posy;
+  float x1 = screen_images_[1].posx;
+  float y1 = screen_images_[1].posy;
+  
+  glBegin(GL_LINES);
+  for (int m = 0; m < matches.size(); ++m) {
+    size_t i = matches[m].first;
+    size_t j = matches[m].second;
+    glVertex2f(x0 +  left[i].x, y0 +  left[i].y);
+    glVertex2f(x1 + right[j].x, y1 + right[j].y);
+  }
+  glEnd();
+}
+
+
 void MatchViewer::paintGL() {
-  SetUpGlCamera();
-  DrawImages();
+  if (document_) {
+    SetUpGlCamera();
+    for (int i = 0; i < 2; ++i) {
+      DrawImage(i);
+    }
+    DrawCandidateMatches();
+  }
 }
 
 void MatchViewer::resizeGL(int width, int height) {
@@ -207,7 +221,7 @@ int MatchViewer::ImageUnderPointer(QMouseEvent *event) {
   float x, y;
   PlaneFromScreen(event->x(), event->y(), &x, &y);
 
-  for (int i = 0; i < screen_images_.size(); ++i) {
+  for (int i = 0; i < 2; ++i) {
     if (screen_images_[i].Contains(x, y)) {
       return i;
     }

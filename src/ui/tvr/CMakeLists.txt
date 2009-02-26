@@ -1,9 +1,9 @@
 
-SET(HEADERS main_window.h match_viewer.h features.h)
-SET(SOURCES main.cc main_window.cc match_viewer.cc)
-QT4_WRAP_CPP(SOURCES ${HEADERS})
+SET(MOC_HEADERS main_window.h match_viewer.h)
+SET(SOURCES main.cc main_window.cc match_viewer.cc features.cc)
+QT4_WRAP_CPP(SOURCES ${MOC_HEADERS})
 
-ADD_EXECUTABLE(tvr ${SOURCES} ${HEADERS})
+ADD_EXECUTABLE(tvr ${SOURCES})
 TARGET_LINK_LIBRARIES(tvr
                       image
                       numeric

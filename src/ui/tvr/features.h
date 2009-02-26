@@ -22,15 +22,36 @@
 #ifndef UI_TVR_FEATURES_H_
 #define UI_TVR_FEATURES_H_
 
-// TODO(pau): Move this to libmv, or remove it as soon as libmv has something
-//            equivalent.
+#include <vector>
+
+#include "libmv/correspondence/kdtree.h"
+
+// FIXME(pau): Move this to libmv, or remove it as soon as libmv has something
+//             equivalent. Right now, there are two pseudo-prototypes for this
+//             in libmv/correspondence. I'm writing a third one here which is
+//             clearly not the best solution! So go and fix it soon!
+//             My plan is to do something simple here, and then convert it
+//             to the datastructures we decide to use (probably the bipartite
+//             graph).
+
 struct SurfFeature {
   float x, y, scale, orientation;
   float descriptor[64];
+  float operator[](int i) const { return descriptor[i]; }
 };
 
 struct SurfFeatureSet {
   std::vector<SurfFeature> features;
+  libmv::KdTree<SurfFeature, float> tree;
 };
+
+typedef std::pair<size_t, size_t> Match;
+
+// Compute candidate matches between 2 sets of features.  Two features a and b
+// are a candidate match if a is the nearest neighbor of b and b is the nearest
+// neighbor of a.
+void FindCandidateMatches(const SurfFeatureSet &left,
+                          const SurfFeatureSet &right,
+                          std::vector<Match> *matches);
 
 #endif //UI_TVR_FEATURES_H_

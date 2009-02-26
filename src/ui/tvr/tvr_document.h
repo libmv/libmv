@@ -19,50 +19,17 @@
 // IN THE SOFTWARE.
 
 
-#ifndef UI_TVR_MAIN_WINWOW_H_
-#define UI_TVR_MAIN_WINWOW_H_
+#ifndef UI_TVR_TVR_DATA_H_
+#define UI_TVR_TVR_DATA_H_
 
-
-#include <QMainWindow>
-#include <QMenu>
-#include <QAction>
+#include <vector>
 
 #include "ui/tvr/features.h"
-#include "ui/tvr/tvr_document.h"
-#include "ui/tvr/match_viewer.h"
 
-
-class TvrMainWindow : public QMainWindow {
-  Q_OBJECT
-
- public:
-  TvrMainWindow(QWidget *parent = 0);
-  ~TvrMainWindow();
-
- public slots:
-  void OpenImages();
-  void ComputeFeatures();
-  void ComputeFeatures(int image_index);
-  void ComputeCandidateMatches();
-//TODO(pau) implement:  void ComputeRobustMatches();
-
- private:
-  void CreateActions();
-  void CreateMenus();
-  void SynchronizeDepthmapList();
-  
- private:
-  // Data.
-  TvrDocument document_;
-
-  // Qt widgets, menus and actions.
-  QMenu *file_menu_;
-  QAction *open_images_action_;
-  QMenu *matching_menu_;
-  QAction *compute_features_action_;
-  QAction *compute_candidate_matches_;
-
-  MatchViewer *viewer_;
+struct TvrDocument {
+  QImage images[2];
+  SurfFeatureSet feature_sets[2];
+  std::vector<Match> candidate_matches;
 };
 
-#endif // UI_TVR_MAIN_WINWOW_H_
+#endif //UI_TVR_TVR_DATA_H_
