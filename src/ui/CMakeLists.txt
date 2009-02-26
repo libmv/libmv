@@ -14,6 +14,8 @@ TARGET_LINK_LIBRARIES(imageviewer image
                       ${LAPACK_LIBRARIES}
                       ${QT_QTCORE_LIBRARY}
                       ${QT_QTGUI_LIBRARY}
-                      ${QT_QTOPENGL_LIBRARY})
+                      ${QT_QTOPENGL_LIBRARY}
+                      ${OPENGL_gl_LIBRARY}
+                      ${OPENGL_glu_LIBRARY})
 
 ADD_SUBDIRECTORY(tvr)

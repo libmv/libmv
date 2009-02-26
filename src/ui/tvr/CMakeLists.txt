@@ -11,5 +11,7 @@ TARGET_LINK_LIBRARIES(tvr
                       gflags
                       ${QT_QTCORE_LIBRARY}
                       ${QT_QTGUI_LIBRARY}
-                      ${QT_QTOPENGL_LIBRARY})
+                      ${QT_QTOPENGL_LIBRARY}
+                      ${OPENGL_gl_LIBRARY}
+                      ${OPENGL_glu_LIBRARY})
 
