@@ -74,7 +74,7 @@ double SigmaApprox(int num_inliers, int num_sampled, int num_total) {
 template<typename Model, typename TMat, typename Fitter, typename Classifier,
          typename CostFunction>
 Model Estimate(TMat &samples, Fitter fitter, Classifier classifier,
-               CostFunction cost_function) {
+               CostFunction cost_function, std::vector<int> *inliers = NULL) {
   int iteration = 0;
   int max_iterations = 100;
   const int really_max_iterations = 1000;
@@ -138,6 +138,16 @@ Model Estimate(TMat &samples, Fitter fitter, Classifier classifier,
 
     VLOG(1) << "Max iterations needed given best inlier ratio: "
             << max_iterations << "; best inlier ratio: " << best_inlier_ratio;
+  }
+
+  // Compute inliers for best_model.
+  if (inliers) {
+    for (int j = 0; j < total_samples; ++j) {
+      double error_j = best_model.Error(samples.col(j));
+      if (classifier.IsInlier(error_j)) {
+        inliers->push_back(j);
+      }
+    }
   }
 
   return best_model;

@@ -29,7 +29,9 @@ namespace libmv {
 
 double FundamentalFromCorrespondences8PointRobust(const Mat &x1,
                                                   const Mat &x2,
-                                                  Mat3 *F);
+                                                  Mat3 *F,
+                                              std::vector<int> *inliers = NULL);
+
 } // namespace libmv
 
 #endif  // LIBMV_MULTIVIEW_ROBUST_FUNDAMENTAL_H_

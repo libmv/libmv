@@ -67,13 +67,15 @@ class FundamentalFitter {
 
 double FundamentalFromCorrespondences8PointRobust(const Mat &x1,
                                                   const Mat &x2,
-                                                  Mat3 *F) {
+                                                  Mat3 *F,
+                                             std::vector<int> *inliers = NULL) {
   Mat4X x1x2;
   VerticalStack(x1, x2, &x1x2);
   FundamentalModel model = Estimate<FundamentalModel>(x1x2,
                                                       FundamentalFitter(),
                                                       ThresholdClassifier(1),
-                                                      MLECost(1));
+                                                      MLECost(1),
+                                                      inliers);
   *F = model.F;
   return 0.0;  // This doesn't mean much for the robust case.
 }

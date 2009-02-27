@@ -45,7 +45,8 @@ TEST(RobustFundamental, FundamentalFromCorrespondences8PointRobust) {
   }
 
   Mat3 F;
-  FundamentalFromCorrespondences8PointRobust(x1, x2, &F);
+  std::vector<int> inliers;
+  FundamentalFromCorrespondences8PointRobust(x1, x2, &F, &inliers);
 
   // FIXME: This doesn't actually check the value of F!
 
@@ -59,13 +60,18 @@ TEST(RobustFundamental, FundamentalFromCorrespondences8PointRobust) {
   }
   EXPECT_MATRIX_NEAR_ZERO(y_F_x, 1e-8);
   EXPECT_NEAR(0, F.determinant(), 1e-8);
+  EXPECT_EQ(8, inliers.size());
 }
 
-TEST(RobustFundamental, FundamentalFromCorrespondences8PointRealisticNoOutliers) {
+TEST(RobustFundamental,
+     FundamentalFromCorrespondences8PointRealisticNoOutliers) {
   TwoViewDataSet d = TwoRealisticCameras();
 
   Mat3 F_estimated;
-  FundamentalFromCorrespondences8PointRobust(d.x1, d.x2, &F_estimated);
+  std::vector<int> inliers;
+  FundamentalFromCorrespondences8PointRobust(d.x1, d.x2, &F_estimated,
+                                             &inliers);
+  EXPECT_EQ(d.x1.cols(), inliers.size());
 
   // Normalize.
   Mat3 F_gt_norm, F_estimated_norm;
@@ -106,7 +112,10 @@ TEST(RobustFundamental, FundamentalFromCorrespondences8PointRealistic) {
 
   // Compute fundamental matrix from correspondences.
   Mat3 F_estimated;
-  FundamentalFromCorrespondences8PointRobust(x1s, x2s, &F_estimated);
+  std::vector<int> inliers;
+  FundamentalFromCorrespondences8PointRobust(x1s, x2s, &F_estimated, &inliers);
+
+  EXPECT_LE(d.x1.cols(), inliers.size());
 
   // Normalize.
   Mat3 F_gt_norm, F_estimated_norm;
