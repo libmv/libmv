@@ -6,6 +6,7 @@ Upstream version: r884472 on November 14th, 2008.
 Local modifications:
 
   * Fixed a minor assert bug in Map.h.
+  * Fixed an "unused variable" warning in SVD.h.
 
 Note: Only the license and Eigen/ directory is included.
 Note: For now, the CMake build system for Eigen is not included because we only
