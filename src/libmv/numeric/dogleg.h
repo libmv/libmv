@@ -196,7 +196,7 @@ class Dogleg {
       }
 
       // Solve for dogleg direction dx_dl.
-      Scalar beta;
+      Scalar beta = 0;
       Step step = SolveDoglegDirection(dx_sd, dx_gn, radius, alpha,
                                        &dx_dl, &beta);
 
@@ -208,7 +208,7 @@ class Dogleg {
 
       x_new = x + dx_dl;
       Scalar actual = f_(x).norm2() - f_(x_new).norm2();
-      Scalar predicted;
+      Scalar predicted = 0;
       if (step == GAUSS_NEWTON) {
         predicted = f_(x).norm2();
       } else if (step == STEEPEST_DESCENT) {
