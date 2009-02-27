@@ -86,7 +86,9 @@ Model Estimate(TMat &samples, Fitter fitter, Classifier classifier,
   double best_inlier_ratio = 0.0;
   Model best_model;
 
-  while (iteration++ < max_iterations) {
+  for (iteration = 0;
+       iteration < max_iterations &&
+       iteration < really_max_iterations; ++iteration) {
     VecXi subset_indices = PickSubset(min_samples, total_samples);
     TMat subset = ExtractColumns(samples, subset_indices);
     VLOG(1) << "Random subset: (" << subset_indices.size() << ") "
@@ -133,8 +135,7 @@ Model Estimate(TMat &samples, Fitter fitter, Classifier classifier,
     const double desired_certainty = 0.03;
     double needed_iterations = log(desired_certainty)
                              / log(1 - pow(best_inlier_ratio, min_samples));
-    max_iterations = std::min(static_cast<int>(needed_iterations),
-                              really_max_iterations);
+    max_iterations = static_cast<int>(needed_iterations);
 
     VLOG(1) << "Max iterations needed given best inlier ratio: "
             << max_iterations << "; best inlier ratio: " << best_inlier_ratio;
