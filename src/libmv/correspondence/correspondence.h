@@ -56,7 +56,7 @@ class Correspondences {
     CorrespondenceGraph::Iterator iter_;
   };
 
-  // Transfers ownership of Feature*.
+  // Transfers ownership of feature to *this.
   void Insert(ImageID image_id, TrackID track_id, Feature *feature) {
     correspondences_.Insert(image_id, feature, track_id);
   }
