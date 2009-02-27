@@ -12,10 +12,9 @@ Building
 
 Before building, make sure you have the following:
 
-* cmake 2.4 or newer
-* atlas, lapack and blas development packages. 
-    On ubuntu: apt-get install lapack3-pic lapack-dev
-    On debian/testing: apt-get install liblapack-dev liblapack-pic
+* CMake 2.4 or newer.
+* Development packages. 
+    On ubuntu: apt-get install cmake
+    On debian/testing: apt-get install cmake
 
 * Qt 4
-
