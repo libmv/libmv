@@ -29,7 +29,7 @@
 struct TvrDocument {
   QImage images[2];
   SurfFeatureSet feature_sets[2];
-  std::vector<Match> candidate_matches;
+  libmv::Correspondences correspondences;
 };
 
 #endif //UI_TVR_TVR_DATA_H_

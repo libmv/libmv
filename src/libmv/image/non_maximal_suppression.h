@@ -66,9 +66,8 @@ inline bool IsLocalMax3D(const TArray &f, int width, int x, int y, int z) {
   return true;
 }
 
-// Find the local maximums of f(x, y, z) within boxes of width^3. Call callback
-// for each absolute extremum within any cube box of size width x width x
-// width. Callback is of the form void(int x, int y, int z, Scalar value);
+// Find the local maximums of f(x, y, z) within boxes of width^3. Store the
+// (x, y, z location of each in maxima vector.
 template<typename TArray>
 inline void FindLocalMaxima3D(const TArray &f,
                               int width,

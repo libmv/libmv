@@ -23,9 +23,12 @@
 
 namespace libmv {
 
-Correspondences::~Correspondences() {
-  for (Iterator it = ScanAllFeatures(); !it.Done(); it.Next()) {
-    delete it.feature();
+Correspondences::~Correspondences() {}
+
+void DeleteCorrespondenceFeatures(Correspondences *correspondences) {
+  for (Correspondences::Iterator it = correspondences->ScanAllFeatures();
+       !it.Done(); it.Next()) {
+    delete const_cast<Feature *>(it.feature());
   }
 }
 

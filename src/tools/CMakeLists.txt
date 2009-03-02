@@ -5,6 +5,7 @@ TARGET_LINK_LIBRARIES(track image correspondence image gflags glog)
 ADD_EXECUTABLE(interest_points interest_points.cc)
 TARGET_LINK_LIBRARIES(interest_points
                       numeric
+                      correspondence
                       image
                       pthread
                       gflags

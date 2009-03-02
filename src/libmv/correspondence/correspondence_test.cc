@@ -58,6 +58,8 @@ TEST(Correspondences, Views) {
   EXPECT_EQ(3, view_it.feature()->tag);
   EXPECT_EQ(1, view_it.image());
   EXPECT_EQ(2, view_it.track());
+
+  DeleteCorrespondenceFeatures(&correspondences);
 }
 
 // This function works over TestFeatures only; other features will be filtered
@@ -80,6 +82,25 @@ TEST(Correspondences, ImplicitViewConstruction) {
   correspondences.Insert(1, 5, new SiblingTestFeature);
 
   EXPECT_EQ(2, CountTestPoints(&correspondences));
+  DeleteCorrespondenceFeatures(&correspondences);
 }
 
+TEST(BipartiteGraph, TrackIterator) {
+  Correspondences correspondences;
+  correspondences.Insert(1, 10, new SiblingTestFeature);
+  correspondences.Insert(1, 20, new TestFeature(3));
+  correspondences.Insert(2, 10, new TestFeature(4));
+  correspondences.Insert(2, 20, new SiblingTestFeature);
+  correspondences.Insert(3, 50, new SiblingTestFeature);
+
+  Correspondences::TrackIterator it = correspondences.ScanAllTracks();
+
+  // Although it's bad to rely on order, do so anyway. This may break if the
+  // implementation switches to unordered maps.
+  EXPECT_FALSE(it.Done()); EXPECT_EQ(it.track(), 10); it.Next(); 
+  EXPECT_FALSE(it.Done()); EXPECT_EQ(it.track(), 20); it.Next();
+  EXPECT_FALSE(it.Done()); EXPECT_EQ(it.track(), 50); it.Next();
+  EXPECT_TRUE(it.Done());
+  DeleteCorrespondenceFeatures(&correspondences);
+}
 }  // namespace

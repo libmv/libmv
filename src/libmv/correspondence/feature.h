@@ -31,10 +31,16 @@ class Feature {
   virtual ~Feature();
 };
 
-class PointFeature : public Feature {
+struct PointFeature : public Feature {
  public:
   virtual ~PointFeature();
-  virtual const Vec2f &Point() const = 0;
+
+  float x() const { return coords(0); }
+  float y() const { return coords(1); }
+
+  Vec2f coords;       // (x, y), i.e. (column, row).
+  float scale;        // In pixels.
+  float orientation;  // In radians.
 };
 
 class LineFeature : public Feature {

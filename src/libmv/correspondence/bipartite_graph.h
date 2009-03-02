@@ -91,6 +91,21 @@ class BipartiteGraph {
     return it->second;
   }
 
+  // For iterating over the right nodes.
+  // TODO(keir): Add a LeftIterator.
+  class RightIterator {
+    friend class BipartiteGraph<LeftNode, Edge, RightNode>;
+    public:
+    RightNode right() const { return right_iter_->first; }
+    void Next()             { right_iter_++; }
+    bool Done() const {
+      return right_iter_ == graph_->right_to_left_.end();
+    }
+   private:
+    typename RightToLeftMap::const_iterator right_iter_;
+    BipartiteGraph<LeftNode, Edge, RightNode> *graph_;
+  };
+
   enum IteratorType {
     OVER_LEFT_NODES,
     OVER_RIGHT_NODES,
@@ -247,6 +262,13 @@ class BipartiteGraph {
     iterator.left_ = left_node;
     iterator.deleted_ = false;
     iterator.Assign();
+    iterator.graph_ = this;
+    return iterator;
+  }
+
+  RightIterator ScanRightNodes() {
+    RightIterator iterator;
+    iterator.right_iter_ = right_to_left_.begin();
     iterator.graph_ = this;
     return iterator;
   }

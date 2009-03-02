@@ -25,6 +25,7 @@
 #include <vector>
 
 #include "libmv/numeric/numeric.h"
+#include "libmv/correspondence/feature.h"
 #include "libmv/image/integral_image.h"
 #include "libmv/image/convolve.h"
 #include "third_party/glog/src/glog/logging.h"
@@ -51,10 +52,14 @@ typename TImage::Scalar HarrY(const TImage &integral_image,
        - BoxIntegral(integral_image, row - HW, col - HW,  W, HW);
 }
 
-template<int blocks, int samples_per_block, typename TImage>
+template<int blocks, int samples_per_block,
+         typename TImage, typename TPointFeature>
 void USURFDescriptor(const TImage &integral_image,
-                     float x, float y, float scale,
+                     const TPointFeature &feature,
                      Matrix<float, 4 * blocks * blocks, 1> *descriptor) {
+  float x = feature.x();
+  float y = feature.y();
+  float scale = feature.scale;
   const int int_scale = lround(2*scale);
   const int half_region = blocks*samples_per_block/2;
 

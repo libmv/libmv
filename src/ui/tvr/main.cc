@@ -21,10 +21,10 @@
 #include <QApplication>
 
 #include "main_window.h"
+#include "libmv/tools/tool.h"
 
 int main(int argc, char *argv[]) {
-  //TODO(pau) init glog
-  
+  libmv::Init("", &argc, &argv);
   QApplication app(argc, argv);
   TvrMainWindow window;
   window.show();

@@ -23,17 +23,21 @@
 
 void FindCandidateMatches(const SurfFeatureSet &left,
                           const SurfFeatureSet &right,
-                          std::vector<Match> *matches) {
+                          libmv::Correspondences *correspondences) {
+  int max_track_number = 0;
   for (size_t i = 0; i < left.features.size(); ++i) {
     size_t j, k;
     float distance; 
     right.tree.ApproximateNearestNeighborBestBinFirst(left.features[i],
                                                       100, &j, &distance);
     left.tree.ApproximateNearestNeighborBestBinFirst(right.features[j],
-                                                      100, &k, &distance);
+                                                     100, &k, &distance);
+    // Left image is image 0, right is 1 for now.
     if (i == k) {
-      matches->push_back(Match(i, j));
+      // Both kdtrees matched the same feature, so it is probably a match.
+      correspondences->Insert(0, max_track_number, &left.features[i]);
+      correspondences->Insert(1, max_track_number, &right.features[j]);
+      max_track_number++;
     }
   }
 }
-

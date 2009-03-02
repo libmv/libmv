@@ -324,7 +324,7 @@ void DrawFeature(const PointFeature &feature,
                  FloatImage *image) {
   assert(image->Depth() == 3);
 
-  const Vec2f &point = feature.Point();
+  const Vec2f &point = feature.coords;
 
   const int cross_width = 5;
   int x = lround(point(0));

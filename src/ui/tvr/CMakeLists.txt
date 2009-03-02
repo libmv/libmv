@@ -6,6 +6,7 @@ QT4_WRAP_CPP(SOURCES ${MOC_HEADERS})
 ADD_EXECUTABLE(tvr ${SOURCES})
 TARGET_LINK_LIBRARIES(tvr
                       image
+                      correspondence
                       numeric
                       glog
                       gflags

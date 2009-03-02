@@ -56,23 +56,24 @@ void MatchViewer::UpdateScreenImage(int index) {
 
   unsigned char *data = new unsigned char[oi.width * oi.height * 4];
 
-  for (int i = 0; i < oi.height; ++i)
+  for (int i = 0; i < oi.height; ++i) {
     for (int j = 0; j < oi.width; ++j) {
       data[4*(i * oi.width + j) + 0] = im.bits()[4*(i * oi.width + j) + 2];
       data[4*(i * oi.width + j) + 1] = im.bits()[4*(i * oi.width + j) + 1];
       data[4*(i * oi.width + j) + 2] = im.bits()[4*(i * oi.width + j) + 0];
     }
+  }
 
-  // select our current texture
+  // Select our current texture.
   glBindTexture(GL_TEXTURE_2D, oi.textureID);
-  // select modulate to mix texture with color for shading
+  // Select modulate to mix texture with color for shading.
   glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-  // when texture area is small, bilinear filter the closest mipmap
+  // When texture area is small, bilinear filter the closest mipmap.
   glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
                   GL_NEAREST_MIPMAP_NEAREST);
-  // when texture area is large, bilinear filter the original
+  // When texture area is large, enlarge the pixels but don't upsample.
   glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-  // the texture wraps over at the edges (repeat)
+  // Wrap the texture at the edges (repeat).
   glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
   glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
@@ -161,12 +162,12 @@ void MatchViewer::DrawImage(int i) {
 }
 
 void MatchViewer::DrawFeatures(int image_index) {
-  std::vector<SurfFeature> &features =
+  std::vector<libmv::SurfFeature> &features =
       document_->feature_sets[image_index].features;
   
   for (int i = 0; i < features.size(); ++i) {
     glPushMatrix();
-    glTranslatef(features[i].x, features[i].y, 0);
+    glTranslatef(features[i].x(), features[i].y(), 0);
     glScalef(features[i].scale, features[i].scale, features[i].scale);
     // TODO(pau) when surf orientation will be detected, ensure that this is
     //           turning in the right sense and the right units (deg vs rad).
@@ -183,21 +184,20 @@ void MatchViewer::DrawFeatures(int image_index) {
 }
 
 void MatchViewer::DrawCandidateMatches() {
-  std::vector<SurfFeature> &left = document_->feature_sets[0].features;
-  std::vector<SurfFeature> &right = document_->feature_sets[1].features;
-  std::vector<Match> &matches = document_->candidate_matches;
-
-  float x0 = screen_images_[0].posx;
-  float y0 = screen_images_[0].posy;
-  float x1 = screen_images_[1].posx;
-  float y1 = screen_images_[1].posy;
+  float xoff[2] = { screen_images_[0].posx, screen_images_[1].posx};
+  float yoff[2] = { screen_images_[0].posy, screen_images_[1].posy};
   
-  glBegin(GL_LINES);
-  for (int m = 0; m < matches.size(); ++m) {
-    size_t i = matches[m].first;
-    size_t j = matches[m].second;
-    glVertex2f(x0 +  left[i].x, y0 +  left[i].y);
-    glVertex2f(x1 + right[j].x, y1 + right[j].y);
+  glBegin(GL_LINES);  // TODO(keir): Note that this will break with > 2 images.
+  for (libmv::Correspondences::TrackIterator t =
+          document_->correspondences.ScanAllTracks();
+       !t.Done(); t.Next()) {
+    for (libmv::PointCorrespondences::Iterator it =
+            libmv::PointCorrespondences(&document_->correspondences)
+              .ScanFeaturesForTrack(t.track());
+         !it.Done(); it.Next()) {
+      glVertex2f(xoff[it.image()] +  it.feature()->x(),
+                 yoff[it.image()] +  it.feature()->y());
+    }
   }
   glEnd();
 }

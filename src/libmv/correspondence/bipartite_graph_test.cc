@@ -205,4 +205,24 @@ TEST(BipartiteGraph, DeleteWhileScanningRightNodesForLeftNode) {
 
   CheckIteratorOutput(x.ScanAllEdges(), kExpected, 3);
 }
+
+TEST(BipartiteGraph, RightIteratorSimpleCase) {
+  TestBipartiteGraph x;
+  x.Insert(1, 'a',  1.5f);
+  x.Insert(2, 'c', 30.5f);
+  x.Insert(2, 'd', 40.5f);
+  x.Insert(2, 'e', 50.5f);
+  x.Insert(3, 'a',  2.5f);
+
+  TestBipartiteGraph::RightIterator it = x.ScanRightNodes();
+
+  // Although it's bad to rely on order, do so anyway. This may break if the
+  // implementation switches to unordered maps.
+  EXPECT_FALSE(it.Done()); EXPECT_EQ(it.right(),  1.5f); it.Next(); 
+  EXPECT_FALSE(it.Done()); EXPECT_EQ(it.right(),  2.5f); it.Next();
+  EXPECT_FALSE(it.Done()); EXPECT_EQ(it.right(), 30.5f); it.Next();
+  EXPECT_FALSE(it.Done()); EXPECT_EQ(it.right(), 40.5f); it.Next();
+  EXPECT_FALSE(it.Done()); EXPECT_EQ(it.right(), 50.5f); it.Next();
+  EXPECT_TRUE(it.Done());
+}
 }  // namespace

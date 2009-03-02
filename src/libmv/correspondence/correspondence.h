@@ -38,27 +38,44 @@ typedef int TrackID;
 
 class Correspondences {
  public:
-  typedef BipartiteGraph<ImageID, Feature *, TrackID> CorrespondenceGraph;
+  typedef BipartiteGraph<ImageID, const Feature *, TrackID> CorrespondenceGraph;
 
   ~Correspondences();
 
   class Iterator {
     friend class Correspondences;
    public:
-    ImageID image()    const { return iter_.left(); }
-    TrackID track()    const { return iter_.right(); }
-    Feature *feature() const { return iter_.edge(); }
-    bool Done()        const { return iter_.Done(); }
-    void Next()              { iter_.Next(); }
-    void DeleteFeature()     { iter_.DeleteEdge(); }
+    ImageID image()          const { return iter_.left(); }
+    TrackID track()          const { return iter_.right(); }
+    const Feature *feature() const { return iter_.edge(); }
+    bool Done()              const { return iter_.Done(); }
+    void Next()                    { iter_.Next(); }
+    void DeleteFeature()           { iter_.DeleteEdge(); }
    private:
     Iterator(CorrespondenceGraph::Iterator iter) : iter_(iter) {}
     CorrespondenceGraph::Iterator iter_;
   };
 
-  // Transfers ownership of feature to *this.
-  void Insert(ImageID image_id, TrackID track_id, Feature *feature) {
+  class TrackIterator {
+    friend class Correspondences;
+   public:
+    TrackID track()    const { return iter_.right(); }
+    bool Done()        const { return iter_.Done(); }
+    void Next()              { iter_.Next(); }
+   private:
+    // TODO(keir): Add DeleteTrack().
+    TrackIterator(CorrespondenceGraph::RightIterator iter) : iter_(iter) {}
+    CorrespondenceGraph::RightIterator iter_;
+  };
+
+  // Does not take ownership of feature, which must remain valid for the life
+  // of the correspondences.
+  void Insert(ImageID image_id, TrackID track_id, const Feature *feature) {
     correspondences_.Insert(image_id, feature, track_id);
+  }
+
+  TrackIterator ScanAllTracks() {
+    return TrackIterator(correspondences_.ScanRightNodes());
   }
 
   Iterator ScanAllFeatures() {
@@ -69,6 +86,9 @@ class Correspondences {
     return Iterator(correspondences_.ScanEdgesForLeftNode(image));
   }
 
+  Iterator ScanFeaturesForTrack(TrackID track) {
+    return Iterator(correspondences_.ScanEdgesForRightNode(track));
+  }
 private:
   CorrespondenceGraph correspondences_;
 };
@@ -86,8 +106,8 @@ class CorrespondencesView {
    public:
     ImageID image() const { return iter_.image(); }
     TrackID track() const { return iter_.track(); }
-    SpecificFeature *feature() const {
-      return static_cast<SpecificFeature *>(iter_.feature());
+    const SpecificFeature *feature() const {
+      return static_cast<const SpecificFeature *>(iter_.feature());
     }
     bool Done() { return iter_.Done(); }
     void Next() {
@@ -99,7 +119,7 @@ class CorrespondencesView {
    private:
     void SkipOtherFeatures() {
       while (!iter_.Done() &&
-             !dynamic_cast<SpecificFeature *>(iter_.feature())) {
+             !dynamic_cast<const SpecificFeature *>(iter_.feature())) {
         iter_.Next();
       }
     }
@@ -114,9 +134,11 @@ class CorrespondencesView {
   Iterator ScanAllFeatures() {
     return Iterator(correspondences_->ScanAllFeatures());
   }
-
   Iterator ScanFeaturesForImage(ImageID image) {
     return Iterator(correspondences_->ScanFeaturesForImage(image));
+  }
+  Iterator ScanFeaturesForTrack(TrackID track) {
+    return Iterator(correspondences_->ScanFeaturesForTrack(track));
   }
 
 private:
@@ -125,6 +147,10 @@ private:
 
 typedef CorrespondencesView<PointFeature> PointCorrespondences;
 typedef CorrespondencesView<LineFeature> LineCorrespondences;
+
+// Delete the features in a correspondences. Uses const_cast to avoid the
+// constness problems. This is more intended for tests than for actual use.
+void DeleteCorrespondenceFeatures(Correspondences *correspondences);
 
 }  // namespace libmv
 

@@ -25,15 +25,25 @@
 #include <vector>
 
 #include "libmv/numeric/numeric.h"
+#include "libmv/correspondence/feature.h"
 #include "libmv/image/array_nd.h"
 #include "libmv/image/blob_response.h"
 #include "libmv/image/derivative.h"
 #include "libmv/image/image_io.h"
 #include "libmv/image/integral_image.h"
 #include "libmv/image/non_maximal_suppression.h"
+#include "libmv/image/surf_descriptor.h"
 #include "third_party/glog/src/glog/logging.h"
 
+// TODO(keir): Move the detection routines into surf_detector.h.
+
 namespace libmv {
+
+struct SurfFeature : public PointFeature {
+  libmv::Matrix<float, 64, 1> descriptor;
+  // Match kdtree traits: with this, the SurfFeature can act as a kdtree point.
+  float operator[](int i) const { return descriptor(i); }
+};
 
 template<typename TImage, typename TOctave>
 void MakeSURFOctave(const TImage &integral_image, 
@@ -46,6 +56,7 @@ void MakeSURFOctave(const TImage &integral_image,
   int rows = integral_image.rows();
   int cols = integral_image.cols();
   octave->Resize(num_intervals, rows / scale, cols / scale);
+  octave->fill(0);
   for (int i = 0, lobe_size = lobe_start;
        i < num_intervals; ++i, lobe_size += lobe_increment) {
     VLOG(1) << "Filtering interval " << i
@@ -54,7 +65,8 @@ void MakeSURFOctave(const TImage &integral_image,
     // TODO(keir): Really, the right way to do this is to add some sort of
     // slicing semantics to the array class. Add slicing!
     Map<RMatf> blobiness(octave->Data() + octave->Offset(i, 0, 0),
-        rows / scale, cols / scale);
+                         rows / scale,
+                         cols / scale);
     BlobResponse(integral_image, lobe_size, scale, &blobiness);
   }
 }
@@ -65,7 +77,7 @@ inline bool RefineMaxima3D(const TArray &f, int x, int y, int z, Vec3 *xp) {
   return Hessian3D(f, x, y, z).lu().solve(-Gradient3D(f, x, y, z), xp);
 }
 
-float GaussianScaleForInterval(float interval,
+inline float GaussianScaleForInterval(float interval,
                                int lobe_start,
                                int lobe_increment) {
   // The magic number is from the paper; a gaussian filter with sigma = 1.2 is
@@ -77,13 +89,13 @@ float GaussianScaleForInterval(float interval,
 }
 
 // Detect features. Each result colum stores x, y, s.
-template<typename TImage>
+template<typename TImage, typename TPointFeature>
 void DetectFeatures(const TImage integral_image,
                     int num_intervals,
                     int lobe_start,
                     int lobe_increment,
                     int scale,
-                    std::vector<Vec3f> *features) {
+                    std::vector<TPointFeature> *features) {
 
   Array3Df blob_responses;
   MakeSURFOctave(integral_image,
@@ -124,23 +136,25 @@ void DetectFeatures(const TImage integral_image,
     }
     // 'src' is for (sigma, row, column).
     Vec3f src = maxima[i].cast<float>() + delta;
-    src(0) = GaussianScaleForInterval(src(0), lobe_start, lobe_increment);
-    src(1) *= scale;
-    src(2) *= scale;
-    features->push_back(src);
+    TPointFeature detection;
+    detection.coords << src(2), src(1);  // (x, y).
+    detection.coords *= scale;
+    detection.orientation = 0;
+    detection.scale = GaussianScaleForInterval(src(0),
+                                               lobe_start,
+                                               lobe_increment);
+    features->push_back(detection);
   }
   LOG(INFO) << "Found " << maxima.size() - rejected << " interest points.";
   LOG(INFO) << "Rejected " << rejected << " local maxima.";
 }
 
 // Detect features. Each result colum stores x, y, s.
-template<typename TImage>
-void MultiscaleDetectFeatures(const TImage image,
+template<typename TImage, typename TPointFeature>
+void MultiscaleDetectFeatures(const TImage &integral_image,
                               int num_octaves,
                               int num_intervals,
-                              std::vector<Vec3f> *features) {
-  Matf integral_image;
-  IntegralImage(image, &integral_image);
+                              std::vector<TPointFeature> *features) {
   int scale = 1;
   int lobe_start = 3;
   int lobe_increment = 2;
@@ -153,8 +167,33 @@ void MultiscaleDetectFeatures(const TImage image,
     lobe_start += lobe_increment;
     lobe_increment *= 2;
   }
+  // TODO(keir): Right now, this can find nearly-identical features in scale
+  // space if there are enough intervals and octaves. If there aren't many
+  // features, doing an n^2 pruning based on distance in the 3D space of
+  // (x,y,scale) is probably reasonable. Otherwise could do dual-tree kdtree
+  // pruning, but there would have to be thousands of features for this to be
+  // worthwhile.
   LOG(INFO) << "Multi scale fast hessian found " << features->size()
             << " features.";
+}
+
+// TODO(keir): Make the parameters for SURF extraction a class.
+// TODO(keir): Add a unit test for this. Sadly it's not easy to do; perhaps
+// detect a single blob in an image with faked gradients in the 4x4 bins?
+template<typename TImage, typename TPointFeature>
+void SurfFeatures(const TImage &image,
+                  int num_octaves,
+                  int num_intervals,
+                  std::vector<TPointFeature> *detections) {
+  Matf integral_image;
+  IntegralImage(image, &integral_image);
+
+  MultiscaleDetectFeatures(integral_image, num_octaves, num_intervals,
+                           detections);
+  for (int i = 0; i < detections->size(); ++i) {
+    SurfFeature &f = (*detections)[i];
+    USURFDescriptor<4, 5>(integral_image, f, &f.descriptor);
+  }
 }
 
 }  // namespace libmv

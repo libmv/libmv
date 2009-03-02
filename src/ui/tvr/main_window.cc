@@ -69,8 +69,9 @@ void TvrMainWindow::CreateMenus() {
 
 void TvrMainWindow::OpenImages() {
   QStringList filenames = QFileDialog::getOpenFileNames(this,
-      "Select Two Images", "", "Image Files (*.png *.jpg *.bmp *.ppm *.xpm)");
+      "Select Two Images", "", "Image Files (*.png *.jpg *.bmp *.ppm *.pgm *.xpm)");
 
+  // TODO(keir): Don't segfault if != 2 images are selected.
   for (int i = 0; i < 2; ++i) {
     document_.images[i].load(filenames[i]);
   }
@@ -90,39 +91,24 @@ void TvrMainWindow::ComputeFeatures(int image_index) {
   SurfFeatureSet &fs = document_.feature_sets[image_index];
       
   // Convert to gray-scale.
+  // TODO(keir): Make a libmv image <-> QImage interop library inside libmv for
+  // easy bidirectional exchange of images between Qt and libmv.
   libmv::Array3Df image(height, width, 1);
   for (int y = 0; y < height; ++y) {
     for (int x = 0; x < width; ++x) {
       // TODO(pau): there are better ways to compute intensity.
       //            Implement one and put it on libmv/image.
-      image(y, x) = (float(qimage.bits()[4*(y * width + x) + 2])
-                   + float(qimage.bits()[4*(y * width + x) + 1])
-                   + float(qimage.bits()[4*(y * width + x) + 0])) / 3;
+      int depth = qimage.depth() / 8;
+      image(y, x) = 0;
+      for (int c = 0; c < depth; ++c) {
+        if (c != 3) {  // Skip alpha channel for RGBA.
+          image(y, x) = float(qimage.bits()[depth*(y * width + x) + c]);
+        }
+      }
+      image(y, x) /= depth == 4 ? 3 : depth;
     }
   }
-
-  // Detect features.
-  std::vector<libmv::Vec3f> detections;
-  libmv::MultiscaleDetectFeatures(image, 4, 4, &detections);
-  fs.features.resize(detections.size());
-
-
-  // Compute descriptors and fill surf_feature_set structure.
-  libmv::Matf integral_image;
-  libmv::IntegralImage(image, &integral_image);
-  for (int i = 0; i < detections.size(); ++i) {
-    SurfFeature &f = fs.features[i];
-    f.x = detections[i](2);
-    f.y = detections[i](1);
-    f.scale = detections[i](0);
-    f.orientation = 0;
-    libmv::Matrix<float, 64, 1> descriptor;
-    libmv::USURFDescriptor<4, 5>(integral_image, f.x, f.y, f.scale,
-                                 &descriptor);
-    for (int k = 0; k < 64; ++k) {
-      f.descriptor[k] = descriptor(k);
-    }
-  }
+  libmv::SurfFeatures(image, 3, 4, &fs.features);
 
   // Build the kd-tree.
   fs.tree.Build(&fs.features[0], fs.features.size(), 64, 10);
@@ -133,7 +119,6 @@ void TvrMainWindow::ComputeFeatures(int image_index) {
 void TvrMainWindow::ComputeCandidateMatches() {
   FindCandidateMatches(document_.feature_sets[0],
                        document_.feature_sets[1],
-                       &document_.candidate_matches);
-  
+                       &document_.correspondences);
   viewer_->updateGL();
 }
