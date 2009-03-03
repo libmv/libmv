@@ -221,6 +221,32 @@ TEST(Fundamental, FundamentalFromCorrespondences8PointDegenerate) {
   EXPECT_NEAR(0, res, 1e-8);
 }
 
+TEST(Fundamental, SampsonDistance2) {
+  Vec3 t(1, 0, 0);
+  Mat3 F = CrossProductMatrix(t); // Fundametal matrix corresponding to pure
+                                  // translation.
+
+  Vec2 x0(0, 0), y0(  0,   0); // Good match (at infinity).
+  Vec2 x1(0, 0), y1(100,   0); // Good match (no vertical disparity).
+  Vec2 x2(0, 0), y2(0.0, 0.1); // Small error (a bit of vertical disparity).
+  Vec2 x3(0, 0), y3(  0,   1); // Bigger error.
+  Vec2 x4(0, 0), y4(  0,  10); // Biggest error.
+  Vec2 x5(0, 0), y5(100,  10); // Biggest error with horitzontal disparity.
+
+  double error0 = SampsonDistance2(F, x0, y0);
+  double error1 = SampsonDistance2(F, x1, y1);
+  double error2 = SampsonDistance2(F, x2, y2);
+  double error3 = SampsonDistance2(F, x3, y3);
+  double error4 = SampsonDistance2(F, x4, y4);
+  double error5 = SampsonDistance2(F, x5, y5);
+
+  EXPECT_EQ(0, error0);
+  EXPECT_EQ(0, error1);
+  EXPECT_LE(error1, error2);
+  EXPECT_LE(error2, error3);
+  EXPECT_LE(error3, error4);
+  EXPECT_EQ(error4, error5);
+}
 
 TEST(Fundamental, EssentialFromFundamental) {
   TwoViewDataSet d = TwoRealisticCameras();

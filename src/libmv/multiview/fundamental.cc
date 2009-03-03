@@ -161,6 +161,18 @@ void NormalizeFundamental(const Mat3 F, Mat3 *F_normalized) {
   }
 }
 
+// Approximation of reprojection error; page 287 of HZ equation 11.9. This
+// avoids triangulating the point, relying only on the entries in F.
+double SampsonDistance2(const Mat &F, const Vec2 &x1, const Vec2 &x2) {
+  Vec3 x(x1(0), x1(1), 1.0);
+  Vec3 y(x2(0), x2(1), 1.0);
+
+  Vec3 F_x = F * x;
+  Vec3 Ft_y = F.transpose() * y;
+  double y_F_x = y.dot(F_x);
+  
+  return Square(y_F_x) / (F_x.start(2).norm2() + Ft_y.start(2).norm2());
+}
 
 // HZ 9.6 pag 257
 void EssentialFromFundamental(const Mat3 &F,

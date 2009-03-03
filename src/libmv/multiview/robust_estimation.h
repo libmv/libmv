@@ -91,7 +91,7 @@ Model Estimate(TMat &samples, Fitter fitter, Classifier classifier,
        iteration < really_max_iterations; ++iteration) {
     VecXi subset_indices = PickSubset(min_samples, total_samples);
     TMat subset = ExtractColumns(samples, subset_indices);
-    VLOG(1) << "Random subset: (" << subset_indices.size() << ") "
+    VLOG(1) << "Random subset: (" << subset_indices.size() << ")\n"
              << subset_indices;
 
     std::vector<Model> models;

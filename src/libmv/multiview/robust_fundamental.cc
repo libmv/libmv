@@ -34,15 +34,7 @@ struct FundamentalModel {
 
   template<typename TVec>
   double Error(TVec x1x2) {
-    Vec3 x1; x1.start(2) = x1x2.start(2); x1(2) = 1.0;
-    Vec3 x2; x2.start(2) = x1x2.end(2);   x2(2) = 1.0;
-
-    // Approximation of true error; page 287 of HZ equation 11.9. This avoids
-    // triangulating the point, relying only on the entries in F.
-    double sampson_error = (x1.transpose() * F * x2)(0,0)
-         / ((F * x1).norm2() + (F.transpose() * x2).norm2());
-
-    double sampson_error2 = sampson_error * sampson_error;
+    double sampson_error2 = SampsonDistance2(F, x1x2.start(2), x1x2.end(2));
     VLOG(4) << "Sampson error^2 = " << sampson_error2;
     return sampson_error2;
   }

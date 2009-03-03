@@ -48,6 +48,12 @@ double FundamentalFromCorrespondences8Point(const Mat &x1,
 
 void NormalizeFundamental(const Mat3 F, Mat3 *F_normalized);
 
+
+// Approximation of reprojection error; page 287 of HZ equation 11.9. This
+// avoids triangulating the point, relying only on the entries in F.
+double SampsonDistance2(const Mat &F, const Vec2 &x1, const Vec2 &x2);
+
+
 // Compute the relative camera motion between two cameras.
 // Given the motion parameters of two cameras, computes the motion parameters
 // of the second one assuming the first one to be at the origin.
