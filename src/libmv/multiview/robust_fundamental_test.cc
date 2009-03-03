@@ -35,8 +35,8 @@ using namespace libmv;
 TEST(RobustFundamental, FundamentalFromCorrespondences8PointRobust) {
   int n = 16;
   Mat x1(2,n);
-  x1 << 0, 0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4, /**/  5,
-        0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, /**/  5;
+  x1 << 0, 0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4,   5,
+        0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2,   5;
 
   Mat x2(2,n);
   x2 = x1;
@@ -50,8 +50,8 @@ TEST(RobustFundamental, FundamentalFromCorrespondences8PointRobust) {
   std::vector<int> inliers;
   FundamentalFromCorrespondences8PointRobust(x1, x2, 0.1, &F, &inliers);
 
-  VLOG(1) << "F\n" << F << "\n";
-  VLOG(1) << "INLIERS " << inliers.size() << "\n";
+  LOG(INFO) << "F\n" << F << "\n";
+  LOG(INFO) << "INLIERS " << inliers.size() << "\n";
 
   // F should be 0, 0,  0,
   //             0, 0, -1,
@@ -74,7 +74,7 @@ TEST(RobustFundamental,
 
   Mat3 F_estimated;
   std::vector<int> inliers;
-  FundamentalFromCorrespondences8PointRobust(d.x1, d.x2, 3,
+  FundamentalFromCorrespondences8PointRobust(d.x1, d.x2, 3.0,
                                              &F_estimated, &inliers);
   EXPECT_EQ(d.x1.cols(), inliers.size());
 
@@ -100,6 +100,7 @@ TEST(RobustFundamental,
   EXPECT_NEAR(0, F_estimated.determinant(), 1e-8);
 }
 
+
 TEST(RobustFundamental, FundamentalFromCorrespondences8PointRealistic) {
   TwoViewDataSet d = TwoRealisticCameras();
 
@@ -118,10 +119,12 @@ TEST(RobustFundamental, FundamentalFromCorrespondences8PointRealistic) {
   // Compute fundamental matrix from correspondences.
   Mat3 F_estimated;
   std::vector<int> inliers;
-  FundamentalFromCorrespondences8PointRobust(x1s, x2s, 3,
+  FundamentalFromCorrespondences8PointRobust(x1s, x2s, 1,
                                              &F_estimated, &inliers);
-
-  EXPECT_LE(d.x1.cols(), inliers.size());
+  
+  LOG(INFO) << "Number of inliers = " << inliers.size();
+  EXPECT_LE(d.x1.cols(), inliers.size()); // Some outliers may be considered
+                                          // inliers, that's fine.
 
   // Normalize.
   Mat3 F_gt_norm, F_estimated_norm;

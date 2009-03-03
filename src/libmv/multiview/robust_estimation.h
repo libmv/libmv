@@ -75,9 +75,9 @@ template<typename Model, typename TMat, typename Fitter, typename Classifier,
          typename CostFunction>
 Model Estimate(TMat &samples, Fitter fitter, Classifier classifier,
                CostFunction cost_function, std::vector<int> *inliers = NULL) {
-  int iteration = 0;
-  int max_iterations = 100;
-  const int really_max_iterations = 1000;
+  uint iteration = 0;
+  uint max_iterations = 100;
+  const uint really_max_iterations = 1000;
   int min_samples = fitter.MinimumSamples();
   int total_samples = samples.cols();
 
@@ -91,12 +91,12 @@ Model Estimate(TMat &samples, Fitter fitter, Classifier classifier,
        iteration < really_max_iterations; ++iteration) {
     VecXi subset_indices = PickSubset(min_samples, total_samples);
     TMat subset = ExtractColumns(samples, subset_indices);
-    VLOG(1) << "Random subset: (" << subset_indices.size() << ")\n"
+    VLOG(2) << "Random subset: (" << subset_indices.size() << ")\n"
              << subset_indices;
 
     std::vector<Model> models;
     fitter.Fit(subset, &models);
-    VLOG(1) << "Fitted subset; found " << models.size() << " model(s).";
+    VLOG(2) << "Fitted subset; found " << models.size() << " model(s).";
 
     for (int i = 0; i < models.size(); ++i) {
       // Compute costs for each fit, possibly bailing early if the model looks
@@ -135,9 +135,9 @@ Model Estimate(TMat &samples, Fitter fitter, Classifier classifier,
     const double desired_certainty = 0.03;
     double needed_iterations = log(desired_certainty)
                              / log(1 - pow(best_inlier_ratio, min_samples));
-    max_iterations = static_cast<int>(needed_iterations);
+    max_iterations = static_cast<uint>(needed_iterations);
 
-    VLOG(1) << "Max iterations needed given best inlier ratio: "
+    VLOG(2) << "Max iterations needed given best inlier ratio: "
             << max_iterations << "; best inlier ratio: " << best_inlier_ratio;
   }
 
