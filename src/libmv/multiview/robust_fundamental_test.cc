@@ -33,34 +33,39 @@ namespace {
 using namespace libmv;
 
 TEST(RobustFundamental, FundamentalFromCorrespondences8PointRobust) {
-  int n = 9;
+  int n = 16;
   Mat x1(2,n);
-  x1 << 0, 0, 0, 1, 1, 1, 2, 2, /**/  1000,
-        0, 1, 2, 0, 1, 2, 0, 1, /**/ -1000;
+  x1 << 0, 0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4, /**/  5,
+        0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, /**/  5;
 
   Mat x2(2,n);
   x2 = x1;
   for (int i = 0; i < n; ++i) {
-    x2(1,i) += 1;
+    x2(0, i) += i % 2;  // Multiple horitzontal disparities.
   }
+  x2(0, n - 1) = 10;
+  x2(1, n - 1) = 10;   // The outlier has vertical disparity.
 
   Mat3 F;
   std::vector<int> inliers;
-  FundamentalFromCorrespondences8PointRobust(x1, x2, &F, &inliers);
+  FundamentalFromCorrespondences8PointRobust(x1, x2, 0.1, &F, &inliers);
 
-  // FIXME: This doesn't actually check the value of F!
+  VLOG(1) << "F\n" << F << "\n";
+  VLOG(1) << "INLIERS " << inliers.size() << "\n";
 
-  Vec y_F_x(n);
-  for (int i = 0; i < n; ++i) {
-    Vec3 x, y, F_x;
-    x << x1(0, i), x1(1, i), 1;
-    y << x2(0, i), x2(1, i), 1;
-    F_x = F * x;
-    y_F_x(i) = y.dot(F_x);
-  }
-  EXPECT_MATRIX_NEAR_ZERO(y_F_x, 1e-8);
-  EXPECT_NEAR(0, F.determinant(), 1e-8);
-  EXPECT_EQ(8, inliers.size());
+  // F should be 0, 0,  0,
+  //             0, 0, -1,
+  //             0, 1,  0
+  EXPECT_NEAR(0.0, F(0,0), 1e-8);
+  EXPECT_NEAR(0.0, F(0,1), 1e-8);
+  EXPECT_NEAR(0.0, F(0,2), 1e-8);
+  EXPECT_NEAR(0.0, F(1,0), 1e-8);
+  EXPECT_NEAR(0.0, F(1,1), 1e-8);
+  EXPECT_NEAR(0.0, F(2,0), 1e-8);
+  EXPECT_NEAR(0.0, F(2,2), 1e-8);
+  EXPECT_NEAR(F(1,2), -F(2,1), 1e-8);
+  
+  EXPECT_EQ(n - 1, inliers.size());
 }
 
 TEST(RobustFundamental,
@@ -69,8 +74,8 @@ TEST(RobustFundamental,
 
   Mat3 F_estimated;
   std::vector<int> inliers;
-  FundamentalFromCorrespondences8PointRobust(d.x1, d.x2, &F_estimated,
-                                             &inliers);
+  FundamentalFromCorrespondences8PointRobust(d.x1, d.x2, 3,
+                                             &F_estimated, &inliers);
   EXPECT_EQ(d.x1.cols(), inliers.size());
 
   // Normalize.
@@ -113,7 +118,8 @@ TEST(RobustFundamental, FundamentalFromCorrespondences8PointRealistic) {
   // Compute fundamental matrix from correspondences.
   Mat3 F_estimated;
   std::vector<int> inliers;
-  FundamentalFromCorrespondences8PointRobust(x1s, x2s, &F_estimated, &inliers);
+  FundamentalFromCorrespondences8PointRobust(x1s, x2s, 3,
+                                             &F_estimated, &inliers);
 
   EXPECT_LE(d.x1.cols(), inliers.size());
 

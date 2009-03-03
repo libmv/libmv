@@ -50,6 +50,9 @@ class FundamentalFitter {
     Mat2X x1s(x1x2.block(0, 0, 2, n));
     Mat2X x2s(x1x2.block(2, 0, 2, n));
     FundamentalFromCorrespondences8Point(x1s, x2s, &F);
+    VLOG(4) << "x1\n" << x1s << "\n";
+    VLOG(4) << "x2\n" << x2s << "\n";
+    VLOG(4) << "F\n" << F << "\n";
     models->push_back(FundamentalModel(F));
   }
   int MinimumSamples() {
@@ -59,15 +62,19 @@ class FundamentalFitter {
 
 double FundamentalFromCorrespondences8PointRobust(const Mat &x1,
                                                   const Mat &x2,
+                                                  double max_error,
                                                   Mat3 *F,
-                                             std::vector<int> *inliers = NULL) {
+                                                  std::vector<int> *inliers) {
+  // The threshold is on the sum of the squared errors in the two images.
+  double threshold = 2 * Square(max_error);
   Mat4X x1x2;
   VerticalStack(x1, x2, &x1x2);
-  FundamentalModel model = Estimate<FundamentalModel>(x1x2,
-                                                      FundamentalFitter(),
-                                                      ThresholdClassifier(1),
-                                                      MLECost(1),
-                                                      inliers);
+  FundamentalModel model =
+      Estimate<FundamentalModel>(x1x2,
+                                 FundamentalFitter(),
+                                 ThresholdClassifier(threshold),
+                                 MLECost(threshold),
+                                 inliers);
   *F = model.F;
   return 0.0;  // This doesn't mean much for the robust case.
 }

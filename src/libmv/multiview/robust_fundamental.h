@@ -27,10 +27,12 @@
 
 namespace libmv {
 
-double FundamentalFromCorrespondences8PointRobust(const Mat &x1,
-                                                  const Mat &x2,
-                                                  Mat3 *F,
-                                              std::vector<int> *inliers = NULL);
+double FundamentalFromCorrespondences8PointRobust(
+    const Mat &x1,
+    const Mat &x2,
+    double max_error,
+    Mat3 *F,
+    std::vector<int> *inliers = NULL);
 
 } // namespace libmv
 
