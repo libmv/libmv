@@ -53,6 +53,10 @@ void NormalizeFundamental(const Mat3 F, Mat3 *F_normalized);
 // avoids triangulating the point, relying only on the entries in F.
 double SampsonDistance2(const Mat &F, const Vec2 &x1, const Vec2 &x2);
 
+// Sum of the distances from the points to the epipolar lines; page 288 of HZ
+// equation 11.10.
+double SymmetricEpipolarDistance2(const Mat &F, const Vec2 &x1, const Vec2 &x2);
+
 
 // Compute the relative camera motion between two cameras.
 // Given the motion parameters of two cameras, computes the motion parameters

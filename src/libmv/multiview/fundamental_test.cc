@@ -20,6 +20,7 @@
 
 #include <iostream>
 
+#include "third_party/glog/src/glog/logging.h"
 #include "libmv/multiview/fundamental.h"
 #include "libmv/multiview/projection.h"
 #include "libmv/multiview/test_data_sets.h"
@@ -233,19 +234,62 @@ TEST(Fundamental, SampsonDistance2) {
   Vec2 x4(0, 0), y4(  0,  10); // Biggest error.
   Vec2 x5(0, 0), y5(100,  10); // Biggest error with horitzontal disparity.
 
-  double error0 = SampsonDistance2(F, x0, y0);
-  double error1 = SampsonDistance2(F, x1, y1);
-  double error2 = SampsonDistance2(F, x2, y2);
-  double error3 = SampsonDistance2(F, x3, y3);
-  double error4 = SampsonDistance2(F, x4, y4);
-  double error5 = SampsonDistance2(F, x5, y5);
+  double dist0 = SampsonDistance2(F, x0, y0);
+  double dist1 = SampsonDistance2(F, x1, y1);
+  double dist2 = SampsonDistance2(F, x2, y2);
+  double dist3 = SampsonDistance2(F, x3, y3);
+  double dist4 = SampsonDistance2(F, x4, y4);
+  double dist5 = SampsonDistance2(F, x5, y5);
 
-  EXPECT_EQ(0, error0);
-  EXPECT_EQ(0, error1);
-  EXPECT_LE(error1, error2);
-  EXPECT_LE(error2, error3);
-  EXPECT_LE(error3, error4);
-  EXPECT_EQ(error4, error5);
+  VLOG(1) << "SampsonDistance2: "
+          << dist0 << " " 
+          << dist1 << " " 
+          << dist2 << " " 
+          << dist3 << " " 
+          << dist4 << " " 
+          << dist5 << "\n";
+
+  EXPECT_EQ(0, dist0);
+  EXPECT_EQ(0, dist1);
+  EXPECT_EQ(2 * Square(0.1), dist2);
+  EXPECT_EQ(2 * Square(1), dist3);
+  EXPECT_EQ(2 * Square(10), dist4);
+  EXPECT_EQ(2 * Square(10), dist5);
+}
+
+TEST(Fundamental, SymmetricEpipolarDistance2) {
+  Vec3 t(1, 0, 0);
+  Mat3 F = CrossProductMatrix(t); // Fundametal matrix corresponding to pure
+                                  // translation.
+
+  Vec2 x0(0, 0), y0(  0,   0); // Good match (at infinity).
+  Vec2 x1(0, 0), y1(100,   0); // Good match (no vertical disparity).
+  Vec2 x2(0, 0), y2(0.0, 0.1); // Small error (a bit of vertical disparity).
+  Vec2 x3(0, 0), y3(  0,   1); // Bigger error.
+  Vec2 x4(0, 0), y4(  0,  10); // Biggest error.
+  Vec2 x5(0, 0), y5(100,  10); // Biggest error with horitzontal disparity.
+
+  double dist0 = SymmetricEpipolarDistance2(F, x0, y0);
+  double dist1 = SymmetricEpipolarDistance2(F, x1, y1);
+  double dist2 = SymmetricEpipolarDistance2(F, x2, y2);
+  double dist3 = SymmetricEpipolarDistance2(F, x3, y3);
+  double dist4 = SymmetricEpipolarDistance2(F, x4, y4);
+  double dist5 = SymmetricEpipolarDistance2(F, x5, y5);
+
+  VLOG(1) << "SymmetricEpiporalDistance2: "
+      << dist0 << " "
+      << dist1 << " "
+      << dist2 << " "
+      << dist3 << " "
+      << dist4 << " "
+      << dist5 << "\n";
+
+  EXPECT_EQ(0, dist0);
+  EXPECT_EQ(0, dist1);
+  EXPECT_EQ(2 * Square(0.1), dist2);
+  EXPECT_EQ(2 * Square(1), dist3);
+  EXPECT_EQ(2 * Square(10), dist4);
+  EXPECT_EQ(2 * Square(10), dist5);
 }
 
 TEST(Fundamental, EssentialFromFundamental) {

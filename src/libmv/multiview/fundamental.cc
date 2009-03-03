@@ -170,8 +170,27 @@ double SampsonDistance2(const Mat &F, const Vec2 &x1, const Vec2 &x2) {
   Vec3 F_x = F * x;
   Vec3 Ft_y = F.transpose() * y;
   double y_F_x = y.dot(F_x);
+
+  // FIXME(pau): for some reason I don't understand i need to multiply by 2
+  // the algebraic error to get the right approximation of the sum of the
+  // squared distances.  In theory, the 2* bellow should not be there.
+  return Square(2 * y_F_x) / (   F_x.start(2).squaredNorm()
+                              + Ft_y.start(2).squaredNorm());
+}
+
+// Sum of the squared distances from the points to the epipolar lines; page 288 // of HZ equation 11.10.
+double SymmetricEpipolarDistance2(const Mat &F,
+                                  const Vec2 &x1,
+                                  const Vec2 &x2) {
+  Vec3 x(x1(0), x1(1), 1.0);
+  Vec3 y(x2(0), x2(1), 1.0);
+
+  Vec3 F_x = F * x;
+  Vec3 Ft_y = F.transpose() * y;
+  double y_F_x = y.dot(F_x);
   
-  return Square(y_F_x) / (F_x.start(2).norm2() + Ft_y.start(2).norm2());
+  return Square(y_F_x) * (  1 / F_x.start(2).squaredNorm()
+                          + 1 / Ft_y.start(2).squaredNorm());
 }
 
 // HZ 9.6 pag 257
