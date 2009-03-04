@@ -33,7 +33,7 @@
 #include "libmv/image/integral_image.h"
 #include "libmv/image/non_maximal_suppression.h"
 #include "libmv/image/surf_descriptor.h"
-#include "third_party/glog/src/glog/logging.h"
+#include "libmv/logging/logging.h"
 
 // TODO(keir): Move the detection routines into surf_detector.h.
 

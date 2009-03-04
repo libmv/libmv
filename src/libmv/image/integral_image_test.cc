@@ -21,7 +21,7 @@
 #include "libmv/numeric/numeric.h"
 #include "libmv/image/integral_image.h"
 #include "testing/testing.h"
-#include "third_party/glog/src/glog/logging.h"
+#include "libmv/logging/logging.h"
 
 using namespace libmv;
 

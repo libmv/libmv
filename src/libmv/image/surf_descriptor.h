@@ -28,7 +28,7 @@
 #include "libmv/correspondence/feature.h"
 #include "libmv/image/integral_image.h"
 #include "libmv/image/convolve.h"
-#include "third_party/glog/src/glog/logging.h"
+#include "libmv/logging/logging.h"
 
 namespace libmv {
 

@@ -20,7 +20,7 @@
 
 #include <iostream>
 
-#include "third_party/glog/src/glog/logging.h"
+#include "libmv/logging/logging.h"
 #include "libmv/multiview/fundamental.h"
 #include "libmv/multiview/projection.h"
 #include "libmv/multiview/test_data_sets.h"

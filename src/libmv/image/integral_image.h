@@ -22,7 +22,7 @@
 #define LIBMV_IMAGE_INTEGRAL_IMAGE_H
 
 #include "libmv/image/array_nd.h"
-#include "third_party/glog/src/glog/logging.h"
+#include "libmv/logging/logging.h"
 
 namespace libmv {
 

@@ -28,7 +28,7 @@
 #include <set>
 #include <vector>
 
-#include "third_party/glog/src/glog/logging.h"
+#include "libmv/logging/logging.h"
 #include "libmv/multiview/fundamental.h"
 #include "libmv/multiview/sixpointnview.h"
 #include "libmv/numeric/numeric.h"

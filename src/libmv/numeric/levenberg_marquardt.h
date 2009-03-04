@@ -33,7 +33,7 @@
 
 #include "libmv/numeric/numeric.h"
 #include "libmv/numeric/function_derivative.h"
-#include "third_party/glog/src/glog/logging.h"
+#include "libmv/logging/logging.h"
 
 namespace libmv {
 

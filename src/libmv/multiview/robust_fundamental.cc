@@ -23,7 +23,7 @@
 #include "libmv/numeric/numeric.h"
 #include "libmv/multiview/fundamental.h"
 #include "libmv/multiview/robust_estimation.h"
-#include "third_party/glog/src/glog/logging.h"
+#include "libmv/logging/logging.h"
 
 namespace libmv {
 
