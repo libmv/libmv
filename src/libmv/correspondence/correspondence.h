@@ -67,6 +67,18 @@ class Correspondences {
     TrackIterator(CorrespondenceGraph::RightIterator iter) : iter_(iter) {}
     CorrespondenceGraph::RightIterator iter_;
   };
+  
+  int NumFeatures() const {
+    return correspondences_.NumEdges();
+  }
+
+  int NumImages() const {
+    return correspondences_.NumLeftNodes();
+  }
+
+  int NumTracks() const {
+    return correspondences_.NumRightNodes();
+  }
 
   // Does not take ownership of feature, which must remain valid for the life
   // of the correspondences.

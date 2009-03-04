@@ -57,6 +57,12 @@ void TvrMainWindow::CreateActions() {
   compute_candidate_matches_->setStatusTip(tr("Compute Candidate Matches"));
   connect(compute_candidate_matches_, SIGNAL(triggered()),
           this, SLOT(ComputeCandidateMatches()));
+  
+  compute_robust_matches_ = new QAction(tr("&Compute Robust Matches..."),
+                                        this);
+  compute_robust_matches_->setStatusTip(tr("Compute Robust Matches"));
+  connect(compute_robust_matches_, SIGNAL(triggered()),
+          this, SLOT(ComputeRobustMatches()));
 }
 
 void TvrMainWindow::CreateMenus() {
@@ -65,6 +71,7 @@ void TvrMainWindow::CreateMenus() {
   matching_menu_ = menuBar()->addMenu(tr("&Matching"));
   matching_menu_->addAction(compute_features_action_);
   matching_menu_->addAction(compute_candidate_matches_);
+  matching_menu_->addAction(compute_robust_matches_);
 }
 
 void TvrMainWindow::OpenImages() {
@@ -120,5 +127,19 @@ void TvrMainWindow::ComputeCandidateMatches() {
   FindCandidateMatches(document_.feature_sets[0],
                        document_.feature_sets[1],
                        &document_.correspondences);
+  viewer_->updateGL();
+}
+
+void TvrMainWindow::ComputeRobustMatches() {
+  libmv::Correspondences new_correspondences;
+  libmv::Mat3 F;
+
+  ComputeFundamental(document_.correspondences, &F, &new_correspondences);
+  
+  // TODO(pau) Make sure this is not copying too many things.  We could
+  //           implement an efficient swap for the biparted graph (just swaping
+  //           the maps), or remove outlier tracks from the candidate matches
+  //           instead of constructing a new correspondance set.
+  std::swap(document_.correspondences, new_correspondences);
   viewer_->updateGL();
 }

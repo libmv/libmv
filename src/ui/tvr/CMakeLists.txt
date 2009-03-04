@@ -8,6 +8,7 @@ TARGET_LINK_LIBRARIES(tvr
                       image
                       correspondence
                       numeric
+                      multiview
                       glog
                       gflags
                       ${QT_QTCORE_LIBRARY}

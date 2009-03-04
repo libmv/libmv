@@ -9,6 +9,8 @@ ADD_LIBRARY(multiview
             sixpointnview.cc
             triangulation.cc)
 
+TARGET_LINK_LIBRARIES(multiview numeric)
+
 ADD_LIBRARY(multiview_test_data
             test_data_sets.cc)
 

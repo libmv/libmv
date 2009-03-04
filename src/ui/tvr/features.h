@@ -41,4 +41,10 @@ void FindCandidateMatches(const SurfFeatureSet &left,
                           const SurfFeatureSet &right,
                           libmv::Correspondences *correspondences);
 
+// Computes the fundamental matrix given a set of candidate correspondences.
+// Outputs the fundamental matrix and the set of inlier correspondences.
+void ComputeFundamental(libmv::Correspondences &candidate,
+                        libmv::Mat3 *F,
+                        libmv::Correspondences *robust);
+
 #endif //UI_TVR_FEATURES_H_
