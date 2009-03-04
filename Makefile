@@ -17,4 +17,10 @@ test : debug
 
 test-release : release
 	cd bin-opt && ctest
-	
+
+
+kdevelop :
+	mkdir -p kdevelop-pro
+	cd kdevelop-pro && cmake -G KDevelop3 -DCMAKE_BUILD_TYPE=Debug ../src/
+
+#TODO(pau) Add a constructor of CodeBlocks project using the wiki instructions.
