@@ -46,6 +46,8 @@ struct LineModel {
     double e = y - line_y;
     return e*e;
   }
+  LineModel() : a(0), b(0) {}
+  LineModel(double _a, double _b) : a(_a), b(_b) {}
   double a, b;
 };
 
@@ -59,7 +61,7 @@ struct LineFitter {
     Vec b(X.transpose() * samples.row(1).transpose());
     Vec2 ba;
     A.svd().solve(b, &ba);
-    LineModel line = {ba(1), ba(0)};
+    LineModel line(ba(1), ba(0));
     models->push_back(line);
   }
   int MinimumSamples() {
