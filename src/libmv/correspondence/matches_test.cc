@@ -42,7 +42,7 @@ struct SiblingTestFeature : public Feature {
   virtual ~SiblingTestFeature() {}
 };
 
-TEST(Matches, ImplicitViewConstruction) {
+TEST(Matches, FilteringIterators) {
   Matches matches;
   int expected_its[] = {
     1, 1, 11,
@@ -107,6 +107,65 @@ TEST(Matches, ImplicitViewConstruction) {
   EXPECT_EQ(12, i);
 
   DeleteMatchFeatures(&matches);
+}
+
+TEST(Matches, IteratingOverTracksInCertainImages) {
+  // It's often necessary to iterate over either all the tracks that are
+  // visible in a given set of images. We do this with an iterator, shown
+  // below, which takes a set of images and then iterates over the tracks which
+  // appear in all images.
+
+  int expected_its[] = {
+    // Image ID, track ID, feature tag.
+    1, 1, 11,  // Track 1 is in all 3 images.
+    2, 1, 12,
+    3, 1, 13,
+    1, 2, 14,  // This track, 2, should be ignored.
+    2, 2, 15,
+    1, 3, 16,  // Track 3 is in all 3 images.
+    2, 3, 17,
+    3, 3, 18,
+    6, 3, 19,  // This feature should not be scanned.
+    6, 4, 20,  // This track should not be scanned.
+    0
+  };
+
+  Matches matches;
+
+  int max_i = 0;
+  for (; expected_its[max_i]; max_i += 3) {
+    matches.Insert(expected_its[max_i + 0],
+                   expected_its[max_i + 1], 
+                   new MyPoint(expected_its[max_i + 2])); 
+    LOG(INFO) << "> " << expected_its[max_i + 0]
+              << ", " << expected_its[max_i + 1]
+              << ", " << expected_its[max_i + 2];
+  }
+  EXPECT_EQ(max_i, 30);
+  std::set<Matches::Image> images;
+  images.insert(1);
+  images.insert(2);
+  images.insert(3);
+
+  int num_tracks = 0;
+  for (Matches::TracksInImagesIterator it = matches.TracksInImagesBegin(images);
+       it != matches.TracksInImagesEnd(images); ++it) {
+    LOG(INFO) << "Track: " << *it;
+    ++num_tracks;
+  }
+  EXPECT_EQ(2, num_tracks);
+
+  // TODO(keir): Finish support for the below API.
+  /*
+  // Finally accumulate the tracks.
+  for (Matches::TracksInImagesIterator it = matches.TracksInImagesBegin(images);
+       it != matches.TracksInImagesEnd(images); ++it) {
+    for (Matches::TracksInImagesFeatureIterator<MyPoint> tt =
+         it.begin<MyPoint>(); tt != it.end<MyPoint>(); ++tt) {
+      // Stack feature x,y,whatever into matrix.
+    }
+  }
+  */
 }
 
 }  // namespace

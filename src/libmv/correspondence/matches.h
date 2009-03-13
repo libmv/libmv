@@ -34,7 +34,9 @@ class PointFeature;
 class LineFeature;
 
 class Matches {
+ friend class TracksInImagesIterator;
  public:
+   class TracksInImagesIterator;
    // TODO(keir): Decide if simple numbers are good enough.
   typedef int Image;
   typedef int Track;
@@ -160,6 +162,64 @@ class Matches {
   // of the correspondences.
   void Insert(Image image, Track track, const Feature *feature) {
     graph_.Insert(image, feature, track);
+  }
+
+  class TracksInImagesIterator {
+   friend class Matches;
+   public:
+    Track operator*()  const { return *iter_; }
+    bool operator!=(const TracksInImagesIterator &other) {
+      // Dirty hack alert.
+      (void) other;
+      return iter_ != matches_.TrackEnd();
+    }
+    void operator++() {
+      ++iter_;
+      Skip();
+    }
+    // TODO(keir): Add support to iterate over relevant features.
+   private:
+    TracksInImagesIterator(const Matches &matches,
+                           const std::set<Image> &images)
+        : matches_(matches), images_(images), iter_(matches.TrackBegin()) {
+      Skip();
+    }
+    void Skip() {
+      while (iter_ != matches_.TrackEnd() &&
+             !TrackIsInAllImages(*iter_))
+        ++iter_;
+    }
+    bool TrackIsInAllImages(Track track) {
+      LOG(INFO) << "Checking track: " << track;
+      LOG(INFO) << "Images.size(): " << images_.size();
+      for (std::set<Image>::const_iterator it = images_.begin();
+           it != images_.end(); ++it) {
+        // TODO(keir): Expose enough of the bipartite graph to do this faster.
+        // A better way would be to cache the track -> images map and only hit
+        // that, rather than hitting the image map for each image.
+        LOG(INFO) << "is in image... : " << *it;
+        const Feature *feature;
+        if (!matches_.graph_.GetEdge(*it, track, &feature)) {
+          LOG(INFO) << "... It isn't.";
+          return false;
+        }
+      }
+      LOG(INFO) << "In all images.";
+      return true;
+    }
+    const Matches &matches_;
+    const std::set<Image> &images_;
+    TrackIterator iter_;
+  };
+
+  TracksInImagesIterator TracksInImagesBegin(
+      const std::set<Image> &images) const {
+    return TracksInImagesIterator(*this, images);
+  }
+
+  TracksInImagesIterator TracksInImagesEnd(
+      const std::set<Image> &images) const {
+    return TracksInImagesIterator(*this, images);
   }
 
  private:
