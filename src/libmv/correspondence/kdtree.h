@@ -31,10 +31,10 @@
 
 namespace libmv {
 
-// A simple priority cue used to sort the nodes to explore for A-knn.
-// Low priority values are poped first.
+// A simple priority cue used to sort the nodes to explore for A-knn.  Low
+// priority values are popped first.
 // TODO(pau): if we are going to use this anywhere else, put it on a separate
-//            file.
+// file.
 template<typename Value, typename Priority>
 class PriorityQueue {
  public:
@@ -210,7 +210,6 @@ class KdTree {
     return num_explored_leafs;
   }
 
-
  private:
   int LeftChild(int i) const {
     return 2 * i + 1;
@@ -289,8 +288,6 @@ class KdTree {
   int num_levels_;
 };
 
-
 }  // namespace libmv
-
 
 #endif // LIBMV_CORRESPONDENCE_KDTREE_H_
