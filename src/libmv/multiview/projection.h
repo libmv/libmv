@@ -30,6 +30,23 @@ namespace libmv {
 void P_From_KRt(const Mat3 &K, const Mat3 &R, const Vec3 &t, Mat34 *P);
 void KRt_From_P(const Mat34 &P, Mat3 *K, Mat3 *R, Vec3 *t);
 
+// Applies a change of basis to the image coordinates of the projection matrix
+// so that the principal point becomes principal_point_new.
+void ProjectionShiftPrincipalPoint(const Mat34 &P,
+                                   const Vec2 &principal_point,
+                                   const Vec2 &principal_point_new,
+                                   Mat34 *P_new);
+                                    
+// Applies a change of basis to the image coordinates of the projection matrix
+// so that the aspect ratio becomes aspect_ratio_new.  This is done by
+// stretching the y axis.  The aspect ratio is defined as the quotient between
+// the focal length of the y and the x axis.
+void ProjectionChangeAspectRatio(const Mat34 &P,
+                                 const Vec2 &principal_point,
+                                 double aspect_ratio,
+                                 double aspect_ratio_new,
+                                 Mat34 *P_new);
+
 void HomogeneousToEuclidean(const Mat &H, Mat *X);
 void HomogeneousToEuclidean(const Vec3 &H, Vec2 *X);
 void HomogeneousToEuclidean(const Vec4 &H, Vec3 *X);

@@ -118,6 +118,33 @@ void KRt_From_P(const Mat34 &P, Mat3 *Kp, Mat3 *Rp, Vec3 *tp) {
   *tp = t;
 }
 
+void ProjectionShiftPrincipalPoint(const Mat34 &P,
+                                   const Vec2 &principal_point,
+                                   const Vec2 &principal_point_new,
+                                   Mat34 *P_new) {
+  Mat3 T;
+  T << 1, 0, principal_point_new(0) - principal_point(0),
+       0, 1, principal_point_new(1) - principal_point(1),
+       0, 0,                                           1;
+  *P_new = T * P;
+}
+
+void ProjectionChangeAspectRatio(const Mat34 &P,
+                                 const Vec2 &principal_point,
+                                 double aspect_ratio,
+                                 double aspect_ratio_new,
+                                 Mat34 *P_new) {
+  Mat3 T;
+  T << 1,                               0, 0,
+       0, aspect_ratio_new / aspect_ratio, 0,
+       0,                               0, 1;
+  Mat34 P_temp;
+  
+  ProjectionShiftPrincipalPoint(P, principal_point, Vec2(0,0), &P_temp);
+  P_temp = T * P_temp;
+  ProjectionShiftPrincipalPoint(P_temp, Vec2(0,0), principal_point, P_new);
+}
+
 void HomogeneousToEuclidean(const Mat &H, Mat *X) {
   int d = H.rows() - 1;
   int n = H.cols();

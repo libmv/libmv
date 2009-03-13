@@ -7,7 +7,8 @@ ADD_LIBRARY(multiview
             robust_estimation.cc
             focal_from_fundamental.cc
             sixpointnview.cc
-            triangulation.cc)
+            triangulation.cc
+            autocalibration.cc)
 
 TARGET_LINK_LIBRARIES(multiview numeric)
 
@@ -27,6 +28,7 @@ MULTIVIEW_TEST(resection)
 MULTIVIEW_TEST(robust_fundamental)
 MULTIVIEW_TEST(robust_estimation)
 MULTIVIEW_TEST(sixpointnview)
+MULTIVIEW_TEST(autocalibration)
 
 # TODO(keir): Make tests that depend on generated.cc to use generated sources.
 #ADD_GENERATED_SOURCE(generated.cc generator.py)

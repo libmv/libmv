@@ -44,21 +44,21 @@ void FindCandidateMatches(const SurfFeatureSet &left,
 
 //TODO(pau) Once stable, this has to move to libmv.
 //TODO(pau) candidate should be const; we need const_iterator in Correspondence.
-void ComputeFundamental(libmv::Correspondences &candidate,
+void ComputeFundamental(libmv::Correspondences &all_matches,
                         libmv::Mat3 *F,
-                        libmv::Correspondences *robust) {
+                        libmv::Correspondences *consistent_matches) {
   using namespace libmv;
 
   // Construct matrices containing the matches.
-  int n = candidate.NumTracks();
+  int n = all_matches.NumTracks();
   Mat x[2] = {Mat(2,n), Mat(2,n)};
   std::vector<TrackID> track_ids(n);
 
   int i = 0;
-  for (Correspondences::TrackIterator t = candidate.ScanAllTracks();
+  for (Correspondences::TrackIterator t = all_matches.ScanAllTracks();
        !t.Done(); t.Next()) {
     PointCorrespondences::Iterator it =
-        PointCorrespondences(&candidate).ScanFeaturesForTrack(t.track());
+        PointCorrespondences(&all_matches).ScanFeaturesForTrack(t.track());
     x[it.image()](0,i) = it.feature()->x();
     x[it.image()](1,i) = it.feature()->y();
     it.Next();
@@ -76,10 +76,10 @@ void ComputeFundamental(libmv::Correspondences &candidate,
 
   // Build new correspondence graph containing only inliers.
   for (int j = 0; j < inliers.size(); ++j) {
-    PointCorrespondences::Iterator it = PointCorrespondences(&candidate)
+    PointCorrespondences::Iterator it = PointCorrespondences(&all_matches)
         .ScanFeaturesForTrack(track_ids[inliers[j]]);
-    robust->Insert(it.image(), j, it.feature());
+    consistent_matches->Insert(it.image(), j, it.feature());
     it.Next();
-    robust->Insert(it.image(), j, it.feature());
+    consistent_matches->Insert(it.image(), j, it.feature());
   }
 }

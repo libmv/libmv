@@ -53,4 +53,36 @@ TEST(Projection, P_From_KRt) {
   // the case. Also add a test for that here.
 }
 
+TEST(AutoCalibration, ProjectionShiftPrincipalPoint) {
+  Mat34 P1, P2;
+  P1 << 1, 0, 0, 0,
+        0, 1, 0, 0,
+        0, 0, 1, 0;
+  P2 << 1, 0, 3, 0,
+        0, 1, 4, 0,
+        0, 0, 1, 0;
+  Mat34 P1_computed, P2_computed;
+  ProjectionShiftPrincipalPoint(P1, Vec2(0, 0), Vec2(3, 4), &P2_computed);
+  ProjectionShiftPrincipalPoint(P2, Vec2(3, 4), Vec2(0, 0), &P1_computed);
+
+  EXPECT_MATRIX_EQ(P1, P1_computed);
+  EXPECT_MATRIX_EQ(P2, P2_computed);
+}
+
+TEST(AutoCalibration, ProjectionChangeAspectRatio) {
+  Mat34 P1, P2;
+  P1 << 1, 0, 3, 0,
+        0, 1, 4, 0,
+        0, 0, 1, 0;
+  P2 << 1, 0, 3, 0,
+        0, 2, 4, 0,
+        0, 0, 1, 0;
+  Mat34 P1_computed, P2_computed;
+  ProjectionChangeAspectRatio(P1, Vec2(3, 4), 1, 2, &P2_computed);
+  ProjectionChangeAspectRatio(P2, Vec2(3, 4), 2, 1, &P1_computed);
+
+  EXPECT_MATRIX_EQ(P1, P1_computed);
+  EXPECT_MATRIX_EQ(P2, P2_computed);
+}
+
 } // namespace
