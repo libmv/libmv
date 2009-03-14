@@ -55,7 +55,7 @@ TEST(AutoCalibration, K_From_AbsoluteConic_SignedDiagonal) {
   EXPECT_MATRIX_NEAR(Kpositive, Kp, 1e-8);
 }
 
-TEST(AutoCalibrationLinear, Solve) {
+TEST(AutoCalibrationLinear, MetricTransformation_MetricInput) {
   double width = 1000, height = 800;
   Mat3 K;
   K << width,     0,  width / 2, // 1000x800 image with 35mm equiv focal length.
@@ -69,29 +69,72 @@ TEST(AutoCalibrationLinear, Solve) {
     Mat3 R = RotationAroundX(double(rand()) / RAND_MAX * 3)
            * RotationAroundY(double(rand()) / RAND_MAX * 3)
            * RotationAroundZ(double(rand()) / RAND_MAX * 3);
-    Vec3 t(double(rand())/RAND_MAX,
-           double(rand())/RAND_MAX,
-           double(rand())/RAND_MAX);
+    Vec3 t(double(rand()) / RAND_MAX,
+           double(rand()) / RAND_MAX,
+           double(rand()) / RAND_MAX);
     Mat34 P;
     P_From_KRt(K, R, t, &P);
     a.AddProjection(P, width, height);
-
   }
-  a.ConstrainSingleCalibration();
   
   // Compute metric update transformation.
   Mat H = a.MetricTransformation();
 
   // Since the input was metric, the transformation should be metric.
   // The 3x3 submatrix should be orthonormal.
-  Mat R = H.block<3,3>(0,0);
+  Mat R = H.block<3, 3>(0, 0);
   Mat RRt = R * R.transpose();
-  Mat Id = Mat::Identity(3,3);
-  EXPECT_MATRIX_NEAR(Id, RRt, 1e-6);
+  Mat Id = Mat::Identity(3, 3);
+  EXPECT_MATRIX_NEAR(Id, RRt, 1e-3);
 
   // The plane at infinity should be 0,0,0,1.
   Vec3 p = H.row(3).start<3>();
-  EXPECT_NEAR(0, p.norm(), 1e-6);
+  EXPECT_NEAR(0, p.norm(), 1e-2);
+}
+
+TEST(AutoCalibrationLinear, MetricTransformation) {
+  const int num_cams = 10;
+  double width = 1000, height = 800;
+  Mat3 K;
+  K << width,     0,  width / 2, // 1000x800 image with 35mm equiv focal length.
+           0, width, height / 2,
+           0,     0,          1;
+
+  Mat4 H_real;
+  H_real << 1, 0, 0, 0,
+            0, 1, 0, 0,
+            0, 0, 1, 0,
+            0, 0, 0, 1;
+
+  AutoCalibrationLinear a;
+
+  // Add cameras with random rotation and translation.
+  Mat34 Ps[num_cams];
+  for (int i = 0; i < num_cams; ++i) {
+    Mat3 R = RotationAroundX(double(rand()) / RAND_MAX * 3)
+           * RotationAroundY(double(rand()) / RAND_MAX * 3)
+           * RotationAroundZ(double(rand()) / RAND_MAX * 3);
+    Vec3 t(double(rand()) / RAND_MAX,
+           double(rand()) / RAND_MAX,
+           double(rand()) / RAND_MAX);
+    Mat34 P_metric;
+    P_From_KRt(K, R, t, &P_metric);
+    Ps[i] = P_metric * H_real.inverse();  // Distort cameras.
+    a.AddProjection(Ps[i], width, height);
+  }
+  
+  // Compute metric update transformation.
+  Mat H_computed = a.MetricTransformation();
+  
+  for (int i = 0; i < num_cams; ++i) {
+    Mat34 P_metric = Ps[i] * H_computed;
+    Mat3 K_computed, R;
+    Vec3 t;
+    KRt_From_P(P_metric, &K_computed, &R, &t);
+    
+    EXPECT_MATRIX_NEAR(K, K_computed, 10);
+    LOG(INFO) << "K_computed\n" << K_computed;
+  }
 }
 
 

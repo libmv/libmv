@@ -41,7 +41,7 @@ void KRt_From_P(const Mat34 &P, Mat3 *Kp, Mat3 *Rp, Vec3 *tp) {
     double s = K(2,1);
     double l = sqrt(c * c + s * s);
     c /= l; s /= l;
-    Mat Qx(3,3);
+    Mat3 Qx;
     Qx << 1, 0, 0,
          0, c, -s,
          0, s, c;
@@ -54,7 +54,7 @@ void KRt_From_P(const Mat34 &P, Mat3 *Kp, Mat3 *Rp, Vec3 *tp) {
     double s = K(2,0);
     double l = sqrt(c * c + s * s);
     c /= l; s /= l;
-    Mat Qy(3,3);
+    Mat3 Qy;
     Qy << c, 0, s,
           0, 1, 0,
          -s, 0, c;
@@ -67,7 +67,7 @@ void KRt_From_P(const Mat34 &P, Mat3 *Kp, Mat3 *Rp, Vec3 *tp) {
     double s = K(1,0);
     double l = sqrt(c * c + s * s);
     c /= l; s /= l;
-    Mat Qz;
+    Mat3 Qz;
     Qz << c,-s, 0,
           s, c, 0,
           0, 0, 1;
@@ -75,27 +75,27 @@ void KRt_From_P(const Mat34 &P, Mat3 *Kp, Mat3 *Rp, Vec3 *tp) {
     Q = Qz.transpose() * Q;
   }
 
-  Mat R = Q;
+  Mat3 R = Q;
 
   // Ensure that the diagonal is positive.
   // TODO(pau) Change this to ensure that:
   //  - K(0,0) > 0
   //  - K(2,2) = 1
   //  - det(R) = 1
-  if( K(2,2) < 0) {
+  if (K(2,2) < 0) {
     K = -K;
     R = -R;
   }
-  if( K(1,1) < 0 ) {
-    Mat S(3,3);
+  if (K(1,1) < 0) {
+    Mat3 S;
     S << 1, 0, 0,
          0,-1, 0,
          0, 0, 1;
     K = K * S;
     R = S * R;
   }
-  if( K(0,0) < 0 ) {
-    Mat S(3,3);
+  if (K(0,0) < 0) {
+    Mat3 S;
     S << -1, 0, 0,
           0, 1, 0,
           0, 0, 1;

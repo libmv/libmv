@@ -55,29 +55,9 @@ class AutoCalibrationLinear {
     
     return projections_.size() - 1;
   }
-
-  void ConstrainCommonCalibration(int i, int j) {
-    double nu = 1;
-    const Mat34 &Pi = projections_[i];
-    const Mat34 &Pj = projections_[j];
-    constraints_.push_back((w11(Pi) - w11(Pj)) / 0.001 / nu);
-    constraints_.push_back((w12(Pi) - w12(Pj)) / 0.001 / nu);
-    constraints_.push_back((w13(Pi) - w13(Pj)) / 0.001 / nu);
-    constraints_.push_back((w22(Pi) - w22(Pj)) / 0.001 / nu);
-    constraints_.push_back((w23(Pi) - w23(Pj)) / 0.001 / nu);
-    constraints_.push_back((w33(Pi) - w33(Pj)) / 0.001 / nu);
-  }
   
-  void ConstrainSingleCalibration() {
-    for (int j = 0; j < projections_.size(); ++j) {
-      for (int i = 0; i < j; ++i) {
-        ConstrainCommonCalibration(i, j);
-      }
-    }
-  }
-  
-  Mat MetricTransformation() {
-    // Compute Q.
+  Mat4 MetricTransformation() {
+    // Compute the dual absolute quadric, Q.
     Mat A(constraints_.size(), 10);
     for (int i = 0; i < A.rows(); ++i) {
       A.row(i) = Vec(constraints_[i]);
@@ -90,9 +70,17 @@ class AutoCalibrationLinear {
 
     // Compute a transformation to a metric frame by decomposing Q.
     Eigen::SelfAdjointEigenSolver<Mat4> eigen_solver(Q);
+    
+    // Eigen values should be possitive,
+    Vec temp_values = eigen_solver.eigenvalues();
+    if (temp_values.sum() < 0) {
+      temp_values = -temp_values;
+    }
+     
+    // and sorted, so that they are proportional to 1,1,1,0.
     Vec eigenvalues;
     Mat eigenvectors;
-    SortEigenVectors(eigen_solver.eigenvalues(), eigen_solver.eigenvectors(),
+    SortEigenVectors(temp_values, eigen_solver.eigenvectors(),
                      &eigenvalues, &eigenvectors);
     
     LOG(INFO) << "Q\n" << Q << "\n";
@@ -103,7 +91,6 @@ class AutoCalibrationLinear {
   }
 
  private:
-
   // Add constraints on the absolute quadric based on assumptions on the
   // camera parameters.  See eq. (26) of [1].
   void AddProjectionConstraints(const Mat34 &P) {
