@@ -46,6 +46,7 @@ class TvrMainWindow : public QMainWindow {
   void ComputeCandidateMatches();
   void ComputeRobustMatches();
   void FocalFromFundamental();
+  void MetricReconstruction();
   
  private:
   void CreateActions();
@@ -65,6 +66,7 @@ class TvrMainWindow : public QMainWindow {
   QAction *compute_robust_matches_action_;
   QMenu *calibration_menu_;
   QAction *focal_from_fundamental_action_;
+  QAction *metric_reconstruction_action_;
 
   MatchViewer *viewer_;
 };

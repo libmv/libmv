@@ -42,17 +42,17 @@ void NViewTriangulate(const Matrix<T, 2, Dynamic> &x,
   int nviews = x.cols();
   assert(nviews == Ps.size());
 
-	Matrix<T, Dynamic, Dynamic> design(3*nviews, 4 + nviews);
-	design.setConstant(0.0);
-	for (int i = 0; i < nviews; i++) {
+  Matrix<T, Dynamic, Dynamic> design(3*nviews, 4 + nviews);
+  design.setConstant(0.0);
+  for (int i = 0; i < nviews; i++) {
     design.template block<3, 4>(3*i, 0) = -Ps[i];
-		design(3*i + 0, 4 + i) = x(0, i);
-		design(3*i + 1, 4 + i) = x(1, i);
-		design(3*i + 2, 4 + i) = 1.0;
-	}
-	Matrix<T, Dynamic, 1>  X_and_alphas;
-	Nullspace(&design, &X_and_alphas);
-	X->resize(4);
+    design(3*i + 0, 4 + i) = x(0, i);
+    design(3*i + 1, 4 + i) = x(1, i);
+    design(3*i + 2, 4 + i) = 1.0;
+  }
+  Matrix<T, Dynamic, 1>  X_and_alphas;
+  Nullspace(&design, &X_and_alphas);
+  X->resize(4);
   *X = X_and_alphas.start(4);
 }
 

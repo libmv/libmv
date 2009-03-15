@@ -32,6 +32,10 @@ struct TvrDocument {
   libmv::Correspondences correspondences;
   libmv::Mat3 F;
   double focal_distance[2];
+  libmv::Mat3 K[2];
+  libmv::Mat3 R[2];
+  libmv::Vec3 t[2];
+  std::vector<libmv::Vec3> X;
 };
 
 #endif //UI_TVR_TVR_DATA_H_

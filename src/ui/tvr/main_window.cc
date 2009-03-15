@@ -24,7 +24,10 @@
 #include "libmv/image/array_nd.h"
 #include "libmv/image/surf.h"
 #include "libmv/image/surf_descriptor.h"
+#include "libmv/multiview/projection.h"
+#include "libmv/multiview/fundamental.h"
 #include "libmv/multiview/focal_from_fundamental.h"
+#include "libmv/multiview/nviewtriangulation.h"
 #include "libmv/logging/logging.h"
 #include "ui/tvr/main_window.h"
 
@@ -73,6 +76,12 @@ void TvrMainWindow::CreateActions() {
       tr("Compute Focal Distance from the Fundamental MatrixRobust Matrix"));
   connect(focal_from_fundamental_action_, SIGNAL(triggered()),
           this, SLOT(FocalFromFundamental()));
+
+  metric_reconstruction_action_ = new QAction(tr("&Metric Reconstruction"), this);
+  metric_reconstruction_action_->setStatusTip(tr(
+      "Compute a metric reconstrution given the current focal length estimates"));
+  connect(metric_reconstruction_action_, SIGNAL(triggered()),
+          this, SLOT(MetricReconstruction()));
 }
 
 void TvrMainWindow::CreateMenus() {
@@ -84,6 +93,7 @@ void TvrMainWindow::CreateMenus() {
   matching_menu_->addAction(compute_robust_matches_action_);
   calibration_menu_ = menuBar()->addMenu(tr("&Calibration"));
   calibration_menu_->addAction(focal_from_fundamental_action_);
+  calibration_menu_->addAction(metric_reconstruction_action_);
 }
 
 void TvrMainWindow::OpenImages() {
@@ -169,4 +179,80 @@ void TvrMainWindow::FocalFromFundamental() {
             << " focal 1: " << document_.focal_distance[1] << "\n";
 
   viewer_->updateGL();
+}
+
+void TvrMainWindow::MetricReconstruction() {
+  using namespace libmv;
+
+  Vec2 p0(document_.images[0].width() / 2., document_.images[0].height() / 2.);
+  Vec2 p1(document_.images[1].width() / 2., document_.images[1].height() / 2.);
+  double f0 = document_.focal_distance[0];
+  double f1 = document_.focal_distance[1];
+  Mat3 K0, K1;
+  K0 << f0,  0, p0(0),
+         0, f0, p0(1),
+         0,  0,     1;
+  K1 << f1,  0, p1(0),
+         0, f1, p1(1),
+         0,  0,     1;
+  
+  // Compute essential matrix
+  Mat3 E;
+  EssentialFromFundamental(document_.F, K0, K1, &E);
+
+  // Get one match from the corresponcence structure.
+  Vec2 x[2];
+  {
+    Correspondences::TrackIterator t =
+        document_.correspondences.ScanAllTracks();
+    PointCorrespondences::Iterator it =
+        PointCorrespondences(&document_.correspondences)
+              .ScanFeaturesForTrack(t.track());
+    x[it.image()](0) = it.feature()->x();
+    x[it.image()](1) = it.feature()->y();
+    it.Next();
+    x[it.image()](0) = it.feature()->x();
+    x[it.image()](1) = it.feature()->y();
+  }
+
+  // Recover R, t from E and K
+  Mat3 R;
+  Vec3 t;
+  MotionFromEssentialAndCorrespondence(E, K0, x[0], K1, x[1], &R, &t);
+
+  LOG(INFO) << "R:\n" << R << "\nt:\n" << t;
+
+  document_.K[0] = K0;
+  document_.R[0] = Mat3::Identity();
+  document_.t[0] = Vec3::Zero();
+  document_.K[1] = K1;
+  document_.R[1] = R;
+  document_.t[1] = t;
+
+  // Triangulate features.
+  {
+    std::vector<Mat34> Ps(2);
+    P_From_KRt(document_.K[0], document_.R[0], document_.t[0], &Ps[0]);
+    P_From_KRt(document_.K[1], document_.R[1], document_.t[1], &Ps[1]);
+    int n = document_.correspondences.NumTracks();
+    document_.X.resize(n);
+    int i = 0;
+    for (Correspondences::TrackIterator t =
+             document_.correspondences.ScanAllTracks(); !t.Done(); t.Next()) {
+      PointCorrespondences::Iterator it =
+          PointCorrespondences(&document_.correspondences)
+              .ScanFeaturesForTrack(t.track());
+      Mat2X x(2, 2);
+      Vec4 X;
+      x(0, it.image()) = it.feature()->x();
+      x(1, it.image()) = it.feature()->y();
+      it.Next();
+      x(0, it.image()) = it.feature()->x();
+      x(1, it.image()) = it.feature()->y();
+      NViewTriangulate(x, Ps, &X);
+      X /= X(3);
+      document_.X[i] = X.start<3>();
+      i++;
+    }
+  }
 }
