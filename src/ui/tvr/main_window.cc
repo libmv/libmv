@@ -157,8 +157,10 @@ void TvrMainWindow::ComputeRobustMatches() {
 }
 
 void TvrMainWindow::FocalFromFundamental() {
-  libmv::Vec2 p0(document_.images[0].width(), document_.images[0].height());
-  libmv::Vec2 p1(document_.images[1].width(), document_.images[1].height());
+  libmv::Vec2 p0(document_.images[0].width() / 2.,
+                 document_.images[0].height() / 2.);
+  libmv::Vec2 p1(document_.images[1].width() / 2.,
+                 document_.images[1].height() / 2.);
   libmv::FocalFromFundamental(document_.F, p0, p1,
                               &document_.focal_distance[0],
                               &document_.focal_distance[1]);
