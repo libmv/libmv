@@ -45,7 +45,8 @@ class TvrMainWindow : public QMainWindow {
   void ComputeFeatures(int image_index);
   void ComputeCandidateMatches();
   void ComputeRobustMatches();
-
+  void FocalFromFundamental();
+  
  private:
   void CreateActions();
   void CreateMenus();
@@ -60,8 +61,10 @@ class TvrMainWindow : public QMainWindow {
   QAction *open_images_action_;
   QMenu *matching_menu_;
   QAction *compute_features_action_;
-  QAction *compute_candidate_matches_;
-  QAction *compute_robust_matches_;
+  QAction *compute_candidate_matches_action_;
+  QAction *compute_robust_matches_action_;
+  QMenu *calibration_menu_;
+  QAction *focal_from_fundamental_action_;
 
   MatchViewer *viewer_;
 };

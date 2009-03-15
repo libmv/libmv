@@ -30,6 +30,8 @@ struct TvrDocument {
   QImage images[2];
   SurfFeatureSet feature_sets[2];
   libmv::Correspondences correspondences;
+  libmv::Mat3 F;
+  double focal_distance[2];
 };
 
 #endif //UI_TVR_TVR_DATA_H_

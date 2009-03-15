@@ -155,9 +155,9 @@ double FundamentalFromCorrespondences8Point(const Mat &x1,
 }
 
 void NormalizeFundamental(const Mat3 F, Mat3 *F_normalized) {
-  F_normalized->set(F / FrobeniusNorm(F));
+  *F_normalized = F / FrobeniusNorm(F);
   if((*F_normalized)(2,2) < 0) {
-    (*F_normalized) *= -1;
+    *F_normalized *= -1;
   }
 }
 

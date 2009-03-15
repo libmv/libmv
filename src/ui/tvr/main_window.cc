@@ -24,6 +24,8 @@
 #include "libmv/image/array_nd.h"
 #include "libmv/image/surf.h"
 #include "libmv/image/surf_descriptor.h"
+#include "libmv/multiview/focal_from_fundamental.h"
+#include "libmv/logging/logging.h"
 #include "ui/tvr/main_window.h"
 
 
@@ -47,22 +49,30 @@ void TvrMainWindow::CreateActions() {
   connect(open_images_action_, SIGNAL(triggered()),
           this, SLOT(OpenImages()));
   
-  compute_features_action_ = new QAction(tr("&Compute Features..."), this);
+  compute_features_action_ = new QAction(tr("&Compute Features"), this);
   compute_features_action_->setStatusTip(tr("Compute Surf Features"));
   connect(compute_features_action_, SIGNAL(triggered()),
           this, SLOT(ComputeFeatures()));
   
-  compute_candidate_matches_ = new QAction(tr("&Compute Candidate Matches..."),
-                                           this);
-  compute_candidate_matches_->setStatusTip(tr("Compute Candidate Matches"));
-  connect(compute_candidate_matches_, SIGNAL(triggered()),
+  compute_candidate_matches_action_ =
+      new QAction(tr("&Compute Candidate Matches"), this);
+  compute_candidate_matches_action_->setStatusTip(
+      tr("Compute Candidate Matches"));
+  connect(compute_candidate_matches_action_, SIGNAL(triggered()),
           this, SLOT(ComputeCandidateMatches()));
   
-  compute_robust_matches_ = new QAction(tr("&Compute Robust Matches..."),
-                                        this);
-  compute_robust_matches_->setStatusTip(tr("Compute Robust Matches"));
-  connect(compute_robust_matches_, SIGNAL(triggered()),
+  compute_robust_matches_action_ = new QAction(tr("&Compute Robust Matches"),
+                                               this);
+  compute_robust_matches_action_->setStatusTip(tr("Compute Robust Matches"));
+  connect(compute_robust_matches_action_, SIGNAL(triggered()),
           this, SLOT(ComputeRobustMatches()));
+
+  focal_from_fundamental_action_ = new QAction(tr("&Focal from Fundamental"),
+                                               this);
+  focal_from_fundamental_action_->setStatusTip(
+      tr("Compute Focal Distance from the Fundamental MatrixRobust Matrix"));
+  connect(focal_from_fundamental_action_, SIGNAL(triggered()),
+          this, SLOT(FocalFromFundamental()));
 }
 
 void TvrMainWindow::CreateMenus() {
@@ -70,8 +80,10 @@ void TvrMainWindow::CreateMenus() {
   file_menu_->addAction(open_images_action_);
   matching_menu_ = menuBar()->addMenu(tr("&Matching"));
   matching_menu_->addAction(compute_features_action_);
-  matching_menu_->addAction(compute_candidate_matches_);
-  matching_menu_->addAction(compute_robust_matches_);
+  matching_menu_->addAction(compute_candidate_matches_action_);
+  matching_menu_->addAction(compute_robust_matches_action_);
+  calibration_menu_ = menuBar()->addMenu(tr("&Calibration"));
+  calibration_menu_->addAction(focal_from_fundamental_action_);
 }
 
 void TvrMainWindow::OpenImages() {
@@ -132,14 +144,27 @@ void TvrMainWindow::ComputeCandidateMatches() {
 
 void TvrMainWindow::ComputeRobustMatches() {
   libmv::Correspondences new_correspondences;
-  libmv::Mat3 F;
 
-  ComputeFundamental(document_.correspondences, &F, &new_correspondences);
+  ComputeFundamental(document_.correspondences,
+                     &document_.F, &new_correspondences);
   
   // TODO(pau) Make sure this is not copying too many things.  We could
   //           implement an efficient swap for the biparted graph (just swaping
   //           the maps), or remove outlier tracks from the candidate matches
   //           instead of constructing a new correspondance set.
   std::swap(document_.correspondences, new_correspondences);
+  viewer_->updateGL();
+}
+
+void TvrMainWindow::FocalFromFundamental() {
+  libmv::Vec2 p0(document_.images[0].width(), document_.images[0].height());
+  libmv::Vec2 p1(document_.images[1].width(), document_.images[1].height());
+  libmv::FocalFromFundamental(document_.F, p0, p1,
+                              &document_.focal_distance[0],
+                              &document_.focal_distance[1]);
+
+  LOG(INFO) << "focal 0: " << document_.focal_distance[0]
+            << " focal 1: " << document_.focal_distance[1] << "\n";
+
   viewer_->updateGL();
 }

@@ -18,8 +18,11 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
+
+#include "libmv/multiview/fundamental.h"
 #include "libmv/multiview/robust_fundamental.h"
 #include "ui/tvr/features.h"
+
 
 void FindCandidateMatches(const SurfFeatureSet &left,
                           const SurfFeatureSet &right,
@@ -72,7 +75,7 @@ void ComputeFundamental(libmv::Correspondences &all_matches,
   // Compute Fundamental matrix and inliers.
   std::vector<int> inliers;
   // TODO(pau) Expose the threshold.
-  FundamentalFromCorrespondences8PointRobust(x[0], x[1], 5, F, &inliers);
+  FundamentalFromCorrespondences8PointRobust(x[0], x[1], 2, F, &inliers);
 
   // Build new correspondence graph containing only inliers.
   for (int j = 0; j < inliers.size(); ++j) {
@@ -81,5 +84,28 @@ void ComputeFundamental(libmv::Correspondences &all_matches,
     consistent_matches->Insert(it.image(), j, it.feature());
     it.Next();
     consistent_matches->Insert(it.image(), j, it.feature());
+  }
+  
+  // Compute Fundamental matrix using all inliers.
+  {
+    int n = consistent_matches->NumTracks();
+    Mat x[2] = {Mat(2,n), Mat(2,n)};
+    int i = 0;
+    for (Correspondences::TrackIterator t = consistent_matches->ScanAllTracks();
+       !t.Done(); t.Next()) {
+      PointCorrespondences::Iterator it =
+          PointCorrespondences(consistent_matches)
+              .ScanFeaturesForTrack(t.track());
+      x[it.image()](0,i) = it.feature()->x();
+      x[it.image()](1,i) = it.feature()->y();
+      it.Next();
+      x[it.image()](0,i) = it.feature()->x();
+      x[it.image()](1,i) = it.feature()->y();
+      i++;
+    }
+    FundamentalFromCorrespondences8Point(x[0], x[1], F);
+    NormalizeFundamental(*F, F);
+    
+    LOG(INFO) << "F:\n" << *F;
   }
 }
