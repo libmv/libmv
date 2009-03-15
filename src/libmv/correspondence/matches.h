@@ -66,11 +66,11 @@ class Matches {
       Skip<FeatureT>(&iter_, end_);
       return *this;
     }
-   private:
     ImageFeatureIterator(Iterator iter, Iterator end)
         : iter_(iter), end_(end) {
       Skip<FeatureT>(&iter_, end_);
     }
+   private:
     Iterator iter_;
     Iterator end_;
   };
@@ -120,11 +120,11 @@ class Matches {
       Skip<FeatureT>(&iter_, end_);
       return *this;
     }
-   private:
     TrackFeatureIterator(Iterator iter, Iterator end)
         : iter_(iter), end_(end) {
       Skip<FeatureT>(&iter_, end_);
     }
+   private:
     Iterator iter_;
     Iterator end_;
   };
@@ -169,7 +169,7 @@ class Matches {
    public:
     Track operator*()  const { return *iter_; }
     bool operator!=(const TracksInImagesIterator &other) {
-      // Dirty hack alert.
+      // FIXME: Dirty hack alert.
       (void) other;
       return iter_ != matches_.TrackEnd();
     }
