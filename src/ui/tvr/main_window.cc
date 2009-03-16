@@ -51,7 +51,14 @@ void TvrMainWindow::CreateActions() {
   open_images_action_->setStatusTip(tr("Open an image pair"));
   connect(open_images_action_, SIGNAL(triggered()),
           this, SLOT(OpenImages()));
+
+  save_blender_action_ = new QAction(tr("&Save as Brender..."), this);
+  save_blender_action_->setShortcut(tr("Ctrl+O"));
+  save_blender_action_->setStatusTip(tr("Save Scene as a Blender Script"));
+  connect(save_blender_action_, SIGNAL(triggered()),
+          this, SLOT(SaveBlender()));
   
+
   compute_features_action_ = new QAction(tr("&Compute Features"), this);
   compute_features_action_->setStatusTip(tr("Compute Surf Features"));
   connect(compute_features_action_, SIGNAL(triggered()),
@@ -87,6 +94,7 @@ void TvrMainWindow::CreateActions() {
 void TvrMainWindow::CreateMenus() {
   file_menu_ = menuBar()->addMenu(tr("&File"));
   file_menu_->addAction(open_images_action_);
+  file_menu_->addAction(save_blender_action_);
   matching_menu_ = menuBar()->addMenu(tr("&Matching"));
   matching_menu_->addAction(compute_features_action_);
   matching_menu_->addAction(compute_candidate_matches_action_);
@@ -106,6 +114,13 @@ void TvrMainWindow::OpenImages() {
   }
 
   viewer_->SetDocument(&document_);
+}
+
+void TvrMainWindow::SaveBlender() {
+  QString filename = QFileDialog::getSaveFileName(this,
+      "Save as Blender Script", "", "Blender Python Script (*.py)");
+
+  document_.SaveAsBlender(filename.toAscii().data());
 }
 
 void TvrMainWindow::ComputeFeatures() {

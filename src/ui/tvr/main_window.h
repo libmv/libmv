@@ -41,6 +41,7 @@ class TvrMainWindow : public QMainWindow {
 
  public slots:
   void OpenImages();
+  void SaveBlender();
   void ComputeFeatures();
   void ComputeFeatures(int image_index);
   void ComputeCandidateMatches();
@@ -60,6 +61,7 @@ class TvrMainWindow : public QMainWindow {
   // Qt widgets, menus and actions.
   QMenu *file_menu_;
   QAction *open_images_action_;
+  QAction *save_blender_action_;
   QMenu *matching_menu_;
   QAction *compute_features_action_;
   QAction *compute_candidate_matches_action_;
