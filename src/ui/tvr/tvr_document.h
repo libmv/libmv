@@ -47,8 +47,11 @@ struct TvrDocument {
     fprintf(fid, "from Blender import Camera, Object, Scene, NMesh\n");
     fprintf(fid, "from Blender import Mathutils\n");
     fprintf(fid, "from Blender.Mathutils import *\n");
+
     fprintf(fid, "cur = Scene.GetCurrent()\n");
 
+    //////////////////////////////////////////////////////////////////////////
+    // Cameras.
     fprintf(fid, "# Cameras\n");
     for (int i = 0; i < 2; ++i) {
       // Set up the camera
@@ -75,6 +78,11 @@ struct TvrDocument {
       for (int j = 0; j < 3; ++j) {
         fprintf(fid, "[");
         for (int k = 0; k < 3; ++k) {
+          // Opengl's camera faces down the NEGATIVE z axis so we have to
+          // do a 180 degree X axis rotation. The math works out so that
+          // the following conditional nicely implements that.
+          if (j == 2 || j == 1)
+            fprintf(fid, "-");
           fprintf(fid, "%g,", R[i](j,k)); // transposed!
         }
         fprintf(fid, "0.0],");
@@ -85,70 +93,13 @@ struct TvrDocument {
         fprintf(fid, "%g,", optical_center(j));
       fprintf(fid, "1.0]))\n");
 
-      // K matrix; not used by blender
-      fprintf(fid, "k%04d = [", i);
-      for (int j=0; j<3; j++) {
-        fprintf(fid, "[");
-        for (int k=0; k<3; k++) {
-          fprintf(fid, "%g,", K[i](j,k)); 
-        }
-        fprintf(fid, "],");
-      }
-      fprintf(fid, "]\n");
-
       // Link the scene and the camera together
       fprintf(fid, "o%04d.link(c%04d)\n\n", i, i);
       fprintf(fid, "cur.link(o%04d)\n\n", i);
     }
 
-    // IPO curves
-    fprintf(fid, "# Animate the camera with IpoCurves\n");
-    fprintf(fid, "crender = Camera.New('persp')\n");
-    fprintf(fid, "crender.lens = 35.0 # this lens value doesn't matter\n");
-    fprintf(fid, "crender.setDrawSize(0.05)\n");
-    fprintf(fid, "orender = Object.New('Camera')\n");
-    fprintf(fid, "orender.name = \"libmv_render_cam\"\n");
-    fprintf(fid, "orender.link(crender)\n");
-    fprintf(fid, "cur.link(orender)\n");
-    fprintf(fid, "cur.setCurrentCamera(orender)\n");
-    fprintf(fid, "ipo = Blender.Ipo.New('Object','render_cam_objipo')\n");
-    fprintf(fid, "orender.setIpo(ipo)\n");
-    fprintf(fid, "locx = ipo.addCurve('LocX')\n");
-    fprintf(fid, "locx.setInterpolation('Linear')\n");
-    fprintf(fid, "locy = ipo.addCurve('LocY')\n");
-    fprintf(fid, "locy.setInterpolation('Linear')\n");
-    fprintf(fid, "locz = ipo.addCurve('LocZ')\n");
-    fprintf(fid, "locz.setInterpolation('Linear')\n");
-    fprintf(fid, "rotx = ipo.addCurve('RotX')\n");
-    fprintf(fid, "rotx.setInterpolation('Linear')\n");
-    fprintf(fid, "roty = ipo.addCurve('RotY')\n");
-    fprintf(fid, "roty.setInterpolation('Linear')\n");
-    fprintf(fid, "rotz = ipo.addCurve('RotZ')\n");
-    fprintf(fid, "rotz.setInterpolation('Linear')\n");
-    fprintf(fid, "camipo = Blender.Ipo.New('Camera','render_cam_camipo')\n");
-    fprintf(fid, "crender.setIpo(camipo)\n");
-    fprintf(fid, "lenscurve = camipo.addCurve('Lens')\n");
-    fprintf(fid, "lenscurve.setInterpolation('Linear')\n");
-    fprintf(fid, "\n");
-    for (int i = 0; i < 2; ++i) {
-      fprintf(fid, "locx.addBezier((%d,o%04d.LocX))\n", i, i);
-      fprintf(fid, "locy.addBezier((%d,o%04d.LocY))\n", i, i);
-      fprintf(fid, "locz.addBezier((%d,o%04d.LocZ))\n", i, i);
-      fprintf(fid, "rotx.addBezier((%d,o%04d.RotX*18/3.141593))\n", i, i);
-      fprintf(fid, "roty.addBezier((%d,o%04d.RotY*18/3.141593))\n", i, i);
-      fprintf(fid, "rotz.addBezier((%d,o%04d.RotZ*18/3.141593))\n", i, i);
-      fprintf(fid, "lenscurve.addBezier((%d,c%04d.lens))\n", i, i);
-      fprintf(fid, "\n");
-    }
-    fprintf(fid, "\n");
-
-    fprintf(fid, "allob=Object.Get()\n");
-    fprintf(fid, "for o in allob:\n");
-    fprintf(fid, "   print o.name[:10]\n");
-    fprintf(fid, "   if o.name.startswith('libmv_cam'):\n");
-    fprintf(fid, "	 cur.unlink(o)\n");
-    fprintf(fid, "\n");
-
+    //////////////////////////////////////////////////////////////////////////
+    // Point Cloud.
     fprintf(fid, "# Point cloud\n");
     fprintf(fid, "ob=Object.New('Mesh','libmv_point_cloud')\n");
     fprintf(fid, "ob.setLocation(0.0,0.0,0.0)\n");
@@ -161,13 +112,14 @@ struct TvrDocument {
     fprintf(fid, "mesh.update()\n");
     fprintf(fid, "cur.update()\n\n");
 
+    //////////////////////////////////////////////////////////////////////////
+    // Scene node including cameras and points.
     fprintf(fid, "# Add a helper object to help manipulating joined camera and"
                  "points\n");
     fprintf(fid, "scene_dummy = Object.New('Empty','libmv_scene')\n");
     fprintf(fid, "scene_dummy.setLocation(0.0,0.0,0.0)\n");
     fprintf(fid, "cur.link(scene_dummy)\n");
-    // FIXME orender is from IPO... do IPO curves!
-    //	fprintf(fid, "scene_dummy.makeParent([orender,ob])\n");
+
     fprintf(fid, "scene_dummy.makeParent([ob])\n");
     for (int i = 0; i < 2; ++i) {
       fprintf(fid, "scene_dummy.makeParent([o%04d])\n", i);
