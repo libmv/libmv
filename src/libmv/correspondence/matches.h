@@ -36,7 +36,9 @@ class LineFeature;
 class Matches {
  friend class TracksInImagesIterator;
  public:
-   class TracksInImagesIterator;
+  template<typename FeatureT>
+  class TracksInImagesIterator;
+
    // TODO(keir): Decide if simple numbers are good enough.
   typedef int Image;
   typedef int Track;
@@ -164,6 +166,10 @@ class Matches {
     graph_.Insert(image, feature, track);
   }
 
+  template<typename FeatureT>
+  class TracksInImagesFeatureIterator;
+
+  template<typename FeatureT>
   class TracksInImagesIterator {
    friend class Matches;
    public:
@@ -177,7 +183,16 @@ class Matches {
       ++iter_;
       Skip();
     }
-    // TODO(keir): Add support to iterate over relevant features.
+    TracksInImagesFeatureIterator<FeatureT> begin() const {
+      return TracksInImagesFeatureIterator<FeatureT>(iter_.begin<FeatureT>(),
+                                                     iter_.end<FeatureT>(),
+                                                     images_);
+    }
+    TracksInImagesFeatureIterator<FeatureT> end() const {
+      return TracksInImagesFeatureIterator<FeatureT>(iter_.end<FeatureT>(),
+                                                     iter_.end<FeatureT>(),
+                                                     images_);
+    }
    private:
     TracksInImagesIterator(const Matches &matches,
                            const std::set<Image> &images)
@@ -197,14 +212,15 @@ class Matches {
         // TODO(keir): Expose enough of the bipartite graph to do this faster.
         // A better way would be to cache the track -> images map and only hit
         // that, rather than hitting the image map for each image.
-        LOG(INFO) << "is in image... : " << *it;
         const Feature *feature;
         if (!matches_.graph_.GetEdge(*it, track, &feature)) {
-          LOG(INFO) << "... It isn't.";
+          return false;
+        }
+        // Only take the advertised feature type.
+        if (!dynamic_cast<const FeatureT *>(feature)) {
           return false;
         }
       }
-      LOG(INFO) << "In all images.";
       return true;
     }
     const Matches &matches_;
@@ -212,15 +228,55 @@ class Matches {
     TrackIterator iter_;
   };
 
-  TracksInImagesIterator TracksInImagesBegin(
+  template<typename FeatureT>
+  TracksInImagesIterator<FeatureT> TracksInImagesBegin(
       const std::set<Image> &images) const {
-    return TracksInImagesIterator(*this, images);
+    return TracksInImagesIterator<FeatureT>(*this, images);
   }
 
-  TracksInImagesIterator TracksInImagesEnd(
+  template<typename FeatureT>
+  TracksInImagesIterator<FeatureT> TracksInImagesEnd(
       const std::set<Image> &images) const {
-    return TracksInImagesIterator(*this, images);
+    return TracksInImagesIterator<FeatureT>(*this, images);
   }
+
+  // Same as TrackFeatureIterator but for iterating over the features in a
+  // track.
+  template<typename FeatureT>
+  class TracksInImagesFeatureIterator {
+    friend class TracksInImagesIterator<FeatureT>;
+   public:
+    typedef TrackFeatureIterator<FeatureT> Iterator;
+    Track           image()    const { return iter_.image();   }
+    Track           track()    const { return iter_.track();   }
+    const FeatureT *feature()  const { return iter_.feature(); }
+    bool operator!=(const TracksInImagesFeatureIterator<FeatureT> &it) const {
+      return iter_ != it.iter_;
+    }
+    TracksInImagesFeatureIterator<FeatureT> &operator++() {
+      ++iter_;
+      Skip();
+      return *this;
+    }
+   private:
+    TracksInImagesFeatureIterator(Iterator iter,
+                                  Iterator end,
+                                  const std::set<Image> &images)
+        : iter_(iter), end_(end), images_(images) {
+      Skip();
+    }
+    void Skip() {
+      while (iter_ != end_ && !images_.count(iter_.image())) {
+        ++iter_;
+      }
+    }
+    Iterator iter_;
+    Iterator end_;
+    const std::set<Image> &images_;
+  };
+
+  // TODO(keir): Add ImagesInTracksIterator.
+  // TODO(keir): Add ImagesInTracksFeatureIterator.
 
  private:
   template<typename FeatureT, typename IteratorT>

@@ -115,7 +115,7 @@ TEST(Matches, IteratingOverTracksInCertainImages) {
   // below, which takes a set of images and then iterates over the tracks which
   // appear in all images.
 
-  int expected_its[] = {
+  int features[] = {
     // Image ID, track ID, feature tag.
     1, 1, 11,  // Track 1 is in all 3 images.
     2, 1, 12,
@@ -133,39 +133,58 @@ TEST(Matches, IteratingOverTracksInCertainImages) {
   Matches matches;
 
   int max_i = 0;
-  for (; expected_its[max_i]; max_i += 3) {
-    matches.Insert(expected_its[max_i + 0],
-                   expected_its[max_i + 1], 
-                   new MyPoint(expected_its[max_i + 2])); 
-    LOG(INFO) << "> " << expected_its[max_i + 0]
-              << ", " << expected_its[max_i + 1]
-              << ", " << expected_its[max_i + 2];
+  for (; features[max_i]; max_i += 3) {
+    matches.Insert(features[max_i + 0],
+                   features[max_i + 1], 
+                   new MyPoint(features[max_i + 2])); 
+    LOG(INFO) << "> " << features[max_i + 0]
+              << ", " << features[max_i + 1]
+              << ", " << features[max_i + 2];
   }
   EXPECT_EQ(max_i, 30);
+
+  // Insert some distractor tracks
+  matches.Insert(1, 50, new SiblingTestFeature);
+  matches.Insert(2, 50, new SiblingTestFeature);
+  matches.Insert(3, 50, new SiblingTestFeature);
+  matches.Insert(1, 51, new SiblingTestFeature);
+  matches.Insert(2, 51, new SiblingTestFeature);
+  matches.Insert(3, 51, new SiblingTestFeature);
+
   std::set<Matches::Image> images;
   images.insert(1);
   images.insert(2);
   images.insert(3);
 
+  int expected_features[] = {
+    // Image ID, track ID, feature tag.
+    1, 1, 11,  // Track 1 is in all 3 images.
+    2, 1, 12,
+    3, 1, 13,
+    1, 3, 16,  // Track 3 is in all 3 images.
+    2, 3, 17,
+    3, 3, 18,
+    0
+  };
+  int i = 0;
   int num_tracks = 0;
-  for (Matches::TracksInImagesIterator it = matches.TracksInImagesBegin(images);
-       it != matches.TracksInImagesEnd(images); ++it) {
+  // Finally accumulate the tracks.
+  for (Matches::TracksInImagesIterator<MyPoint> it =
+             matches.TracksInImagesBegin<MyPoint>(images);
+       it != matches.TracksInImagesEnd<MyPoint>(images); ++it) {
+    for (Matches::TracksInImagesFeatureIterator<MyPoint> tt =
+         it.begin(); tt != it.end(); ++tt) {
+      // Stack feature x,y,whatever into matrix.
+      EXPECT_EQ(expected_features[i + 0], tt.image());
+      EXPECT_EQ(expected_features[i + 1], tt.track());
+      EXPECT_EQ(expected_features[i + 2], tt.feature()->tag);
+      i += 3;
+    }
     LOG(INFO) << "Track: " << *it;
     ++num_tracks;
   }
+  EXPECT_EQ(18, i);
   EXPECT_EQ(2, num_tracks);
-
-  // TODO(keir): Finish support for the below API.
-  /*
-  // Finally accumulate the tracks.
-  for (Matches::TracksInImagesIterator it = matches.TracksInImagesBegin(images);
-       it != matches.TracksInImagesEnd(images); ++it) {
-    for (Matches::TracksInImagesFeatureIterator<MyPoint> tt =
-         it.begin<MyPoint>(); tt != it.end<MyPoint>(); ++tt) {
-      // Stack feature x,y,whatever into matrix.
-    }
-  }
-  */
 }
 
 }  // namespace
