@@ -23,6 +23,7 @@
 #define LIBMV_MULTIVIEW_AUTOCALIBRATION_H_
 
 #include <vector>
+#include <algorithm>
 
 #include <Eigen/QR>
 
