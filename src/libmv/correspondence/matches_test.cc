@@ -168,13 +168,13 @@ TEST(Matches, IteratingOverTracksInCertainImages) {
   };
   int i = 0;
   int num_tracks = 0;
-  // Finally accumulate the tracks.
+  // For each track...
   for (Matches::TracksInImagesIterator<MyPoint> it =
              matches.TracksInImagesBegin<MyPoint>(images);
        it != matches.TracksInImagesEnd<MyPoint>(images); ++it) {
+    // For each feature...
     for (Matches::TracksInImagesFeatureIterator<MyPoint> tt =
          it.begin(); tt != it.end(); ++tt) {
-      // Stack feature x,y,whatever into matrix.
       EXPECT_EQ(expected_features[i + 0], tt.image());
       EXPECT_EQ(expected_features[i + 1], tt.track());
       EXPECT_EQ(expected_features[i + 2], tt.feature()->tag);
