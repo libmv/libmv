@@ -18,13 +18,14 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
-#include <iostream>
 #include <cstring>
 
-#include "libmv/image/image_io.h"
+#include <iostream>
 
+#include "jpeglib.h"
 #include "png.h"
-//#include "jpeglib.h"
+
+#include "libmv/image/image_io.h"
 
 namespace libmv {
 
@@ -33,7 +34,7 @@ enum format {
 };
 
 static format get_format(const char *c) {
-  char *p = strrchr (c, '.');
+  char *p = strrchr (c, '.'); // find last '.'
 
   if (p == NULL)
     return Unknown;
@@ -71,8 +72,8 @@ int ReadImage(const char *filename, ByteImage *im){
       return ReadPnm(filename, im);
     case Png:
       return ReadPng(filename, im);
-      //case Jpg:
-      //return ReadJpg(filename, im);
+    case Jpg:
+      return ReadJpg(filename, im);
     default:
       return 0;
   };
@@ -85,8 +86,8 @@ int ReadImage(const char *filename, FloatImage *im){
       return ReadPnm(filename, im);
     case Png:
       return ReadPng(filename, im);
-      //case Jpg:
-      //return ReadJpg(filename, im);
+    case Jpg:
+      return ReadJpg(filename, im);
     default:
       return 0;
   };
@@ -99,8 +100,8 @@ int WriteImage(const ByteImage &im, const char *filename){
       return WritePnm(im, filename);
     case Png:
       return WritePng(im, filename);
-      //case Jpg:
-      //return WriteJpg(im, filename);
+    case Jpg:
+      return WriteJpg(im, filename);
     default:
       return 0;
   };
@@ -113,13 +114,139 @@ int WriteImage(const FloatImage &im, const char *filename){
       return WritePnm(im, filename);
     case Png:
       return WritePng(im, filename);
-      //case Jpg:
-      //return WriteJpg(im, filename);
+    case Jpg:
+      return WriteJpg(im, filename);
     default:
       return 0;
   };
 }
-
+int ReadJpg(const char *filename, ByteImage *im) {
+  FILE *file = fopen(filename,"r");
+  if (!file) {
+    return 0;
+  }
+  int res = ReadJpgStream(file, im);
+  fclose(file);
+  return res;
+}
+int ReadJpg(const char *filename, FloatImage *image) {
+  ByteImage byte_image;
+  int res = ReadJpg(filename, &byte_image);
+  if (!res) {
+    return res;
+  }
+  ByteArrayToScaledFloatArray(byte_image, image);
+  return res;
+}
+struct my_error_mgr {
+  struct jpeg_error_mgr pub;
+  jmp_buf setjmp_buffer;
+};
+METHODDEF(void)
+jpeg_error (j_common_ptr cinfo)
+{
+  my_error_mgr *myerr = (my_error_mgr*) cinfo->err;
+  (*cinfo->err->output_message) (cinfo);
+  longjmp(myerr->setjmp_buffer, 1);
+}
+int ReadJpgStream(FILE *file, ByteImage *im) {
+  jpeg_decompress_struct cinfo;
+  struct my_error_mgr jerr;
+  JSAMPARRAY buffer;
+  cinfo.err = jpeg_std_error(&jerr.pub);
+  jerr.pub.error_exit = &jpeg_error;
+  
+  if (setjmp(jerr.setjmp_buffer)) {
+    jpeg_destroy_decompress(&cinfo);
+    return 0;
+  }
+  
+  jpeg_create_decompress(&cinfo);
+  jpeg_stdio_src(&cinfo, file);
+  jpeg_read_header(&cinfo, TRUE);
+  jpeg_start_decompress(&cinfo);
+  
+  int row_stride = cinfo.output_width * cinfo.output_components;
+  
+  buffer = (*cinfo.mem->alloc_sarray)
+    ((j_common_ptr) &cinfo, JPOOL_IMAGE, row_stride, 1);
+  
+  im->Resize(cinfo.output_height, cinfo.output_width, cinfo.output_components);
+  
+  unsigned char *ptr = im->Data();
+  
+  while (cinfo.output_scanline < cinfo.output_height) {
+    jpeg_read_scanlines(&cinfo, buffer, 1);
+    
+    int i;
+    for(i=0;i<row_stride;i++) {
+      *ptr = (*buffer)[i];
+      ptr++;
+    }
+  }
+  
+  jpeg_finish_decompress(&cinfo);
+  jpeg_destroy_decompress(&cinfo);
+  return 1;
+}
+int WriteJpg(const ByteImage &im, const char *filename, int quality) {
+  FILE *file = fopen(filename,"w");
+  if (!file) {
+    return 0;
+  }
+  int res = WriteJpgStream(im, file, quality);
+  fclose(file);
+  return res;
+}
+int WriteJpg(const FloatImage &image, const char *filename, int quality) {
+  ByteImage byte_image;
+  FloatArrayToScaledByteArray(image, &byte_image);
+  return WriteJpg(byte_image, filename, quality);
+}
+int WriteJpgStream(const ByteImage &im, FILE *file, int quality) {
+  struct jpeg_compress_struct cinfo;
+  struct jpeg_error_mgr jerr;
+  
+  cinfo.err = jpeg_std_error(&jerr);
+  jpeg_create_compress(&cinfo);
+  jpeg_stdio_dest(&cinfo, file);
+  
+  cinfo.image_width = im.Width();
+  cinfo.image_height = im.Height();
+  cinfo.input_components = im.Depth();
+  
+  if(cinfo.input_components==3) {
+    cinfo.in_color_space = JCS_RGB;
+  }
+  else if(cinfo.input_components==1) {
+    cinfo.in_color_space = JCS_GRAYSCALE;
+  }
+  else
+    return 0;
+  
+  jpeg_set_defaults(&cinfo);
+  jpeg_set_quality(&cinfo, quality, TRUE);
+  jpeg_start_compress(&cinfo, TRUE);
+  
+  const unsigned char *ptr = im.Data();
+  int row_bytes = cinfo.image_width*cinfo.input_components;
+  
+  JSAMPLE *row = new JSAMPLE[row_bytes];
+  
+  while (cinfo.next_scanline < cinfo.image_height) {
+    int i;
+    for(i=0; i<row_bytes; i++)
+    	row[i] = ptr[i];
+    jpeg_write_scanlines(&cinfo, &row, 1);
+    ptr += row_bytes;
+  }
+  
+  delete [] row;
+  
+  jpeg_finish_compress(&cinfo);
+  jpeg_destroy_compress(&cinfo);
+  return 1;
+}
 int ReadPng(const char *filename, ByteImage *im) {
   FILE *file = fopen(filename,"r");
   if (!file) {
