@@ -182,10 +182,10 @@ void TvrMainWindow::ComputeRobustMatches() {
 }
 
 void TvrMainWindow::FocalFromFundamental() {
-  libmv::Vec2 p0(document_.images[0].width() / 2.,
-                 document_.images[0].height() / 2.);
-  libmv::Vec2 p1(document_.images[1].width() / 2.,
-                 document_.images[1].height() / 2.);
+  libmv::Vec2 p0((document_.images[0].width() - 1) / 2.,
+                 (document_.images[0].height() - 1) / 2.);
+  libmv::Vec2 p1((document_.images[1].width() - 1) / 2.,
+                 (document_.images[1].height() - 1) / 2.);
   libmv::FocalFromFundamental(document_.F, p0, p1,
                               &document_.focal_distance[0],
                               &document_.focal_distance[1]);
@@ -199,8 +199,10 @@ void TvrMainWindow::FocalFromFundamental() {
 void TvrMainWindow::MetricReconstruction() {
   using namespace libmv;
 
-  Vec2 p0(document_.images[0].width() / 2., document_.images[0].height() / 2.);
-  Vec2 p1(document_.images[1].width() / 2., document_.images[1].height() / 2.);
+  Vec2 p0((document_.images[0].width() - 1) / 2.,
+          (document_.images[0].height() - 1) / 2.);
+  Vec2 p1((document_.images[1].width() - 1) / 2.,
+          (document_.images[1].height() - 1) / 2.);
   double f0 = document_.focal_distance[0];
   double f1 = document_.focal_distance[1];
   Mat3 K0, K1;

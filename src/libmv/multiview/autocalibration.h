@@ -225,9 +225,9 @@ class AutoCalibrationLinear {
                                   double height,
                                   Mat34 *P_new) {
     Mat3 T;
-    T << width + height,              0,  width / 2,
-                      0, width + height, height / 2,
-                      0,              0,          1;
+    T << width + height,              0,  (width - 1) / 2,
+                      0, width + height, (height - 1) / 2,
+                      0,              0,                1;
     *P_new = T.inverse() * P;
   }
   
@@ -236,9 +236,9 @@ class AutoCalibrationLinear {
                                     double height,
                                     Mat34 *P_new) {
     Mat3 T;
-    T << width + height,              0,  width / 2,
-                      0, width + height, height / 2,
-                      0,              0,          1;
+    T << width + height,              0,  (width - 1) / 2,
+                      0, width + height, (height - 1) / 2,
+                      0,              0,                1;
     *P_new = T * P;
   }
 
