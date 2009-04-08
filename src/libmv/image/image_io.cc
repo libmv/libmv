@@ -19,10 +19,269 @@
 // IN THE SOFTWARE.
 
 #include <iostream>
+#include <cstring>
 
 #include "libmv/image/image_io.h"
 
+#include "png.h"
+//#include "jpeglib.h"
+
 namespace libmv {
+
+enum format {
+  Pnm, Png, Jpg, Tga, Unknown
+};
+
+static format get_format(const char *c) {
+  char *p = strrchr (c, '.');
+
+  if (p == NULL)
+    return Unknown;
+
+  int len = strlen(p);
+
+  if (len != 4)
+    return Unknown;
+
+  if (tolower(p[1]) == 'p' && tolower(p[1]) == 'n' && tolower(p[1]) == 'g')
+    return Png;
+
+  if (tolower(p[1]) == 'p' && tolower(p[1]) == 'p' && tolower(p[1]) == 'm')
+    return Pnm;
+
+  if (tolower(p[1]) == 'p' && tolower(p[1]) == 'g' && tolower(p[1]) == 'm')
+    return Pnm;
+
+  if (tolower(p[1]) == 'p' && tolower(p[1]) == 'b' && tolower(p[1]) == 'm')
+    return Pnm;
+
+  if (tolower(p[1]) == 'p' && tolower(p[1]) == 'n' && tolower(p[1]) == 'm')
+    return Pnm;
+
+  if (tolower(p[1]) == 'j' && tolower(p[1]) == 'p' && tolower(p[1]) == 'g')
+    return Jpg;
+
+  return Unknown;
+}
+int ReadImage(const char *filename, ByteImage *im){
+  format f = get_format(filename);
+
+  switch (f) {
+    case Pnm:
+      return ReadPnm(filename, im);
+    case Png:
+      return ReadPng(filename, im);
+      //case Jpg:
+      //return ReadJpg(filename, im);
+    default:
+      return 0;
+  };
+}
+int ReadImage(const char *filename, FloatImage *im){
+  format f = get_format(filename);
+
+  switch (f) {
+    case Pnm:
+      return ReadPnm(filename, im);
+    case Png:
+      return ReadPng(filename, im);
+      //case Jpg:
+      //return ReadJpg(filename, im);
+    default:
+      return 0;
+  };
+}
+int WriteImage(const ByteImage &im, const char *filename){
+  format f = get_format(filename);
+
+  switch (f) {
+    case Pnm:
+      return WritePnm(im, filename);
+    case Png:
+      return WritePng(im, filename);
+      //case Jpg:
+      //return WriteJpg(im, filename);
+    default:
+      return 0;
+  };
+}
+int WriteImage(const FloatImage &im, const char *filename){
+  format f = get_format(filename);
+
+  switch (f) {
+    case Pnm:
+      return WritePnm(im, filename);
+    case Png:
+      return WritePng(im, filename);
+      //case Jpg:
+      //return WriteJpg(im, filename);
+    default:
+      return 0;
+  };
+}
+
+int ReadPng(const char *filename, ByteImage *im) {
+  FILE *file = fopen(filename,"r");
+  if (!file) {
+    return 0;
+  }
+  int res = ReadPngStream(file, im);
+  fclose(file);
+  return res;
+}
+
+int ReadPng(const char *filename, FloatImage *image) {
+  ByteImage byte_image;
+  int res = ReadPng(filename, &byte_image);
+  if (!res) {
+    return res;
+  }
+  ByteArrayToScaledFloatArray(byte_image, image);
+  return res;
+}
+
+//based on http://zarb.org/~gc/html/libpng.html
+int ReadPngStream(FILE *file, ByteImage *im) {
+  png_byte header[8];
+
+  fread(header, 1, 8, file);
+  if (png_sig_cmp(header, 0, 8))
+    return 0;
+
+  png_structp png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING,
+                                               NULL, NULL, NULL);
+
+  if (!png_ptr)
+    return 0;
+
+  png_infop info_ptr = png_create_info_struct(png_ptr);
+  if (!info_ptr)
+    return 0;
+
+  if (setjmp(png_jmpbuf(png_ptr)))
+    return 0;
+
+  png_init_io(png_ptr, file);
+  png_set_sig_bytes(png_ptr, 8);
+
+  png_read_info(png_ptr, info_ptr);
+
+  im->Resize(info_ptr->height, info_ptr->width, info_ptr->channels);
+
+  png_read_update_info(png_ptr, info_ptr);
+
+  if (setjmp(png_jmpbuf(png_ptr)))
+    return 0;
+
+  png_bytep *row_pointers =
+       (png_bytep*)malloc(sizeof(png_bytep) * im->Height());
+
+  int y;
+  for (y=0; y<im->Height(); y++)
+    row_pointers[y] = (png_byte*) malloc(info_ptr->rowbytes);
+
+  png_read_image(png_ptr, row_pointers);
+
+  unsigned char *ptr = im->Data();
+
+  int i, j;
+  for (j=0; j<im->Height(); j++)
+    for (i=0; i<im->Width(); i++) {
+      *ptr = row_pointers[j][i];
+      ptr++;
+    }
+
+  for (y=0; y<im->Height(); y++)
+    free(row_pointers[y]);
+
+  free(row_pointers);
+
+  return 1;
+}
+
+int WritePng(const ByteImage &im, const char *filename) {
+  FILE *file = fopen(filename,"w");
+  if (!file) {
+    return 0;
+  }
+  int res = WritePngStream(im, file);
+  fclose(file);
+  return res;
+}
+
+int WritePng(const FloatImage &image, const char *filename) {
+  ByteImage byte_image;
+  FloatArrayToScaledByteArray(image, &byte_image);
+  return WritePng(byte_image, filename);
+}
+
+int WritePngStream(const ByteImage &im, FILE *file) {
+  png_structp png_ptr =
+      png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+
+  if (!png_ptr)
+    return 0;
+
+  png_infop info_ptr = png_create_info_struct(png_ptr);
+  if (!info_ptr)
+    return 0;
+
+  if (setjmp(png_jmpbuf(png_ptr)))
+    return 0;
+
+  png_init_io(png_ptr, file);
+
+  if (setjmp(png_jmpbuf(png_ptr)))
+    return 0;
+
+  //colour types defined at png.h:841+
+  char colour;
+  if (im.Depth() == 3)
+    colour = PNG_COLOR_TYPE_RGB;
+  else if (im.Depth() == 1)
+    colour = PNG_COLOR_TYPE_GRAY;
+  else
+    return 0;
+
+  png_set_IHDR(png_ptr, info_ptr, im.Width(), im.Height(),
+      8, colour, PNG_INTERLACE_NONE,
+      PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
+
+  png_write_info(png_ptr, info_ptr);
+
+  if (setjmp(png_jmpbuf(png_ptr)))
+    return 0;
+
+  png_bytep *row_pointers =
+      (png_bytep*) malloc(sizeof(png_bytep) * im.Height());
+
+  int y;
+  for (y = 0; y < im.Height(); y++)
+    row_pointers[y] = (png_byte*) malloc(info_ptr->rowbytes);
+
+  unsigned char *ptr = (unsigned char *)im.Data();
+
+  int i, j;
+  for (j = 0; j < im.Height(); j++)
+    for (i = 0; i < im.Width(); i++) {
+      row_pointers[j][i] = *ptr;
+      ptr++;
+    }
+
+  png_write_image(png_ptr, row_pointers);
+
+  if (setjmp(png_jmpbuf(png_ptr)))
+    return 0;
+
+  for (y = 0; y < im.Height(); y++)
+    free(row_pointers[y]);
+
+  free(row_pointers);
+
+  png_write_end(png_ptr, NULL);
+
+  return 1;
+}
 
 int ReadPnm(const char *filename, ByteImage *im) {
   FILE *file = fopen(filename,"r");
@@ -43,13 +302,10 @@ int ReadPnm(const char *filename, FloatImage *image) {
   ByteArrayToScaledFloatArray(byte_image, image);
   return res;
 }
-
-// TODO(maclean): Add support for PNG and JPG via libjpeg and libpng. Will
-// require some cmake hackery and #define madness though.  Consider examples at
-// http://trac.astrometry.net/browser/trunk/src/astrometry/util/cairoutils.c
 // TODO(maclean): Consider making this templated to support loading into both
 // Eigen and Array3D's.
-// Comment handling as per the description provided at http://netpbm.sourceforge.net/doc/pgm.html
+// Comment handling as per the description provided at
+//   http://netpbm.sourceforge.net/doc/pgm.html
 // and http://netpbm.sourceforge.net/doc/pbm.html
 int ReadPnmStream(FILE *file, ByteImage *im) {
 
@@ -75,49 +331,48 @@ int ReadPnmStream(FILE *file, ByteImage *im) {
     return 0;
   }
 
-  // the following loop parses the PNM header one character at a time, looking for
-  // the int tokens width, height and maxValues (in that order), and discarding
-  // all comment (everything from '#' to '\n' inclusive), where comments *may occur
-  // inside tokens*. Each token must be terminate with a whitespace character, and only
-  // one whitespace char is eaten after the third int token is parsed.
-  while (valuesIndex < NUM_VALUES)
-  {
+  // the following loop parses the PNM header one character at a time, looking
+  // for the int tokens width, height and maxValues (in that order), and
+  // discarding all comment (everything from '#' to '\n' inclusive), where
+  // comments *may occur inside tokens*. Each token must be terminate with a
+  // whitespace character, and only one whitespace char is eaten after the
+  // third int token is parsed.
+  while (valuesIndex < NUM_VALUES) {
     char nextChar ;
     res = fread(&nextChar,1,1,file);
-    if (res == 0) return 0 ; // read failed, EOF?
+    if (res == 0) return 0; // read failed, EOF?
 
-    if (isspace(nextChar))
-    {
-      if (inToken) // we were reading a token, so this white space delimits it
-      {
-        inToken = 0 ;
+    if (isspace(nextChar)) {
+      if (inToken) { // we were reading a token, so this white space delimits it
+        inToken = 0;
         intBuffer[intIndex] = 0 ; // NULL-terminate the string
         values[valuesIndex++] = atoi(intBuffer);
-        intIndex = 0 ; // reset for next int token
-//        if (valuesIndex == 3 && values[2] > 65535) return 0 ; // use this line if image class aloows 2-byte grey-scale
-        if (valuesIndex == 3 && values[2] > 255) return 0 ; // to conform with current image class
+        intIndex = 0; // reset for next int token
+        // use this line if image class aloows 2-byte grey-scale
+//        if (valuesIndex == 3 && values[2] > 65535) return 0 ;
+        // to conform with current image class
+        if (valuesIndex == 3 && values[2] > 255) return 0;
       }
     }
-    else if (isdigit(nextChar))
-    {
+    else if (isdigit(nextChar)) {
       inToken = 1 ; // in case it's not already set
       intBuffer[intIndex++] = nextChar ;
-      if (intIndex == INT_BUFFER_SIZE) return 0 ; // tokens should never be this long
+      if (intIndex == INT_BUFFER_SIZE) // tokens should never be this long
+        return 0;
     }
-    else if (nextChar == '#')
-    {
-      do // eat all characters from input stream until newline
-      {
+    else if (nextChar == '#') {
+      do { // eat all characters from input stream until newline
         res = fread(&nextChar,1,1,file);
-      } while (res == 1 && nextChar != '\n') ;
-      if (res == 0) return 0 ; // read failed, EOF?
+      } while (res == 1 && nextChar != '\n');
+      if (res == 0) return 0; // read failed, EOF?
     }
-    else // encountered a non-whitepace, non-digit outside a comment - bail out
-    {
-      return 0 ;
+    else {
+      // Encountered a non-whitepace, non-digit outside a comment - bail out.
+      return 0;
     }
   }
 
+  // use this line if image class aloows 2-byte grey-scale
 //  if (values[2] > 255 && magicnumber == 5) depth = 2 ;
 
   // Read pixels.
@@ -153,7 +408,7 @@ int WritePnmStream(const ByteImage &im, FILE *file) {
   // Write magic number.
   if (im.Depth() == 1) {
     fprintf(file, "P5\n");
-  } else if(im.Depth() == 3) {
+  } else if (im.Depth() == 3) {
     fprintf(file, "P6\n");
   } else {
     return 0;

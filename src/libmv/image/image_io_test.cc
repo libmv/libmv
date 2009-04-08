@@ -120,5 +120,49 @@ TEST(WritePnm, Ppm) {
   EXPECT_TRUE(read_image == image);
 }
 
+TEST(ReadPng, InvalidFiles) {
+  Array3Du image;
+  Array3Df float_image;
+  string pnm_filename = string(THIS_SOURCE_DIR) + "/image_test/two_pixels.ppm";
+  EXPECT_FALSE(ReadPng(pnm_filename.c_str(), &image));
+  EXPECT_FALSE(ReadPng("hopefully_unexisting_file", &image));
+  EXPECT_FALSE(ReadPng(pnm_filename.c_str(), &float_image));
+  EXPECT_FALSE(ReadPng("hopefully_unexisting_file", &float_image));
+}
+
+TEST(ReadPng, Png) {
+  Array3Du image;
+  string png_filename = string(THIS_SOURCE_DIR) + "/image_test/two_pixels.png";
+  EXPECT_TRUE(ReadPng(png_filename.c_str(), &image));
+  EXPECT_EQ(2, image.Width());
+  EXPECT_EQ(1, image.Height());
+  EXPECT_EQ(1, image.Depth());
+  EXPECT_EQ(image(0,0), (unsigned char)255);
+  EXPECT_EQ(image(0,1), (unsigned char)0);
+}
+
+TEST(ReadPng, PngFloat) {
+  FloatImage image;
+  string pgm_filename = string(THIS_SOURCE_DIR) + "/image_test/two_pixels.png";
+  EXPECT_TRUE(ReadPng(pgm_filename.c_str(), &image));
+  EXPECT_EQ(2, image.Width());
+  EXPECT_EQ(1, image.Height());
+  EXPECT_EQ(1, image.Depth());
+  EXPECT_EQ(image(0,0), 1);
+  EXPECT_EQ(image(0,1), 0);
+}
+
+TEST(WritePng, Png) {
+  Array3Du image(1,2);
+  image(0,0) = 255;
+  image(0,1) = 0;
+  string out_filename = string(THIS_SOURCE_DIR)
+	              + "/image_test/test_write_png.png";
+  EXPECT_TRUE(WritePng(image, out_filename.c_str()));
+
+  Array3Du read_image;
+  EXPECT_TRUE(ReadPng(out_filename.c_str(), &read_image));
+  EXPECT_TRUE(read_image == image);
+}
 
 }  // namespace

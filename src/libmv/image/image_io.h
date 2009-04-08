@@ -27,6 +27,25 @@
 
 namespace libmv {
 
+int ReadImage(const char *, ByteImage *);
+int ReadImage(const char *, FloatImage *);
+int WriteImage(const ByteImage &, const char *);
+int WriteImage(const FloatImage &, const char *);
+
+int ReadPng(const char *, ByteImage *);
+int ReadPng(const char *, FloatImage *);
+int ReadPngStream(FILE *, ByteImage *);
+int WritePng(const ByteImage &, const char *);
+int WritePng(const FloatImage &, const char *);
+int WritePngStream(const ByteImage &, FILE *);
+
+int ReadJpg(const char *, ByteImage *);
+int ReadJpg(const char *, FloatImage *);
+int ReadJpgStream(FILE *, ByteImage *);
+int WriteJpg(const ByteImage &, const char *);
+int WriteJpg(const FloatImage &, const char *);
+int WriteJpgStream(const ByteImage &, FILE *, int quality=90);
+
 int ReadPnm(const char *filename, ByteImage *im);
 int ReadPnm(const char *filename, FloatImage *im);
 int ReadPnmStream(FILE *file, ByteImage *im);

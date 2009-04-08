@@ -4,6 +4,8 @@ ADD_LIBRARY(image image.cc image_io.cc convolve.cc image_pyramid.cc array_nd.cc
             image_sequence.cc image_sequence_io.cc image_sequence_filters.cc
             filtered_sequence.cc pyramid_sequence.cc)
 
+TARGET_LINK_LIBRARIES(image png)
+
 MACRO (IMAGE_TEST NAME)
   LIBMV_TEST(${NAME} image)
 ENDMACRO (IMAGE_TEST)

@@ -159,12 +159,12 @@ class ArrayND : public BaseArray {
     }
   }
 
-  /// Return a tuple containing the lenght of each axis.
+  /// Return a tuple containing the length of each axis.
   const Index &Shape() const {
     return shape_;
   }
 
-  /// Return the lenght of an axis.
+  /// Return the length of an axis.
   int Shape(int axis) const {
     return shape_(axis);
   }
