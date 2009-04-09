@@ -26,6 +26,7 @@
 #include "png.h"
 
 #include "libmv/image/image_io.h"
+#include "libmv/logging/logging.h"
 
 namespace libmv {
 
@@ -34,7 +35,7 @@ enum format {
 };
 
 static format get_format(const char *c) {
-  char *p = strrchr (c, '.'); // find last '.'
+  char *p = strrchr (c, '.');
 
   if (p == NULL)
     return Unknown;
@@ -42,7 +43,10 @@ static format get_format(const char *c) {
   int len = strlen(p);
 
   if (len != 4)
+  {
+    LOG(ERROR) << "Error: Couldn't open " << c << " Unknown file format\n";
     return Unknown;
+  }
 
   if (tolower(p[1]) == 'p' && tolower(p[1]) == 'n' && tolower(p[1]) == 'g')
     return Png;
@@ -62,8 +66,10 @@ static format get_format(const char *c) {
   if (tolower(p[1]) == 'j' && tolower(p[1]) == 'p' && tolower(p[1]) == 'g')
     return Jpg;
 
+  LOG(ERROR) << "Error: Couldn't open " << c << " Unknown file format\n";
   return Unknown;
 }
+
 int ReadImage(const char *filename, ByteImage *im){
   format f = get_format(filename);
 
@@ -78,6 +84,7 @@ int ReadImage(const char *filename, ByteImage *im){
       return 0;
   };
 }
+
 int ReadImage(const char *filename, FloatImage *im){
   format f = get_format(filename);
 
@@ -92,6 +99,7 @@ int ReadImage(const char *filename, FloatImage *im){
       return 0;
   };
 }
+
 int WriteImage(const ByteImage &im, const char *filename){
   format f = get_format(filename);
 
@@ -106,6 +114,7 @@ int WriteImage(const ByteImage &im, const char *filename){
       return 0;
   };
 }
+
 int WriteImage(const FloatImage &im, const char *filename){
   format f = get_format(filename);
 
@@ -120,15 +129,18 @@ int WriteImage(const FloatImage &im, const char *filename){
       return 0;
   };
 }
+
 int ReadJpg(const char *filename, ByteImage *im) {
   FILE *file = fopen(filename,"r");
   if (!file) {
+    LOG(ERROR) << "Error: Couldn't open " << filename << " fopen returned 0\n";
     return 0;
   }
   int res = ReadJpgStream(file, im);
   fclose(file);
   return res;
 }
+
 int ReadJpg(const char *filename, FloatImage *image) {
   ByteImage byte_image;
   int res = ReadJpg(filename, &byte_image);
@@ -138,10 +150,12 @@ int ReadJpg(const char *filename, FloatImage *image) {
   ByteArrayToScaledFloatArray(byte_image, image);
   return res;
 }
+
 struct my_error_mgr {
   struct jpeg_error_mgr pub;
   jmp_buf setjmp_buffer;
 };
+
 METHODDEF(void)
 jpeg_error (j_common_ptr cinfo)
 {
@@ -149,6 +163,7 @@ jpeg_error (j_common_ptr cinfo)
   (*cinfo->err->output_message) (cinfo);
   longjmp(myerr->setjmp_buffer, 1);
 }
+
 int ReadJpgStream(FILE *file, ByteImage *im) {
   jpeg_decompress_struct cinfo;
   struct my_error_mgr jerr;
@@ -189,21 +204,28 @@ int ReadJpgStream(FILE *file, ByteImage *im) {
   jpeg_destroy_decompress(&cinfo);
   return 1;
 }
+
 int WriteJpg(const ByteImage &im, const char *filename, int quality) {
   FILE *file = fopen(filename,"w");
   if (!file) {
+    LOG(ERROR) << "Error: Couldn't open " << filename << " fopen returned 0\n";
     return 0;
   }
   int res = WriteJpgStream(im, file, quality);
   fclose(file);
   return res;
 }
+
 int WriteJpg(const FloatImage &image, const char *filename, int quality) {
   ByteImage byte_image;
   FloatArrayToScaledByteArray(image, &byte_image);
   return WriteJpg(byte_image, filename, quality);
 }
+
 int WriteJpgStream(const ByteImage &im, FILE *file, int quality) {
+  if(quality < 0 || quality > 100)
+  	LOG(ERROR) << "Error: The quality parameter should be between 0 and 100\n";
+  
   struct jpeg_compress_struct cinfo;
   struct jpeg_error_mgr jerr;
   
@@ -222,7 +244,11 @@ int WriteJpgStream(const ByteImage &im, FILE *file, int quality) {
     cinfo.in_color_space = JCS_GRAYSCALE;
   }
   else
+  {
+    LOG(ERROR) << "Error: Unsupported number of channels in file\n";
+    jpeg_destroy_compress(&cinfo);
     return 0;
+  }
   
   jpeg_set_defaults(&cinfo);
   jpeg_set_quality(&cinfo, quality, TRUE);
@@ -247,9 +273,11 @@ int WriteJpgStream(const ByteImage &im, FILE *file, int quality) {
   jpeg_destroy_compress(&cinfo);
   return 1;
 }
+
 int ReadPng(const char *filename, ByteImage *im) {
   FILE *file = fopen(filename,"r");
   if (!file) {
+    LOG(ERROR) << "Error: Couldn't open " << filename << " fopen returned 0\n";
     return 0;
   }
   int res = ReadPngStream(file, im);
@@ -267,7 +295,7 @@ int ReadPng(const char *filename, FloatImage *image) {
   return res;
 }
 
-//based on http://zarb.org/~gc/html/libpng.html
+//The writing and reading functions using libpng are based on http://zarb.org/~gc/html/libpng.html
 int ReadPngStream(FILE *file, ByteImage *im) {
   png_byte header[8];
 
@@ -329,6 +357,7 @@ int ReadPngStream(FILE *file, ByteImage *im) {
 int WritePng(const ByteImage &im, const char *filename) {
   FILE *file = fopen(filename,"w");
   if (!file) {
+    LOG(ERROR) << "Error: Couldn't open " << filename << " fopen returned 0\n";
     return 0;
   }
   int res = WritePngStream(im, file);
@@ -361,7 +390,7 @@ int WritePngStream(const ByteImage &im, FILE *file) {
   if (setjmp(png_jmpbuf(png_ptr)))
     return 0;
 
-  //colour types defined at png.h:841+
+  //Colour types are defined at png.h:841+.
   char colour;
   if (im.Depth() == 3)
     colour = PNG_COLOR_TYPE_RGB;
@@ -413,6 +442,7 @@ int WritePngStream(const ByteImage &im, FILE *file) {
 int ReadPnm(const char *filename, ByteImage *im) {
   FILE *file = fopen(filename,"r");
   if (!file) {
+    LOG(ERROR) << "Error: Couldn't open " << filename << " fopen returned 0\n";
     return 0;
   }
   int res = ReadPnmStream(file, im);
@@ -514,6 +544,7 @@ int ReadPnmStream(FILE *file, ByteImage *im) {
 int WritePnm(const ByteImage &im, const char *filename) {
   FILE *file = fopen(filename,"w");
   if (!file) {
+    LOG(ERROR) << "Error: Couldn't open " << filename << " fopen returned 0\n";
     return 0;
   }
   int res = WritePnmStream(im, file);
