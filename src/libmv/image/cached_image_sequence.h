@@ -33,9 +33,9 @@ typedef std::pair<void *, int> TaggedImageKey;
 
 // A image cache that is shared among many image sequences (or anything that
 // produces images).
-class ImageCache : public LRUCache<TaggedImageKey, Image *> {
+class ImageCache : public LRUCache<TaggedImageKey, Image> {
  public:
-  typedef LRUCache<TaggedImageKey, Image *> Base;
+  typedef LRUCache<TaggedImageKey, Image> Base;
   ImageCache() : Base(10*1024*1024) {}
   ImageCache(int max_cache_size_in_bytes) : Base(max_cache_size_in_bytes) {}
 };

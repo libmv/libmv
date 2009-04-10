@@ -116,19 +116,20 @@ class LRUCache : public Cache<K, V> {
     if(possible_delete_needed)
     	DeleteUnpinnedItemsIfNecessary();
   }
-
-  virtual bool FetchAndPin(const K &key, V *value) {
+  
+  virtual bool FetchAndPin(const K &key, V **value) {
     if (!ContainsKey(key)) {
       return false;
     } 
     Pin(key);
-    *value = *items_[key].ptr;
+    *value = items_[key].ptr;
     return true;
   }
-  virtual void StoreAndPinSized(const K &key, V value, const int size) {
+  
+  virtual void StoreAndPinSized(const K &key, V *value, const int size) {
     size_ += size;
     CachedItem new_item;
-    new_item.ptr = new V(value);
+    new_item.ptr = value;
     new_item.use_count = 1;
     new_item.size = size;
     items_[key] = new_item;

@@ -31,11 +31,11 @@ namespace libmv {
 template<typename K, typename V>
 class Cache {
  public:
-  virtual bool FetchAndPin(const K &key, V *value) = 0;
-  virtual void StoreAndPin(const K &key, V value) {
+  virtual bool FetchAndPin(const K &key, V **value) = 0;
+  virtual void StoreAndPin(const K &key, V *value) {
     StoreAndPinSized(key, value, 1);
   }
-  virtual void StoreAndPinSized(const K &key, V value, const int size) = 0;
+  virtual void StoreAndPinSized(const K &key, V *value, const int size) = 0;
   virtual void Unpin(const K &key) = 0;
   virtual void MassUnpin() = 0;
   virtual bool ContainsKey(const K &key) = 0;

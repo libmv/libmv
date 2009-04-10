@@ -160,7 +160,7 @@ class SimpleConcretePyramidSequence : public PyramidSequence {
   ImageSequence *source_;
   int levels_;
   double sigma_;
-  LRUCache<int, ImagePyramid *> cache_;
+  LRUCache<int, ImagePyramid> cache_;
 };
 
 PyramidSequence *MakeSimplePyramidSequence(ImageSequence *source,

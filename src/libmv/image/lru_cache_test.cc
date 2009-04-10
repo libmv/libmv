@@ -27,66 +27,66 @@ typedef libmv::LRUCache<int, int> TestCache;
 
 TEST(LRUCache, NullOnEmptyKey) {
   TestCache cache(10);
-  int result;
-  bool succeeded = cache.FetchAndPin(4, &result);
+  int *ptr;
+  bool succeeded = cache.FetchAndPin(4, &ptr);
   EXPECT_FALSE(succeeded);
 }
 
 TEST(LRUCache, StoreAndRetreiveOneItem) {
   TestCache cache(10);
-  int result;
-  cache.StoreAndPin(4, 40);
-  bool succeeded = cache.FetchAndPin(4, &result);
+  int *ptr;
+  cache.StoreAndPin(4, new int(40));
+  bool succeeded = cache.FetchAndPin(4, &ptr);
   EXPECT_EQ(succeeded, true);
-  EXPECT_EQ(result, 40);
+  EXPECT_EQ(*ptr, 40);
 }
 
 TEST(LRUCache, SizeIncreasesWithAddedItems) {
   TestCache cache(10);
   EXPECT_EQ(cache.Size(), 0);
-  cache.StoreAndPin(4, 40);
+  cache.StoreAndPin(4, new int(40));
   EXPECT_EQ(cache.Size(), 1);
-  cache.StoreAndPin(5, 40);
+  cache.StoreAndPin(5, new int(40));
   EXPECT_EQ(cache.Size(), 2);
 }
 
 TEST(LRUCache, MaxSizeExceededWhenItemsPinned) {
   TestCache cache(3);
-  cache.StoreAndPin(4, 40);
-  cache.StoreAndPin(5, 50);
-  cache.StoreAndPin(6, 60);
+  cache.StoreAndPin(4, new int(40));
+  cache.StoreAndPin(5, new int(50));
+  cache.StoreAndPin(6, new int(60));
   EXPECT_EQ(cache.Size(), 3);
-  cache.StoreAndPin(7, 70);
+  cache.StoreAndPin(7, new int(70));
   EXPECT_EQ(cache.Size(), 4);
 }
 
 TEST(LRUCache, MaxSizeNotExceededWhenItemsUnpinned) {
   TestCache cache(3);
-  cache.StoreAndPin(4, 40);
-  cache.StoreAndPin(5, 50);
-  cache.StoreAndPin(6, 60);
+  cache.StoreAndPin(4, new int(40));
+  cache.StoreAndPin(5, new int(50));
+  cache.StoreAndPin(6, new int(60));
   EXPECT_EQ(cache.Size(), 3);
   cache.MassUnpin();
-  cache.StoreAndPin(7, 70);
+  cache.StoreAndPin(7, new int(70));
   EXPECT_EQ(cache.Size(), 3);
-  cache.StoreAndPin(8, 80);
+  cache.StoreAndPin(8, new int(80));
   EXPECT_EQ(cache.Size(), 3);
-  cache.StoreAndPin(9, 90);
+  cache.StoreAndPin(9, new int(90));
   EXPECT_EQ(cache.Size(), 3);
 }
 
 TEST(LRUCache, HarderCase) {
   TestCache cache(3);
-  cache.StoreAndPin(4, 40);
-  cache.StoreAndPin(5, 50);
-  cache.StoreAndPin(6, 60);
+  cache.StoreAndPin(4, new int(40));
+  cache.StoreAndPin(5, new int(50));
+  cache.StoreAndPin(6, new int(60));
   EXPECT_EQ(cache.Size(), 3);
   cache.MassUnpin();
-  cache.StoreAndPin(7, 70);
+  cache.StoreAndPin(7, new int(70));
   EXPECT_EQ(cache.Size(), 3);
-  cache.StoreAndPin(8, 80);
+  cache.StoreAndPin(8, new int(80));
   EXPECT_EQ(cache.Size(), 3);
-  cache.StoreAndPin(9, 90);
+  cache.StoreAndPin(9, new int(90));
   EXPECT_EQ(cache.Size(), 3);
 }
 
