@@ -50,14 +50,13 @@ class SetQueue {
   }
   void Remove(const K &key) {
     assert(Contains(key));
-    queue_.erase(queue_positions_[key]);
-    queue_positions_.erase(queue_positions_.find(key));
+    typename Map::iterator it = queue_positions_.find(key);
+    queue_.erase(it->second);
+    queue_positions_.erase(it);
   }
   void Dequeue(K *key) {
-    assert(queue_.size() > 0);
-    typename Queue::iterator last = queue_.end();
-    --last;  // Necessary because end is one past the last item.
-    *key = *last;
+    assert(!queue_.empty());
+    *key = queue_.back();
     Remove(*key);
   }
   bool Contains(const K &key) {
@@ -70,6 +69,10 @@ class SetQueue {
   int Size() {
     assert(queue_.size() == queue_positions_.size());
     return queue_.size();
+  }
+  bool Empty() {
+    assert(queue_.empty() == queue_positions_.empty());
+    return queue_.empty();
   }
  private:
   typedef list<K> Queue;
@@ -91,28 +94,27 @@ class LRUCache : public Cache<K, V> {
       size_(0) {}
 
   void Pin(const K &key) {
+    assert(ContainsKey(key));
     CachedItem *item = &(items_[key]);
-    if (item->use_count == 0) {
-      unpinned_items_.Remove(key);
-    } 
-    item->use_count++;
+    if(Pin(key, item))
+      DeleteUnpinnedItemsIfNecessary();
   }
-
+  
   virtual void Unpin(const K &key) {
+    assert(ContainsKey(key));
     CachedItem *item = &(items_[key]);
-    if (item->use_count > 0) {
-      if (item->use_count == 1) {
-        unpinned_items_.Enqueue(key);
-      } 
-      item->use_count--;
-    }
+    if(Unpin(key, item))
+    	DeleteUnpinnedItemsIfNecessary();
   }
 
   virtual void MassUnpin() {
+    bool possible_delete_needed = false;
     for (typename CacheMap::iterator it = items_.begin();
         it != items_.end(); ++it) {
-      Unpin(it->first);
+      possible_delete_needed |= Unpin(it->first, &it->second);
     }
+    if(possible_delete_needed)
+    	DeleteUnpinnedItemsIfNecessary();
   }
 
   virtual bool FetchAndPin(const K &key, V *value) {
@@ -120,16 +122,15 @@ class LRUCache : public Cache<K, V> {
       return false;
     } 
     Pin(key);
-    *value = items_[key].value;
+    *value = *items_[key].ptr;
     return true;
   }
-
   virtual void StoreAndPinSized(const K &key, V value, const int size) {
-    CachedItem new_item;
-    new_item.size = size;
     size_ += size;
-    new_item.value = value;
+    CachedItem new_item;
+    new_item.ptr = new V(value);
     new_item.use_count = 1;
+    new_item.size = size;
     items_[key] = new_item;
     DeleteUnpinnedItemsIfNecessary();
   }
@@ -147,35 +148,65 @@ class LRUCache : public Cache<K, V> {
   }
 
   virtual void SetMaxSize(const int max_size) {
-    // TODO(keir): Evict items if max_size has shrunk smaller than what's
-    // currently in the cache.
     max_size_ = max_size;
+    DeleteUnpinnedItemsIfNecessary();
   }
 
   virtual ~LRUCache() {}
 
  private:
   void DeleteUnpinnedItemsIfNecessary() {
-    while (unpinned_items_.Size() &&
+    while (!unpinned_items_.Empty() &&
            size_ > max_size_) {
       K key_to_remove;
       unpinned_items_.Dequeue(&key_to_remove);
-      CachedItem *item = &(items_[key_to_remove]);
-      // TODO(keir): We need to delete this sometimes! Figure out the right way
-      // to detect that this is a pointer and delete it.
-      // delete item->value;
-      printf("leaking %d bytes\n", item->size);
+      typename CacheMap::iterator it = items_.find(key_to_remove);
+      assert(it!=items_.end());
+      CachedItem *item = &it->second;
+      delete item->ptr;
       size_ -= item->size;
-      items_.erase(items_.find(key_to_remove));
+      items_.erase(it);
     }
   }
-
-  lru_cache::SetQueue<K> unpinned_items_;
+  
   struct CachedItem {
-    V value;
+    V *ptr;
     int use_count;
     int size;
+    CachedItem() : ptr(NULL) {}
   };
+  
+  bool Pin(const K &key, CachedItem *item)
+  {
+    assert(ContainsKey(key));
+    bool res;
+    if (item->use_count == 0) {
+      unpinned_items_.Remove(key);
+      res = true;
+    }
+    else
+      res = false;
+    item->use_count++;
+    return res;
+  }
+  
+  bool Unpin(const K &key, CachedItem *item)
+  {
+    assert(ContainsKey(key));
+    bool res;
+    if (item->use_count > 0) {
+      if (item->use_count == 1) {
+        unpinned_items_.Enqueue(key);
+        res = true;
+      }
+      else
+        res = false;
+      item->use_count--;
+    }
+    return res;
+  }
+  
+  lru_cache::SetQueue<K> unpinned_items_;
   typedef map<const K, CachedItem> CacheMap;
   CacheMap items_;
 
