@@ -26,4 +26,6 @@ using std::list;
 
 namespace libmv {
 
+
+
 } // namespace libmv

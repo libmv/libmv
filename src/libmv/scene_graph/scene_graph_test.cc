@@ -18,8 +18,46 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
+#include <cstring>
+
 #include "libmv/scene_graph/scene_graph.h"
 #include "testing/testing.h"
+#include "libmv/logging/logging.h"
 
 using libmv::SceneGraph;
+using libmv::MakeSGNode;
+using libmv::SGNode;
+using libmv::SGNotRoot;
+using libmv::SGNotLeaf;
+
+struct test_struct {
+  int data_;
+  float some_more_data_;
+};
+
+TEST(scene_graph, general_usage) {
+  SceneGraph<test_struct> scene_graph;
+  test_struct *t0 = new test_struct;
+  SGNotRoot<test_struct> *n = MakeSGNode(t0, "child");
+  scene_graph.AddChild(n);
+  EXPECT_TRUE(n->GetParent() == &scene_graph);
+  EXPECT_TRUE(scene_graph.NumChildren() == 1);
+  SGNode<test_struct> *node = scene_graph.GetAtPath("/child");
+  EXPECT_TRUE(node==n);
+  EXPECT_TRUE(node->GetObject() == t0);
+  char *path = node->GetPath();
+  EXPECT_FALSE(strcmp(path, "/child"));
+  delete [] path;
+  
+  test_struct *t1 = new test_struct;
+  SGNotRoot<test_struct> *child = MakeSGNode(t1, "childb");
+  node = node->AddChild(child);
+  EXPECT_TRUE(child->GetParent() == node);
+  EXPECT_TRUE(scene_graph.NumChildren() == 1);
+  EXPECT_TRUE(node->NumChildren() == 1);
+  path = child->GetPath();
+  EXPECT_FALSE(strcmp(path, "/child/childb"));
+  EXPECT_TRUE(scene_graph.GetAtPath("/child/childb") == child);
+  delete [] path;
+}
 
