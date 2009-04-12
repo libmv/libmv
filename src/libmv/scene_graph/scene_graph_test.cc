@@ -45,11 +45,11 @@ TEST(SceneGraph, Paths) {
   TestStruct *t0 = new TestStruct;
   SGNotRoot<TestStruct> *n = MakeSGNode(t0, "child");
   scene_graph.AddChild(n);
-  EXPECT_TRUE(n->GetParent() == &scene_graph);
-  EXPECT_TRUE(scene_graph.NumChildren() == 1);
+  EXPECT_EQ(n->GetParent(), &scene_graph);
+  EXPECT_EQ(scene_graph.NumChildren(), 1);
   SGNode<TestStruct> *node = scene_graph.GetAtPath("/child");
-  EXPECT_TRUE(node==n);
-  EXPECT_TRUE(node->GetObject() == t0);
+  EXPECT_EQ(node, n);
+  EXPECT_EQ(node->GetObject(), t0);
   char *path = node->GetPath();
   EXPECT_FALSE(strcmp(path, "/child"));
   delete [] path;
@@ -57,13 +57,25 @@ TEST(SceneGraph, Paths) {
   TestStruct *t1 = new TestStruct;
   SGNotRoot<TestStruct> *child = MakeSGNode(t1, "childb");
   node = node->AddChild(child);
-  EXPECT_TRUE(child->GetParent() == node);
-  EXPECT_TRUE(scene_graph.NumChildren() == 1);
-  EXPECT_TRUE(node->NumChildren() == 1);
+  EXPECT_EQ(child->GetParent(), node);
+  EXPECT_EQ(scene_graph.NumChildren(), 1);
+  EXPECT_EQ(node->NumChildren(), 1);
   path = child->GetPath();
   EXPECT_FALSE(strcmp(path, "/child/childb"));
-  EXPECT_TRUE(scene_graph.GetAtPath("/child/childb") == child);
+  EXPECT_EQ(scene_graph.GetAtPath("/child/childb"), child);
   delete [] path;
+}
+
+TEST(SceneGraph, NoHangingPtrs) {
+  SceneGraph<TestStruct> scene_graph;
+  TestStruct *t0 = new TestStruct;
+  scene_graph.AddChild(MakeSGNode(t0, "child"));
+  EXPECT_EQ(scene_graph.NumChildren(), 1);
+  SGNode<TestStruct> *n = scene_graph.GetChild("child");
+  EXPECT_TRUE(n);
+  delete n;
+  EXPECT_EQ(scene_graph.NumChildren(), 0);
+  EXPECT_FALSE(scene_graph.GetChild("child"));
 }
 
 TEST(SceneGraph, BigGraph) {
@@ -78,5 +90,9 @@ TEST(SceneGraph, BigGraph) {
     name[0]++;
   }
   //TODO(Daniel): Finish this test and add more.
+}
+
+TEST(SceneGraph, MatrixTest) {
+
 }
 
