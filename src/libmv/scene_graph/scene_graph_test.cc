@@ -89,7 +89,7 @@ TEST(SceneGraph, BigGraph) {
     scene_graph.AddChild(MakeSGNode(new TestStruct(data), name));
     name[0]++;
   }
-  //TODO(Daniel): Finish this test and add more.
+  // TODO(Daniel): Finish this test and add more.
 }
 
 TEST(SceneGraph, MatrixTest) {

@@ -42,9 +42,8 @@ static format get_format(const char *c) {
 
   int len = strlen(p);
 
-  if (len != 4)
-  {
-    LOG(ERROR) << "Error: Couldn't open " << c << " Unknown file format\n";
+  if (len != 4) {
+    LOG(ERROR) << "Error: Couldn't open " << c << " Unknown file format";
     return Unknown;
   }
 
@@ -66,7 +65,7 @@ static format get_format(const char *c) {
   if (tolower(p[1]) == 'j' && tolower(p[1]) == 'p' && tolower(p[1]) == 'g')
     return Jpg;
 
-  LOG(ERROR) << "Error: Couldn't open " << c << " Unknown file format\n";
+  LOG(ERROR) << "Error: Couldn't open " << c << " Unknown file format";
   return Unknown;
 }
 
@@ -133,7 +132,7 @@ int WriteImage(const FloatImage &im, const char *filename){
 int ReadJpg(const char *filename, ByteImage *im) {
   FILE *file = fopen(filename,"r");
   if (!file) {
-    LOG(ERROR) << "Error: Couldn't open " << filename << " fopen returned 0\n";
+    LOG(ERROR) << "Error: Couldn't open " << filename << " fopen returned 0";
     return 0;
   }
   int res = ReadJpgStream(file, im);
@@ -208,7 +207,7 @@ int ReadJpgStream(FILE *file, ByteImage *im) {
 int WriteJpg(const ByteImage &im, const char *filename, int quality) {
   FILE *file = fopen(filename,"w");
   if (!file) {
-    LOG(ERROR) << "Error: Couldn't open " << filename << " fopen returned 0\n";
+    LOG(ERROR) << "Error: Couldn't open " << filename << " fopen returned 0";
     return 0;
   }
   int res = WriteJpgStream(im, file, quality);
@@ -224,7 +223,7 @@ int WriteJpg(const FloatImage &image, const char *filename, int quality) {
 
 int WriteJpgStream(const ByteImage &im, FILE *file, int quality) {
   if (quality < 0 || quality > 100)
-  	LOG(ERROR) << "Error: The quality parameter should be between 0 and 100\n";
+    LOG(ERROR) << "Error: The quality parameter should be between 0 and 100";
   
   struct jpeg_compress_struct cinfo;
   struct jpeg_error_mgr jerr;
@@ -239,13 +238,10 @@ int WriteJpgStream(const ByteImage &im, FILE *file, int quality) {
   
   if (cinfo.input_components==3) {
     cinfo.in_color_space = JCS_RGB;
-  }
-  else if (cinfo.input_components==1) {
+  } else if (cinfo.input_components==1) {
     cinfo.in_color_space = JCS_GRAYSCALE;
-  }
-  else
-  {
-    LOG(ERROR) << "Error: Unsupported number of channels in file\n";
+  } else {
+    LOG(ERROR) << "Error: Unsupported number of channels in file";
     jpeg_destroy_compress(&cinfo);
     return 0;
   }
@@ -277,7 +273,7 @@ int WriteJpgStream(const ByteImage &im, FILE *file, int quality) {
 int ReadPng(const char *filename, ByteImage *im) {
   FILE *file = fopen(filename,"r");
   if (!file) {
-    LOG(ERROR) << "Error: Couldn't open " << filename << " fopen returned 0\n";
+    LOG(ERROR) << "Error: Couldn't open " << filename << " fopen returned 0";
     return 0;
   }
   int res = ReadPngStream(file, im);
@@ -295,7 +291,7 @@ int ReadPng(const char *filename, FloatImage *image) {
   return res;
 }
 
-//The writing and reading functions using libpng are based on http://zarb.org/~gc/html/libpng.html
+// The writing and reading functions using libpng are based on http://zarb.org/~gc/html/libpng.html
 int ReadPngStream(FILE *file, ByteImage *im) {
   png_byte header[8];
 
@@ -357,7 +353,7 @@ int ReadPngStream(FILE *file, ByteImage *im) {
 int WritePng(const ByteImage &im, const char *filename) {
   FILE *file = fopen(filename,"w");
   if (!file) {
-    LOG(ERROR) << "Error: Couldn't open " << filename << " fopen returned 0\n";
+    LOG(ERROR) << "Error: Couldn't open " << filename << " fopen returned 0";
     return 0;
   }
   int res = WritePngStream(im, file);
@@ -390,7 +386,7 @@ int WritePngStream(const ByteImage &im, FILE *file) {
   if (setjmp(png_jmpbuf(png_ptr)))
     return 0;
 
-  //Colour types are defined at png.h:841+.
+  // Colour types are defined at png.h:841+.
   char colour;
   if (im.Depth() == 3)
     colour = PNG_COLOR_TYPE_RGB;
@@ -442,7 +438,7 @@ int WritePngStream(const ByteImage &im, FILE *file) {
 int ReadPnm(const char *filename, ByteImage *im) {
   FILE *file = fopen(filename,"r");
   if (!file) {
-    LOG(ERROR) << "Error: Couldn't open " << filename << " fopen returned 0\n";
+    LOG(ERROR) << "Error: Couldn't open " << filename << " fopen returned 0";
     return 0;
   }
   int res = ReadPnmStream(file, im);
@@ -544,7 +540,7 @@ int ReadPnmStream(FILE *file, ByteImage *im) {
 int WritePnm(const ByteImage &im, const char *filename) {
   FILE *file = fopen(filename,"w");
   if (!file) {
-    LOG(ERROR) << "Error: Couldn't open " << filename << " fopen returned 0\n";
+    LOG(ERROR) << "Error: Couldn't open " << filename << " fopen returned 0";
     return 0;
   }
   int res = WritePnmStream(im, file);
