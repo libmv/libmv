@@ -59,7 +59,7 @@ class SGNode
     return NULL;
   }
   
-  //AddChild and RemoveChild may result in reallocation of this,
+  //AddChild and RemoveChild may result in reallocation for the node,
   //the new node is returned from each function.
   //If you don't want reallocation use AddChildStable and RemoveChildStable
   //although they may fail.
@@ -82,12 +82,16 @@ class SGNode
     return false;
   }
   
+  //Returns the matrix for the object which includes effects from parents.
   virtual Mat4 GetMatrix() {
     Mat4 res;
     res.setIdentity();
     return res;
   }
   
+  virtual bool HasChild(SGNotRoot<Object> *) {
+    return false;
+  }
   virtual bool HasChildren() {
     return false;
   }
@@ -120,7 +124,7 @@ class SGNotLeaf : public virtual SGNode<Object>
     	path++;
     const char *next_path = strchr(path, '/');
     int next_size;
-    if(next_path)
+    if (next_path)
       next_size = strlen(next_path);
     else
       next_size = 0;
@@ -129,10 +133,10 @@ class SGNotLeaf : public virtual SGNode<Object>
     strncpy(child_name, path, size);
     child_name[size]='\0';
     SGNotRoot<Object> *child = GetChild(child_name);
-    if(!child)
+    if (!child)
       return NULL;
     SGNotRoot<Object> *result;
-    if(next_path)
+    if (next_path)
       result = child->GetAtPath(next_path);
     else
       result = child;
@@ -145,7 +149,7 @@ class SGNotLeaf : public virtual SGNode<Object>
   bool HasChild(SGNotRoot<Object> *node) {
     typename list<SGNotRoot<Object> *>::iterator it;
     for(it=children_.begin(); it!=children_.end(); ++it)
-      if(*it == node)
+      if (*it == node)
       	return true;
     return false;
   }
@@ -186,12 +190,12 @@ class SGNotRoot : public virtual SGNode<Object>
     assert(parent_);
     char *parent_path = parent_->GetPath();
     int len;
-    if(parent_path)
+    if (parent_path)
       len = strlen(parent_path);
     else
       len = 0;
     char *res = new char [len + strlen(name_) + 2];
-    if(parent_path)
+    if (parent_path)
       strcpy(res, parent_path);
     res[len] = '/';
     strcpy(&res[len+1], name_);
@@ -202,14 +206,17 @@ class SGNotRoot : public virtual SGNode<Object>
   bool SetName(const char *name) {
     int i;
     for(i=0; i<strlen(name); i++) {
-    	if(!((name[i]>'0'&&name[i]<'9')||
-    	     (name[i]>'a'&&name[i]<'z')||
-    	     (name[i]>'A'&&name[i]<'Z')||
+    	if (!((name[i]>='0'&&name[i]<='9')||
+    	     (name[i]>='a'&&name[i]<='z')||
+    	     (name[i]>='A'&&name[i]<='Z')||
     	     name[i]==' ')) {
     	  name_=NULL;
     	  return false;
     	}
     }
+    if (parent_)
+      if (parent_->GetChild(name) != NULL)
+        return false;
     name_ = new char[strlen(name)+1];
     strcpy(name_, name);
     return true;
@@ -231,13 +238,13 @@ class SGNotRoot : public virtual SGNode<Object>
   
   void SetParent(SGNotLeaf<Object> *node) {
     parent_ = node;
-    if(node)
+    if (node)
       parent_->HasChild(this);
     UpdateMatrix();
   }
   
   void UpdateMatrix() {
-    if(parent_) {
+    if (parent_) {
       current_ = parent_->GetMatrix() * transform_;
       this->UpdateChildren();
     }
@@ -325,7 +332,7 @@ class SGLeafNode : public SGNotRoot<Object>
     assert(branch->HasChildren());
     assert(branch->NumChildren()==1);
     SGNode<Object> *parent = branch->GetParent();
-    if(parent) {
+    if (parent) {
       bool res = parent->RemoveChildStable(this);
       assert(res);
       res = parent->AddChildStable(branch);
@@ -347,8 +354,8 @@ SGNotRoot<Object> *SGNotLeaf<Object>::GetChild(const char *name) {
   typename list<SGNotRoot<Object> *>::iterator it;
   for(it=children_.begin(); it!=children_.end(); ++it) {
     const char *child_name = (*it)->GetName();
-    if(child_name)
-      if(!strcmp(name, child_name))
+    if (child_name)
+      if (!strcmp(name, child_name))
         return *it;
   }
   return NULL;
@@ -389,7 +396,7 @@ bool SGNotLeaf<Object>::RemoveChildStable(SGNotRoot<Object> *node) {
 template<class Object>
 SGNode<Object> *SGBranchNode<Object>::RemoveChild(SGNotRoot<Object> *node) {
   SGNotLeaf<Object>::RemoveChildStable(node);
-  if(!this->HasChildren())
+  if (!this->HasChildren())
   {
     SGLeafNode<Object> *leaf =
        new SGLeafNode<Object>(static_cast<SGNotRoot<Object> *>(this));
@@ -410,7 +417,7 @@ class SceneGraph : public SGRootNode<Object>
 template<class Object>
 SGLeafNode<Object> *MakeSGNode(Object *obj, const char *name) {
   SGLeafNode<Object> *leaf = new SGLeafNode<Object>;
-  if(!leaf->SetName(name))
+  if (!leaf->SetName(name))
     LOG(ERROR) << "couldn't set name: " << name << "\n";
   else
     assert(leaf->GetName());

@@ -30,27 +30,32 @@ using libmv::SGNode;
 using libmv::SGNotRoot;
 using libmv::SGNotLeaf;
 
-struct test_struct {
+struct TestStruct {
   int data_;
   float some_more_data_;
+  TestStruct() {}
+  TestStruct(const TestStruct &t) {
+    data_ = t.data_;
+    some_more_data_ = t.some_more_data_;
+  }
 };
 
-TEST(scene_graph, general_usage) {
-  SceneGraph<test_struct> scene_graph;
-  test_struct *t0 = new test_struct;
-  SGNotRoot<test_struct> *n = MakeSGNode(t0, "child");
+TEST(SceneGraph, Paths) {
+  SceneGraph<TestStruct> scene_graph;
+  TestStruct *t0 = new TestStruct;
+  SGNotRoot<TestStruct> *n = MakeSGNode(t0, "child");
   scene_graph.AddChild(n);
   EXPECT_TRUE(n->GetParent() == &scene_graph);
   EXPECT_TRUE(scene_graph.NumChildren() == 1);
-  SGNode<test_struct> *node = scene_graph.GetAtPath("/child");
+  SGNode<TestStruct> *node = scene_graph.GetAtPath("/child");
   EXPECT_TRUE(node==n);
   EXPECT_TRUE(node->GetObject() == t0);
   char *path = node->GetPath();
   EXPECT_FALSE(strcmp(path, "/child"));
   delete [] path;
   
-  test_struct *t1 = new test_struct;
-  SGNotRoot<test_struct> *child = MakeSGNode(t1, "childb");
+  TestStruct *t1 = new TestStruct;
+  SGNotRoot<TestStruct> *child = MakeSGNode(t1, "childb");
   node = node->AddChild(child);
   EXPECT_TRUE(child->GetParent() == node);
   EXPECT_TRUE(scene_graph.NumChildren() == 1);
@@ -59,5 +64,19 @@ TEST(scene_graph, general_usage) {
   EXPECT_FALSE(strcmp(path, "/child/childb"));
   EXPECT_TRUE(scene_graph.GetAtPath("/child/childb") == child);
   delete [] path;
+}
+
+TEST(SceneGraph, BigGraph) {
+  SceneGraph<TestStruct> scene_graph;
+  char name[2];
+  name[1] = '\0';
+  name[0] = 'a';
+  int i;
+  TestStruct data;
+  for (i=0; i<20; i++) {
+    scene_graph.AddChild(MakeSGNode(new TestStruct(data), name));
+    name[0]++;
+  }
+  //TODO(Daniel): Finish this test and add more.
 }
 

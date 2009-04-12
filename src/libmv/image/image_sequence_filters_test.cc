@@ -33,6 +33,7 @@ using libmv::Array3Df;
 namespace {
 
 // TODO(keir): Make this pass valgrind clean!
+// TODO(Daniel): This test fails because items in the cache are unpinned more than they have been pinned.
 TEST(BlurAndDerivative, Simple) {
   ImageCache cache;
   MockImageSequence source(&cache);

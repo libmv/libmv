@@ -90,4 +90,19 @@ TEST(LRUCache, HarderCase) {
   EXPECT_EQ(cache.Size(), 3);
 }
 
+TEST(LRUCache, SizeDecreaseWhenMaxSizeChanged) {
+  TestCache cache(3);
+  cache.StoreAndPin(4, new int(40));
+  cache.StoreAndPin(5, new int(50));
+  cache.StoreAndPin(6, new int(60));
+  cache.MassUnpin();
+  EXPECT_EQ(cache.Size(), 3);
+  cache.SetMaxSize(2);
+  EXPECT_EQ(cache.Size(), 2);
+  cache.SetMaxSize(1);
+  EXPECT_EQ(cache.Size(), 1);
+  cache.SetMaxSize(10);
+  EXPECT_EQ(cache.Size(), 1);
+}
+
 }  // namespace

@@ -96,15 +96,15 @@ class LRUCache : public Cache<K, V> {
   void Pin(const K &key) {
     assert(ContainsKey(key));
     CachedItem *item = &(items_[key]);
-    if(Pin(key, item))
+    if (Pin(key, item))
       DeleteUnpinnedItemsIfNecessary();
   }
   
   virtual void Unpin(const K &key) {
     assert(ContainsKey(key));
     CachedItem *item = &(items_[key]);
-    if(Unpin(key, item))
-    	DeleteUnpinnedItemsIfNecessary();
+    if (Unpin(key, item))
+      DeleteUnpinnedItemsIfNecessary();
   }
 
   virtual void MassUnpin() {
@@ -113,8 +113,8 @@ class LRUCache : public Cache<K, V> {
         it != items_.end(); ++it) {
       possible_delete_needed |= Unpin(it->first, &it->second);
     }
-    if(possible_delete_needed)
-    	DeleteUnpinnedItemsIfNecessary();
+    if (possible_delete_needed)
+      DeleteUnpinnedItemsIfNecessary();
   }
   
   virtual bool FetchAndPin(const K &key, V **value) {
@@ -162,7 +162,7 @@ class LRUCache : public Cache<K, V> {
       K key_to_remove;
       unpinned_items_.Dequeue(&key_to_remove);
       typename CacheMap::iterator it = items_.find(key_to_remove);
-      assert(it!=items_.end());
+      assert(it != items_.end());
       CachedItem *item = &it->second;
       delete item->ptr;
       size_ -= item->size;
@@ -177,33 +177,26 @@ class LRUCache : public Cache<K, V> {
     CachedItem() : ptr(NULL) {}
   };
   
-  bool Pin(const K &key, CachedItem *item)
-  {
+  bool Pin(const K &key, CachedItem *item) {
     assert(ContainsKey(key));
-    bool res;
+    bool res = false;
     if (item->use_count == 0) {
       unpinned_items_.Remove(key);
       res = true;
     }
-    else
-      res = false;
     item->use_count++;
     return res;
   }
   
-  bool Unpin(const K &key, CachedItem *item)
-  {
+  bool Unpin(const K &key, CachedItem *item) {
     assert(ContainsKey(key));
-    bool res;
-    if (item->use_count > 0) {
-      if (item->use_count == 1) {
-        unpinned_items_.Enqueue(key);
-        res = true;
-      }
-      else
-        res = false;
-      item->use_count--;
+    assert(item->use_count > 0);
+    bool res = false;
+    if (item->use_count == 1) {
+      unpinned_items_.Enqueue(key);
+      res = true;
     }
+    item->use_count--;
     return res;
   }
   

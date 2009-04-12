@@ -223,7 +223,7 @@ int WriteJpg(const FloatImage &image, const char *filename, int quality) {
 }
 
 int WriteJpgStream(const ByteImage &im, FILE *file, int quality) {
-  if(quality < 0 || quality > 100)
+  if (quality < 0 || quality > 100)
   	LOG(ERROR) << "Error: The quality parameter should be between 0 and 100\n";
   
   struct jpeg_compress_struct cinfo;
@@ -237,10 +237,10 @@ int WriteJpgStream(const ByteImage &im, FILE *file, int quality) {
   cinfo.image_height = im.Height();
   cinfo.input_components = im.Depth();
   
-  if(cinfo.input_components==3) {
+  if (cinfo.input_components==3) {
     cinfo.in_color_space = JCS_RGB;
   }
-  else if(cinfo.input_components==1) {
+  else if (cinfo.input_components==1) {
     cinfo.in_color_space = JCS_GRAYSCALE;
   }
   else
