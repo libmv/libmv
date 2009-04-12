@@ -96,3 +96,13 @@ TEST(SceneGraph, MatrixTest) {
 
 }
 
+TEST(SceneGraph, Misc) {
+  TestStruct data;
+  SceneGraph<TestStruct> scene_graph;
+  SGNode<TestStruct> *node = MakeSGNode(new TestStruct(data), "child");
+  scene_graph.AddChild(node);
+  node->AddChild(MakeSGNode(new TestStruct(data), "childofchild"));
+  EXPECT_EQ(scene_graph.NumChildrenRecursive(), 2);
+  EXPECT_EQ(scene_graph.NumChildren(), 1);
+}
+
