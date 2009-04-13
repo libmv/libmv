@@ -47,6 +47,8 @@
 #include <QMainWindow>
 #include <QPrinter>
 
+#include "ui/scrubber.h"
+
 class QAction;
 class QLabel;
 class QMenu;
@@ -59,6 +61,8 @@ class ImageViewer : public QMainWindow
 
 public:
     ImageViewer();
+    
+    void FrameChange();
 
 private slots:
     void open();
@@ -76,7 +80,6 @@ private:
     void scaleImage(double factor);
     void adjustScrollBar(QScrollBar *scrollBar, double factor);
 
-    QLabel *imageLabel;
     QScrollArea *scrollArea;
     double scaleFactor;
 
@@ -95,6 +98,10 @@ private:
     QMenu *fileMenu;
     QMenu *viewMenu;
     QMenu *helpMenu;
+    
+    QLabel *imageLabel;
+    
+    Scrubber *scrubber;
 };
 
 #endif

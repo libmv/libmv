@@ -11,6 +11,10 @@ using namespace std;
 #include "ui/imageviewer.h"
 #include "ui/scrubber.h"
 
+static void callback(void *data) {
+  ((ImageViewer*)data)->FrameChange();
+}
+
 ImageViewer::ImageViewer()
 {
   imageLabel = new QLabel;
@@ -24,18 +28,15 @@ ImageViewer::ImageViewer()
 
   setCentralWidget(scrollArea);
 
-  Scrubber *scrubber = new Scrubber;
+  scrubber = new Scrubber;
   scrubber->setNumItems(20);
-  scrubber->setItem(0, 1);
-  scrubber->setItem(4, 1);
-  scrubber->setItem(5, 1);
-  scrubber->setItem(18, 1);
   statusBar()->addPermanentWidget(scrubber, 1);
+  scrubber->setCallback(callback, this);
 
   createActions();
   createMenus();
 
-  setWindowTitle(tr("Image Viewer"));
+  setWindowTitle(tr("Libmv Testbed"));
   resize(500, 400);
 }
 
@@ -46,7 +47,12 @@ void ImageViewer::open()
   if (!fileName.isEmpty()) {
 
     libmv::ByteImage mv_image;
-    assert(libmv::ReadPnm(fileName.toStdString().c_str(), &mv_image));
+    if(!libmv::ReadImage(fileName.toStdString().c_str(), &mv_image))  {
+      QMessageBox::information(this, tr("Libmv Testbed"),
+          tr("Cannot load %1.").arg(fileName));
+      return;
+    }
+    
     libmv::FloatImage float_mv_image;
     float_mv_image.CopyFrom(mv_image);
     libmv::FloatImage blurred_mv_image;
@@ -65,21 +71,32 @@ void ImageViewer::open()
     libmv::FloatArrayToScaledByteArray(blurred_mv_image, &mv_image);
 //    mv_image.CopyFrom(float_mv_image);
 
-    printf("w=%d,h=%d\n", mv_image.Width(), mv_image.Height());
+    printf("w=%d,h=%d,d=%d\n", mv_image.Width(), mv_image.Height(),
+                 mv_image.Depth());
 
-    QImage image(mv_image.Data(), mv_image.Width(), mv_image.Height(),
-                 QImage::Format_Indexed8);
+    QImage image;
+    if (mv_image.Depth() == 1) {
+      image = QImage(mv_image.Data(), mv_image.Width(), mv_image.Height(), QImage::Format_Indexed8);
+    } else if (mv_image.Depth() == 3) {
+      //Sorry QImage::Format_RGB888 isn't implemented in qt 4.3 the version on my computer (Daniel).
+      QMessageBox::information(this, tr("Libmv Testbed"),
+          tr("Cannot load %1. Try converting your image to greyscale.").arg(fileName));
+      return;
+    }
+    
     image.setNumColors(256);
     for (int i = 0, count = image.numColors(); i < count; ++i) {
       image.setColor(i, qRgb(i,i,i));
     }
 
     if (image.isNull()) {
-      QMessageBox::information(this, tr("Image Viewer"),
+      QMessageBox::information(this, tr("Libmv Testbed"),
           tr("Cannot load %1.").arg(fileName));
       return;
     }
+    
     QPixmap qp = QPixmap::fromImage(image);
+    scrubber->setCurrentItem(qp);
     imageLabel->setPixmap(qp);
 
     scaleFactor = 1.0;
@@ -93,6 +110,10 @@ void ImageViewer::open()
   }
 }
 
+void ImageViewer::FrameChange() {
+  imageLabel->setPixmap(scrubber->GetCurrentItem());
+}
+
 void ImageViewer::print()
 {
   Q_ASSERT(imageLabel->pixmap());
@@ -104,7 +125,7 @@ void ImageViewer::print()
     size.scale(rect.size(), Qt::KeepAspectRatio);
     painter.setViewport(rect.x(), rect.y(), size.width(), size.height());
     painter.setWindow(imageLabel->pixmap()->rect());
-    painter.drawPixmap(0, 0, *imageLabel->pixmap());
+    painter.drawPixmap(0, 0, scrubber->GetCurrentItem());
   }
 }
 
@@ -137,19 +158,8 @@ void ImageViewer::fitToWindow()
 
 void ImageViewer::about()
 {
-  QMessageBox::about(this, tr("About Image Viewer"),
-      tr("<p>The <b>Image Viewer</b> example shows how to combine QLabel "
-        "and QScrollArea to display an image. QLabel is typically used "
-        "for displaying a text, but it can also display an image. "
-        "QScrollArea provides a scrolling view around another widget. "
-        "If the child widget exceeds the size of the frame, QScrollArea "
-        "automatically provides scroll bars. </p><p>The example "
-        "demonstrates how QLabel's ability to scale its contents "
-        "(QLabel::scaledContents), and QScrollArea's ability to "
-        "automatically resize its contents "
-        "(QScrollArea::widgetResizable), can be used to implement "
-        "zooming and scaling features. </p><p>In addition the example "
-        "shows how to use QPainter to print an image.</p>"));
+  QMessageBox::about(this, tr("About Libmv Testbed"),
+      tr("<p>This is a tool to test functionality in Libmv.</p>"));
 }
 
 void ImageViewer::createActions()
@@ -190,9 +200,6 @@ void ImageViewer::createActions()
 
   aboutAct = new QAction(tr("&About"), this);
   connect(aboutAct, SIGNAL(triggered()), this, SLOT(about()));
-
-  aboutQtAct = new QAction(tr("About &Qt"), this);
-  connect(aboutQtAct, SIGNAL(triggered()), qApp, SLOT(aboutQt()));
 }
 
 void ImageViewer::createMenus()
@@ -212,7 +219,6 @@ void ImageViewer::createMenus()
 
   helpMenu = new QMenu(tr("&Help"), this);
   helpMenu->addAction(aboutAct);
-  helpMenu->addAction(aboutQtAct);
 
   menuBar()->addMenu(fileMenu);
   menuBar()->addMenu(viewMenu);

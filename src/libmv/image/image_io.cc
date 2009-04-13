@@ -30,11 +30,7 @@
 
 namespace libmv {
 
-enum format {
-  Pnm, Png, Jpg, Tga, Unknown
-};
-
-static format get_format(const char *c) {
+Format GetFormat(const char *c) {
   char *p = strrchr (c, '.');
 
   if (p == NULL)
@@ -47,22 +43,22 @@ static format get_format(const char *c) {
     return Unknown;
   }
 
-  if (tolower(p[1]) == 'p' && tolower(p[1]) == 'n' && tolower(p[1]) == 'g')
+  if (tolower(p[1]) == 'p' && tolower(p[2]) == 'n' && tolower(p[3]) == 'g')
     return Png;
 
-  if (tolower(p[1]) == 'p' && tolower(p[1]) == 'p' && tolower(p[1]) == 'm')
+  if (tolower(p[1]) == 'p' && tolower(p[2]) == 'p' && tolower(p[3]) == 'm')
     return Pnm;
 
-  if (tolower(p[1]) == 'p' && tolower(p[1]) == 'g' && tolower(p[1]) == 'm')
+  if (tolower(p[1]) == 'p' && tolower(p[2]) == 'g' && tolower(p[3]) == 'm')
     return Pnm;
 
-  if (tolower(p[1]) == 'p' && tolower(p[1]) == 'b' && tolower(p[1]) == 'm')
+  if (tolower(p[1]) == 'p' && tolower(p[2]) == 'b' && tolower(p[3]) == 'm')
     return Pnm;
 
-  if (tolower(p[1]) == 'p' && tolower(p[1]) == 'n' && tolower(p[1]) == 'm')
+  if (tolower(p[1]) == 'p' && tolower(p[2]) == 'n' && tolower(p[3]) == 'm')
     return Pnm;
 
-  if (tolower(p[1]) == 'j' && tolower(p[1]) == 'p' && tolower(p[1]) == 'g')
+  if (tolower(p[1]) == 'j' && tolower(p[2]) == 'p' && tolower(p[3]) == 'g')
     return Jpg;
 
   LOG(ERROR) << "Error: Couldn't open " << c << " Unknown file format";
@@ -70,7 +66,7 @@ static format get_format(const char *c) {
 }
 
 int ReadImage(const char *filename, ByteImage *im){
-  format f = get_format(filename);
+  Format f = GetFormat(filename);
 
   switch (f) {
     case Pnm:
@@ -85,7 +81,7 @@ int ReadImage(const char *filename, ByteImage *im){
 }
 
 int ReadImage(const char *filename, FloatImage *im){
-  format f = get_format(filename);
+  Format f = GetFormat(filename);
 
   switch (f) {
     case Pnm:
@@ -100,7 +96,7 @@ int ReadImage(const char *filename, FloatImage *im){
 }
 
 int WriteImage(const ByteImage &im, const char *filename){
-  format f = get_format(filename);
+  Format f = GetFormat(filename);
 
   switch (f) {
     case Pnm:
@@ -115,7 +111,7 @@ int WriteImage(const ByteImage &im, const char *filename){
 }
 
 int WriteImage(const FloatImage &im, const char *filename){
-  format f = get_format(filename);
+  Format f = GetFormat(filename);
 
   switch (f) {
     case Pnm:

@@ -28,6 +28,7 @@
 using libmv::Array3Df;
 using libmv::Array3Du;
 using libmv::FloatImage;
+using libmv::GetFormat;
 using std::string;
 
 namespace {
@@ -208,6 +209,18 @@ TEST(WriteJpg, Jpg) {
   Array3Du read_image;
   EXPECT_TRUE(ReadJpg(out_filename.c_str(), &read_image));
   EXPECT_TRUE(read_image == image);
+}
+
+TEST(GetFormat, filenames) {
+  EXPECT_EQ(GetFormat("something.jpg"), libmv::Jpg);
+  EXPECT_EQ(GetFormat("something.png"), libmv::Png);
+  EXPECT_EQ(GetFormat("something.pnm"), libmv::Pnm);
+  EXPECT_EQ(GetFormat("/some/thing.JpG"), libmv::Jpg);
+  EXPECT_EQ(GetFormat("/some/thing.pNG"), libmv::Png);
+  EXPECT_EQ(GetFormat("some/thing.PNm"), libmv::Pnm);
+  EXPECT_EQ(GetFormat(".s/o.m/e.t/h.i/n.g.JPG"), libmv::Jpg);
+  EXPECT_EQ(GetFormat(".s/o.m/e.t/h.i/n.g.PNG"), libmv::Png);
+  EXPECT_EQ(GetFormat(".s/o.m/e.t/h.i/n.g.PNM"), libmv::Pnm);
 }
 
 }  // namespace

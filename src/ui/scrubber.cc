@@ -5,6 +5,8 @@
 Scrubber::Scrubber(QWidget *parent)
     : QWidget(parent)
 {
+  current_item_ = 0;
+  frame_change = 0;
 }
 
 void Scrubber::setNumItems(int newsize) {
@@ -13,8 +15,8 @@ void Scrubber::setNumItems(int newsize) {
   clearItems();
 }
 
-void Scrubber::setItem(int index, char flag) {
-  items_[index] = flag;
+void Scrubber::setItem(int index, QPixmap &pix){
+  items_[index] = pix;
 }
 
 void Scrubber::setCurrentItem(int index) {
@@ -23,8 +25,20 @@ void Scrubber::setCurrentItem(int index) {
 
 void Scrubber::clearItems() {
   for (unsigned int i = 0; i < items_.size(); ++i) {
-    items_[i] = 0;
+    items_[i] = QPixmap();
   }
+
+}
+QPixmap Scrubber::GetItem(int index) {
+  return items_[index];
+}
+
+QPixmap Scrubber::GetCurrentItem() {
+  return items_[current_item_];
+}
+
+void Scrubber::setCurrentItem(QPixmap pix) {
+  items_[current_item_] = pix;
 }
 
 // TODO(keir): This breaks down when there are more than about 30 frames,
@@ -48,7 +62,7 @@ void Scrubber::paintEvent(QPaintEvent *)
       painter.drawLine(blockWidth*i, 0, blockWidth*i, blockHeight);
       painter.setPen(Qt::black);
       QRect itemRect(blockWidth*i, 0, blockWidth, blockHeight);
-      if (items_[i]) {
+      if (!items_[i].isNull()) {
         painter.fillRect(itemRect, itemPresentColor);
       }
       QString numformat;
@@ -63,4 +77,6 @@ void Scrubber::mousePressEvent (QMouseEvent *e) {
   setCurrentItem(itemHit);
   repaint();
   emit selectionChanged(itemHit);
+  if(frame_change)
+    frame_change(frame_change_data_);
 }

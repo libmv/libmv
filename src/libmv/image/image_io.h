@@ -27,6 +27,12 @@
 
 namespace libmv {
 
+enum Format {
+  Pnm, Png, Jpg, Tga, Unknown
+};
+
+Format GetFormat(const char *c);
+
 int ReadImage(const char *, ByteImage *);
 int ReadImage(const char *, FloatImage *);
 int WriteImage(const ByteImage &, const char *);
