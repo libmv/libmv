@@ -1,6 +1,6 @@
 
 SET(MOC_HEADERS main_window.h match_viewer.h)
-SET(SOURCES main.cc main_window.cc match_viewer.cc features.cc)
+SET(SOURCES main.cc main_window.cc match_viewer.cc 3D_viewer.cc features.cc)
 QT4_WRAP_CPP(SOURCES ${MOC_HEADERS})
 
 ADD_EXECUTABLE(tvr ${SOURCES})

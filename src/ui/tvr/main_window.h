@@ -30,6 +30,7 @@
 #include "ui/tvr/features.h"
 #include "ui/tvr/tvr_document.h"
 #include "ui/tvr/match_viewer.h"
+#include "ui/tvr/3D_viewer.h"
 
 
 class TvrMainWindow : public QMainWindow {
@@ -73,7 +74,12 @@ class TvrMainWindow : public QMainWindow {
   QAction *focal_from_fundamental_action_;
   QAction *metric_reconstruction_action_;
 
-  MatchViewer *viewer_;
+  MatchViewer *viewer2d_;
+  Viewer3D *viewer3d_;
+  
+  enum view {
+    view2d, view3d
+  } current_view_;
 };
 
 #endif // UI_TVR_MAIN_WINWOW_H_

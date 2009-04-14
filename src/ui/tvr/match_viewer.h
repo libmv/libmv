@@ -23,42 +23,8 @@
 
 #include <QGLWidget>
 #include <vector>
-#include <utility> //For std::pair.
 
 #include "ui/tvr/tvr_document.h"
-#include "libmv/scene_graph/scene_graph.h"
-
-class SceneObject {
- public:
-  // The drawing function should assume that
-  // opengl's model matrix is already ready for drawing
-  virtual void Draw() {};
-};
-
-class SceneCamera : public SceneObject {
- public:
-  // Position, scale and rotation are stored in the SGNode Matrix,
-  // so SceneCamera only needs a drawing function.
-  void Draw();
-};
-
-struct ScenePoint {
-  float x_, y_, z_;
-  ScenePoint(float x, float y, float z) {
-    x_ = x;
-    y_ = y;
-    z_ = z;
-  }
-};
-
-class ScenePointCloud : public SceneObject {
- public:
-  void Draw();
-  void AddPoint(ScenePoint &);
- private:
-  // Feel free to change this to a list if removal of points is needed (Daniel).
-  std::vector<ScenePoint> points_;
-};
 
 // A widget displaying two images on a plane, with surf features and matches.
 //  - Dragging moves the plane.
@@ -85,8 +51,6 @@ class MatchViewer : public QGLWidget {
 
   QSize minimumSizeHint() const;
   QSize sizeHint() const;
-
-  void ToggleView();
 
  public slots:
   void SetDocument(TvrDocument *doc);
@@ -116,17 +80,12 @@ class MatchViewer : public QGLWidget {
  private:
   TvrDocument *document_;
   OnScreenImage screen_images_[2];
-  libmv::SceneGraph<SceneObject> scene_graph;
 
   enum MouseDragBehavior {
     NONE, MOVE_VIEW, MOVE_IMAGE
   } mouse_drag_behavior_;
   
   int dragging_image_;
-  
-  enum view {
-    view2d, view3d
-  } current_view_;
     
   float tx, ty;  // Top left corner of the window in plane coordinates.
   float zoom;    // Window pixels per plane pixel.

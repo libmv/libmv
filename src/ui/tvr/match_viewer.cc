@@ -25,13 +25,11 @@
 
 #include "ui/tvr/match_viewer.h"
 
-
 MatchViewer::MatchViewer(QWidget *parent)
 : QGLWidget(parent), document_(NULL) {
   tx = 0;
   ty = 0;
   zoom = 1;
-  current_view_ = view2d;
 }
 
 MatchViewer::~MatchViewer() {
@@ -102,17 +100,6 @@ QSize MatchViewer::minimumSizeHint() const {
 
 QSize MatchViewer::sizeHint() const {
   return QSize(800, 400);
-}
-
-void MatchViewer::ToggleView() {
-  switch (current_view_) {
-    case view2d:
-      current_view_ = view3d;
-      break;
-    case view3d:
-      current_view_ = view2d;
-      break;
-  };
 }
 
 void MatchViewer::SetTransformation(float tx_, float ty_, float zoom_) {
@@ -225,56 +212,6 @@ void MatchViewer::paintGL() {
 
 void MatchViewer::resizeGL(int width, int height) {
   glViewport(0, 0, width, height);
-}
-
-#ifdef NOT_IMPLEMENTED_YET 
-static void Draw(libmv::SGNode<SceneObject> *ptr,  void *) {
-  glLoadMatrixf(ptr->GetMatrix().data());
-  ptr->GetObject()->draw();
-}
-// To draw the scene then becomes, scene_graph.ForeachChildRecursive(&Draw, NULL);
-#endif
-
-void SceneCamera::Draw() {
-  glBegin(GL_LINES);
-  // Feel free to change the way camera's are represented (Daniel).
-  glVertex3f(0.0f,0.0f,0.0f);
-  glVertex3f(1.0f,1.0f,1.0f);
-  
-  glVertex3f(0.0f,0.0f,0.0f);
-  glVertex3f(1.0f,-1.0f,1.0f);
-  
-  glVertex3f(0.0f,0.0f,0.0f);
-  glVertex3f(-1.0f,1.0f,1.0f);
-  
-  glVertex3f(0.0f,0.0f,0.0f);
-  glVertex3f(-1.0f,-1.0f,1.0f);
-  
-  glVertex3f(-1.0f,-1.0f,1.0f);
-  glVertex3f(-1.0f,1.0f,1.0f);
-  
-  glVertex3f(-1.0f,1.0f,1.0f);
-  glVertex3f(1.0f,1.0f,1.0f);
-  
-  glVertex3f(1.0f,1.0f,1.0f);
-  glVertex3f(1.0f,-1.0f,1.0f);
-  
-  glVertex3f(1.0f,-1.0f,1.0f);
-  glVertex3f(-1.0f,-1.0f,1.0f);
-  glEnd();
-}
-
-void ScenePointCloud::Draw() {
-  std::vector<ScenePoint>::iterator it;
-  glBegin(GL_POINTS);
-  for (it=points_.begin(); it!=points_.end(); ++it) {
-    glVertex3f(it->x_, it->y_, it->z_);
-  }
-  glEnd();
-}
-
-void ScenePointCloud::AddPoint(ScenePoint &s) {
-  points_.push_back(s);
 }
 
 int MatchViewer::ImageUnderPointer(QMouseEvent *event) {

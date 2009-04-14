@@ -115,6 +115,8 @@ class SGNode {
     return 0;
   }
   
+  virtual void DeleteChildren() {};
+  
   virtual void ForeachChild(void (*)(SGNotRoot<Object> *, void *), void *) {}
   virtual void ForeachChildRecursive(void (*)(SGNotRoot<Object> *, void *), void *) {}
   
@@ -207,6 +209,15 @@ class SGNotLeaf : public virtual SGNode<Object> {
   }
   bool HasChildren() {
     return !children_.empty();
+  }
+  
+  void DeleteChildren() {
+    typename list<SGNode<Object> *>::iterator it;
+    for (it=children_.begin(); it!=children_.end(); ++it) {
+      (*it)->SetParent(NULL);
+      delete *it;
+    }
+    children_.clear();
   }
   
   bool RemoveChildStable(SGNode<Object> *node);
@@ -440,12 +451,7 @@ void SGNotLeaf<Object>::UpdateChildren() {
 
 template<class Object>
 SGNotLeaf<Object>::~SGNotLeaf() {
-  typename list<SGNode<Object> *>::iterator it;
-  for (it=children_.begin(); it!=children_.end(); ++it) {
-    (*it)->SetParent(NULL);
-    delete *it;
-  }
-  children_.clear();
+  DeleteChildren();
 }
 
 template<class Object>

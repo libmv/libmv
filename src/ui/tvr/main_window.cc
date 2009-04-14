@@ -36,8 +36,10 @@
 TvrMainWindow::TvrMainWindow(QWidget *parent)
   : QMainWindow(parent) {
 
-  viewer_ = new MatchViewer();
-  setCentralWidget(viewer_);
+  viewer2d_ = new MatchViewer();
+  viewer3d_ = new Viewer3D();
+  setCentralWidget(viewer2d_);
+  current_view_ = view2d;
 
   CreateActions();
   CreateMenus();
@@ -121,7 +123,8 @@ void TvrMainWindow::OpenImages() {
     for (int i = 0; i < 2; ++i) {
       document_.images[i].load(filenames[i]);
     }
-    viewer_->SetDocument(&document_);
+    viewer2d_->SetDocument(&document_);
+    viewer3d_->SetDocument(&document_);
   } else if (filenames.size() != 0) {
     QMessageBox::information(this, tr("TVR"),
           tr("Please select 2 images."));
@@ -138,7 +141,13 @@ void TvrMainWindow::SaveBlender() {
 }
 
 void TvrMainWindow::ToggleView() {
-  viewer_->ToggleView();
+  if(current_view_ == view2d) {
+    setCentralWidget(viewer3d_);
+    current_view_ = view3d;
+  } else {
+    setCentralWidget(viewer2d_);
+    current_view_ = view2d;
+  }
 }
 
 void TvrMainWindow::ComputeFeatures() {
@@ -175,14 +184,14 @@ void TvrMainWindow::ComputeFeatures(int image_index) {
   // Build the kd-tree.
   fs.tree.Build(&fs.features[0], fs.features.size(), 64, 10);
 
-  viewer_->updateGL();
+  viewer2d_->updateGL();
 }
 
 void TvrMainWindow::ComputeCandidateMatches() {
   FindCandidateMatches(document_.feature_sets[0],
                        document_.feature_sets[1],
                        &document_.correspondences);
-  viewer_->updateGL();
+  viewer2d_->updateGL();
 }
 
 void TvrMainWindow::ComputeRobustMatches() {
@@ -196,7 +205,7 @@ void TvrMainWindow::ComputeRobustMatches() {
   //           the maps), or remove outlier tracks from the candidate matches
   //           instead of constructing a new correspondance set.
   std::swap(document_.correspondences, new_correspondences);
-  viewer_->updateGL();
+  viewer2d_->updateGL();
 }
 
 void TvrMainWindow::FocalFromFundamental() {
@@ -211,7 +220,7 @@ void TvrMainWindow::FocalFromFundamental() {
   LOG(INFO) << "focal 0: " << document_.focal_distance[0]
             << " focal 1: " << document_.focal_distance[1] << "\n";
 
-  viewer_->updateGL();
+  viewer2d_->updateGL();
 }
 
 void TvrMainWindow::MetricReconstruction() {
