@@ -37,7 +37,6 @@ TvrMainWindow::TvrMainWindow(QWidget *parent)
   : QMainWindow(parent) {
 
   viewer2d_ = new MatchViewer();
-  viewer3d_ = new Viewer3D();
   setCentralWidget(viewer2d_);
   current_view_ = view2d;
 
@@ -123,8 +122,9 @@ void TvrMainWindow::OpenImages() {
     for (int i = 0; i < 2; ++i) {
       document_.images[i].load(filenames[i]);
     }
+    if(current_view_ != view2d)
+      ToggleView();
     viewer2d_->SetDocument(&document_);
-    viewer3d_->SetDocument(&document_);
   } else if (filenames.size() != 0) {
     QMessageBox::information(this, tr("TVR"),
           tr("Please select 2 images."));
@@ -142,9 +142,13 @@ void TvrMainWindow::SaveBlender() {
 
 void TvrMainWindow::ToggleView() {
   if(current_view_ == view2d) {
+    viewer3d_ = new Viewer3D();
+    viewer3d_->SetDocument(&document_);
     setCentralWidget(viewer3d_);
     current_view_ = view3d;
   } else {
+    viewer2d_ = new MatchViewer();
+    viewer2d_->SetDocument(&document_);
     setCentralWidget(viewer2d_);
     current_view_ = view2d;
   }
