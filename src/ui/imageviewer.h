@@ -101,7 +101,7 @@ private:
     
     QLabel *imageLabel;
     
-    Scrubber *scrubber;
+    Scrubber scrubber;
 };
 
 #endif

@@ -28,10 +28,9 @@ ImageViewer::ImageViewer()
 
   setCentralWidget(scrollArea);
 
-  scrubber = new Scrubber;
-  scrubber->setNumItems(20);
-  statusBar()->addPermanentWidget(scrubber, 1);
-  scrubber->setCallback(callback, this);
+  scrubber.setNumItems(20);
+  statusBar()->addPermanentWidget(&scrubber, 1);
+  scrubber.setCallback(callback, this);
 
   createActions();
   createMenus();
@@ -96,7 +95,7 @@ void ImageViewer::open()
     }
     
     QPixmap qp = QPixmap::fromImage(image);
-    scrubber->setCurrentItem(qp);
+    scrubber.setCurrentItem(qp);
     imageLabel->setPixmap(qp);
 
     scaleFactor = 1.0;
@@ -111,7 +110,7 @@ void ImageViewer::open()
 }
 
 void ImageViewer::FrameChange() {
-  imageLabel->setPixmap(scrubber->GetCurrentItem());
+  imageLabel->setPixmap(scrubber.GetCurrentItem());
 }
 
 void ImageViewer::print()
@@ -125,7 +124,7 @@ void ImageViewer::print()
     size.scale(rect.size(), Qt::KeepAspectRatio);
     painter.setViewport(rect.x(), rect.y(), size.width(), size.height());
     painter.setWindow(imageLabel->pixmap()->rect());
-    painter.drawPixmap(0, 0, scrubber->GetCurrentItem());
+    painter.drawPixmap(0, 0, scrubber.GetCurrentItem());
   }
 }
 

@@ -47,6 +47,7 @@ class SGNotLeaf;
 * Along with SceneGraph It should/will contain all the functionality needed
 * from outside of this library.
 */
+
 template<class Object>
 class SGNode {
  public:
@@ -94,18 +95,10 @@ class SGNode {
   }
   
   // Returns the matrix for the object which includes effects from parents.
-  virtual Mat4 GetMatrix() {
-    Mat4 res;
-    res.setIdentity();
-    return res;
-  }
+  virtual Mat4 GetMatrix() = 0;
   
   // Returns the matrix for the object which excludes effects from parents.
-  virtual Mat4 GetObjectMatrix() {
-    Mat4 res;
-    res.setIdentity();
-    return res;
-  }
+  virtual Mat4 GetObjectMatrix() = 0;
   
   virtual bool HasChild(SGNotRoot<Object> *) {
     return false;
@@ -123,6 +116,7 @@ class SGNode {
   }
   
   virtual void ForeachChild(void (*)(SGNotRoot<Object> *, void *), void *) {}
+  virtual void ForeachChildRecursive(void (*)(SGNotRoot<Object> *, void *), void *) {}
   
   virtual Object *GetObject() {
     return NULL;
@@ -130,8 +124,8 @@ class SGNode {
   virtual void SetObject(Object *) {}
   
   // Set the matrix which describes the transformation incurred by this object
-  virtual void SetMatrix(Mat4) {}
-  virtual void Transform(Mat4) {}
+  virtual void SetMatrix(Mat4 &) = 0;
+  virtual void Transform(Mat4 &) = 0;
   
   virtual ~SGNode() {}
  protected:
@@ -179,6 +173,14 @@ class SGNotLeaf : public virtual SGNode<Object> {
     typename list<SGNode<Object> *>::iterator it;
     for (it=children_.begin(); it!=children_.end(); ++it)
       func(*it, data);
+  }
+  
+  void ForeachChildRecursive(void (*func)(SGNode<Object> *, void *), void *data) {
+    typename list<SGNode<Object> *>::iterator it;
+    for (it=children_.begin(); it!=children_.end(); ++it) {
+      func(*it, data);
+      (*it)->ForeachChildRecursive(func, data);
+    }
   }
   
   void UpdateChildren();
@@ -277,12 +279,12 @@ class SGNotRoot : public virtual SGNode<Object> {
     return transform_;
   }
   
-  void SetMatrix(Mat4 mat) {
+  void SetMatrix(Mat4 &mat) {
     transform_ = mat;
     UpdateMatrix();
   }
   
-  void Transform(Mat4 mat) {
+  void Transform(Mat4 &mat) {
     transform_ = transform_ * mat;
     UpdateMatrix();
   }
@@ -359,6 +361,30 @@ class SGRootNode : public SGNotLeaf<Object> {
     this->RemoveChildStable(node);
     return this;
   }
+  
+  Mat4 GetMatrix() {
+    return view_;
+  }
+  Mat4 GetObjectMatrix() {
+    return view_;
+  }
+  
+  void SetMatrix(Mat4 &mat) {
+    view_ = mat;
+    this->UpdateChildren();
+  }
+  
+  void Transform(Mat4 &mat) {
+    view_ = view_ * mat;
+    this->UpdateChildren();
+  }
+  
+  SGRootNode() {
+    view_.setIdentity();
+  }
+ private:
+  
+  Mat4 view_; //store the viewing matrix for the scene in the root node
 };
 
 template<class Object>

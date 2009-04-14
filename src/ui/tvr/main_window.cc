@@ -20,6 +20,7 @@
 
 #include <QMenuBar>
 #include <QFileDialog>
+#include <QtGui>
 
 #include "libmv/image/array_nd.h"
 #include "libmv/image/surf.h"
@@ -52,8 +53,14 @@ void TvrMainWindow::CreateActions() {
   connect(open_images_action_, SIGNAL(triggered()),
           this, SLOT(OpenImages()));
 
-  save_blender_action_ = new QAction(tr("&Save as Brender..."), this);
-  save_blender_action_->setShortcut(tr("Ctrl+O"));
+  toggle_view_action_ = new QAction(tr("&Toggle View"), this);
+  toggle_view_action_->setShortcut(tr("TAB"));
+  toggle_view_action_->setStatusTip(tr("Toggle between 2D and 3D"));
+  connect(toggle_view_action_, SIGNAL(triggered()),
+          this, SLOT(ToggleView()));
+
+  save_blender_action_ = new QAction(tr("&Save as Blender..."), this);
+  save_blender_action_->setShortcut(tr("Ctrl+S"));
   save_blender_action_->setStatusTip(tr("Save Scene as a Blender Script"));
   connect(save_blender_action_, SIGNAL(triggered()),
           this, SLOT(SaveBlender()));
@@ -95,6 +102,8 @@ void TvrMainWindow::CreateMenus() {
   file_menu_ = menuBar()->addMenu(tr("&File"));
   file_menu_->addAction(open_images_action_);
   file_menu_->addAction(save_blender_action_);
+  view_menu_ = menuBar()->addMenu(tr("&View"));
+  view_menu_->addAction(toggle_view_action_);
   matching_menu_ = menuBar()->addMenu(tr("&Matching"));
   matching_menu_->addAction(compute_features_action_);
   matching_menu_->addAction(compute_candidate_matches_action_);
@@ -108,19 +117,28 @@ void TvrMainWindow::OpenImages() {
   QStringList filenames = QFileDialog::getOpenFileNames(this,
       "Select Two Images", "", "Image Files (*.png *.jpg *.bmp *.ppm *.pgm *.xpm)");
 
-  // TODO(keir): Don't segfault if != 2 images are selected.
-  for (int i = 0; i < 2; ++i) {
-    document_.images[i].load(filenames[i]);
+  if (filenames.size() == 2) {
+    for (int i = 0; i < 2; ++i) {
+      document_.images[i].load(filenames[i]);
+    }
+    viewer_->SetDocument(&document_);
+  } else if (filenames.size() != 0) {
+    QMessageBox::information(this, tr("TVR"),
+          tr("Please select 2 images."));
+    OpenImages();
   }
-
-  viewer_->SetDocument(&document_);
 }
 
 void TvrMainWindow::SaveBlender() {
   QString filename = QFileDialog::getSaveFileName(this,
       "Save as Blender Script", "", "Blender Python Script (*.py)");
-
+  if(filename.isNull())
+    return;
   document_.SaveAsBlender(filename.toAscii().data());
+}
+
+void TvrMainWindow::ToggleView() {
+  viewer_->ToggleView();
 }
 
 void TvrMainWindow::ComputeFeatures() {
