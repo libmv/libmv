@@ -33,18 +33,6 @@
 class MatchViewer : public QGLWidget {
   Q_OBJECT
 
-  struct OnScreenImage {
-    GLuint textureID;
-    int width, height;
-    float posx, posy;
-    float scale;
-
-    bool Contains(float x, float y) {
-      return posx < x && x < posx + width
-          && posy < y && y < posy + height;
-    }
-  };
-
  public:
   MatchViewer(QWidget *parent = 0);
   ~MatchViewer();
@@ -54,7 +42,7 @@ class MatchViewer : public QGLWidget {
 
  public slots:
   void SetDocument(TvrDocument *doc);
-  void UpdateScreenImage(int index);
+  void SetGlTexture(GLuint tex, int index);
   void SetTransformation(float tx_, float ty_, float zoom_);
 
  protected:
@@ -79,7 +67,19 @@ class MatchViewer : public QGLWidget {
 
  private:
   TvrDocument *document_;
-  OnScreenImage screen_images_[2];
+  
+  struct OnScreenImage {
+    GLuint textureID;
+    int width, height;
+    float posx, posy;
+    float scale;
+
+    bool Contains(float x, float y) {
+      return posx < x && x < posx + width
+          && posy < y && y < posy + height;
+    }
+    OnScreenImage() : textureID(0) {}
+  } screen_images_[2];
 
   enum MouseDragBehavior {
     NONE, MOVE_VIEW, MOVE_IMAGE

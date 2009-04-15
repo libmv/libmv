@@ -26,12 +26,12 @@
 #include <QMainWindow>
 #include <QMenu>
 #include <QAction>
+#include <qgl.h>
 
 #include "ui/tvr/features.h"
 #include "ui/tvr/tvr_document.h"
 #include "ui/tvr/match_viewer.h"
 #include "ui/tvr/3D_viewer.h"
-
 
 class TvrMainWindow : public QMainWindow {
   Q_OBJECT
@@ -56,9 +56,13 @@ class TvrMainWindow : public QMainWindow {
   void CreateMenus();
   void SynchronizeDepthmapList();
   
+  void ImageToGL(int);
+  void DeleteGL(int);
+  
  private:
   // Data.
   TvrDocument document_;
+  GLuint textures_[2];
 
   // Qt widgets, menus and actions.
   QMenu *file_menu_;

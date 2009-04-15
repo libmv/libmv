@@ -21,7 +21,7 @@
 #include "ui/tvr/3D_viewer.h"
 
 #ifdef NOT_IMPLEMENTED_YET 
-static void Draw(libmv::SGNode<SceneObject> *ptr,  void *) {
+static bool Draw(libmv::SGNode<SceneObject> *ptr,  void *) {
   glLoadMatrixf(ptr->GetMatrix().data());
   ptr->GetObject()->draw();
 }
@@ -58,20 +58,32 @@ void SceneCamera::Draw() {
 }
 
 void ScenePointCloud::Draw() {
-  std::vector<ScenePoint>::iterator it;
+  std::vector<libmv::Vec3>::iterator it;
   glBegin(GL_POINTS);
   for (it=points_.begin(); it!=points_.end(); ++it) {
-    glVertex3f(it->x_, it->y_, it->z_);
+    glVertex3f(it->x(), it->y(), it->z());
   }
   glEnd();
 }
 
-void ScenePointCloud::AddPoint(ScenePoint &s) {
+void ScenePointCloud::AddPoint(libmv::Vec3 &s) {
   points_.push_back(s);
 }
 
 void SceneImage::Draw() {
+  assert(glIsTexture(texture_));
+
+  glEnable(GL_TEXTURE_2D);
+  glBindTexture(GL_TEXTURE_2D, texture_);
   
+  glBegin(GL_QUADS);
+  glTexCoord2d(0, 0); glVertex2d(-1, -1);
+  glTexCoord2d(1, 0); glVertex2d(1, -1);
+  glTexCoord2d(1, 1); glVertex2d(1, 1);
+  glTexCoord2d(0, 1); glVertex2d(-1, 1);
+  glEnd();
+  
+  glDisable(GL_TEXTURE_2D);
 }
 
 Viewer3D::Viewer3D(QWidget *parent) : QGLWidget(parent), document_(NULL) {}

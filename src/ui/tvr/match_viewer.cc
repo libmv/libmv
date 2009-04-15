@@ -38,60 +38,16 @@ MatchViewer::~MatchViewer() {
 
 void MatchViewer::SetDocument(TvrDocument *doc) {
   document_ = doc;
-  
-  for (int i = 0; i < 2; ++i) {
-    UpdateScreenImage(i);
-  }
 }
 
-void MatchViewer::UpdateScreenImage(int index) {
-  OnScreenImage &oi = screen_images_[index];
-  QImage &im = document_->images[index];
-
-  glGenTextures(1, &oi.textureID);
-
-  oi.width = im.width();
-  oi.height = im.height();
-
-  unsigned char *data = new unsigned char[oi.width * oi.height * 4];
-
-  for (int i = 0; i < oi.height; ++i) {
-    for (int j = 0; j < oi.width; ++j) {
-      data[4*(i * oi.width + j) + 0] = im.bits()[4*(i * oi.width + j) + 2];
-      data[4*(i * oi.width + j) + 1] = im.bits()[4*(i * oi.width + j) + 1];
-      data[4*(i * oi.width + j) + 2] = im.bits()[4*(i * oi.width + j) + 0];
-    }
-  }
-
-  // Select our current texture.
-  glBindTexture(GL_TEXTURE_2D, oi.textureID);
-  // Select modulate to mix texture with color for shading.
-  glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-  // When texture area is small, bilinear filter the closest mipmap.
-  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
-                  GL_NEAREST_MIPMAP_NEAREST);
-  // When texture area is large, enlarge the pixels but don't upsample.
-  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-  // Wrap the texture at the edges (repeat).
-  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-
-  // build our texture mipmaps
-  gluBuild2DMipmaps(GL_TEXTURE_2D, GL_RGBA, oi.width, oi.height,
-      GL_RGBA, GL_UNSIGNED_BYTE, data);
-
-  delete [] data;
-
-  if (index == 0) {
-    oi.posx = 0;
-    oi.posy = 0;
-  } else {
-    OnScreenImage &prev = screen_images_[index - 1];
-    oi.posx = prev.posx + prev.width + 10;
-    oi.posy = prev.posy;
-  }
-
-  updateGL();
+void MatchViewer::SetGlTexture(GLuint tex, int index) {
+  assert(index < 2);
+  screen_images_[index].textureID = tex;
+  screen_images_[index].width = document_->images[index].width();
+  screen_images_[index].height = document_->images[index].height();
+  screen_images_[index].posx = index * (screen_images_[0].width + 10);
+  screen_images_[index].posy = 0;
+  screen_images_[index].scale = 1;
 }
 
 QSize MatchViewer::minimumSizeHint() const {
@@ -138,25 +94,30 @@ void MatchViewer::SetUpGlCamera() {
 }
 
 void MatchViewer::DrawImage(int i) {
-  OnScreenImage &si = screen_images_[i];
+  assert(document_);
+  assert(!document_->images[i].isNull());
+  
+  if (screen_images_[i].textureID) {
+    OnScreenImage &si = screen_images_[i];
 
-  glMatrixMode(GL_MODELVIEW);
-  glPushMatrix();
-  glTranslatef(si.posx, si.posy, 0);
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+    glTranslatef(si.posx, si.posy, 0);
 
-  glEnable(GL_TEXTURE_2D);
-  glBindTexture(GL_TEXTURE_2D, si.textureID);
-  glBegin(GL_QUADS);
-  glTexCoord2d(0, 0); glVertex2d(0, 0);
-  glTexCoord2d(1, 0); glVertex2d(si.width, 0);
-  glTexCoord2d(1, 1); glVertex2d(si.width, si.height);
-  glTexCoord2d(0, 1); glVertex2d(0, si.height);
-  glEnd();
-  glDisable(GL_TEXTURE_2D);
+    glEnable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, si.textureID);
+    glBegin(GL_QUADS);
+    glTexCoord2d(0, 0); glVertex2d(0, 0);
+    glTexCoord2d(1, 0); glVertex2d(si.width, 0);
+    glTexCoord2d(1, 1); glVertex2d(si.width, si.height);
+    glTexCoord2d(0, 1); glVertex2d(0, si.height);
+    glEnd();
+    glDisable(GL_TEXTURE_2D);
 
-  DrawFeatures(i);
+    DrawFeatures(i);
 
-  glPopMatrix();
+    glPopMatrix();
+  }
 }
 
 void MatchViewer::DrawFeatures(int image_index) {
@@ -201,10 +162,15 @@ void MatchViewer::DrawCandidateMatches() {
 }
 
 void MatchViewer::paintGL() {
-  if (document_) {
+  bool res = 0;
+  for (int i = 0; i < 2; ++i) {
+    res |= screen_images_[i].textureID;
+  }
+  if(res) {
     SetUpGlCamera();
     for (int i = 0; i < 2; ++i) {
-      DrawImage(i);
+      if(screen_images_[i].textureID)
+        DrawImage(i);
     }
     DrawCandidateMatches();
   }

@@ -42,9 +42,13 @@ TvrMainWindow::TvrMainWindow(QWidget *parent)
 
   CreateActions();
   CreateMenus();
+  
+  textures_[0] = 0;
+  textures_[1] = 0;
 }
 
 TvrMainWindow::~TvrMainWindow() {
+  glDeleteTextures(2, textures_);
 }
 
 void TvrMainWindow::CreateActions() {
@@ -119,17 +123,48 @@ void TvrMainWindow::OpenImages() {
       "Select Two Images", "", "Image Files (*.png *.jpg *.bmp *.ppm *.pgm *.xpm)");
 
   if (filenames.size() == 2) {
-    for (int i = 0; i < 2; ++i) {
-      document_.images[i].load(filenames[i]);
-    }
-    if(current_view_ != view2d)
+    if (current_view_ != view2d)
       ToggleView();
     viewer2d_->SetDocument(&document_);
+    for (int i = 0; i < 2; ++i) {
+      QImage q;
+      q.load(filenames[i]);
+      document_.images[i] = q.rgbSwapped();
+      ImageToGL(i);
+      viewer2d_->SetGlTexture(textures_[i], i);
+    }
   } else if (filenames.size() != 0) {
     QMessageBox::information(this, tr("TVR"),
           tr("Please select 2 images."));
     OpenImages();
   }
+}
+
+void TvrMainWindow::DeleteGL(int index) {
+  glDeleteTextures(1, &textures_[index]);
+}
+
+void TvrMainWindow::ImageToGL(int index) {
+  assert(!document_.images[index].isNull());
+  glGenTextures(1, &textures_[index]);
+
+  // Select our current texture.
+  glBindTexture(GL_TEXTURE_2D, textures_[index]);
+  // Select modulate to mix texture with color for shading.
+  glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+  // When texture area is small, bilinear filter the closest mipmap.
+  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
+                  GL_NEAREST_MIPMAP_NEAREST);
+  // When texture area is large, enlarge the pixels but don't upsample.
+  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  // Wrap the texture at the edges (repeat).
+  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+  // build our texture mipmaps
+  gluBuild2DMipmaps(GL_TEXTURE_2D, GL_RGBA, document_.images[index].width(),
+      document_.images[index].height(), GL_RGBA, GL_UNSIGNED_BYTE,
+      document_.images[index].bits());
 }
 
 void TvrMainWindow::SaveBlender() {
@@ -149,6 +184,11 @@ void TvrMainWindow::ToggleView() {
   } else {
     viewer2d_ = new MatchViewer();
     viewer2d_->SetDocument(&document_);
+    int i;
+    for (i=0; i<2; ++i)
+      if(!document_.images[i].isNull()) {
+        viewer2d_->SetGlTexture(textures_[i], i);
+      }
     setCentralWidget(viewer2d_);
     current_view_ = view2d;
   }

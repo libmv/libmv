@@ -31,7 +31,8 @@
 class SceneObject {
  public:
   // The drawing function should assume that
-  // opengl's model matrix is already ready for drawing
+  // opengl's model matrix is already ready for drawing.
+  // Changing the model matrix won't affect children.
   virtual void Draw() {};
 };
 
@@ -42,28 +43,21 @@ class SceneCamera : public SceneObject {
   void Draw();
 };
 
-struct ScenePoint {
-  float x_, y_, z_;
-  ScenePoint(float x, float y, float z) {
-    x_ = x;
-    y_ = y;
-    z_ = z;
-  }
-};
-
 class ScenePointCloud : public SceneObject {
  public:
   void Draw();
-  void AddPoint(ScenePoint &);
+  void AddPoint(libmv::Vec3 &);
  private:
   // Feel free to change this to a list if removal of points is needed (Daniel).
-  std::vector<ScenePoint> points_;
+  std::vector<libmv::Vec3> points_;
 };
 
 class SceneImage : public SceneObject {
  public:
   void Draw();
+  SceneImage(GLuint texture) : texture_(texture) {}
  private:
+  GLuint texture_;
 };
 
 // A widget displaying a 3D scene, including:
@@ -71,6 +65,7 @@ class SceneImage : public SceneObject {
 //  - Point clouds.
 //  - Images.
 class Viewer3D : public QGLWidget {
+  Q_OBJECT
   
  public:
   Viewer3D(QWidget *parent = 0);

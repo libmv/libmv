@@ -117,8 +117,12 @@ class SGNode {
   
   virtual void DeleteChildren() {};
   
-  virtual void ForeachChild(void (*)(SGNotRoot<Object> *, void *), void *) {}
-  virtual void ForeachChildRecursive(void (*)(SGNotRoot<Object> *, void *), void *) {}
+  virtual bool ForeachChild(bool (*)(SGNotRoot<Object> *, void *), void *) {
+    return true;
+  }
+  virtual bool ForeachChildRecursive(bool (*)(SGNotRoot<Object> *, void *), void *) {
+    return true;
+  }
   
   virtual Object *GetObject() {
     return NULL;
@@ -171,18 +175,23 @@ class SGNotLeaf : public virtual SGNode<Object> {
     return result;
   }
   
-  void ForeachChild(void (*func)(SGNode<Object> *, void *), void *data) {
+  bool ForeachChild(bool (*func)(SGNode<Object> *, void *), void *data) {
     typename list<SGNode<Object> *>::iterator it;
     for (it=children_.begin(); it!=children_.end(); ++it)
-      func(*it, data);
+      if (!func(*it, data))
+        return false;
+    return true;
   }
   
-  void ForeachChildRecursive(void (*func)(SGNode<Object> *, void *), void *data) {
+  bool ForeachChildRecursive(bool (*func)(SGNode<Object> *, void *), void *data) {
     typename list<SGNode<Object> *>::iterator it;
     for (it=children_.begin(); it!=children_.end(); ++it) {
-      func(*it, data);
-      (*it)->ForeachChildRecursive(func, data);
+      if (!func(*it, data))
+        return false;
+      if (!(*it)->ForeachChildRecursive(func, data))
+        return false;
     }
+    return true;
   }
   
   void UpdateChildren();
