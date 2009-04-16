@@ -42,11 +42,14 @@ class MatchViewer : public QGLWidget {
 
  public slots:
   void SetDocument(TvrDocument *doc);
-  void SetGlTexture(GLuint tex, int index);
   void SetTransformation(float tx_, float ty_, float zoom_);
 
  protected:
   // Drawing.
+  void InvalidateTextures();
+  bool TexturesInited();
+  void InitTextures();
+  void InitTexture(int index);
   void initializeGL();
   void paintGL();
   void resizeGL(int width, int height);
@@ -54,7 +57,7 @@ class MatchViewer : public QGLWidget {
   void DrawImage(int i);
   void DrawFeatures(int image_index);
   void DrawCandidateMatches();
-
+  
   // Mouse.
   void mousePressEvent(QMouseEvent *event);
   void mouseMoveEvent(QMouseEvent *event);

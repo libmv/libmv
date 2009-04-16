@@ -35,20 +35,17 @@
 
 TvrMainWindow::TvrMainWindow(QWidget *parent)
   : QMainWindow(parent) {
-
-  viewer2d_ = new MatchViewer();
-  setCentralWidget(viewer2d_);
-  current_view_ = view2d;
-
+  
   CreateActions();
   CreateMenus();
-  
-  textures_[0] = 0;
-  textures_[1] = 0;
+
+  viewers_area_ = new QMdiArea();
+  setCentralWidget(viewers_area_);
+  Show2DView();
+  viewers_area_->currentSubWindow()->showMaximized();
 }
 
 TvrMainWindow::~TvrMainWindow() {
-  glDeleteTextures(2, textures_);
 }
 
 void TvrMainWindow::CreateActions() {
@@ -58,11 +55,17 @@ void TvrMainWindow::CreateActions() {
   connect(open_images_action_, SIGNAL(triggered()),
           this, SLOT(OpenImages()));
 
-  toggle_view_action_ = new QAction(tr("&Toggle View"), this);
-  toggle_view_action_->setShortcut(tr("TAB"));
-  toggle_view_action_->setStatusTip(tr("Toggle between 2D and 3D"));
-  connect(toggle_view_action_, SIGNAL(triggered()),
-          this, SLOT(ToggleView()));
+  view_2d_action_ = new QAction(tr("&2D View"), this);
+  view_2d_action_->setShortcut(tr("2"));
+  view_2d_action_->setStatusTip(tr("Show a 2D view of the matches"));
+  connect(view_2d_action_, SIGNAL(triggered()),
+          this, SLOT(Show2DView()));
+
+  view_3d_action_ = new QAction(tr("&3D View"), this);
+  view_3d_action_->setShortcut(tr("3"));
+  view_3d_action_->setStatusTip(tr("Show a 3D view of the reconstruction"));
+  connect(view_3d_action_, SIGNAL(triggered()),
+          this, SLOT(Show3DView()));
 
   save_blender_action_ = new QAction(tr("&Save as Blender..."), this);
   save_blender_action_->setShortcut(tr("Ctrl+S"));
@@ -70,7 +73,6 @@ void TvrMainWindow::CreateActions() {
   connect(save_blender_action_, SIGNAL(triggered()),
           this, SLOT(SaveBlender()));
   
-
   compute_features_action_ = new QAction(tr("&Compute Features"), this);
   compute_features_action_->setStatusTip(tr("Compute Surf Features"));
   connect(compute_features_action_, SIGNAL(triggered()),
@@ -96,9 +98,10 @@ void TvrMainWindow::CreateActions() {
   connect(focal_from_fundamental_action_, SIGNAL(triggered()),
           this, SLOT(FocalFromFundamental()));
 
-  metric_reconstruction_action_ = new QAction(tr("&Metric Reconstruction"), this);
-  metric_reconstruction_action_->setStatusTip(tr(
-      "Compute a metric reconstrution given the current focal length estimates"));
+  metric_reconstruction_action_ = new QAction(tr("&Metric Reconstruction"),
+                                              this);
+  metric_reconstruction_action_->setStatusTip(tr("Compute a metric "
+      "reconstrution given the current focal length estimates"));
   connect(metric_reconstruction_action_, SIGNAL(triggered()),
           this, SLOT(MetricReconstruction()));
 }
@@ -108,7 +111,8 @@ void TvrMainWindow::CreateMenus() {
   file_menu_->addAction(open_images_action_);
   file_menu_->addAction(save_blender_action_);
   view_menu_ = menuBar()->addMenu(tr("&View"));
-  view_menu_->addAction(toggle_view_action_);
+  view_menu_->addAction(view_2d_action_);
+  view_menu_->addAction(view_3d_action_);
   matching_menu_ = menuBar()->addMenu(tr("&Matching"));
   matching_menu_->addAction(compute_features_action_);
   matching_menu_->addAction(compute_candidate_matches_action_);
@@ -120,51 +124,20 @@ void TvrMainWindow::CreateMenus() {
 
 void TvrMainWindow::OpenImages() {
   QStringList filenames = QFileDialog::getOpenFileNames(this,
-      "Select Two Images", "", "Image Files (*.png *.jpg *.bmp *.ppm *.pgm *.xpm)");
+      "Select Two Images", "",
+      "Image Files (*.png *.jpg *.bmp *.ppm *.pgm *.xpm)");
 
   if (filenames.size() == 2) {
-    if (current_view_ != view2d)
-      ToggleView();
-    viewer2d_->SetDocument(&document_);
     for (int i = 0; i < 2; ++i) {
       QImage q;
       q.load(filenames[i]);
       document_.images[i] = q.rgbSwapped();
-      ImageToGL(i);
-      viewer2d_->SetGlTexture(textures_[i], i);
     }
+    UpdateViewers();
   } else if (filenames.size() != 0) {
-    QMessageBox::information(this, tr("TVR"),
-          tr("Please select 2 images."));
+    QMessageBox::information(this, tr("TVR"), tr("Please select 2 images."));
     OpenImages();
   }
-}
-
-void TvrMainWindow::DeleteGL(int index) {
-  glDeleteTextures(1, &textures_[index]);
-}
-
-void TvrMainWindow::ImageToGL(int index) {
-  assert(!document_.images[index].isNull());
-  glGenTextures(1, &textures_[index]);
-
-  // Select our current texture.
-  glBindTexture(GL_TEXTURE_2D, textures_[index]);
-  // Select modulate to mix texture with color for shading.
-  glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-  // When texture area is small, bilinear filter the closest mipmap.
-  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
-                  GL_NEAREST_MIPMAP_NEAREST);
-  // When texture area is large, enlarge the pixels but don't upsample.
-  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-  // Wrap the texture at the edges (repeat).
-  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-
-  // build our texture mipmaps
-  gluBuild2DMipmaps(GL_TEXTURE_2D, GL_RGBA, document_.images[index].width(),
-      document_.images[index].height(), GL_RGBA, GL_UNSIGNED_BYTE,
-      document_.images[index].bits());
 }
 
 void TvrMainWindow::SaveBlender() {
@@ -175,23 +148,18 @@ void TvrMainWindow::SaveBlender() {
   document_.SaveAsBlender(filename.toAscii().data());
 }
 
-void TvrMainWindow::ToggleView() {
-  if(current_view_ == view2d) {
-    viewer3d_ = new Viewer3D();
-    viewer3d_->SetDocument(&document_);
-    setCentralWidget(viewer3d_);
-    current_view_ = view3d;
-  } else {
-    viewer2d_ = new MatchViewer();
-    viewer2d_->SetDocument(&document_);
-    int i;
-    for (i=0; i<2; ++i)
-      if(!document_.images[i].isNull()) {
-        viewer2d_->SetGlTexture(textures_[i], i);
-      }
-    setCentralWidget(viewer2d_);
-    current_view_ = view2d;
-  }
+void TvrMainWindow::Show2DView() {
+  MatchViewer *viewer = new MatchViewer();
+  viewer->SetDocument(&document_);
+  viewers_area_->addSubWindow(viewer);
+  viewer->show();
+}
+
+void TvrMainWindow::Show3DView() {
+  Viewer3D *viewer = new Viewer3D();
+  viewer->SetDocument(&document_);
+  viewers_area_->addSubWindow(viewer);
+  viewer->show();
 }
 
 void TvrMainWindow::ComputeFeatures() {
@@ -228,14 +196,14 @@ void TvrMainWindow::ComputeFeatures(int image_index) {
   // Build the kd-tree.
   fs.tree.Build(&fs.features[0], fs.features.size(), 64, 10);
 
-  viewer2d_->updateGL();
+  UpdateViewers();
 }
 
 void TvrMainWindow::ComputeCandidateMatches() {
   FindCandidateMatches(document_.feature_sets[0],
                        document_.feature_sets[1],
                        &document_.correspondences);
-  viewer2d_->updateGL();
+  UpdateViewers();
 }
 
 void TvrMainWindow::ComputeRobustMatches() {
@@ -249,7 +217,7 @@ void TvrMainWindow::ComputeRobustMatches() {
   //           the maps), or remove outlier tracks from the candidate matches
   //           instead of constructing a new correspondance set.
   std::swap(document_.correspondences, new_correspondences);
-  viewer2d_->updateGL();
+  UpdateViewers();
 }
 
 void TvrMainWindow::FocalFromFundamental() {
@@ -264,7 +232,7 @@ void TvrMainWindow::FocalFromFundamental() {
   LOG(INFO) << "focal 0: " << document_.focal_distance[0]
             << " focal 1: " << document_.focal_distance[1] << "\n";
 
-  viewer2d_->updateGL();
+  UpdateViewers();
 }
 
 void TvrMainWindow::MetricReconstruction() {
@@ -342,5 +310,18 @@ void TvrMainWindow::MetricReconstruction() {
       document_.X[i] = X.start<3>();
       i++;
     }
+  }
+}
+
+void TvrMainWindow::UpdateViewers() {
+  //TODO(pau): this is a hack to redraw all windows.  It assumes that all
+  //           windows contain QGLWidgets.  The proper way to do that is to
+  //           add signals to TvrDocument, so that the widgets know when it
+  //           has changed.
+  
+  QList<QMdiSubWindow *> windows = viewers_area_->subWindowList();
+  for (int i = 0; i < windows.size(); ++i) {
+    QGLWidget *viewer = (QGLWidget *)windows[i]->widget();
+    viewer->updateGL();
   }
 }

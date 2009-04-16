@@ -26,6 +26,7 @@
 #include <QMainWindow>
 #include <QMenu>
 #include <QAction>
+#include <QMdiArea>
 #include <qgl.h>
 
 #include "ui/tvr/features.h"
@@ -43,33 +44,32 @@ class TvrMainWindow : public QMainWindow {
  public slots:
   void OpenImages();
   void SaveBlender();
-  void ToggleView();
+  void Show2DView();
+  void Show3DView();
   void ComputeFeatures();
   void ComputeFeatures(int image_index);
   void ComputeCandidateMatches();
   void ComputeRobustMatches();
   void FocalFromFundamental();
   void MetricReconstruction();
+  void UpdateViewers();
   
  private:
   void CreateActions();
   void CreateMenus();
   void SynchronizeDepthmapList();
   
-  void ImageToGL(int);
-  void DeleteGL(int);
-  
  private:
   // Data.
   TvrDocument document_;
-  GLuint textures_[2];
 
   // Qt widgets, menus and actions.
   QMenu *file_menu_;
   QAction *open_images_action_;
   QAction *save_blender_action_;
   QMenu *view_menu_;
-  QAction *toggle_view_action_;
+  QAction *view_2d_action_;
+  QAction *view_3d_action_;
   QMenu *matching_menu_;
   QAction *compute_features_action_;
   QAction *compute_candidate_matches_action_;
@@ -78,12 +78,7 @@ class TvrMainWindow : public QMainWindow {
   QAction *focal_from_fundamental_action_;
   QAction *metric_reconstruction_action_;
 
-  MatchViewer *viewer2d_;
-  Viewer3D *viewer3d_;
-  
-  enum view {
-    view2d, view3d
-  } current_view_;
+  QMdiArea *viewers_area_;
 };
 
 #endif // UI_TVR_MAIN_WINWOW_H_
