@@ -34,7 +34,7 @@ TEST(LRUCache, NullOnEmptyKey) {
 
 TEST(LRUCache, StoreAndRetreiveOneItem) {
   TestCache cache(10);
-  int *ptr;
+  int *ptr = NULL;
   cache.StoreAndPin(4, new int(40));
   bool succeeded = cache.FetchAndPin(4, &ptr);
   EXPECT_EQ(succeeded, true);

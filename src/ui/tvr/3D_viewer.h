@@ -30,6 +30,7 @@
 
 class SceneObject {
  public:
+  virtual ~SceneObject() {};
   // The drawing function should assume that
   // opengl's model matrix is already ready for drawing.
   // Changing the model matrix won't affect children.

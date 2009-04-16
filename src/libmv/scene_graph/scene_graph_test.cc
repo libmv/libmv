@@ -33,11 +33,7 @@ using libmv::SGNotLeaf;
 struct TestStruct {
   int data_;
   float some_more_data_;
-  TestStruct() {}
-  TestStruct(const TestStruct &t) {
-    data_ = t.data_;
-    some_more_data_ = t.some_more_data_;
-  }
+  TestStruct() : data_(0), some_more_data_(0) {}
 };
 
 TEST(SceneGraph, Paths) {
