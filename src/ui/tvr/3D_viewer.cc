@@ -24,6 +24,7 @@
 static bool Draw(libmv::SGNode<SceneObject> *ptr,  void *) {
   glLoadMatrixf(ptr->GetMatrix().data());
   ptr->GetObject()->draw();
+  return true;
 }
 // To draw the scene then becomes, scene_graph.ForeachChildRecursive(&Draw, NULL);
 #endif
@@ -86,8 +87,16 @@ void SceneImage::Draw() {
   glDisable(GL_TEXTURE_2D);
 }
 
-Viewer3D::Viewer3D(QWidget *parent) : QGLWidget(parent), document_(NULL) {}
+Viewer3D::Viewer3D(QGLWidget *share, OnScreenImage *images) : QGLWidget(0, share), document_(NULL), screen_images_(images) {}
 
 void Viewer3D::SetDocument(TvrDocument *doc) {
   document_ = doc;
+}
+
+QSize Viewer3D::minimumSizeHint() const {
+  return QSize(50, 50);
+}
+
+QSize Viewer3D::sizeHint() const {
+  return QSize(800, 400);
 }

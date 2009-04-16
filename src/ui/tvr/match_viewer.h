@@ -21,10 +21,12 @@
 #ifndef UI_TVR_MATCH_VIEWER_H_
 #define UI_TVR_MATCH_VIEWER_H_
 
-#include <QGLWidget>
 #include <vector>
 
+#include <QGLWidget>
+
 #include "ui/tvr/tvr_document.h"
+#include "ui/tvr/on_screen_image.h"
 
 // A widget displaying two images on a plane, with surf features and matches.
 //  - Dragging moves the plane.
@@ -34,7 +36,7 @@ class MatchViewer : public QGLWidget {
   Q_OBJECT
 
  public:
-  MatchViewer(QWidget *parent = 0);
+  MatchViewer(QGLWidget *share, OnScreenImage *);
   ~MatchViewer();
 
   QSize minimumSizeHint() const;
@@ -46,10 +48,6 @@ class MatchViewer : public QGLWidget {
 
  protected:
   // Drawing.
-  void InvalidateTextures();
-  bool TexturesInited();
-  void InitTextures();
-  void InitTexture(int index);
   void initializeGL();
   void paintGL();
   void resizeGL(int width, int height);
@@ -57,6 +55,7 @@ class MatchViewer : public QGLWidget {
   void DrawImage(int i);
   void DrawFeatures(int image_index);
   void DrawCandidateMatches();
+  bool TexturesInited();
   
   // Mouse.
   void mousePressEvent(QMouseEvent *event);
@@ -70,19 +69,7 @@ class MatchViewer : public QGLWidget {
 
  private:
   TvrDocument *document_;
-  
-  struct OnScreenImage {
-    GLuint textureID;
-    int width, height;
-    float posx, posy;
-    float scale;
-
-    bool Contains(float x, float y) {
-      return posx < x && x < posx + width
-          && posy < y && y < posy + height;
-    }
-    OnScreenImage() : textureID(0) {}
-  } screen_images_[2];
+  OnScreenImage *screen_images_;
 
   enum MouseDragBehavior {
     NONE, MOVE_VIEW, MOVE_IMAGE

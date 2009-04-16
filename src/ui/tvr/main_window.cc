@@ -133,6 +133,9 @@ void TvrMainWindow::OpenImages() {
       q.load(filenames[i]);
       document_.images[i] = q.rgbSwapped();
     }
+    InitTextures();
+    if (!viewers_area_->currentSubWindow())
+      Show2DView();
     UpdateViewers();
   } else if (filenames.size() != 0) {
     QMessageBox::information(this, tr("TVR"), tr("Please select 2 images."));
@@ -149,17 +152,66 @@ void TvrMainWindow::SaveBlender() {
 }
 
 void TvrMainWindow::Show2DView() {
-  MatchViewer *viewer = new MatchViewer();
+  MatchViewer *viewer = new MatchViewer(&context_, screen_images_);
   viewer->SetDocument(&document_);
   viewers_area_->addSubWindow(viewer);
   viewer->show();
 }
 
 void TvrMainWindow::Show3DView() {
-  Viewer3D *viewer = new Viewer3D();
+  Viewer3D *viewer = new Viewer3D(&context_, screen_images_);
   viewer->SetDocument(&document_);
   viewers_area_->addSubWindow(viewer);
   viewer->show();
+}
+
+void TvrMainWindow::InvalidateTextures() {
+  screen_images_[0].textureID = 0;
+  screen_images_[1].textureID = 0;
+}
+
+void TvrMainWindow::InitTextures() {
+  for (int i = 0; i < 2; ++i) {
+    InitTexture(i);
+  }
+}
+
+void TvrMainWindow::InitTexture(int index) {
+  OnScreenImage &oi = screen_images_[index];
+  QImage &im = document_.images[index];
+
+  if (im.isNull()) return;
+
+  glGenTextures(1, &oi.textureID);
+
+  oi.width = im.width();
+  oi.height = im.height();
+
+  // Select our current texture.
+  glBindTexture(GL_TEXTURE_2D, oi.textureID);
+  // Select modulate to mix texture with color for shading.
+  glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+  // When texture area is small, bilinear filter the closest mipmap.
+  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
+                  GL_NEAREST_MIPMAP_NEAREST);
+  // When texture area is large, enlarge the pixels but don't upsample.
+  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  // Wrap the texture at the edges (repeat).
+  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+  // build our texture mipmaps
+  gluBuild2DMipmaps(GL_TEXTURE_2D, GL_RGBA, oi.width, oi.height,
+      GL_RGBA, GL_UNSIGNED_BYTE, im.bits());
+
+  if (index == 0) {
+    oi.posx = 0;
+    oi.posy = 0;
+  } else {
+    OnScreenImage &prev = screen_images_[index - 1];
+    oi.posx = prev.posx + prev.width + 10;
+    oi.posy = prev.posy;
+  }
 }
 
 void TvrMainWindow::ComputeFeatures() {

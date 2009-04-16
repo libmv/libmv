@@ -54,6 +54,10 @@ class TvrMainWindow : public QMainWindow {
   void MetricReconstruction();
   void UpdateViewers();
   
+  void InvalidateTextures();
+  void InitTextures();
+  void InitTexture(int index);
+  
  private:
   void CreateActions();
   void CreateMenus();
@@ -62,6 +66,8 @@ class TvrMainWindow : public QMainWindow {
  private:
   // Data.
   TvrDocument document_;
+  QGLWidget context_;
+  OnScreenImage screen_images_[2];
 
   // Qt widgets, menus and actions.
   QMenu *file_menu_;

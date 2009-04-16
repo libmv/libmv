@@ -27,6 +27,7 @@
 
 #include "ui/tvr/tvr_document.h"
 #include "libmv/scene_graph/scene_graph.h"
+#include "ui/tvr/on_screen_image.h"
 
 class SceneObject {
  public:
@@ -69,11 +70,11 @@ class Viewer3D : public QGLWidget {
   Q_OBJECT
   
  public:
-  Viewer3D(QWidget *parent = 0);
+  Viewer3D(QGLWidget *share, OnScreenImage *images);
   ~Viewer3D() {};
 
-  QSize minimumSizeHint() const {return QSize(0,0);};
-  QSize sizeHint() const {return QSize(0,0);};
+  QSize minimumSizeHint() const;
+  QSize sizeHint() const;
 
  public slots:
   void SetDocument(TvrDocument *);
@@ -102,6 +103,8 @@ class Viewer3D : public QGLWidget {
 
  private:
   TvrDocument *document_;
+  OnScreenImage *screen_images_;
+  
   libmv::SceneGraph<SceneObject> scene_graph;
 };
 

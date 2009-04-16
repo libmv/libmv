@@ -25,8 +25,8 @@
 
 #include "ui/tvr/match_viewer.h"
 
-MatchViewer::MatchViewer(QWidget *parent)
-: QGLWidget(parent), document_(NULL) {
+MatchViewer::MatchViewer(QGLWidget *share, OnScreenImage *images)
+: QGLWidget(0, share), document_(NULL), screen_images_(images) {
   tx = 0;
   ty = 0;
   zoom = 1;
@@ -63,61 +63,6 @@ void MatchViewer::PlaneFromScreen(float xw, float yw, float *xi, float *yi) {
 void MatchViewer::ScreenFromPlane(float xi, float yi, float *xw, float *yw) {
   *xw = (xi - tx) / zoom;
   *yw = (yi - ty) / zoom;
-}
-
-void MatchViewer::InvalidateTextures() {
-  screen_images_[0].textureID = 0;
-  screen_images_[1].textureID = 0;
-}
-
-bool MatchViewer::TexturesInited() {
-  return screen_images_[0].textureID && screen_images_[1].textureID;
-}
-
-void MatchViewer::InitTextures() {
-  if (document_) {
-    for (int i = 0; i < 2; ++i) {
-      InitTexture(i);
-    }
-  }
-}
-
-void MatchViewer::InitTexture(int index) {
-  OnScreenImage &oi = screen_images_[index];
-  QImage &im = document_->images[index];
-
-  if (im.isNull()) return;
-
-  glGenTextures(1, &oi.textureID);
-
-  oi.width = im.width();
-  oi.height = im.height();
-
-  // Select our current texture.
-  glBindTexture(GL_TEXTURE_2D, oi.textureID);
-  // Select modulate to mix texture with color for shading.
-  glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-  // When texture area is small, bilinear filter the closest mipmap.
-  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
-                  GL_NEAREST_MIPMAP_NEAREST);
-  // When texture area is large, enlarge the pixels but don't upsample.
-  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-  // Wrap the texture at the edges (repeat).
-  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-
-  // build our texture mipmaps
-  gluBuild2DMipmaps(GL_TEXTURE_2D, GL_RGBA, oi.width, oi.height,
-      GL_RGBA, GL_UNSIGNED_BYTE, im.bits());
-
-  if (index == 0) {
-    oi.posx = 0;
-    oi.posy = 0;
-  } else {
-    OnScreenImage &prev = screen_images_[index - 1];
-    oi.posx = prev.posx + prev.width + 10;
-    oi.posy = prev.posy;
-  }
 }
 
 void MatchViewer::initializeGL() {
@@ -207,10 +152,6 @@ void MatchViewer::DrawCandidateMatches() {
 }
 
 void MatchViewer::paintGL() {
-  if (!TexturesInited()) {
-    InitTextures();
-  }
-
   if(TexturesInited()) {
     SetUpGlCamera();
     for (int i = 0; i < 2; ++i) {
@@ -218,6 +159,10 @@ void MatchViewer::paintGL() {
     }
     DrawCandidateMatches();
   }
+}
+
+bool MatchViewer::TexturesInited() {
+  return screen_images_[0].textureID && screen_images_[1].textureID;
 }
 
 void MatchViewer::resizeGL(int width, int height) {
