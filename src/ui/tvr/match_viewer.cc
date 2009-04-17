@@ -25,11 +25,20 @@
 
 #include "ui/tvr/match_viewer.h"
 
-MatchViewer::MatchViewer(QGLWidget *share, OnScreenImage *images)
-: QGLWidget(0, share), document_(NULL), screen_images_(images) {
+static bool ImageContains(OnScreenImage &im, GLTexture &tex, float x, float y) {
+  return im.posx < x && x < im.posx + tex.width
+      && im.posy < y && y < im.posy + tex.height;
+}
+
+MatchViewer::MatchViewer(QGLWidget *share, GLTexture *textures, QWidget *parent)
+: QGLWidget(0, share), document_(NULL), textures_(textures) {
   tx = 0;
   ty = 0;
   zoom = 1;
+  InitTextures();
+  
+  connect(parent, SIGNAL(GLUpdateNeeded()), this, SLOT(GLUpdate()));
+  connect(parent, SIGNAL(TextureChanged()), this, SLOT(TextureChange()));
 }
 
 MatchViewer::~MatchViewer() {
@@ -87,7 +96,7 @@ void MatchViewer::DrawImage(int i) {
   assert(document_);
   assert(!document_->images[i].isNull());
   
-  if (screen_images_[i].textureID) {
+  if (textures_[i].textureID) {
     OnScreenImage &si = screen_images_[i];
 
     glMatrixMode(GL_MODELVIEW);
@@ -95,12 +104,12 @@ void MatchViewer::DrawImage(int i) {
     glTranslatef(si.posx, si.posy, 0);
 
     glEnable(GL_TEXTURE_2D);
-    glBindTexture(GL_TEXTURE_2D, si.textureID);
+    glBindTexture(GL_TEXTURE_2D, textures_[i].textureID);
     glBegin(GL_QUADS);
     glTexCoord2d(0, 0); glVertex2d(0, 0);
-    glTexCoord2d(1, 0); glVertex2d(si.width, 0);
-    glTexCoord2d(1, 1); glVertex2d(si.width, si.height);
-    glTexCoord2d(0, 1); glVertex2d(0, si.height);
+    glTexCoord2d(1, 0); glVertex2d(textures_[i].width, 0);
+    glTexCoord2d(1, 1); glVertex2d(textures_[i].width, textures_[i].height);
+    glTexCoord2d(0, 1); glVertex2d(0, textures_[i].height);
     glEnd();
     glDisable(GL_TEXTURE_2D);
 
@@ -162,7 +171,27 @@ void MatchViewer::paintGL() {
 }
 
 bool MatchViewer::TexturesInited() {
-  return screen_images_[0].textureID && screen_images_[1].textureID;
+  return textures_[0].textureID && textures_[1].textureID;
+}
+
+void MatchViewer::InitTextures() {
+  int i;
+  for (i=0; i<2; ++i) {
+    InitTexture(i);
+  }
+}
+
+void MatchViewer::InitTexture(int index) {
+  OnScreenImage &oi = screen_images_[index];
+  
+  if (index == 0) {
+    oi.posx = 0;
+    oi.posy = 0;
+  } else {
+    OnScreenImage &prev = screen_images_[index - 1];
+    oi.posx = prev.posx + textures_[index].width + 10;
+    oi.posy = prev.posy;
+  }
 }
 
 void MatchViewer::resizeGL(int width, int height) {
@@ -174,7 +203,7 @@ int MatchViewer::ImageUnderPointer(QMouseEvent *event) {
   PlaneFromScreen(event->x(), event->y(), &x, &y);
 
   for (int i = 0; i < 2; ++i) {
-    if (screen_images_[i].Contains(x, y)) {
+    if (ImageContains(screen_images_[i], textures_[i], x, y)) {
       return i;
     }
   }

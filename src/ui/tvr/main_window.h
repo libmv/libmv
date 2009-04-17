@@ -33,6 +33,7 @@
 #include "ui/tvr/tvr_document.h"
 #include "ui/tvr/match_viewer.h"
 #include "ui/tvr/3D_viewer.h"
+#include "ui/tvr/gl_texture.h"
 
 class TvrMainWindow : public QMainWindow {
   Q_OBJECT
@@ -57,7 +58,11 @@ class TvrMainWindow : public QMainWindow {
   void InvalidateTextures();
   void InitTextures();
   void InitTexture(int index);
-  
+ 
+ signals:
+  void TextureChanged();
+  void GLUpdateNeeded();
+    
  private:
   void CreateActions();
   void CreateMenus();
@@ -67,7 +72,7 @@ class TvrMainWindow : public QMainWindow {
   // Data.
   TvrDocument document_;
   QGLWidget context_;
-  OnScreenImage screen_images_[2];
+  GLTexture textures_[2];
 
   // Qt widgets, menus and actions.
   QMenu *file_menu_;

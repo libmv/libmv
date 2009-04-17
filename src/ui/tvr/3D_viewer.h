@@ -23,11 +23,10 @@
 
 #include <QGLWidget>
 #include <vector>
-#include <utility> //For std::pair.
 
 #include "ui/tvr/tvr_document.h"
 #include "libmv/scene_graph/scene_graph.h"
-#include "ui/tvr/on_screen_image.h"
+#include "ui/tvr/gl_texture.h"
 
 class SceneObject {
  public:
@@ -70,7 +69,7 @@ class Viewer3D : public QGLWidget {
   Q_OBJECT
   
  public:
-  Viewer3D(QGLWidget *share, OnScreenImage *images);
+  Viewer3D(QGLWidget *share, GLTexture *textures, QWidget *parent);
   ~Viewer3D() {};
 
   QSize minimumSizeHint() const;
@@ -80,6 +79,7 @@ class Viewer3D : public QGLWidget {
   void SetDocument(TvrDocument *);
   void UpdateScreenImage(int) {};
   void SetTransformation(float, float, float) {};
+  void GLUpdate() { updateGL(); }
 
  protected:
   // Drawing.
@@ -103,7 +103,7 @@ class Viewer3D : public QGLWidget {
 
  private:
   TvrDocument *document_;
-  OnScreenImage *screen_images_;
+  GLTexture *textures_;
   
   libmv::SceneGraph<SceneObject> scene_graph;
 };

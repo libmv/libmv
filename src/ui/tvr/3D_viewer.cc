@@ -87,7 +87,10 @@ void SceneImage::Draw() {
   glDisable(GL_TEXTURE_2D);
 }
 
-Viewer3D::Viewer3D(QGLWidget *share, OnScreenImage *images) : QGLWidget(0, share), document_(NULL), screen_images_(images) {}
+Viewer3D::Viewer3D(QGLWidget *share, GLTexture *textures, QWidget *parent) :
+    QGLWidget(0, share), document_(NULL), textures_(textures) {
+  connect(parent, SIGNAL(GLUpdateNeeded()), this, SLOT(GLUpdate()));
+}
 
 void Viewer3D::SetDocument(TvrDocument *doc) {
   document_ = doc;

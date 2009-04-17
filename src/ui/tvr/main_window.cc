@@ -39,6 +39,8 @@ TvrMainWindow::TvrMainWindow(QWidget *parent)
   CreateActions();
   CreateMenus();
 
+  InvalidateTextures();
+
   viewers_area_ = new QMdiArea();
   setCentralWidget(viewers_area_);
   Show2DView();
@@ -152,22 +154,22 @@ void TvrMainWindow::SaveBlender() {
 }
 
 void TvrMainWindow::Show2DView() {
-  MatchViewer *viewer = new MatchViewer(&context_, screen_images_);
+  MatchViewer *viewer = new MatchViewer(&context_, textures_, this);
   viewer->SetDocument(&document_);
   viewers_area_->addSubWindow(viewer);
   viewer->show();
 }
 
 void TvrMainWindow::Show3DView() {
-  Viewer3D *viewer = new Viewer3D(&context_, screen_images_);
+  Viewer3D *viewer = new Viewer3D(&context_, textures_, this);
   viewer->SetDocument(&document_);
   viewers_area_->addSubWindow(viewer);
   viewer->show();
 }
 
 void TvrMainWindow::InvalidateTextures() {
-  screen_images_[0].textureID = 0;
-  screen_images_[1].textureID = 0;
+  textures_[0].textureID = 0;
+  textures_[1].textureID = 0;
 }
 
 void TvrMainWindow::InitTextures() {
@@ -177,18 +179,17 @@ void TvrMainWindow::InitTextures() {
 }
 
 void TvrMainWindow::InitTexture(int index) {
-  OnScreenImage &oi = screen_images_[index];
   QImage &im = document_.images[index];
 
   if (im.isNull()) return;
 
-  glGenTextures(1, &oi.textureID);
-
-  oi.width = im.width();
-  oi.height = im.height();
+  glGenTextures(1, &textures_[index].textureID);
+  
+  textures_[index].width = im.width();
+  textures_[index].height = im.height();
 
   // Select our current texture.
-  glBindTexture(GL_TEXTURE_2D, oi.textureID);
+  glBindTexture(GL_TEXTURE_2D, textures_[index].textureID);
   // Select modulate to mix texture with color for shading.
   glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
   // When texture area is small, bilinear filter the closest mipmap.
@@ -201,17 +202,10 @@ void TvrMainWindow::InitTexture(int index) {
   glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
   // build our texture mipmaps
-  gluBuild2DMipmaps(GL_TEXTURE_2D, GL_RGBA, oi.width, oi.height,
+  gluBuild2DMipmaps(GL_TEXTURE_2D, GL_RGBA, textures_[index].width, textures_[index].height,
       GL_RGBA, GL_UNSIGNED_BYTE, im.bits());
-
-  if (index == 0) {
-    oi.posx = 0;
-    oi.posy = 0;
-  } else {
-    OnScreenImage &prev = screen_images_[index - 1];
-    oi.posx = prev.posx + prev.width + 10;
-    oi.posy = prev.posy;
-  }
+  
+  emit TextureChanged();
 }
 
 void TvrMainWindow::ComputeFeatures() {
@@ -366,14 +360,5 @@ void TvrMainWindow::MetricReconstruction() {
 }
 
 void TvrMainWindow::UpdateViewers() {
-  //TODO(pau): this is a hack to redraw all windows.  It assumes that all
-  //           windows contain QGLWidgets.  The proper way to do that is to
-  //           add signals to TvrDocument, so that the widgets know when it
-  //           has changed.
-  
-  QList<QMdiSubWindow *> windows = viewers_area_->subWindowList();
-  for (int i = 0; i < windows.size(); ++i) {
-    QGLWidget *viewer = (QGLWidget *)windows[i]->widget();
-    viewer->updateGL();
-  }
+  emit GLUpdateNeeded();
 }
