@@ -26,7 +26,6 @@
 #define LIBMV_SCENE_GRAPH_SCENE_GRAPH_H
 
 #include <cstring>
-
 #include <list>
 
 #include "libmv/numeric/numeric.h"
