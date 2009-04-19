@@ -97,7 +97,10 @@ class SGNode {
   virtual Mat4 GetMatrix() = 0;
   
   // Returns the matrix for the object which excludes effects from parents.
-  virtual Mat4 GetObjectMatrix() = 0;
+  virtual Mat4 &GetObjectMatrix() = 0;
+  
+  // Call this function after modifying the object matrix.
+  virtual void UpdateMatrix() {}
   
   virtual bool HasChild(SGNotRoot<Object> *) {
     return false;
@@ -116,27 +119,24 @@ class SGNode {
   
   virtual void DeleteChildren() {};
   
-  virtual bool ForeachChild(bool (*)(SGNotRoot<Object> *, void *), void *) {
+  virtual bool ForeachChild(bool (*)(SGNode<Object> *, void *), void *) {
     return true;
   }
-  virtual bool ForeachChildRecursive(bool (*)(SGNotRoot<Object> *, void *), void *) {
+  virtual bool ForeachChildRecursive(bool (*)(SGNode<Object> *, void *), void *) {
     return true;
   }
+  
+  virtual void DeleteIf(bool (*)(SGNode<Object> *, void *), void *) {}
+  virtual void DeleteIfRecursive(bool (*)(SGNode<Object> *, void *), void *) {}
   
   virtual Object *GetObject() {
     return NULL;
   }
   virtual void SetObject(Object *) {}
   
-  // Set the matrix which describes the transformation incurred by this object
-  virtual void SetMatrix(Mat4 &) = 0;
-  virtual void Transform(Mat4 &) = 0;
-  
   virtual ~SGNode() {}
  protected:
   virtual void UpdateChildren() {}
-  // Called when an operation changes the transformation matrix.
-  virtual void UpdateMatrix() {}
  protected:
   virtual bool SetParent(SGNotLeaf<Object> *) {
     return false;
@@ -191,6 +191,33 @@ class SGNotLeaf : public virtual SGNode<Object> {
         return false;
     }
     return true;
+  }
+  
+  void DeleteIf(bool (*func)(SGNode<Object> *, void *), void *data) {
+    typename list<SGNode<Object> *>::iterator it;
+    for (it=children_.begin(); it!=children_.end();) {
+      if (func(*it, data)) {
+        (*it)->SetParent(NULL);
+        delete *it;
+        it = children_.erase(it);
+      } else {
+        ++it;
+      }
+    }
+  }
+  
+  void DeleteIfRecursive(bool (*func)(SGNode<Object> *, void *), void *data) {
+    typename list<SGNode<Object> *>::iterator it;
+    for (it=children_.begin(); it!=children_.end();) {
+      if (func(*it, data)) {
+        (*it)->SetParent(NULL);
+        delete *it;
+        it = children_.erase(it);
+      } else {
+        (*it)->DeleteIfRecursive(func, data);
+        ++it;
+      }
+    }
   }
   
   void UpdateChildren();
@@ -294,18 +321,8 @@ class SGNotRoot : public virtual SGNode<Object> {
   Mat4 GetMatrix() {
     return current_;
   }
-  Mat4 GetObjectMatrix() {
+  Mat4 &GetObjectMatrix() {
     return transform_;
-  }
-  
-  void SetMatrix(Mat4 &mat) {
-    transform_ = mat;
-    UpdateMatrix();
-  }
-  
-  void Transform(Mat4 &mat) {
-    transform_ = transform_ * mat;
-    UpdateMatrix();
   }
   
   void UpdateMatrix() {
@@ -384,23 +401,14 @@ class SGRootNode : public SGNotLeaf<Object> {
   Mat4 GetMatrix() {
     return view_;
   }
-  Mat4 GetObjectMatrix() {
+  Mat4 &GetObjectMatrix() {
     return view_;
-  }
-  
-  void SetMatrix(Mat4 &mat) {
-    view_ = mat;
-    this->UpdateChildren();
-  }
-  
-  void Transform(Mat4 &mat) {
-    view_ = view_ * mat;
-    this->UpdateChildren();
   }
   
   SGRootNode() {
     view_.setIdentity();
   }
+  ~SGRootNode() {};
  private:
   
   Mat4 view_; //store the viewing matrix for the scene in the root node
@@ -417,7 +425,8 @@ class SGBranchNode : public SGNotLeaf<Object>, public SGNotRoot<Object> {
   
   SGBranchNode(SGNotLeaf<Object> *l) : SGNotLeaf<Object>(*l) {}
   SGBranchNode(SGNotRoot<Object> *r) : SGNotRoot<Object>(*r) {}
-  SGBranchNode() {}
+  SGBranchNode() {};
+  ~SGBranchNode() {};
 };
 
 template<class Object>
@@ -436,6 +445,7 @@ class SGLeafNode : public SGNotRoot<Object> {
   
   SGLeafNode() {}
   SGLeafNode(SGNotRoot<Object> *r) : SGNotRoot<Object>(*r) {}
+  ~SGLeafNode() {};
 };
 
 template<class Object>
@@ -517,8 +527,8 @@ class SceneGraph : public SGRootNode<Object> {
 };
 
 template<class Object>
-SGLeafNode<Object> *MakeSGNode(Object *obj, const char *name) {
-  SGLeafNode<Object> *leaf = new SGLeafNode<Object>;
+SGNode<Object> *MakeSGNode(Object *obj, const char *name) {
+  SGNode<Object> *leaf = new SGLeafNode<Object>;
   if (!leaf->SetName(name))
     LOG(ERROR) << "couldn't set name: " << name;
   else

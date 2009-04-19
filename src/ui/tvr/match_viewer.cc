@@ -39,6 +39,8 @@ MatchViewer::MatchViewer(QGLWidget *share, GLTexture *textures, QWidget *parent)
   
   connect(parent, SIGNAL(GLUpdateNeeded()), this, SLOT(GLUpdate()));
   connect(parent, SIGNAL(TextureChanged()), this, SLOT(TextureChange()));
+  
+  setWindowTitle("2D View");
 }
 
 MatchViewer::~MatchViewer() {

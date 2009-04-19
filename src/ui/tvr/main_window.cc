@@ -45,6 +45,8 @@ TvrMainWindow::TvrMainWindow(QWidget *parent)
   setCentralWidget(viewers_area_);
   Show2DView();
   viewers_area_->currentSubWindow()->showMaximized();
+  
+  setWindowTitle("TVR");
 }
 
 TvrMainWindow::~TvrMainWindow() {
@@ -176,6 +178,7 @@ void TvrMainWindow::InitTextures() {
   for (int i = 0; i < 2; ++i) {
     InitTexture(i);
   }
+  emit TextureChanged();
 }
 
 void TvrMainWindow::InitTexture(int index) {
@@ -202,10 +205,8 @@ void TvrMainWindow::InitTexture(int index) {
   glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
   // build our texture mipmaps
-  gluBuild2DMipmaps(GL_TEXTURE_2D, GL_RGBA, textures_[index].width, textures_[index].height,
-      GL_RGBA, GL_UNSIGNED_BYTE, im.bits());
-  
-  emit TextureChanged();
+  gluBuild2DMipmaps(GL_TEXTURE_2D, GL_RGBA, textures_[index].width,
+      textures_[index].height, GL_RGBA, GL_UNSIGNED_BYTE, im.bits());
 }
 
 void TvrMainWindow::ComputeFeatures() {

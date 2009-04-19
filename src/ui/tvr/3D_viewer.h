@@ -31,10 +31,16 @@
 class SceneObject {
  public:
   virtual ~SceneObject() {};
+  
+  enum ObjectType {
+    Camera, PointCloud, Image
+  };
+  
   // The drawing function should assume that
   // opengl's model matrix is already ready for drawing.
   // Changing the model matrix won't affect children.
   virtual void Draw() {};
+  virtual ObjectType GetType() = 0;
 };
 
 class SceneCamera : public SceneObject {
@@ -42,12 +48,18 @@ class SceneCamera : public SceneObject {
   // Position, scale and rotation are stored in the SGNode Matrix,
   // so SceneCamera only needs a drawing function.
   void Draw();
+  ObjectType GetType() { return Camera; }
+  
+  ~SceneCamera() {};
 };
 
 class ScenePointCloud : public SceneObject {
  public:
   void Draw();
+  ObjectType GetType() { return PointCloud; }
   void AddPoint(libmv::Vec3 &);
+  
+  ~ScenePointCloud() {};
  private:
   // Feel free to change this to a list if removal of points is needed (Daniel).
   std::vector<libmv::Vec3> points_;
@@ -56,9 +68,12 @@ class ScenePointCloud : public SceneObject {
 class SceneImage : public SceneObject {
  public:
   void Draw();
-  SceneImage(GLuint texture) : texture_(texture) {}
+  ObjectType GetType() { return Image; }
+  SceneImage(GLTexture &texture) : texture_(texture) {}
+  
+  ~SceneImage() {};
  private:
-  GLuint texture_;
+  GLTexture texture_;
 };
 
 // A widget displaying a 3D scene, including:
@@ -77,35 +92,30 @@ class Viewer3D : public QGLWidget {
 
  public slots:
   void SetDocument(TvrDocument *);
-  void UpdateScreenImage(int) {};
-  void SetTransformation(float, float, float) {};
   void GLUpdate() { updateGL(); }
+  void TextureChange();
+  void InitImages();
 
  protected:
   // Drawing.
-  void initializeGL() {};
-  void paintGL() {};
-  void resizeGL(int, int) {};
-  void SetUpGlCamera() {};
-  void DrawImage(int) {};
-  void DrawFeatures(int) {};
-  void DrawCandidateMatches() {};
+  void initializeGL();
+  void paintGL();
+  void resizeGL(int, int);
+  
+  void SetUpGlCamera();
 
   // Mouse.
   void mousePressEvent(QMouseEvent *) {};
-  void mouseMoveEvent(QMouseEvent *) {};
-  void wheelEvent(QWheelEvent *) {};
-  int ImageUnderPointer(QMouseEvent *) {return 0;};
-
-  // Coordinate systems.
-  void PlaneFromScreen(float, float, float *, float *) {};
-  void ScreenFromPlane(float, float, float *, float *) {};
+  void mouseMoveEvent(QMouseEvent *);
+  void wheelEvent(QWheelEvent *);
 
  private:
   TvrDocument *document_;
   GLTexture *textures_;
   
-  libmv::SceneGraph<SceneObject> scene_graph;
+  libmv::SceneGraph<SceneObject> scene_graph_;
+  
+  QPoint lastPos_;
 };
 
 #endif // UI_TVR_3D_VIEWER_H_

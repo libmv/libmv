@@ -60,6 +60,7 @@ class MatchViewer : public QGLWidget {
   void initializeGL();
   void paintGL();
   void resizeGL(int width, int height);
+  
   void SetUpGlCamera();
   void DrawImage(int i);
   void DrawFeatures(int image_index);

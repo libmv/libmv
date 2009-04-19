@@ -23,12 +23,12 @@
 #include "libmv/scene_graph/scene_graph.h"
 #include "testing/testing.h"
 #include "libmv/logging/logging.h"
+#include "libmv/numeric/numeric.h"
 
 using libmv::SceneGraph;
 using libmv::MakeSGNode;
 using libmv::SGNode;
-using libmv::SGNotRoot;
-using libmv::SGNotLeaf;
+using libmv::Mat4;
 
 struct TestStruct {
   int data_;
@@ -39,7 +39,7 @@ struct TestStruct {
 TEST(SceneGraph, Paths) {
   SceneGraph<TestStruct> scene_graph;
   TestStruct *t0 = new TestStruct;
-  SGNotRoot<TestStruct> *n = MakeSGNode(t0, "child");
+  SGNode<TestStruct> *n = MakeSGNode(t0, "child");
   scene_graph.AddChild(n);
   EXPECT_EQ(n->GetParent(), &scene_graph);
   EXPECT_EQ(scene_graph.NumChildren(), 1);
@@ -51,7 +51,7 @@ TEST(SceneGraph, Paths) {
   delete [] path;
   
   TestStruct *t1 = new TestStruct;
-  SGNotRoot<TestStruct> *child = MakeSGNode(t1, "childb");
+  SGNode<TestStruct> *child = MakeSGNode(t1, "childb");
   node = node->AddChild(child);
   EXPECT_EQ(child->GetParent(), node);
   EXPECT_EQ(scene_graph.NumChildren(), 1);
@@ -89,7 +89,20 @@ TEST(SceneGraph, BigGraph) {
 }
 
 TEST(SceneGraph, MatrixTest) {
-
+  Mat4 mat, ident;
+  ident.setIdentity();
+  mat << 6, 5, 3, 4,
+         7, 3, 2, 1,
+         5, 4, 3, 2,
+         0, 0, 1, 4;
+  TestStruct data;
+  SceneGraph<TestStruct> scene_graph;
+  scene_graph.GetObjectMatrix() = mat;
+  scene_graph.UpdateMatrix();
+  scene_graph.AddChild(MakeSGNode(new TestStruct(data), "child"));
+  SGNode<TestStruct> *ptr = scene_graph.GetAtPath("/child");
+  EXPECT_EQ(ptr->GetMatrix(), mat);
+  EXPECT_EQ(ptr->GetObjectMatrix(), ident);
 }
 
 TEST(SceneGraph, Misc) {
