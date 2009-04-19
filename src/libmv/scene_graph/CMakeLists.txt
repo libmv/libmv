@@ -5,3 +5,4 @@ ADD_LIBRARY(scene_graph scene_graph.cc)
 TARGET_LINK_LIBRARIES(scene_graph numeric glog gflags pthread)
 
 LIBMV_TEST(scene_graph scene_graph)
+LIBMV_TEST(scene_graph_simple "")
