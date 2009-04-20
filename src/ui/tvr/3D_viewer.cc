@@ -29,7 +29,7 @@
 #define TRANSLATION_SPEED 1.0f
 
 static bool Draw(libmv::SGNode<SceneObject> *ptr,  void *) {
-  glLoadMatrixd(ptr->GetMatrix().data());
+  glMultMatrixd(ptr->GetMatrix().data());
   ptr->GetObject()->Draw();
   return true;
 }
@@ -65,6 +65,8 @@ void SceneCamera::Draw() {
 
 void ScenePointCloud::Draw() {
   std::vector<libmv::Vec3>::iterator it;
+  glDisable(GL_LIGHTING);
+  glColor3f(0,1,0);
   glBegin(GL_POINTS);
   for (it=points_.begin(); it!=points_.end(); ++it) {
     glVertex3f(it->x(), it->y(), it->z());
@@ -79,7 +81,7 @@ void ScenePointCloud::AddPoint(libmv::Vec3 &s) {
 void SceneImage::Draw() {
   assert(glIsTexture(texture_.textureID));
 
-  glEnable(GL_TEXTURE_2D);
+/*  glEnable(GL_TEXTURE_2D);
   glBindTexture(GL_TEXTURE_2D, texture_.textureID);
   
   glBegin(GL_QUADS);
@@ -90,6 +92,7 @@ void SceneImage::Draw() {
   glEnd();
   
   glDisable(GL_TEXTURE_2D);
+  */
 }
 
 Viewer3D::Viewer3D(QGLWidget *share, GLTexture *textures, QWidget *parent) :
@@ -124,8 +127,7 @@ void Viewer3D::SetDocument(TvrDocument *doc) {
     p->AddPoint(*it);
   }
   
-  scene_graph_.AddChild(
-      libmv::MakeSGNode<SceneObject>(p, "PointCloud"));
+  scene_graph_.AddChild(libmv::MakeSGNode<SceneObject>(p, "PointCloud"));
 }
 
 QSize Viewer3D::minimumSizeHint() const {
@@ -150,10 +152,12 @@ void Viewer3D::SetUpGlCamera() {
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
   gluPerspective(60, 1.5f, 0, 10);
+  glRotatef(180, 1, 0, 0);
   glMatrixMode(GL_MODELVIEW);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   glLoadIdentity();
-}
+  glMultMatrixd(&(scene_graph_.GetObjectMatrix()(0,0)));
+  }
 
 void Viewer3D::resizeGL(int width, int height) {
   glViewport(0, 0, width, height);
@@ -213,6 +217,8 @@ void Viewer3D::mouseMoveEvent(QMouseEvent *event) {
                 * AngleAxisd( - delta.x() * ROTATION_SPEED, Vector3f::UnitZ())
                 * transform;
     }
+    LOG(INFO) << "tranformation\n" << transform.matrix();
+
     scene_graph_.GetObjectMatrix() = transform.matrix();
     scene_graph_.UpdateMatrix();
     updateGL();
