@@ -36,13 +36,13 @@ TEST(SceneGraph, IteratingOverAddedNodes) {
   int expected_values[] = { 5, 4, 10 };
   int i = 0;
   for (Node<int>::iterator it = scene.begin(); it != scene.end(); ++it, ++i) {
-    EXPECT_EQ(expected_names[i], (*it)->GetName());
-    EXPECT_EQ(expected_values[i], *(*it)->GetObject());
-    EXPECT_EQ(&scene, (*it)->GetParent());
+    EXPECT_EQ(expected_names[i], it->GetName());
+    EXPECT_EQ(expected_values[i], *it->GetObject());
+    EXPECT_EQ(&scene, it->GetParent());
   }
-  delete scene.GetObject();
+  scene.DeleteObject();
   for (Node<int>::iterator it = scene.begin(); it != scene.end(); ++it) {
-    delete (*it)->GetObject();
+    it->DeleteObject();
   }
 }
 
@@ -58,6 +58,6 @@ TEST(SceneGraph, GetChildReturnsNullIfNotFound) {
   }
   scene.DeleteObject();
   for (Node<int>::iterator it = scene.begin(); it != scene.end(); ++it) {
-    (*it)->DeleteObject();
+    it->DeleteObject();
   }
 }

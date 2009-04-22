@@ -25,7 +25,7 @@
 #include <vector>
 
 #include "ui/tvr/tvr_document.h"
-#include "libmv/scene_graph/scene_graph.h"
+#include "libmv/scene_graph/scene_graph_simple.h"
 #include "ui/tvr/gl_texture.h"
 
 class SceneObject {
@@ -113,7 +113,7 @@ class Viewer3D : public QGLWidget {
   TvrDocument *document_;
   GLTexture *textures_;
   
-  libmv::SceneGraph<SceneObject> scene_graph_;
+  libmv::scene::Node<SceneObject> scene_graph_;
   
   QPoint lastPos_;
 };

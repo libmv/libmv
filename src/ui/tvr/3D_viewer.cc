@@ -28,11 +28,7 @@
 #define ROTATION_SPEED 1.0f
 #define TRANSLATION_SPEED 1.0f
 
-static bool Draw(libmv::SGNode<SceneObject> *ptr,  void *) {
-  glMultMatrixd(ptr->GetMatrix().data());
-  ptr->GetObject()->Draw();
-  return true;
-}
+using namespace libmv::scene;
 
 void SceneCamera::Draw() {
   glBegin(GL_LINES);
@@ -81,7 +77,7 @@ void ScenePointCloud::AddPoint(libmv::Vec3 &s) {
 void SceneImage::Draw() {
   assert(glIsTexture(texture_.textureID));
 
-/*  glEnable(GL_TEXTURE_2D);
+  glEnable(GL_TEXTURE_2D);
   glBindTexture(GL_TEXTURE_2D, texture_.textureID);
   
   glBegin(GL_QUADS);
@@ -92,7 +88,6 @@ void SceneImage::Draw() {
   glEnd();
   
   glDisable(GL_TEXTURE_2D);
-  */
 }
 
 Viewer3D::Viewer3D(QGLWidget *share, GLTexture *textures, QWidget *parent) :
@@ -102,11 +97,12 @@ Viewer3D::Viewer3D(QGLWidget *share, GLTexture *textures, QWidget *parent) :
   connect(parent, SIGNAL(GLUpdateNeeded()), this, SLOT(GLUpdate()));
   connect(parent, SIGNAL(TextureChanged()), this, SLOT(TextureChange()));
   
+  scene_graph_ = Node<SceneObject>("root node", NULL);
+  
   Transform3d transform;
-  transform.matrix() = scene_graph_.GetObjectMatrix();
+  transform.matrix() = scene_graph_.GetLocalTransform();
   transform = Translation3d(0,0,-1) * transform;
-  scene_graph_.GetObjectMatrix() = transform.matrix();
-  scene_graph_.UpdateMatrix();
+  scene_graph_.SetTransform(transform.matrix());
   
   setWindowTitle("3D View");
 }
@@ -127,7 +123,7 @@ void Viewer3D::SetDocument(TvrDocument *doc) {
     p->AddPoint(*it);
   }
   
-  scene_graph_.AddChild(libmv::MakeSGNode<SceneObject>(p, "PointCloud"));
+  scene_graph_.AddChild(new Node<SceneObject>("PointCloud", p));
 }
 
 QSize Viewer3D::minimumSizeHint() const {
@@ -143,9 +139,21 @@ void Viewer3D::initializeGL() {
   glShadeModel(GL_FLAT);
 }
 
+void DrawNode(Node<SceneObject> *node) {
+  if(node->GetObject()) {
+    glLoadMatrixd(node->GetGlobalTransform().data());
+    node->GetObject()->Draw();
+  }
+  Node<SceneObject>::iterator it;
+  for (it=node->begin(); it!=node->end(); ++it) {
+    DrawNode(&*it);
+  }
+}
+
 void Viewer3D::paintGL() {
   SetUpGlCamera();
-  scene_graph_.ForeachChildRecursive(&Draw, NULL);
+  
+  DrawNode(&scene_graph_);
 }
 
 void Viewer3D::SetUpGlCamera() {
@@ -156,38 +164,38 @@ void Viewer3D::SetUpGlCamera() {
   glMatrixMode(GL_MODELVIEW);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   glLoadIdentity();
-  glMultMatrixd(&(scene_graph_.GetObjectMatrix()(0,0)));
-  }
+}
 
 void Viewer3D::resizeGL(int width, int height) {
   glViewport(0, 0, width, height);
 }
 
-static bool IsImage(libmv::SGNode<SceneObject> *ptr, void *) {
-  return ptr->GetObject()->GetType() == SceneObject::Image;
-}
-
 void Viewer3D::TextureChange() {
-  scene_graph_.DeleteIfRecursive(&IsImage, NULL);
+  Node<SceneObject>::iterator it;
+  for (it=scene_graph_.begin(); it!=scene_graph_.end();) {
+    if (it->GetObject()->GetType() == SceneObject::Image)
+      it = scene_graph_.erase(it);
+    else
+      ++it;
+  }
   
   InitImages();
 }
 
 void Viewer3D::InitImages() {
-  using namespace libmv;
   using namespace Eigen;
   
-  SGNode<SceneObject> *ptr =
-      MakeSGNode<SceneObject>(new SceneImage(textures_[0]), "Image01");
+  Node<SceneObject> *ptr =
+      new Node<SceneObject>("Image01", new SceneImage(textures_[0]));
+  
   scene_graph_.AddChild(ptr);
-  
+
   Transform3d transform;
-  transform.matrix() = ptr->GetObjectMatrix();
+  transform.matrix() = ptr->GetLocalTransform();
   transform = Translation3d(1,0,0) * transform;
-  ptr->GetObjectMatrix() = transform.matrix();
-  ptr->UpdateMatrix();
+  ptr->SetTransform(transform.matrix());
   
-  ptr = MakeSGNode<SceneObject>(new SceneImage(textures_[1]), "Image02");
+  ptr = new Node<SceneObject>("Image02", new SceneImage(textures_[1]));
   scene_graph_.AddChild(ptr);
 }
 
@@ -205,7 +213,7 @@ void Viewer3D::mouseMoveEvent(QMouseEvent *event) {
   
   if (event->buttons() & (Qt::LeftButton | Qt::RightButton)) {
     Transform3d transform;
-    transform.matrix() = scene_graph_.GetObjectMatrix();
+    transform.matrix() = scene_graph_.GetLocalTransform();
     if (event->buttons() & Qt::LeftButton) {
       transform = AngleAxisd(-delta.y() * ROTATION_SPEED, Vector3f::UnitX())
                 * AngleAxisd(-delta.x() * ROTATION_SPEED, Vector3f::UnitY())
@@ -219,8 +227,8 @@ void Viewer3D::mouseMoveEvent(QMouseEvent *event) {
     }
     LOG(INFO) << "tranformation\n" << transform.matrix();
 
-    scene_graph_.GetObjectMatrix() = transform.matrix();
-    scene_graph_.UpdateMatrix();
+    scene_graph_.SetTransform(transform.matrix());
+    
     updateGL();
   }
 }

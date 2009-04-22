@@ -59,7 +59,7 @@ class Node {
     transform_ = Mat4::Identity(4, 4);
     current_ = Mat4::Identity(4, 4);
   }
-  Node(const string &name, Object *object) {
+  Node(const string &name, Object *object) : parent_(NULL) {
     name_ = name;
     object_ = object;
     transform_ = Mat4::Identity(4, 4);
@@ -147,15 +147,19 @@ class Node {
   class iterator {
     friend class Node<Object>;
    public:
-    NodeT * operator*() const {
-      return it_->second;
+    NodeT &operator*() {
+      return *it_->second;
     }
+    NodeT *operator->() {
+      return it_->second;
+    } 
     bool operator!=(const iterator &other) {
       return it_ != other.it_;
     }
     void operator++() {
       ++it_;
     }
+    iterator() {}
    private:
     iterator(const typename ChildMap::iterator &it) {
       it_ = it;
@@ -168,6 +172,13 @@ class Node {
   }
   iterator end() {
     return iterator(children_.end());
+  }
+  
+  iterator erase(iterator position) {
+    iterator next = position;
+    ++next;
+    children_.erase(position.it_);
+    return next;
   }
   
   unsigned int NumChildren() {
@@ -199,7 +210,7 @@ class Node {
   
   void UpdateChildren() {
     for (iterator it = begin(); it != end(); ++it) {
-      (*it)->UpdateGlobalTransform();
+      it->UpdateGlobalTransform();
     }
   }
   
