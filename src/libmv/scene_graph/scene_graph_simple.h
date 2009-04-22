@@ -45,8 +45,17 @@ class Node {
   typedef Node<Object> NodeT;
   typedef std::map<string, NodeT *> ChildMap;
  public:
-  virtual ~Node() {}
-  Node() {
+  virtual ~Node() {
+    typename ChildMap::iterator it;
+    for (it=children_.begin(); it!=children_.end(); ++it) {
+      it->second->SetNoParent();
+      delete it->second;
+    }
+    // TODO: If a node is deleted it is not removed from its parent's map
+    // and it doesn't delete its object.
+  }
+  
+  Node() : parent_(NULL), object_(NULL) {
     transform_ = Mat4::Identity(4, 4);
     current_ = Mat4::Identity(4, 4);
   }
@@ -94,18 +103,35 @@ class Node {
   void RemoveChild(NodeT *child) {
     typename ChildMap::iterator it = children_.find(child->GetName());
     if (it != children_.end()) {
+      assert(it->second == child);
+      it->second->SetNoParent();
       children_.erase(it);
     }
   }
 
   const string &GetName() const    { return name_; }
-  void SetName(const string &name) { name_ = name; }
+  void SetName(const string &name) {
+    if (name == name_)
+      return;
+    name_ = name;
+    if (parent_) {
+      NodeT *parent = parent_;
+      parent->RemoveChild(this);
+      parent->AddChild(this);
+    }
+  }
 
   const Mat4 &GetLocalTransform()  const { return transform_; }
   const Mat4 &GetGlobalTransform() const { return current_;   }
 
   Object *GetObject() const { return object_; }
   void SetObject(Object *object) { object_ = object; }
+  void DeleteObject() {
+    if (object_) {
+      delete object_;
+      object_ = NULL;
+    }
+  }
   
   // The transform to move from the coordinate space of parent to the
   // coordinate space of this object.
@@ -143,6 +169,23 @@ class Node {
   iterator end() {
     return iterator(children_.end());
   }
+  
+  unsigned int NumChildren() {
+    return children_.size();
+  }
+  unsigned int NumChildrenRecursive() {
+    unsigned int result = 0;
+    typename ChildMap::iterator it;
+    for (it=children_.begin(); it!=children_.end(); ++it) {
+      ++result;
+      result += it->second->NumChildrenRecursive();
+    }
+    return result;
+  }
+  
+  bool HasChildren() {
+    return !children_.empty();
+  }
 
  private:
   void UpdateGlobalTransform() {
@@ -153,10 +196,15 @@ class Node {
     }
     this->UpdateChildren();
   }
+  
   void UpdateChildren() {
     for (iterator it = begin(); it != end(); ++it) {
       (*it)->UpdateGlobalTransform();
     }
+  }
+  
+  void SetNoParent() {
+    parent_ = NULL;
   }
 
   // Transform from the parents space to this object's space.

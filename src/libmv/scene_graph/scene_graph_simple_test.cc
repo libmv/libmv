@@ -56,8 +56,8 @@ TEST(SceneGraph, GetChildReturnsNullIfNotFound) {
     scene.AddChild(node);
     EXPECT_EQ(node, scene.GetChild(test_names[i]));
   }
-  delete scene.GetObject();
+  scene.DeleteObject();
   for (Node<int>::iterator it = scene.begin(); it != scene.end(); ++it) {
-    delete (*it)->GetObject();
+    (*it)->DeleteObject();
   }
 }
