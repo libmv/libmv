@@ -1,0 +1,11 @@
+Project: Sparse Bundle Adjustmet (SBA)
+URL: http://www.ics.forth.gr/~lourakis/sba/
+License: GPL
+Upstream version: 1.5
+Local modifications:
+
+None yet.
+
+Note: This taints *all* of libmv and makes it GPL. SBA will be replaced in the
+near future with a new bundelr, but that is going to be a substantial amount
+of work. In the meantime, libmv will be virally converted to GPL.

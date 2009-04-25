@@ -1,0 +1,34 @@
+#
+# Top level Makefile for Sparse Bundle Adjustment library & demo program
+#
+
+# Following two lines use gcc
+CC=gcc
+MAKE=make -f
+
+# Following two lines use icc
+#CC=icc
+#MAKE=make -f
+
+# Following two lines use msvc
+#CC=cl
+#MAKE=nmake /nologo /f
+
+
+build %:
+	@echo "Goals: " $(MAKECMDGOALS)
+ifeq ($(CC), gcc)
+	@echo "Compiling using GNU gcc"
+	@echo "" # empty line
+	$(MAKE) Makefile $(MAKECMDGOALS)
+else
+ ifeq ($(CC), icc)
+	@echo "Compiling using Intel icc"
+	@echo "" # empty line
+	$(MAKE) Makefile.icc $(MAKECMDGOALS)
+ else
+	@echo "Compiling using MS Visual C"
+	@echo "" # empty line
+	$(MAKE) Makefile.vc $(MAKECMDGOALS)
+ endif
+endif

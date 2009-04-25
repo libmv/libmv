@@ -1,0 +1,35 @@
+#
+# Windows Makefile for MATLAB interface to sba
+#
+
+MEX=mex
+MEXCFLAGS=-DWIN32 -I.. -O #-g
+# WHEN USING LAPACK, CHANGE THE NEXT TWO LINES TO WHERE YOUR COMPILED LAPACK/BLAS & F2C LIBS ARE!
+LAPACKBLASLIBS_PATH=C:\src\lib
+F2CLIBS_PATH=C:\src\lib
+
+INTFACESRCS=sba.c
+INTFACESOBJ=sba.mexw32
+SBALIB=../sba.lib
+LAPACKLIBS=$(LAPACKBLASLIBS_PATH)/clapack.lib $(LAPACKBLASLIBS_PATH)/blas.lib $(F2CLIBS_PATH)/libF77.lib $(F2CLIBS_PATH)/libI77.lib
+
+LIBS=$(SBALIB) $(LAPACKLIBS)
+
+dummy: $(INTFACESOBJ) projac.dll
+
+$(INTFACESOBJ): $(INTFACESRCS)
+	$(MEX) $(MEXCFLAGS) $(INTFACESRCS) $(LIBS)
+
+projac.dll: projac.c
+	cl /nologo /O2 projac.c /link /dll /out:projac.dll
+
+clean:
+	-del $(INTFACESOBJ) projac.dll
+
+realclean cleanall: clean
+
+depend:
+	makedepend -f Makefile $(INTFACESRCS)
+
+# DO NOT DELETE THIS LINE -- make depend depends on it.
+

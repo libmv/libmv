@@ -1,0 +1,39 @@
+#
+# Makefile for Sparse Bundle Adjustment library & demo program
+#
+CC=icc #-w1 # warnings on
+CXX=icpc
+CFLAGS=-Wcheck -O3 -tpp7 -xW -march=pentium4 -mcpu=pentium4 -ip -ipo -unroll #-g # -fno-alias
+OBJS=sba_levmar.o sba_levmar_wrap.o sba_lapack.o sba_crsm.o sba_chkjac.o
+SRCS=sba_levmar.c sba_levmar_wrap.c sba_lapack.c sba_crsm.c sba_chkjac.c
+AR=xiar
+#RANLIB=ranlib
+MAKE=make
+
+all: libsba.a dem
+
+libsba.a: $(OBJS)
+	$(AR) crvs libsba.a $(OBJS)
+	#$(RANLIB) libsba.a
+
+sba_levmar.o: sba.h sba_chkjac.h compiler.h
+sba_levmar_wrap.o: sba.h
+sba_lapack.o: sba.h compiler.h
+sba_crsm.o: sba.h
+sba_chkjac.o: sba.h sba_chkjac.h compiler.h
+
+dem:
+	cd demo; $(MAKE) -f Makefile.icc
+
+clean:
+	@rm -f $(OBJS)
+	cd demo; $(MAKE) -f Makefile.icc clean
+	cd matlab; $(MAKE) -f Makefile clean
+
+realclean cleanall: clean
+	@rm -f libsba.a
+
+depend:
+	makedepend -f Makefile.icc $(SRCS)
+
+# DO NOT DELETE THIS LINE -- make depend depends on it.

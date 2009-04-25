@@ -1,0 +1,38 @@
+#
+# MS Visual C Makefile for Sparse Bundle Adjustment demo program
+# At the command prompt, type
+# nmake /f Makefile.vc
+#
+# NOTE: To use this, you must have MSVC installed and properly
+# configured for command line use (you might need to run VCVARS32.BAT
+# included with your copy of MSVC). Another option is to use the
+# free MSVC toolkit from http://msdn.microsoft.com/visualc/vctoolkit2003/
+#
+
+CC=cl /nologo
+# YOU MIGHT WANT TO UNCOMMENT THE FOLLOWING LINE
+#SPOPTFLAGS=/GL /G7 /arch:SSE2 # special optimization: resp. whole program opt., Athlon/Pentium4 opt., SSE2 extensions
+# /MD COMPILES WITH MULTIPLE THREADS SUPPORT. TO DISABLE IT, SUBSTITUTE WITH /ML
+# FLAG /EHsc SUPERSEDED /GX IN MSVC'05. IF YOU HAVE AN EARLIER VERSION THAT COMPLAINS ABOUT IT, CHANGE /EHsc TO /GX
+CFLAGS=/I.. /MD /W3 /EHsc /D_CRT_SECURE_NO_DEPRECATE /O2 $(SPOPTFLAGS) # /Wall
+LAPACKLIBS_PATH=C:\src\lib # CHANGE THIS TO WHERE YOUR COMPILED LAPACK, BLAS and F2C LIBS ARE!
+# UNCOMMENT THE /NODEFAULTLIB BELOW IF YOU GET WARNINGS FOR CONFLICTING SYMBOLS
+LDFLAGS=/link /subsystem:console /opt:ref /libpath:$(LAPACKLIBS_PATH) /libpath:.. # /nodefaultlib:MSVCRT.lib
+OBJS=eucsbademo.obj imgproj.obj readparams.obj
+SRCS=eucsbademo.c imgproj.c readparams.c
+
+LAPACKLIBS=clapack.lib blas.lib libF77.lib libI77.lib
+
+LIBS=sba.lib $(LAPACKLIBS)
+
+eucsbademo.exe: $(OBJS) ..\sba.lib
+	$(CC) $(OBJS) $(LDFLAGS) /out:eucsbademo.exe $(LIBS)
+
+eucsbademo.obj: eucsbademo.h readparams.h
+readparams.obj: eucsbademo.h
+
+clean:
+	-del $(OBJS)
+
+realclean cleanall: clean
+	-del eucsbademo.exe
