@@ -9,7 +9,9 @@ Small change to eucsbademo.c to have a function
   int MAIN__(void) {}
 
 which is needed to work around a problem in f2c on older debian and ubuntu
-releases.
+releases. Without this hack, this error shows up when linking:
+
+  /usr/lib/gcc/i486-linux-gnu/4.1.3/../../../../lib/libf2c.so: undefined reference to `MAIN__'
 
 Note: This taints *all* of libmv and makes it GPL. SBA will be replaced in the
 near future with a new bundelr, but that is going to be a substantial amount
