@@ -4,7 +4,12 @@ License: GPL
 Upstream version: 1.5
 Local modifications:
 
-None yet.
+Small change to eucsbademo.c to have a function
+
+  int MAIN__(void) {}
+
+which is needed to work around a problem in f2c on older debian and ubuntu
+releases.
 
 Note: This taints *all* of libmv and makes it GPL. SBA will be replaced in the
 near future with a new bundelr, but that is going to be a substantial amount

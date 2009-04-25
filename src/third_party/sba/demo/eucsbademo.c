@@ -1147,3 +1147,8 @@ int cnp=6, /* 3 rot params + 3 trans params */
 
   return 0;
 }
+
+// TODO(keir): Investigate the right way to get rid of this. f2c gets all
+// confused about the lack of this entry point when linking. This may cause
+// problems on other distributions, so this may need more investigation.
+int MAIN__(void) {}
