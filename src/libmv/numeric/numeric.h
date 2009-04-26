@@ -50,6 +50,14 @@ typedef Eigen::Matrix<double, 3, 5> Mat35;
 typedef Eigen::Matrix<double, 4, 3> Mat43;
 typedef Eigen::Matrix<double, 4, 4> Mat4;
 typedef Eigen::Matrix<double, 4, 6> Mat46;
+typedef Eigen::Matrix<float, 2, 2> Mat2f;
+typedef Eigen::Matrix<float, 2, 3> Mat23f;
+typedef Eigen::Matrix<float, 3, 3> Mat3f;
+typedef Eigen::Matrix<float, 3, 4> Mat34f;
+typedef Eigen::Matrix<float, 3, 5> Mat35f;
+typedef Eigen::Matrix<float, 4, 3> Mat43f;
+typedef Eigen::Matrix<float, 4, 4> Mat4f;
+typedef Eigen::Matrix<float, 4, 6> Mat46f;
 
 typedef Eigen::Matrix<double, 2, Eigen::Dynamic> Mat2X;
 typedef Eigen::Matrix<double, 3, Eigen::Dynamic> Mat3X;

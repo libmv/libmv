@@ -70,10 +70,41 @@ class SceneImage : public SceneObject {
   void Draw();
   ObjectType GetType() { return Image; }
   SceneImage(GLTexture &texture) : texture_(texture) {}
-  
+
   ~SceneImage() {};
+
  private:
   GLTexture texture_;
+};
+
+class ViewerCamera {
+ public:
+  ViewerCamera();
+  void SetScreenSize(int width, int height);
+  void SetUpGlCamera();
+  void MouseTranslate(float dx, float dy);
+  void MouseRevolve(float dx, float dy);
+  void MouseZoom(float dw);
+
+ private:
+  // Intrinsic parameters.
+  float field_of_view_;
+  float near_;
+  float far_;
+  float screen_width_;
+  float screen_height_;
+  
+  // Extrinsic parameters.
+  // Position and orientation of the world coordinate system w.r.t. the camera.
+  // cam_coords = Rotation(orientation_) * world_coords + position_
+  libmv::Vec3f position_;
+  Eigen::Quaternionf orientation_;
+  
+  // Interaction parameters.
+  libmv::Vec3f revolve_point_;
+  float revolve_speed_;
+  float translation_speed_;
+  float zoom_speed_;
 };
 
 // A widget displaying a 3D scene, including:
@@ -105,7 +136,7 @@ class Viewer3D : public QGLWidget {
   void SetUpGlCamera();
 
   // Mouse.
-  void mousePressEvent(QMouseEvent *) {};
+  void mousePressEvent(QMouseEvent *);
   void mouseMoveEvent(QMouseEvent *);
   void wheelEvent(QWheelEvent *);
 
@@ -114,6 +145,7 @@ class Viewer3D : public QGLWidget {
   GLTexture *textures_;
   
   libmv::scene::Node<SceneObject> scene_graph_;
+  ViewerCamera camera_;
   
   QPoint lastPos_;
 };

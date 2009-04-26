@@ -25,8 +25,8 @@
 
 #include "ui/tvr/3D_viewer.h"
 
-#define ROTATION_SPEED 1.0f
-#define TRANSLATION_SPEED 1.0f
+#define ROTATION_SPEED 0.003f
+#define TRANSLATION_SPEED 0.01f
 
 using namespace libmv::scene;
 
@@ -90,6 +90,60 @@ void SceneImage::Draw() {
   glDisable(GL_TEXTURE_2D);
 }
 
+
+ViewerCamera::ViewerCamera() {  
+  field_of_view_ = 60;
+  near_ = 0.1;
+  far_ = 100;
+  screen_width_ = 1;
+  screen_height_ = 1;
+  
+  position_ << 0, 0, -1;
+  orientation_ = Eigen::Quaternionf(1, 0, 0, 0);
+  
+  revolve_point_ << 0, 0, 0;
+  revolve_speed_ = 1;
+  translation_speed_ = 1;
+  zoom_speed_ = 0.002;
+}
+  
+void ViewerCamera::SetScreenSize(int width, int height) {
+  screen_width_ = width;
+  screen_height_ = height;
+}
+
+void ViewerCamera::SetUpGlCamera() {
+  glMatrixMode(GL_PROJECTION);
+  glLoadIdentity();
+  gluPerspective(field_of_view_,
+                 float(screen_width_) / float(screen_height_),
+                 near_, far_);
+  
+  glMatrixMode(GL_MODELVIEW);
+  glLoadIdentity();
+  glTranslatef(position_(0), position_(1), position_(2));
+  
+  libmv::Mat4f R = libmv::Mat4f::Identity();
+  R.block<3,3>(0,0) = orientation_.toRotationMatrix();
+  glMultMatrixf(&R(0,0));
+}
+
+void ViewerCamera::MouseTranslate(float dx, float dy) {
+  position_(0) += translation_speed_ * dx / screen_width_;
+  position_(1) += translation_speed_ * dy / screen_width_;
+};
+
+void ViewerCamera::MouseRevolve(float dx, float dy) {
+  Eigen::Quaternionf dr(1, dy / screen_width_, dx / screen_width_, 0);
+  dr.normalize();
+  orientation_ *= dr;
+  orientation_.normalize();
+}
+
+void ViewerCamera::MouseZoom(float dw) {
+  position_(2) += zoom_speed_ * dw;
+}
+
 Viewer3D::Viewer3D(QGLWidget *share, GLTexture *textures, QWidget *parent) :
     QGLWidget(0, share), document_(NULL), textures_(textures) {
   using namespace Eigen;
@@ -141,8 +195,10 @@ void Viewer3D::initializeGL() {
 
 void DrawNode(Node<SceneObject> *node) {
   if(node->GetObject()) {
-    glLoadMatrixd(node->GetGlobalTransform().data());
+    glPushMatrix();
+    glMultMatrixd(node->GetLocalTransform().data());
     node->GetObject()->Draw();
+    glPopMatrix();
   }
   Node<SceneObject>::iterator it;
   for (it=node->begin(); it!=node->end(); ++it) {
@@ -151,7 +207,15 @@ void DrawNode(Node<SceneObject> *node) {
 }
 
 void Viewer3D::paintGL() {
-  SetUpGlCamera();
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  
+  camera_.SetUpGlCamera();
+   
+  glBegin(GL_LINES);
+  glColor4f(1,0,0,1); glVertex3f(0, 0, 0); glVertex3f(1, 0, 0);
+  glColor4f(0,1,0,1); glVertex3f(0, 0, 0); glVertex3f(0, 1, 0);
+  glColor4f(0,0,1,1); glVertex3f(0, 0, 0); glVertex3f(0, 0, 1);
+  glEnd();
   
   DrawNode(&scene_graph_);
 }
@@ -167,6 +231,7 @@ void Viewer3D::SetUpGlCamera() {
 }
 
 void Viewer3D::resizeGL(int width, int height) {
+  camera_.SetScreenSize(width, height);
   glViewport(0, 0, width, height);
 }
 
@@ -199,8 +264,8 @@ void Viewer3D::InitImages() {
   scene_graph_.AddChild(ptr);
 }
 
-void Viewer3D::wheelEvent(QWheelEvent *) {
-  // Doesn't seem to ever get called ??? (Daniel)
+void Viewer3D::mousePressEvent(QMouseEvent *event) {
+  lastPos_ = event->pos();
 }
 
 void Viewer3D::mouseMoveEvent(QMouseEvent *event) {
@@ -208,27 +273,21 @@ void Viewer3D::mouseMoveEvent(QMouseEvent *event) {
   QPoint delta = event->pos() - lastPos_;
   lastPos_ = event->pos();  
   
-  if(!(delta.x()||delta.y()))
+  if(delta.x() == 0 && delta.y() == 0) {
     return;
-  
-  if (event->buttons() & (Qt::LeftButton | Qt::RightButton)) {
-    Transform3d transform;
-    transform.matrix() = scene_graph_.GetLocalTransform();
-    if (event->buttons() & Qt::LeftButton) {
-      transform = AngleAxisd(-delta.y() * ROTATION_SPEED, Vector3f::UnitX())
-                * AngleAxisd(-delta.x() * ROTATION_SPEED, Vector3f::UnitY())
-                * transform;
-    }
-    if (event->buttons() & Qt::RightButton) {
-      transform = Translation3d
-                      (delta.y() * TRANSLATION_SPEED * Vector3f::UnitZ())
-                * AngleAxisd( - delta.x() * ROTATION_SPEED, Vector3f::UnitZ())
-                * transform;
-    }
-    LOG(INFO) << "tranformation\n" << transform.matrix();
-
-    scene_graph_.SetTransform(transform.matrix());
-    
-    updateGL();
   }
+  
+  if (event->buttons() & Qt::LeftButton) {
+    camera_.MouseRevolve(delta.x(), delta.y());
+  }
+  
+  if (event->buttons() & Qt::RightButton) {
+    camera_.MouseTranslate(delta.x(), delta.y());
+  }
+  updateGL();
+}
+
+void Viewer3D::wheelEvent(QWheelEvent *event) {
+  camera_.MouseZoom(event->delta());
+  updateGL();
 }
