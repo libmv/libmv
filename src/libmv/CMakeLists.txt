@@ -1,5 +1,6 @@
 ADD_SUBDIRECTORY(image)
 ADD_SUBDIRECTORY(numeric)
 ADD_SUBDIRECTORY(correspondence)
+ADD_SUBDIRECTORY(optimize)
 ADD_SUBDIRECTORY(multiview)
 ADD_SUBDIRECTORY(scene_graph)
