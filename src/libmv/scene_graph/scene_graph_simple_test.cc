@@ -61,3 +61,23 @@ TEST(SceneGraph, GetChildReturnsNullIfNotFound) {
     it->DeleteObject();
   }
 }
+
+TEST(SceneGraph, SetName) {
+  Node<int> scene("root node", new int(0));
+
+  const char * test_names[] = { "bar", "foo", "zap" };
+  for (int i = 0; i < 3; ++i) {
+    Node<int> *node = new Node<int>(test_names[i], new int(10));
+    scene.AddChild(node);
+  }
+  
+  Node<int> *node = scene.GetChild("bar");
+  EXPECT_TRUE(node);
+  node->SetName("something");
+  EXPECT_EQ(node, scene.GetChild("something"));
+  
+  scene.DeleteObject();
+  for (Node<int>::iterator it = scene.begin(); it != scene.end(); ++it) {
+    it->DeleteObject();
+  }
+}

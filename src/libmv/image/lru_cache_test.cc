@@ -27,7 +27,7 @@ typedef libmv::LRUCache<int, int> TestCache;
 
 TEST(LRUCache, NullOnEmptyKey) {
   TestCache cache(10);
-  int *ptr;
+  int *ptr = NULL;
   bool succeeded = cache.FetchAndPin(4, &ptr);
   EXPECT_FALSE(succeeded);
 }

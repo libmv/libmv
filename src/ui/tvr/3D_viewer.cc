@@ -64,7 +64,7 @@ void ScenePointCloud::Draw() {
   glDisable(GL_LIGHTING);
   glColor3f(0,1,0);
   glBegin(GL_POINTS);
-  for (it=points_.begin(); it!=points_.end(); ++it) {
+  for (it = points_.begin(); it != points_.end(); ++it) {
     glVertex3f(it->x(), it->y(), it->z());
   }
   glEnd();
@@ -89,7 +89,6 @@ void SceneImage::Draw() {
   
   glDisable(GL_TEXTURE_2D);
 }
-
 
 ViewerCamera::ViewerCamera() {  
   field_of_view_ = 60;
@@ -154,7 +153,7 @@ Viewer3D::Viewer3D(QGLWidget *share, GLTexture *textures, QWidget *parent) :
   scene_graph_ = Node<SceneObject>("root node", NULL);
   
   Transform3d transform;
-  transform.matrix() = scene_graph_.GetLocalTransform();
+  transform.matrix() = scene_graph_.GetTransform();
   transform = Translation3d(0,0,-1) * transform;
   scene_graph_.SetTransform(transform.matrix());
   
@@ -173,7 +172,7 @@ void Viewer3D::SetDocument(TvrDocument *doc) {
   ScenePointCloud *p = new ScenePointCloud;
   
   std::vector<libmv::Vec3>::iterator it;
-  for (it=document_->X.begin(); it!=document_->X.end(); ++it) {
+  for (it = document_->X.begin(); it != document_->X.end(); ++it) {
     p->AddPoint(*it);
   }
   
@@ -193,17 +192,17 @@ void Viewer3D::initializeGL() {
   glShadeModel(GL_FLAT);
 }
 
-void DrawNode(Node<SceneObject> *node) {
+static void DrawNode(Node<SceneObject> *node) {
+  glPushMatrix();
   if(node->GetObject()) {
-    glPushMatrix();
-    glMultMatrixd(node->GetLocalTransform().data());
+    glMultMatrixd(node->GetTransform().data());
     node->GetObject()->Draw();
-    glPopMatrix();
   }
   Node<SceneObject>::iterator it;
   for (it=node->begin(); it!=node->end(); ++it) {
     DrawNode(&*it);
   }
+  glPopMatrix();
 }
 
 void Viewer3D::paintGL() {
@@ -217,17 +216,8 @@ void Viewer3D::paintGL() {
   glColor4f(0,0,1,1); glVertex3f(0, 0, 0); glVertex3f(0, 0, 1);
   glEnd();
   
+  glColor4f(1,1,1,1);
   DrawNode(&scene_graph_);
-}
-
-void Viewer3D::SetUpGlCamera() {
-  glMatrixMode(GL_PROJECTION);
-  glLoadIdentity();
-  gluPerspective(60, 1.5f, 0, 10);
-  glRotatef(180, 1, 0, 0);
-  glMatrixMode(GL_MODELVIEW);
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  glLoadIdentity();
 }
 
 void Viewer3D::resizeGL(int width, int height) {
@@ -237,7 +227,7 @@ void Viewer3D::resizeGL(int width, int height) {
 
 void Viewer3D::TextureChange() {
   Node<SceneObject>::iterator it;
-  for (it=scene_graph_.begin(); it!=scene_graph_.end();) {
+  for (it = scene_graph_.begin(); it != scene_graph_.end();) {
     if (it->GetObject()->GetType() == SceneObject::Image)
       it = scene_graph_.erase(it);
     else
@@ -256,7 +246,7 @@ void Viewer3D::InitImages() {
   scene_graph_.AddChild(ptr);
 
   Transform3d transform;
-  transform.matrix() = ptr->GetLocalTransform();
+  transform.matrix() = ptr->GetTransform();
   transform = Translation3d(1,0,0) * transform;
   ptr->SetTransform(transform.matrix());
   
@@ -269,7 +259,6 @@ void Viewer3D::mousePressEvent(QMouseEvent *event) {
 }
 
 void Viewer3D::mouseMoveEvent(QMouseEvent *event) {
-  using namespace Eigen;
   QPoint delta = event->pos() - lastPos_;
   lastPos_ = event->pos();  
   

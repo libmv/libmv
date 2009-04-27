@@ -43,33 +43,40 @@ namespace lru_cache {
 template<typename K>
 class SetQueue {
  public:
+  // O(log n)
   void Enqueue(const K &key) {
     assert(!Contains(key));
     queue_.push_front(key);
     queue_positions_[key] = queue_.begin();
   }
+  // O(log n)
   void Remove(const K &key) {
     assert(Contains(key));
     typename Map::iterator it = queue_positions_.find(key);
     queue_.erase(it->second);
     queue_positions_.erase(it);
   }
+  // O(1)
   void Dequeue(K *key) {
     assert(!queue_.empty());
     *key = queue_.back();
     Remove(*key);
   }
+  // O(log n)
   bool Contains(const K &key) {
     return queue_positions_.find(key) != queue_positions_.end();
   }
+  // O(n)
   void Clear() {
     queue_positions_.clear();
     queue_.clear();
   }
+  // O(1) in most implementations however may be O(n)
   int Size() {
     assert(queue_.size() == queue_positions_.size());
     return queue_.size();
   }
+  // O(1)
   bool Empty() {
     assert(queue_.empty() == queue_positions_.empty());
     return queue_.empty();
@@ -85,28 +92,28 @@ class SetQueue {
 
 template<typename K, typename V> class Cache;
 
-// TODO(keir): Document O(...) performance for operations.
 template<typename K, typename V>
 class LRUCache : public Cache<K, V> {
  public:
+  // O(1)
   LRUCache(int max_size)
     : max_size_(max_size),
       size_(0) {}
-
+  // O(n log n)
   void Pin(const K &key) {
     assert(ContainsKey(key));
     CachedItem *item = &(items_[key]);
     if (Pin(key, item))
       DeleteUnpinnedItemsIfNecessary();
   }
-  
+  // O(n log n)
   virtual void Unpin(const K &key) {
     assert(ContainsKey(key));
     CachedItem *item = &(items_[key]);
     if (Unpin(key, item))
       DeleteUnpinnedItemsIfNecessary();
   }
-
+  // O(n log n)
   virtual void MassUnpin() {
     bool possible_delete_needed = false;
     for (typename CacheMap::iterator it = items_.begin();
@@ -116,7 +123,7 @@ class LRUCache : public Cache<K, V> {
     if (possible_delete_needed)
       DeleteUnpinnedItemsIfNecessary();
   }
-  
+  // O(n log n)
   virtual bool FetchAndPin(const K &key, V **value) {
     if (!ContainsKey(key)) {
       return false;
@@ -125,7 +132,7 @@ class LRUCache : public Cache<K, V> {
     *value = items_[key].ptr;
     return true;
   }
-  
+  // O(n log n)
   virtual void StoreAndPinSized(const K &key, V *value, const int size) {
     size_ += size;
     CachedItem new_item;
@@ -135,27 +142,32 @@ class LRUCache : public Cache<K, V> {
     items_[key] = new_item;
     DeleteUnpinnedItemsIfNecessary();
   }
-
+  // O(1)
   virtual bool ContainsKey(const K &key) {
     return items_.find(key) != items_.end();
   }
-
+  // O(1)
   virtual int MaxSize() const {
     return max_size_;
   }
-
+  // O(1)
   virtual int Size() const {
     return size_;
   }
-
+  // O(n log n)
   virtual void SetMaxSize(const int max_size) {
     max_size_ = max_size;
     DeleteUnpinnedItemsIfNecessary();
   }
-
-  virtual ~LRUCache() {}
+  // O(n)
+  virtual ~LRUCache() {
+    typename CacheMap::iterator it;
+    for (it = items_.begin(); it != items_.end(); ++it)
+      delete it->second.ptr;
+  }
 
  private:
+  // O(n log n)
   void DeleteUnpinnedItemsIfNecessary() {
     while (!unpinned_items_.Empty() &&
            size_ > max_size_) {
@@ -176,7 +188,7 @@ class LRUCache : public Cache<K, V> {
     int size;
     CachedItem() : ptr(NULL) {}
   };
-  
+  // O(log n)
   bool Pin(const K &key, CachedItem *item) {
     assert(ContainsKey(key));
     bool res = false;
@@ -187,7 +199,7 @@ class LRUCache : public Cache<K, V> {
     item->use_count++;
     return res;
   }
-  
+  // O(log n)
   bool Unpin(const K &key, CachedItem *item) {
     assert(ContainsKey(key));
     assert(item->use_count > 0);

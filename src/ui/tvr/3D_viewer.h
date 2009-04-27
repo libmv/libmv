@@ -38,7 +38,7 @@ class SceneObject {
   
   // The drawing function should assume that
   // opengl's model matrix is already ready for drawing.
-  // Changing the model matrix won't affect children.
+  // Changing the model matrix will affect children.
   virtual void Draw() {};
   virtual ObjectType GetType() = 0;
 };
@@ -132,8 +132,6 @@ class Viewer3D : public QGLWidget {
   void initializeGL();
   void paintGL();
   void resizeGL(int, int);
-  
-  void SetUpGlCamera();
 
   // Mouse.
   void mousePressEvent(QMouseEvent *);

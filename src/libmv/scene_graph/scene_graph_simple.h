@@ -31,10 +31,6 @@ namespace scene {
 
 using std::string;
 
-// TODO(keir): Consider eliminating the global transform. OpenGL already has
-// its own transform stack; why is it useful to have a global transform for
-// each object?
-
 /**
  * The simplest possible scene graph that could possibly work for displaying a
  * two view reconstruction. Performance is utterly ignored in favor of code
@@ -47,23 +43,21 @@ class Node {
  public:
   virtual ~Node() {
     typename ChildMap::iterator it;
-    for (it=children_.begin(); it!=children_.end(); ++it) {
-      it->second->SetNoParent();
+    for (it = children_.begin(); it != children_.end(); ++it) {
+      it->second->SetParent(NULL);
       delete it->second;
     }
-    // TODO: If a node is deleted it is not removed from its parent's map
-    // and it doesn't delete its object.
+    // TODO (Daniel): If a node is deleted it is not removed from its parent's
+    // map
   }
   
   Node() : parent_(NULL), object_(NULL) {
     transform_ = Mat4::Identity(4, 4);
-    current_ = Mat4::Identity(4, 4);
   }
   Node(const string &name, Object *object) : parent_(NULL) {
     name_ = name;
     object_ = object;
     transform_ = Mat4::Identity(4, 4);
-    current_ = Mat4::Identity(4, 4);
   }
 
   NodeT *GetParent() const { return parent_; }
@@ -71,11 +65,12 @@ class Node {
     if (parent_ != NULL) {
       parent_->RemoveChild(this);
     }
+    if (new_parent == parent_)
+      return;
     parent_ = new_parent;
     if (new_parent != NULL) {
       new_parent->AddChild(this);
     }
-    UpdateGlobalTransform();
   }
 
   NodeT *GetChild(const string &child_name) const {
@@ -84,6 +79,8 @@ class Node {
   }
 
   void AddChild(NodeT *child) {
+    assert(child);
+    assert(!child->GetName().empty());
     // Children must have unique names.
     NodeT *existing_child = GetChild(child->GetName());
     if (existing_child == NULL) {
@@ -104,9 +101,12 @@ class Node {
     typename ChildMap::iterator it = children_.find(child->GetName());
     if (it != children_.end()) {
       assert(it->second == child);
-      it->second->SetNoParent();
       children_.erase(it);
     }
+  }
+  
+  bool HasChild(NodeT *node) {
+    return GetChild(node->GetName()) == node;
   }
 
   const string &GetName() const    { return name_; }
@@ -114,15 +114,11 @@ class Node {
     if (name == name_)
       return;
     name_ = name;
-    if (parent_) {
-      NodeT *parent = parent_;
-      parent->RemoveChild(this);
-      parent->AddChild(this);
-    }
+    // TODO(Daniel): Changing the name should change the parent's map's key
+    // value. The previous method caused a SEG fault.
   }
 
-  const Mat4 &GetLocalTransform()  const { return transform_; }
-  const Mat4 &GetGlobalTransform() const { return current_;   }
+  const Mat4 &GetTransform()  const { return transform_; }
 
   Object *GetObject() const { return object_; }
   void SetObject(Object *object) { object_ = object; }
@@ -137,11 +133,9 @@ class Node {
   // coordinate space of this object.
   void SetTransform(const Mat4 &transform) {
     transform_ = transform;
-    UpdateGlobalTransform();
   }
   void TransformBy(const Mat4 &transform) {
     transform_ = transform_ * transform;
-    UpdateGlobalTransform();
   }
 
   class iterator {
@@ -155,6 +149,9 @@ class Node {
     } 
     bool operator!=(const iterator &other) {
       return it_ != other.it_;
+    }
+    bool operator==(const iterator &other) {
+      return it_ == other.it_;
     }
     void operator++() {
       ++it_;
@@ -187,7 +184,7 @@ class Node {
   unsigned int NumChildrenRecursive() {
     unsigned int result = 0;
     typename ChildMap::iterator it;
-    for (it=children_.begin(); it!=children_.end(); ++it) {
+    for (it = children_.begin(); it != children_.end(); ++it) {
       ++result;
       result += it->second->NumChildrenRecursive();
     }
@@ -199,29 +196,9 @@ class Node {
   }
 
  private:
-  void UpdateGlobalTransform() {
-    if (parent_) {
-      current_ = parent_->GetGlobalTransform() * transform_;
-    } else {
-      current_ = transform_;
-    }
-    this->UpdateChildren();
-  }
-  
-  void UpdateChildren() {
-    for (iterator it = begin(); it != end(); ++it) {
-      it->UpdateGlobalTransform();
-    }
-  }
-  
-  void SetNoParent() {
-    parent_ = NULL;
-  }
 
   // Transform from the parents space to this object's space.
   Mat4 transform_;
-  // Transform from root object space into this objects coordinate space.
-  Mat4 current_;
   string name_;
   NodeT *parent_;
   ChildMap children_;

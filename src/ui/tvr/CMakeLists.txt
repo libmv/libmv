@@ -9,7 +9,6 @@ TARGET_LINK_LIBRARIES(tvr
                       correspondence
                       numeric
                       multiview
-                      scene_graph
                       glog
                       gflags
                       ${QT_QTCORE_LIBRARY}
