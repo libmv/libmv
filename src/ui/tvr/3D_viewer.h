@@ -82,8 +82,8 @@ class ViewerCamera {
   ViewerCamera();
   void SetScreenSize(int width, int height);
   void SetUpGlCamera();
-  void MouseTranslate(float dx, float dy);
-  void MouseRevolve(float dx, float dy);
+  void MouseTranslate(float x1, float y1, float x2, float y2);
+  void MouseRevolve(float x1, float y1, float x2, float y2);
   void MouseZoom(float dw);
 
  private:
@@ -95,14 +95,17 @@ class ViewerCamera {
   float screen_height_;
   
   // Extrinsic parameters.
-  // Position and orientation of the world coordinate system w.r.t. the camera.
-  // cam_coords = Rotation(orientation_) * world_coords + position_
-  libmv::Vec3f position_;
-  Eigen::Quaternionf orientation_;
-  
-  // Interaction parameters.
+  // The parameters define the transformation between the world and the camera
+  // frames as
+  //     cam_coords = Rotation(orientation_) * (world_coords - revolve_point_)
+  //                + revolve_point_in_cam_coords_.
   libmv::Vec3f revolve_point_;
-  float revolve_speed_;
+  libmv::Vec3f revolve_point_in_cam_coords_; // Implicitly defines the position
+                                             // of the camera.
+  Eigen::Quaternionf orientation_; // Orientation of the world axis w.r.t.
+                                   // the camera axis.
+
+  // Interaction parameters.
   float translation_speed_;
   float zoom_speed_;
 };
