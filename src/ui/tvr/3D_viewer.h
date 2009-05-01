@@ -45,12 +45,17 @@ class SceneObject {
 
 class SceneCamera : public SceneObject {
  public:
-  // Position, scale and rotation are stored in the SGNode Matrix,
-  // so SceneCamera only needs a drawing function.
   void Draw();
   ObjectType GetType() { return Camera; }
+  void SetParameters(libmv::Mat3 K, libmv::Mat3 R, libmv::Vec3 t);
+  void SetTexture(GLTexture texture) { texture_ = texture; }
   
   ~SceneCamera() {};
+ private:
+  libmv::Mat3 K_;
+  libmv::Mat3 R_;
+  libmv::Vec3 t_;
+  GLTexture texture_;
 };
 
 class ScenePointCloud : public SceneObject {
@@ -65,17 +70,6 @@ class ScenePointCloud : public SceneObject {
   std::vector<libmv::Vec3> points_;
 };
 
-class SceneImage : public SceneObject {
- public:
-  void Draw();
-  ObjectType GetType() { return Image; }
-  SceneImage(GLTexture &texture) : texture_(texture) {}
-
-  ~SceneImage() {};
-
- private:
-  GLTexture texture_;
-};
 
 class ViewerCamera {
  public:
@@ -128,7 +122,6 @@ class Viewer3D : public QGLWidget {
   void SetDocument(TvrDocument *);
   void GLUpdate() { updateGL(); }
   void TextureChange();
-  void InitImages();
 
  protected:
   // Drawing.
@@ -145,8 +138,10 @@ class Viewer3D : public QGLWidget {
   TvrDocument *document_;
   GLTexture *textures_;
   
+  ScenePointCloud scene_point_cloud_;
+  SceneCamera scene_cameras_[2];
   libmv::scene::Node<SceneObject> scene_graph_;
-  ViewerCamera camera_;
+  ViewerCamera viewer_camera_;
   
   QPoint lastPos_;
 };
