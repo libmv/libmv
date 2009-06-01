@@ -116,7 +116,7 @@ Model Estimate(TMat &samples, Fitter fitter, Classifier classifier,
                 << " is_inlier=" << is_inlier;
         // TODO(keir): Add hypergometric early-breakout.
       }
-      VLOG(3) << "Fit cost: " << cost << ", number of inliers: " << num_inliers;
+      VLOG(5) << "Fit cost: " << cost << ", number of inliers: " << num_inliers;
 
       if (cost < best_cost) {
         best_cost = cost;

@@ -267,18 +267,64 @@ void TvrMainWindow::ComputeRobustMatches() {
   UpdateViewers();
 }
 
+static void PointCorrespondencesAsMatrices(libmv::Correspondences &c,
+                                           libmv::Mat *x1,
+                                           libmv::Mat *x2) {
+  using namespace libmv;
+
+  x1->resize(2, c.NumTracks());
+  x2->resize(2, c.NumTracks());
+  Mat *x[2] = { x1, x2 };
+  int i = 0;
+  for (Correspondences::TrackIterator t = c.ScanAllTracks();
+       !t.Done(); t.Next()) {
+    PointCorrespondences::Iterator it =
+        PointCorrespondences(&c).ScanFeaturesForTrack(t.track());
+    (*x[it.image()])(0, i) = it.feature()->x();
+    (*x[it.image()])(1, i) = it.feature()->y();
+    it.Next();
+    (*x[it.image()])(0, i) = it.feature()->x();
+    (*x[it.image()])(1, i) = it.feature()->y();
+    i++;
+  }
+}
+
+  
+  
 void TvrMainWindow::FocalFromFundamental() {
+  libmv::Mat x1, x2;
+  PointCorrespondencesAsMatrices(document_.correspondences, &x1, &x2);
+
   libmv::Vec2 p0((document_.images[0].width() - 1) / 2.,
                  (document_.images[0].height() - 1) / 2.);
   libmv::Vec2 p1((document_.images[1].width() - 1) / 2.,
                  (document_.images[1].height() - 1) / 2.);
-  libmv::FocalFromFundamental(document_.F, p0, p1,
-                              &document_.focal_distance[0],
-                              &document_.focal_distance[1]);
-
-  LOG(INFO) << "focal 0: " << document_.focal_distance[0]
-            << " focal 1: " << document_.focal_distance[1] << "\n";
-
+  
+  bool use_hartleys_method = false;
+  if (use_hartleys_method) {
+    libmv::FocalFromFundamental(document_.F, p0, p1,
+                                &document_.focal_distance[0],
+                                &document_.focal_distance[1]);
+    LOG(INFO) << "focal 0: " << document_.focal_distance[0]
+              << " focal 1: " << document_.focal_distance[1] << "\n";
+  } else {
+    double fmin_mm = 10;
+    double fmax_mm = 150;
+    double sensor_width_mm = 36; // Assuming a full-sized sensor 1x equiv.
+    double width_pix = document_.images[0].width();
+    libmv::FocalFromFundamentalExhaustive(document_.F, p0, x1, x2,
+                                          fmin_mm / sensor_width_mm * width_pix,
+                                          fmax_mm / sensor_width_mm * width_pix,
+                                          100,
+                                          &document_.focal_distance[0]);
+    document_.focal_distance[1] = document_.focal_distance[0];
+    
+    LOG(INFO) << "focal: " << document_.focal_distance[0]
+              << "pix    35mm equiv: " << document_.focal_distance[0]
+                                          * sensor_width_mm / width_pix
+              << "\n";
+  }
+  
   UpdateViewers();
 }
 
@@ -303,25 +349,14 @@ void TvrMainWindow::MetricReconstruction() {
   Mat3 E;
   EssentialFromFundamental(document_.F, K0, K1, &E);
 
-  // Get one match from the corresponcence structure.
-  Vec2 x[2];
-  {
-    Correspondences::TrackIterator t =
-        document_.correspondences.ScanAllTracks();
-    PointCorrespondences::Iterator it =
-        PointCorrespondences(&document_.correspondences)
-              .ScanFeaturesForTrack(t.track());
-    x[it.image()](0) = it.feature()->x();
-    x[it.image()](1) = it.feature()->y();
-    it.Next();
-    x[it.image()](0) = it.feature()->x();
-    x[it.image()](1) = it.feature()->y();
-  }
-
+  // Get matches from the corresponcence structure.
+  Mat x0, x1;
+  PointCorrespondencesAsMatrices(document_.correspondences, &x0, &x1);
+    
   // Recover R, t from E and K
   Mat3 R;
   Vec3 t;
-  MotionFromEssentialAndCorrespondence(E, K0, x[0], K1, x[1], &R, &t);
+  MotionFromEssentialAndCorrespondence(E, K0, x0.col(0), K1, x1.col(0), &R, &t);
 
   LOG(INFO) << "R:\n" << R << "\nt:\n" << t;
 
@@ -333,30 +368,19 @@ void TvrMainWindow::MetricReconstruction() {
   document_.t[1] = t;
 
   // Triangulate features.
-  {
-    std::vector<Mat34> Ps(2);
-    P_From_KRt(document_.K[0], document_.R[0], document_.t[0], &Ps[0]);
-    P_From_KRt(document_.K[1], document_.R[1], document_.t[1], &Ps[1]);
-    int n = document_.correspondences.NumTracks();
-    document_.X.resize(n);
-    int i = 0;
-    for (Correspondences::TrackIterator t =
-             document_.correspondences.ScanAllTracks(); !t.Done(); t.Next()) {
-      PointCorrespondences::Iterator it =
-          PointCorrespondences(&document_.correspondences)
-              .ScanFeaturesForTrack(t.track());
-      Mat2X x(2, 2);
-      Vec4 X;
-      x(0, it.image()) = it.feature()->x();
-      x(1, it.image()) = it.feature()->y();
-      it.Next();
-      x(0, it.image()) = it.feature()->x();
-      x(1, it.image()) = it.feature()->y();
-      NViewTriangulate(x, Ps, &X);
-      X /= X(3);
-      document_.X[i] = X.start<3>();
-      i++;
-    }
+  std::vector<Mat34> Ps(2);
+  P_From_KRt(document_.K[0], document_.R[0], document_.t[0], &Ps[0]);
+  P_From_KRt(document_.K[1], document_.R[1], document_.t[1], &Ps[1]);
+  
+  int n = x0.cols();
+  document_.X.resize(n);
+  for (int i = 0; i < n; ++i) {
+    Mat2X x(2, 2);
+    x.col(0) = x0.col(i);
+    x.col(1) = x1.col(i);
+    Vec4 X;
+    NViewTriangulate(x, Ps, &X);
+    document_.X[i] = libmv::HomogeneousToEuclidean(X);
   }
 }
 

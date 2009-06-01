@@ -76,6 +76,10 @@ void ComputeFundamental(libmv::Correspondences &all_matches,
   std::vector<int> inliers;
   // TODO(pau) Expose the threshold.
   FundamentalFromCorrespondences8PointRobust(x[0], x[1], 2, F, &inliers);
+  VLOG(1) << inliers.size() << " inliers\n";
+  if (inliers.size() < 8) {
+    return;
+  }
 
   // Build new correspondence graph containing only inliers.
   for (int j = 0; j < inliers.size(); ++j) {

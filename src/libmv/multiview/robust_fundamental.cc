@@ -35,7 +35,7 @@ struct FundamentalModel {
   template<typename TVec>
   double Error(TVec x1x2) {
     double sampson_error2 = SampsonDistance2(F, x1x2.start(2), x1x2.end(2));
-    VLOG(4) << "Sampson error^2 = " << sampson_error2;
+    VLOG(5) << "Sampson error^2 = " << sampson_error2;
     return sampson_error2;
   }
   Mat3 F;
