@@ -41,7 +41,16 @@ void FocalFromFundamental(const Mat3 &F,
                           const Vec2 &principal_point2,
                           double *f1,
                           double *f2);
-
+                          
+void FocalFromFundamentalExhaustive(const Mat3 &F,
+                                const Vec2 &principal_point,
+                                const Mat2X &x1,
+                                const Mat2X &x2,
+                                double min_focal,
+                                double max_focal,
+                                int n_samples,
+                                double *focal);
+                                                    
 } // namespace libmv
 
 #endif  // LIBMV_MULTIVIEW_FOCAL_FROM_FUNDAMENTAL_H_

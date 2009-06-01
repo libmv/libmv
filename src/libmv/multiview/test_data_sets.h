@@ -40,7 +40,7 @@ struct TwoViewDataSet {
 };
 
 // Two cameras at (-1,-1,-10) and (2,1,-10) looking approximately towards z+.
-TwoViewDataSet TwoRealisticCameras();
+TwoViewDataSet TwoRealisticCameras(bool same_K = false);
 
 // An N-view metric dataset (with N < 10). An important difference between this
 // and the other reconstruction data types is that all points are seen by all

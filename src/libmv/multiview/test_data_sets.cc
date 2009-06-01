@@ -27,15 +27,19 @@
 
 namespace libmv {
 
-TwoViewDataSet TwoRealisticCameras() {
+TwoViewDataSet TwoRealisticCameras(bool same_K) {
   TwoViewDataSet d;
 
   d.K1 << 320,   0, 160,
             0, 320, 120,
             0,   0,   1;
-  d.K2 << 360,   0, 170,
-            0, 360, 110,
-            0,   0,   1;
+  if (same_K) {
+    d.K2 = d.K1;
+  } else {
+    d.K2 << 360,   0, 170,
+              0, 360, 110,
+              0,   0,   1;
+  }
   d.R1 = RotationAroundZ(-0.1);
   d.R2 = RotationAroundX(-0.1);
   d.t1 << 1, 1, 10;

@@ -194,7 +194,7 @@ TEST(FocalFromFundamental, TwoViewReconstruction) {
   double f1_estimated, f2_estimated;
   FocalFromFundamental(F_estimated, p1, p2, &f1_estimated, &f2_estimated);
 
-  // Build K matrices from the known principal points and the compted focals.
+  // Build K matrices from the known principal points and the computed focals.
   Mat3 K1_estimated, K2_estimated;
   K1_estimated << f1_estimated,            0, p1(0),
                              0, f1_estimated, p1(1),
@@ -219,6 +219,58 @@ TEST(FocalFromFundamental, TwoViewReconstruction) {
   MotionFromEssentialAndCorrespondence(E_estimated,
                                        K1_estimated, x1,
                                        K2_estimated, x2,
+                                       &R_estimated, &t_estimated);
+
+  RelativeCameraMotion(d.R1, d.t1, d.R2, d.t2, &R, &t);
+  NormalizeL2(&t);
+
+  EXPECT_LE(FrobeniusDistance(R, R_estimated), 1e-8);
+  EXPECT_LE(DistanceL2(t, t_estimated), 1e-8);
+}
+
+TEST(FocalFromFundamentalExhaustive, TwoViewReconstruction) {
+  // Two cameras at (0,0,-10) and (2,1,-10) looking towards z+.
+  TwoViewDataSet d = TwoRealisticCameras(true);
+  Vec2 pp;
+  pp << d.K1(0,2), d.K1(1,2);
+
+  // Compute fundamental matrix from correspondences.
+  Mat3 F_estimated;
+  FundamentalFromCorrespondences8Point(d.x1, d.x2, &F_estimated);
+
+  Mat3 F_gt_norm, F_estimated_norm;
+  NormalizeFundamental(d.F, &F_gt_norm);
+  NormalizeFundamental(F_estimated, &F_estimated_norm);
+
+  EXPECT_NEAR(0, FrobeniusDistance(F_gt_norm, F_estimated_norm), 1e-8);
+
+  // Compute focal lenght.
+  double f_estimated;
+  FocalFromFundamentalExhaustive(F_estimated, pp, d.x1, d.x2,
+                                 10, 1000, 100, &f_estimated);
+
+  // Build K from the known principal point and the computed focal.
+  Mat3 K_estimated;
+  K_estimated << f_estimated,           0, pp(0),
+                           0, f_estimated, pp(1),
+                           0,           0,     1;
+  EXPECT_NEAR(0, FrobeniusDistance(d.K1, K_estimated), 1e-8);
+  EXPECT_NEAR(0, FrobeniusDistance(d.K2, K_estimated), 1e-8);
+
+  // Compute essential matrix
+  Mat3 E_estimated;
+  EssentialFromFundamental(F_estimated, K_estimated, K_estimated,
+                           &E_estimated);
+
+  // Recover R, t from E and K
+  Vec2 x1, x2;
+  MatrixColumn(d.x1, 0, &x1);
+  MatrixColumn(d.x2, 0, &x2);
+  Mat3 R_estimated, R;
+  Vec3 t_estimated, t;
+  MotionFromEssentialAndCorrespondence(E_estimated,
+                                       K_estimated, x1,
+                                       K_estimated, x2,
                                        &R_estimated, &t_estimated);
 
   RelativeCameraMotion(d.R1, d.t1, d.R2, d.t2, &R, &t);

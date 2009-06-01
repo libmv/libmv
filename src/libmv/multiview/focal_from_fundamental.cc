@@ -22,6 +22,9 @@
 // http://axiom.anu.edu.au/~hartley/Papers/focal-lengths/focal.pdf
 
 #include "libmv/numeric/numeric.h"
+#include "libmv/multiview/projection.h"
+#include "libmv/multiview/fundamental.h"
+#include "libmv/multiview/nviewtriangulation.h"
 
 namespace libmv {
 
@@ -132,5 +135,122 @@ void FocalFromFundamental(const Mat3 &F,
   *f1 = sqrt(f1_square);
   *f2 = sqrt(f2_square);
 }
+
+
+
+//TODO(pau) Move this libmv/numeric and add tests.
+template<class Tf, typename T>
+T GoldenRatioSearch(const Tf &f, T a, T b, T tol, int max_it) {
+  // Golden ration search.
+  double c = a + 0.618033988 * (b - a);
+  double fa = f(a);
+  double fb = f(b);
+  double fc = f(c);
+  for (int i = 0; i < max_it && fabs(a - b) >= tol; ++i) {
+    VLOG(3) << "a: " << a << " b: " << b << " c: " << c << " fc: " << fc << "\n";
+
+    double d = a + 0.618033988 * (c - a);
+    double fd = f(d);
+    if (fd < fc) {
+      b = c; fb = fc;
+      c = d; fc = fd;
+    } else {
+      a = b; fa = fb;
+      b = d; fb = fd;
+    }
+  }
+  return c;
+}
+
+
+class FocalReprojectionError {
+ public:
+  FocalReprojectionError(const Mat3 &F,
+                         const Vec2 &principal_point,
+                         const Mat2X &x1,
+                         const Mat2X &x2) 
+      : F_(F), principal_point_(principal_point), x1_(x1), x2_(x2) {
+  }
+  
+  double operator()(double focal) const {
+    Mat3 K;
+    K << focal,      0, principal_point_(0),
+              0, focal, principal_point_(1),
+              0,     0,                  1;
+          
+    Mat3 E;
+    EssentialFromFundamental(F_, K, K, &E);
+    
+    Mat3 R;
+    Vec3 t;
+    MotionFromEssentialAndCorrespondence(E, K, x1_.col(0), K, x2_.col(0),
+                                         &R, &t);
+    
+    std::vector<Mat34> Ps(2);
+    P_From_KRt(K, Mat3::Identity(), Vec3::Zero(), &Ps[0]);
+    P_From_KRt(K, R, t, &Ps[1]);
+    
+    double error = 0;
+    for (int j = 0; j < x1_.cols(); ++j) {
+      Vec4 X;
+      Mat2X x(2,2);
+      x.col(0) = x1_.col(j);
+      x.col(1) = x2_.col(j);
+      NViewTriangulate(x, Ps, &X);
+      Vec3 x1_reproj = Ps[0] * X;
+      Vec3 x2_reproj = Ps[1] * X;
+      error += std::min(2.*2.,
+          (x1_.col(j) - HomogeneousToEuclidean(x1_reproj)).squaredNorm());
+      error += std::min(2.*2.,
+          (x2_.col(j) - HomogeneousToEuclidean(x2_reproj)).squaredNorm());
+    }
+    return error;
+  }
+  
+ private:
+  const Mat3 &F_;
+  const Vec2 &principal_point_;
+  const Mat2X &x1_;
+  const Mat2X &x2_;
+};
+
+
+//TODO(pau) Move this to libmv/numeric and add tests.
+static double Lerp(double x, double x0, double y0, double x1, double y1) {
+  return y0 + (x - x0) * (y1 - y0) / (x1 - x0);
+}
+
+void FocalFromFundamentalExhaustive(const Mat3 &F,
+                                    const Vec2 &principal_point,
+                                    const Mat2X &x1,
+                                    const Mat2X &x2,
+                                    double min_focal,
+                                    double max_focal,
+                                    int n_samples,
+                                    double *focal) {
+  FocalReprojectionError error(F, principal_point, x1, x2);
+  
+  // Exhaustive search.
+  int best_focal = 0;
+  double best_error = std::numeric_limits<double>::max();
+  
+  for (int i = 0; i < n_samples; ++i) {
+    double f = Lerp(i, 0, min_focal, n_samples - 1, max_focal);
+    double e = error(f);
+    
+    if (e < best_error) {
+      best_error = e;
+      best_focal = i;
+    }
+    VLOG(3) << "focal: " << f << "  error: " << e << "\n";
+  }  
+  
+  // Golden ration search.
+  double a = Lerp(best_focal - 1, 0, min_focal, n_samples - 1, max_focal);
+  double b = Lerp(best_focal + 1, 0, min_focal, n_samples - 1, max_focal);
+
+  *focal = GoldenRatioSearch(error, a, b, 1e-8, 99999);
+}
+
 
 }  // namespace libmv
