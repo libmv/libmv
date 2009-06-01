@@ -50,10 +50,22 @@ void ProjectionChangeAspectRatio(const Mat34 &P,
 void HomogeneousToEuclidean(const Mat &H, Mat *X);
 void HomogeneousToEuclidean(const Vec3 &H, Vec2 *X);
 void HomogeneousToEuclidean(const Vec4 &H, Vec3 *X);
+inline Vec2 HomogeneousToEuclidean(const Vec3 &h) {
+  return h.start<2>() / h(2);
+}
+inline Vec3 HomogeneousToEuclidean(const Vec4 &h) {
+  return h.start<3>() / h(3);
+}
 
 void EuclideanToHomogeneous(const Mat &X, Mat *H);
 void EuclideanToHomogeneous(const Vec2 &X, Vec3 *H);
 void EuclideanToHomogeneous(const Vec3 &X, Vec4 *H);
+inline Vec3 EuclideanToHomogeneous(const Vec2 &x) {
+  return Vec3(x(0), x(1), 1);  
+}
+inline Vec4 EuclideanToHomogeneous(const Vec3 &x) {
+  return Vec4(x(0), x(1), x(2), 1);
+}
 
 void Project(const Mat34 &P, const Mat &X, Mat *x);
 
