@@ -21,6 +21,8 @@
 #include "libmv/numeric/numeric.h"
 #include "libmv/multiview/projection.h"
 #include "libmv/multiview/triangulation.h"
+#include "libmv/multiview/nviewtriangulation.h"
+#include "libmv/multiview/bundle.h"
 #include "libmv/multiview/fundamental.h"
 
 namespace libmv {
@@ -37,8 +39,7 @@ void EliminateRow(const Mat34 &P, int row, Mat *X) {
 }
 
 // Addapted from vgg_F_from_P.
-void FundamentalFromProjections(const Mat34 &P1, const Mat34 &P2, Mat3 *F)
-{
+void FundamentalFromProjections(const Mat34 &P1, const Mat34 &P2, Mat3 *F) {
   Mat X[3], Y[3], XY;
 
   for (int i = 0; i < 3; ++i) {
@@ -52,6 +53,14 @@ void FundamentalFromProjections(const Mat34 &P1, const Mat34 &P2, Mat3 *F)
       (*F)(i, j) = XY.determinant();
     }
   }
+}
+
+void ProjectionsFromFundamental(const Mat3 &F, Mat34 *P1, Mat34 *P2) {
+  *P1 << Mat3::Identity(), Vec3::Zero();
+  Vec3 e2;
+  Mat3 Ft = F.transpose();
+  Nullspace(&Ft, &e2);
+  *P2 << CrossProductMatrix(e2) * F, e2;
 }
 
 // HZ 4.4.4 pag.109
@@ -121,7 +130,6 @@ void EnforceFundamentalRank2Constraint(Mat3 *F) {
   Eigen::SVD<Mat3> USV(*F);
   Vec3 d = USV.singularValues();
   d(2) = 0.0;
-  // TODO(keir): optimize to eliminate useless mults of 0.
   *F = USV.matrixU() * d.asDiagonal() * USV.matrixV().transpose();
 }
 
@@ -154,6 +162,14 @@ double FundamentalFromCorrespondences8Point(const Mat &x1,
   return smaller_singular_value;
 }
 
+void FundamentalFromCorrespondencesSampson(const Mat2X &x1,
+                                           const Mat2X &x2,
+                                           Mat3 *F) {
+  (void)x1;
+  (void)x2;
+  (void)F;                               
+}
+                                            
 void NormalizeFundamental(const Mat3 F, Mat3 *F_normalized) {
   *F_normalized = F / FrobeniusNorm(F);
   if((*F_normalized)(2,2) < 0) {
@@ -171,14 +187,12 @@ double SampsonDistance2(const Mat &F, const Vec2 &x1, const Vec2 &x2) {
   Vec3 Ft_y = F.transpose() * y;
   double y_F_x = y.dot(F_x);
 
-  // FIXME(pau): for some reason I don't understand i need to multiply by 2
-  // the algebraic error to get the right approximation of the sum of the
-  // squared distances.  In theory, the 2* bellow should not be there.
-  return Square(2 * y_F_x) / (   F_x.start(2).squaredNorm()
-                              + Ft_y.start(2).squaredNorm());
+  return Square(y_F_x) / (  F_x.start<2>().squaredNorm()
+                          + Ft_y.start<2>().squaredNorm());
 }
 
-// Sum of the squared distances from the points to the epipolar lines; page 288 // of HZ equation 11.10.
+// Sum of the squared distances from the points to the epipolar lines; page 288
+// of HZ equation 11.10.
 double SymmetricEpipolarDistance2(const Mat &F,
                                   const Vec2 &x1,
                                   const Vec2 &x2) {
@@ -188,9 +202,9 @@ double SymmetricEpipolarDistance2(const Mat &F,
   Vec3 F_x = F * x;
   Vec3 Ft_y = F.transpose() * y;
   double y_F_x = y.dot(F_x);
-  
-  return Square(y_F_x) * (  1 / F_x.start(2).squaredNorm()
-                          + 1 / Ft_y.start(2).squaredNorm());
+
+  return Square(y_F_x) * (  1 / F_x.start<2>().squaredNorm()
+                          + 1 / Ft_y.start<2>().squaredNorm());
 }
 
 // HZ 9.6 pag 257

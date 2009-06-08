@@ -187,16 +187,13 @@ void EuclideanToHomogeneous(const Vec3 &X, Vec4 *H) {
   *H << X(0), X(1), X(2), 1;
 }
 
-void Project(const Mat34 &P, const Mat &X, Mat *x) {
-  Mat XX;
-  EuclideanToHomogeneous(X, &XX);
-  HomogeneousToEuclidean(P * XX, x);
-}
-
 double Depth(const Mat3 &R, const Vec3 &t, const Vec3 &X) {
   return (R*X)(2) + t(2);
 }
 
-
+double Depth(const Mat3 &R, const Vec3 &t, const Vec4 &X) {
+  Vec3 Xe = X.start<3>() / X(3);
+  return Depth(R, t, Xe);
+}
 
 }  // namespace libmv

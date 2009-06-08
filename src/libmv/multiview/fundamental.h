@@ -28,6 +28,7 @@
 namespace libmv {
 
 void FundamentalFromProjections(const Mat34 &P1, const Mat34 &P2, Mat3 *F);
+void ProjectionsFromFundamental(const Mat3 &F, Mat34 *P1, Mat34 *P2);
 
 // TODO(pau) These two functions should go in a more general header.
 void PreconditionerFromPoints(const Mat &points, Mat3 *T);
@@ -44,6 +45,10 @@ void EnforceFundamentalRank2Constraint(Mat3 *F);
 
 double FundamentalFromCorrespondences8Point(const Mat &x1,
                                             const Mat &x2,
+                                            Mat3 *F);
+                                            
+void FundamentalFromCorrespondencessSampson(const Mat2X &x1,
+                                            const Mat2X &x2,
                                             Mat3 *F);
 
 void NormalizeFundamental(const Mat3 F, Mat3 *F_normalized);

@@ -35,8 +35,8 @@ struct TwoViewDataSet {
   Vec3 t1, t2;  // Translation.
   Mat34 P1, P2; // Projection matrix, P = K(R|t)
   Mat3 F;       // Fundamental matrix.
-  Mat X;        // 3D points.
-  Mat x1, x2;   // Projected points.
+  Mat3X X;        // 3D points.
+  Mat2X x1, x2;   // Projected points.
 };
 
 // Two cameras at (-1,-1,-10) and (2,1,-10) looking approximately towards z+.

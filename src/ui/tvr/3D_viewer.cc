@@ -90,18 +90,19 @@ void SceneCamera::SetParameters(libmv::Mat3 K, libmv::Mat3 R, libmv::Vec3 t) {
 }
 
 void ScenePointCloud::Draw() {
-  std::vector<libmv::Vec3>::iterator it;
   glDisable(GL_LIGHTING);
   glColor3f(0,1,0);
   glBegin(GL_POINTS);
-  for (it = points_.begin(); it != points_.end(); ++it) {
-    glVertex3f(it->x(), it->y(), it->z());
+  for (int i = 0; i < points_.size(); ++i) {
+    glColor3fv(&colors_[i](0));
+    glVertex3dv(&points_[i](0));
   }
   glEnd();
 }
 
-void ScenePointCloud::AddPoint(libmv::Vec3 &s) {
-  points_.push_back(s);
+void ScenePointCloud::AddPoint(libmv::Vec3 &point, libmv::Vec3f &color) {
+  points_.push_back(point);
+  colors_.push_back(color);
 }
 
 
@@ -219,9 +220,8 @@ void Viewer3D::SetDocument(TvrDocument *doc) {
   assert(textures_);
   
   if (document_->X.size() > 0) {
-    for (std::vector<libmv::Vec3>::iterator it = document_->X.begin();
-         it != document_->X.end(); ++it) {
-      scene_point_cloud_.AddPoint(*it);
+    for (int i = 0; i < document_->X.size(); ++i) {
+      scene_point_cloud_.AddPoint(document_->X[i], document_->X_colors[i]);
     }
     scene_graph_.AddChild(new Node<SceneObject>("PointCloud",
                                                 &scene_point_cloud_));

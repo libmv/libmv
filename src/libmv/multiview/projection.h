@@ -67,36 +67,38 @@ inline Vec4 EuclideanToHomogeneous(const Vec3 &x) {
   return Vec4(x(0), x(1), x(2), 1);
 }
 
-void Project(const Mat34 &P, const Mat &X, Mat *x);
-
-inline Mat2X Project(const Mat34 &P, const Mat4X &X) {
-  Mat2X x(2, X.cols());
-
-  Mat3X xs = P*X;
-  xs.row(0) = xs.row(0).cwise() / xs.row(2);
-
+inline void Project(const Mat34 &P, const Mat4X &X, Mat2X *x) {
+  x->resize(2, X.cols());
   for (int c = 0; c < X.cols(); ++c) {
     Vec3 hx = P * X.col(c);
-    x(0, c) = hx(0) / hx(2);
-    x(1, c) = hx(1) / hx(2);
+    x->col(c) = hx.start<2>() / hx(2);
   }
+}
+
+inline Mat2X Project(const Mat34 &P, const Mat4X &X) {
+  Mat2X x;
+  Project(P, X, &x);
   return x;
+}
+
+inline void Project(const Mat34 &P, const Mat3X &X, Mat2X *x) {
+  x->resize(2, X.cols());
+  for (int c = 0; c < X.cols(); ++c) {
+    Vec4 HX;
+    HX << X.col(c), 1.0;
+    Vec3 hx = P * HX;
+    x->col(c) = hx.start<2>() / hx(2);
+  }
 }
 
 inline Mat2X Project(const Mat34 &P, const Mat3X &X) {
   Mat2X x(2, X.cols());
-  for (int c = 0; c < X.cols(); ++c) {
-    Vec4 HX;
-    HX.start<3>() = X.col(c);
-    HX(3) = 1.0;
-    Vec3 hx = P * HX;
-    x(0, c) = hx(0) / hx(2);
-    x(1, c) = hx(1) / hx(2);
-  }
+  Project(P, X, &x);
   return x;
 }
 
 double Depth(const Mat3 &R, const Vec3 &t, const Vec3 &X);
+double Depth(const Mat3 &R, const Vec3 &t, const Vec4 &X);
 
 } // namespace libmv
 

@@ -33,8 +33,23 @@ namespace {
 using namespace libmv;
 
 TEST(Fundamental, FundamentalFromProjections) {
-  // TODO(pau) Write test for FundamentalFromProjections
+  Mat34 P1_gt, P2_gt;
+  P1_gt << 1, 0, 0, 0,
+           0, 1, 0, 0,
+           0, 0, 1, 0;
+  P2_gt << 1, 1, 1, 3,
+           0, 2, 0, 3,
+           0, 1, 1, 0;
+  Mat3 F_gt;
+  FundamentalFromProjections(P1_gt, P2_gt, &F_gt);
 
+  Mat34 P1, P2;
+  ProjectionsFromFundamental(F_gt, &P1, &P2);
+
+  Mat3 F;
+  FundamentalFromProjections(P1, P2, &F);
+
+  EXPECT_MATRIX_PROP(F_gt, F, 1e-8);
 }
 
 TEST(Fundamental, PreconditionerFromPoints) {
@@ -132,35 +147,9 @@ TEST(Fundamental, FundamentalFromCorrespondencesLinearRealistic) {
   // Compute fundamental matrix from correspondences.
   Mat3 F_estimated;
   FundamentalFromCorrespondencesLinear(d.x1, d.x2, &F_estimated);
-
-  // Normalize.
-  Mat3 F_gt_norm, F_estimated_norm;
-  NormalizeFundamental(d.F, &F_gt_norm);
-  NormalizeFundamental(F_estimated, &F_estimated_norm);
   
   // Compare with ground truth.
-  EXPECT_NEAR(F_gt_norm(0, 0), F_estimated_norm(0, 0), 1e-8);
-  EXPECT_NEAR(F_gt_norm(0, 1), F_estimated_norm(0, 1), 1e-8);
-  EXPECT_NEAR(F_gt_norm(0, 2), F_estimated_norm(0, 2), 1e-8);
-  EXPECT_NEAR(F_gt_norm(1, 0), F_estimated_norm(1, 0), 1e-8);
-  EXPECT_NEAR(F_gt_norm(1, 1), F_estimated_norm(1, 1), 1e-8);
-  EXPECT_NEAR(F_gt_norm(1, 2), F_estimated_norm(1, 2), 1e-8);
-  EXPECT_NEAR(F_gt_norm(2, 0), F_estimated_norm(2, 0), 1e-8);
-  EXPECT_NEAR(F_gt_norm(2, 1), F_estimated_norm(2, 1), 1e-8);
-  EXPECT_NEAR(F_gt_norm(2, 2), F_estimated_norm(2, 2), 1e-8);
-
-  // Check fundamental properties.
-  int n = d.X.cols();
-  Vec y_F_x(n);
-  for (int i = 0; i < n; ++i) {
-    Vec3 x, y, F_x;
-    x << d.x1(0, i), d.x1(1, i), 1;
-    y << d.x2(0, i), d.x2(1, i), 1;
-    F_x = F_estimated * x;
-    y_F_x(i) = y.dot(F_x);
-  }
-  EXPECT_MATRIX_NEAR_ZERO(y_F_x, 1e-8);
-  EXPECT_NEAR(0, F_estimated.determinant(), 1e-8);
+  EXPECT_MATRIX_PROP(d.F, F_estimated, 1e-6);
 }
 
 TEST(Fundamental, FundamentalFromCorrespondences8PointRealistic) {
@@ -169,35 +158,9 @@ TEST(Fundamental, FundamentalFromCorrespondences8PointRealistic) {
   // Compute fundamental matrix from correspondences.
   Mat3 F_estimated;
   FundamentalFromCorrespondences8Point(d.x1, d.x2, &F_estimated);
-
-  // Normalize.
-  Mat3 F_gt_norm, F_estimated_norm;
-  NormalizeFundamental(d.F, &F_gt_norm);
-  NormalizeFundamental(F_estimated, &F_estimated_norm);
   
   // Compare with ground truth.
-  EXPECT_NEAR(F_gt_norm(0, 0), F_estimated_norm(0, 0), 1e-8);
-  EXPECT_NEAR(F_gt_norm(0, 1), F_estimated_norm(0, 1), 1e-8);
-  EXPECT_NEAR(F_gt_norm(0, 2), F_estimated_norm(0, 2), 1e-8);
-  EXPECT_NEAR(F_gt_norm(1, 0), F_estimated_norm(1, 0), 1e-8);
-  EXPECT_NEAR(F_gt_norm(1, 1), F_estimated_norm(1, 1), 1e-8);
-  EXPECT_NEAR(F_gt_norm(1, 2), F_estimated_norm(1, 2), 1e-8);
-  EXPECT_NEAR(F_gt_norm(2, 0), F_estimated_norm(2, 0), 1e-8);
-  EXPECT_NEAR(F_gt_norm(2, 1), F_estimated_norm(2, 1), 1e-8);
-  EXPECT_NEAR(F_gt_norm(2, 2), F_estimated_norm(2, 2), 1e-8);
-
-  // Check fundamental properties.
-  int n = d.X.cols();
-  Vec y_F_x(n);
-  for (int i = 0; i < n; ++i) {
-    Vec3 x, y, F_x;
-    x << d.x1(0, i), d.x1(1, i), 1;
-    y << d.x2(0, i), d.x2(1, i), 1;
-    F_x = F_estimated * x;
-    y_F_x(i) = y.dot(F_x);
-  }
-  EXPECT_MATRIX_NEAR_ZERO(y_F_x, 1e-8);
-  EXPECT_NEAR(0, F_estimated.determinant(), 1e-8);
+  EXPECT_MATRIX_PROP(d.F, F_estimated, 1e-6);
 }
 
 // 8 points in a cube is a degenerate configuration.
@@ -221,6 +184,7 @@ TEST(Fundamental, FundamentalFromCorrespondences8PointDegenerate) {
 
   EXPECT_NEAR(0, res, 1e-8);
 }
+
 
 TEST(Fundamental, SampsonDistance2) {
   Vec3 t(1, 0, 0);
@@ -249,12 +213,16 @@ TEST(Fundamental, SampsonDistance2) {
           << dist4 << " " 
           << dist5 << "\n";
 
+  // The expected distance are two times (one per image) the distance from the
+  // point to the reprojection of the best triangulated point.  For this
+  // particular example this reprojection is the midpoint between the point and
+  // the epipolar line.
   EXPECT_EQ(0, dist0);
   EXPECT_EQ(0, dist1);
-  EXPECT_EQ(2 * Square(0.1), dist2);
-  EXPECT_EQ(2 * Square(1), dist3);
-  EXPECT_EQ(2 * Square(10), dist4);
-  EXPECT_EQ(2 * Square(10), dist5);
+  EXPECT_EQ(2 * Square(0.1 / 2), dist2);
+  EXPECT_EQ(2 * Square(1. / 2), dist3);
+  EXPECT_EQ(2 * Square(10. / 2), dist4);
+  EXPECT_EQ(2 * Square(10. / 2), dist5);
 }
 
 TEST(Fundamental, SymmetricEpipolarDistance2) {
@@ -284,6 +252,8 @@ TEST(Fundamental, SymmetricEpipolarDistance2) {
       << dist4 << " "
       << dist5 << "\n";
 
+  // The expected distances are two times (one per image) the distance from the
+  // point to the epipolar line.
   EXPECT_EQ(0, dist0);
   EXPECT_EQ(0, dist1);
   EXPECT_EQ(2 * Square(0.1), dist2);
@@ -301,11 +271,7 @@ TEST(Fundamental, EssentialFromFundamental) {
   Mat3 E_from_F;
   EssentialFromFundamental(d.F, d.K1, d.K2, &E_from_F);
 
-  Mat3 E_from_Rt_norm, E_from_F_norm;
-  NormalizeFundamental(E_from_Rt, &E_from_Rt_norm);
-  NormalizeFundamental(E_from_F, &E_from_F_norm);
-
-  EXPECT_NEAR(0, FrobeniusDistance(E_from_Rt_norm, E_from_F_norm), 1e-8);
+  EXPECT_MATRIX_PROP(E_from_Rt, E_from_F, 1e-6);
 }
 
 TEST(Fundamental, MotionFromEssential) {

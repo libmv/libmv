@@ -25,6 +25,7 @@
 #include "libmv/multiview/projection.h"
 #include "libmv/multiview/fundamental.h"
 #include "libmv/multiview/nviewtriangulation.h"
+#include "libmv/multiview/focal_from_fundamental.h"
 
 namespace libmv {
 
@@ -199,10 +200,17 @@ class FocalReprojectionError {
       NViewTriangulate(x, Ps, &X);
       Vec3 x1_reproj = Ps[0] * X;
       Vec3 x2_reproj = Ps[1] * X;
-      error += std::min(2.*2.,
-          (x1_.col(j) - HomogeneousToEuclidean(x1_reproj)).squaredNorm());
-      error += std::min(2.*2.,
-          (x2_.col(j) - HomogeneousToEuclidean(x2_reproj)).squaredNorm());
+      double threshold = 1.;
+      double d1 = Depth(Mat3::Identity(), Vec3::Zero(), X);
+      double d2 = Depth(R, t, X);
+      if (d1 < 0 || d2 < 0) {
+        error += 2 * Square(threshold);
+      } else {
+        error += std::min(Square(threshold),
+            (x1_.col(j) - HomogeneousToEuclidean(x1_reproj)).squaredNorm());
+        error += std::min(Square(threshold),
+            (x2_.col(j) - HomogeneousToEuclidean(x2_reproj)).squaredNorm());
+      }
     }
     return error;
   }

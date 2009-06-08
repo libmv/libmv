@@ -62,12 +62,12 @@ class ScenePointCloud : public SceneObject {
  public:
   void Draw();
   ObjectType GetType() { return PointCloud; }
-  void AddPoint(libmv::Vec3 &);
+  void AddPoint(libmv::Vec3 &point, libmv::Vec3f &color);
   
   ~ScenePointCloud() {};
  private:
-  // Feel free to change this to a list if removal of points is needed (Daniel).
   std::vector<libmv::Vec3> points_;
+  std::vector<libmv::Vec3f> colors_;
 };
 
 

@@ -67,4 +67,24 @@ do { \
   } \
 } while(false);
 
+// Check that sin(angle(a, b)) < tolerance.
+#define EXPECT_MATRIX_PROP(a, b, tolerance) \
+do { \
+  bool dims_match = (a.rows() == b.rows()) && (a.cols() == b.cols()); \
+  EXPECT_EQ(a.rows(), b.rows()) << "Matrix rows don't match."; \
+  EXPECT_EQ(a.cols(), b.cols()) << "Matrix cols don't match."; \
+  if (dims_match) { \
+    double c = CosinusBetweenMatrices(a, b); \
+    if (c * c < 1) { \
+      double s = sqrt(1 - c * c); \
+      EXPECT_NEAR(0, s, tolerance); \
+    } \
+  } \
+} while(false);
+
+template<class TMat>
+double CosinusBetweenMatrices(const TMat &a, const TMat &b) {
+  return (a.cwise() * b).sum() / FrobeniusNorm(a) / FrobeniusNorm(b);
+}
+
 #endif  // TESTING_TESTING_H_

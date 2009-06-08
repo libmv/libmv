@@ -29,6 +29,7 @@
 #include "libmv/multiview/fundamental.h"
 #include "libmv/multiview/focal_from_fundamental.h"
 #include "libmv/multiview/nviewtriangulation.h"
+#include "libmv/multiview/bundle.h"
 #include "libmv/logging/logging.h"
 #include "ui/tvr/main_window.h"
 
@@ -108,6 +109,13 @@ void TvrMainWindow::CreateActions() {
       "reconstrution given the current focal length estimates"));
   connect(metric_reconstruction_action_, SIGNAL(triggered()),
           this, SLOT(MetricReconstruction()));
+
+  metric_bundle_action_ = new QAction(tr("&Bundle Adjust"),
+                                      this);
+  metric_bundle_action_->setStatusTip(tr("Perform non-linear "
+      "optimization of camera parameters and points."));
+  connect(metric_bundle_action_, SIGNAL(triggered()),
+          this, SLOT(MetricBundle()));
 }
 
 void TvrMainWindow::CreateMenus() {
@@ -124,6 +132,7 @@ void TvrMainWindow::CreateMenus() {
   calibration_menu_ = menuBar()->addMenu(tr("&Calibration"));
   calibration_menu_->addAction(focal_from_fundamental_action_);
   calibration_menu_->addAction(metric_reconstruction_action_);
+  calibration_menu_->addAction(metric_bundle_action_);
 }
 
 void TvrMainWindow::OpenImages() {
@@ -374,6 +383,7 @@ void TvrMainWindow::MetricReconstruction() {
   
   int n = x0.cols();
   document_.X.resize(n);
+  document_.X_colors.resize(n);
   for (int i = 0; i < n; ++i) {
     Mat2X x(2, 2);
     x.col(0) = x0.col(i);
@@ -381,6 +391,49 @@ void TvrMainWindow::MetricReconstruction() {
     Vec4 X;
     NViewTriangulate(x, Ps, &X);
     document_.X[i] = libmv::HomogeneousToEuclidean(X);
+    
+    // Get 3D point color from first image.
+    QRgb rgb = document_.images[0].pixel(int(round(x0(0,i))),
+                                         int(round(x0(1,i))));
+    document_.X_colors[i] << qBlue(rgb), qGreen(rgb), qRed(rgb);
+    document_.X_colors[i] /= 255;
+  }
+}
+
+void TvrMainWindow::MetricBundle() {
+  using namespace libmv;
+  
+  std::vector<Mat3> K(2);
+  std::vector<Mat3> R(2);
+  std::vector<Vec3> t(2);
+  for (int i = 0; i < 2; ++i) {
+    K[i] = document_.K[i];
+    R[i] = document_.R[i];
+    t[i] = document_.t[i];
+  }
+  std::vector<Mat2X> x(2);
+  Mat xs[2];
+  PointCorrespondencesAsMatrices(document_.correspondences, &xs[0], &xs[1]);
+  for (int i = 0; i < 2; ++i) {
+    x[i].set(xs[i]);
+  }
+  
+  Mat3X X(3, document_.X.size());
+  for (int i = 0; i < X.cols(); ++i) {
+    X.col(i) = document_.X[i];
+  }
+  assert(x[0].cols() == X.cols());
+  assert(x[1].cols() == X.cols());
+  
+  EuclideanBAFull(x, &K, &R, &t, &X);                 // Run BA.
+  
+  for (int i = 0; i < 2; ++i) {
+    document_.K[i] = K[i];
+    document_.R[i] = R[i];
+    document_.t[i] = t[i];
+  }
+  for (int i = 0; i < X.cols(); ++i) {
+    document_.X[i] = X.col(i); 
   }
 }
 

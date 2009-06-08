@@ -66,6 +66,7 @@ double FundamentalFromCorrespondences8PointRobust(const Mat &x1,
                                                   Mat3 *F,
                                                   std::vector<int> *inliers) {
   // The threshold is on the sum of the squared errors in the two images.
+  // Actually, Sampson's approximation of this error.
   double threshold = 2 * Square(max_error);
   Mat4X x1x2;
   VerticalStack(x1, x2, &x1x2);

@@ -53,6 +53,7 @@ class TvrMainWindow : public QMainWindow {
   void ComputeRobustMatches();
   void FocalFromFundamental();
   void MetricReconstruction();
+  void MetricBundle();
   void UpdateViewers();
   
   void InvalidateTextures();
@@ -88,6 +89,7 @@ class TvrMainWindow : public QMainWindow {
   QMenu *calibration_menu_;
   QAction *focal_from_fundamental_action_;
   QAction *metric_reconstruction_action_;
+  QAction *metric_bundle_action_;
 
   QMdiArea *viewers_area_;
 };

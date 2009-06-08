@@ -9,9 +9,11 @@ ADD_LIBRARY(multiview
             focal_from_fundamental.cc
             sixpointnview.cc
             triangulation.cc
+            bundle.cc
             autocalibration.cc)
 
-TARGET_LINK_LIBRARIES(multiview numeric)
+TARGET_LINK_LIBRARIES(multiview numeric
+                                sba ${LAPACK_LIB} ${BLAS_LIB} ${F77_LIB} ${I77_LIB})
 
 ADD_LIBRARY(multiview_test_data
             test_data_sets.cc)
@@ -30,6 +32,7 @@ MULTIVIEW_TEST(resection)
 MULTIVIEW_TEST(robust_fundamental)
 MULTIVIEW_TEST(robust_estimation)
 MULTIVIEW_TEST(sixpointnview)
+MULTIVIEW_TEST(bundle)
 MULTIVIEW_TEST(autocalibration)
 
 # TODO(keir): Make tests that depend on generated.cc to use generated sources.

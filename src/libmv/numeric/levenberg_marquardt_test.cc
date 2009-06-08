@@ -42,13 +42,14 @@ class F {
 };
 
 TEST(LevenbergMarquardt, SimpleCase) {
-  Vec3 x; x << 0.76026643, -30.01799744, 0.55192142;
+  Vec3 x(0.76026643, -30.01799744, 0.55192142);
   F f;
   LevenbergMarquardt<F>::SolverParameters params;
   LevenbergMarquardt<F> lm(f);
   LevenbergMarquardt<F>::Results results = lm.minimize(params, &x);
-  Vec3 expected_min_x; expected_min_x << 2, 5, 0;
+  Vec3 expected_min_x(2, 5, 0);
 
   EXPECT_MATRIX_NEAR(expected_min_x, x, 1e-5);
 }
+
 }  // namespace

@@ -36,6 +36,7 @@ struct TvrDocument {
   libmv::Mat3 R[2];
   libmv::Vec3 t[2];
   std::vector<libmv::Vec3> X;
+  std::vector<libmv::Vec3f> X_colors;
 
   void SaveAsBlender(const char *filename) {
     FILE* fid = fopen(filename, "wb");

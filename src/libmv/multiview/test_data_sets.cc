@@ -49,10 +49,9 @@ TwoViewDataSet TwoRealisticCameras(bool same_K) {
 
   FundamentalFromProjections(d.P1, d.P2, &d.F);
   
-  d.X.resize(3,8);
-  d.X << 0, 1, 0, 1, 0, 1, 0, 1,
-         0, 0, 1, 1, 0, 0, 1, 1,
-         0, 0, 0, 0, 1, 1, 1, 2;
+  d.X.resize(3, 30);
+  d.X.setRandom();
+
   Project(d.P1, d.X, &d.x1);
   Project(d.P2, d.X, &d.x2);
   
