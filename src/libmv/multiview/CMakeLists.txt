@@ -13,7 +13,7 @@ ADD_LIBRARY(multiview
             autocalibration.cc)
 
 TARGET_LINK_LIBRARIES(multiview numeric
-                                sba ${LAPACK_LIB} ${BLAS_LIB} ${F77_LIB} ${I77_LIB})
+                                V3D colamd ldl)
 
 ADD_LIBRARY(multiview_test_data
             test_data_sets.cc)

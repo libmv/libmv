@@ -1,0 +1,16 @@
+Project: SSBA
+URL: http://www.cs.unc.edu/~cmzach/opensource.html
+License: LGPL3
+Upstream version: 1.0
+
+Local modifications:
+
+  * Added
+      SET(CMAKE_CXX_FLAGS "")
+    to CMakeList.txt to prevent warnings from being treated as errors.
+  * Fixed "unused variable" in the header files.  Warnings in the cpps files 
+    are still there.
+  * Fixed a bug in CameraMatrix::opticalAxis() in file
+    Geometry/v3d_cameramatrix.h
+  * Deleted the Dataset directory.
+
