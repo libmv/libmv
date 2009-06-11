@@ -13,8 +13,6 @@ Building
 Before building, make sure you have the following:
 
 * CMake 2.4 or newer.
-* Development packages. 
-    On ubuntu: apt-get install cmake
-    On debian/testing: apt-get install cmake
+* Qt4.
+* SuiteSparse. (On debian/ubuntu: apt-get install libsuitesparse-dev)
 
-* Qt 4
