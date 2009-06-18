@@ -24,7 +24,6 @@ with SSBA. If not, see <http://www.gnu.org/licenses/>.
 #include "Geometry/v3d_metricbundle.h"
 
 #include <cstring>
-
 #include <iostream>
 #include <fstream>
 #include <map>
