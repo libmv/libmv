@@ -74,8 +74,8 @@ TEST(SceneGraph, SetName) {
   Node<int> *node = scene.GetChild("bar");
   EXPECT_TRUE(node);
   node->SetName("something");
+  EXPECT_EQ(node->GetName(), "something");
   EXPECT_EQ(node, scene.GetChild("something"));
-  
   scene.DeleteObject();
   for (Node<int>::iterator it = scene.begin(); it != scene.end(); ++it) {
     it->DeleteObject();

@@ -22,6 +22,7 @@
 #define LIBMV_SCENE_GRAPH_SCENE_GRAPH_SIMPLE_H
 
 #include <map>
+#include <iostream>
 
 #include "libmv/numeric/numeric.h"
 #include "libmv/logging/logging.h"
@@ -62,11 +63,11 @@ class Node {
 
   NodeT *GetParent() const { return parent_; }
   void SetParent(NodeT *new_parent) {
+    if (new_parent == parent_)
+      return;
     if (parent_ != NULL) {
       parent_->RemoveChild(this);
     }
-    if (new_parent == parent_)
-      return;
     parent_ = new_parent;
     if (new_parent != NULL) {
       new_parent->AddChild(this);
@@ -113,9 +114,13 @@ class Node {
   void SetName(const string &name) {
     if (name == name_)
       return;
-    name_ = name;
-    // TODO(Daniel): Changing the name should change the parent's map's key
-    // value. The previous method caused a SEG fault.
+    if (parent_) {
+      parent_->RemoveChild(this);
+      name_ = name;
+      parent_->AddChild(this);
+    } else {
+      name_ = name;
+    }
   }
 
   const Mat4 &GetTransform()  const { return transform_; }

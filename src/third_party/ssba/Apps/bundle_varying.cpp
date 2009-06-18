@@ -23,6 +23,8 @@ with SSBA. If not, see <http://www.gnu.org/licenses/>.
 #include "Math/v3d_linear_utils.h"
 #include "Geometry/v3d_metricbundle.h"
 
+#include "string.h"
+
 #include <iostream>
 #include <fstream>
 #include <map>
