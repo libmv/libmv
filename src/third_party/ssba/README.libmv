@@ -13,4 +13,6 @@ Local modifications:
   * Fixed a bug in CameraMatrix::opticalAxis() in file
     Geometry/v3d_cameramatrix.h
   * Deleted the Dataset directory.
+  * Added '#include <string>' to ssba/Apps/bundle_common.cpp and
+    ssba/Apps/bundle_varying.cpp to stop undefined references to strcmp
 
