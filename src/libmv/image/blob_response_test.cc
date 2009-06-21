@@ -102,7 +102,7 @@ TEST(SimpleCase, TwoPeaksScaled) {
   response.resize(20, 20);
   response.Fill(0.0);
   IntegralImage(peak, &integral_image);
-  BlobResponse(integral_image, 3, 2, &response);
+  BlobResponse(integral_image, 3, 2/*scale*/, &response);
   PrintArray(response);
   EXPECT_TRUE(IsLocalMax2D(response, 3, 10, 11));
   EXPECT_TRUE(IsLocalMax2D(response, 3,  5,  7));
