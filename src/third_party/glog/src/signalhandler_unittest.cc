@@ -25,7 +25,8 @@ void* DieInThread(void*) {
 }
 
 void WriteToStdout(const char* data, int size) {
-  write(STDOUT_FILENO, data, size);
+  int ignored = write(STDOUT_FILENO, data, size);
+  (void) ignored;
 }
 
 int main(int argc, char **argv) {

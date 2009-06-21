@@ -37,7 +37,8 @@ static const int kPrintfPointerFieldWidth = 2 + 2 * sizeof(void*);
 static void DebugWriteToStderr(const char* data, void *unused) {
   (void) unused;
   // This one is signal-safe.
-  write(STDERR_FILENO, data, strlen(data));
+  int ignored = write(STDERR_FILENO, data, strlen(data));
+  (void) ignored;
 }
 
 // Print a program counter and its symbol name.

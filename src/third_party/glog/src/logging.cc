@@ -602,14 +602,16 @@ bool LogFileObject::CreateLogfile(const char* time_pid_string) {
     // Make the symlink be relative (in the same dir) so that if the
     // entire log directory gets relocated the link is still valid.
     const char *linkdest = slash ? (slash + 1) : filename;
-    symlink(linkdest, linkpath.c_str());         // silently ignore failures
+    int ignored = symlink(linkdest, linkpath.c_str());         // silently ignore failures
+    (void) ignored;
 
     // Make an additional link to the log file in a place specified by
     // FLAGS_log_link, if indicated
     if (!FLAGS_log_link.empty()) {
       linkpath = FLAGS_log_link + "/" + linkname;
       unlink(linkpath.c_str());                  // delete old one if it exists
-      symlink(filename, linkpath.c_str());       // silently ignore failures
+      int also_ignored = symlink(filename, linkpath.c_str());       // silently ignore failures
+      (void) also_ignored;
     }
   }
 
