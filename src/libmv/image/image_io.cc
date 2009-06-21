@@ -291,7 +291,9 @@ int ReadPng(const char *filename, FloatImage *image) {
 int ReadPngStream(FILE *file, ByteImage *im) {
   png_byte header[8];
 
-  fread(header, 1, 8, file);
+  if (fread(header, 1, 8, file) != 8) {
+    LOG(FATAL) << "fread failed.";
+  }
   if (png_sig_cmp(header, 0, 8))
     return 0;
 
