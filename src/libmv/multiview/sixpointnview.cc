@@ -1,15 +1,15 @@
 // Copyright (c) 2007, 2008 libmv authors.
-// 
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
 // deal in the Software without restriction, including without limitation the
 // rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
 // sell copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -17,7 +17,7 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
-// 
+//
 // Compute a projective reconstruction from N views of six points. Based on:
 //
 // [1] Frederik Schaffalitzky, Andrew Zisserman, Richard I. Hartley, Philip H.
@@ -36,6 +36,10 @@
 
 namespace libmv {
 
+/**
+ * Compute a pencil of two cameras that both perfectly project the five points
+ * to the five basis points of P^3.
+ */
 template<typename TMatP, typename TMatA, typename TMatB>
 static void FivePointCameraPencil(const TMatP &points, TMatA *A, TMatB *B) {
   CHECK_EQ(5, points.cols());
@@ -59,11 +63,12 @@ static void FivePointCameraPencil(const TMatP &points, TMatA *A, TMatB *B) {
   *B = Hinv * tmpB;
 }
 
+/** Calculate the last (sixth) point in projective 4 space. */
 static Vec4 CalcX6FromDesignMat(
     double a, double b, double c, double d, double e) {
   // This should match the matrix in step 6 above, equation (9) in [1].
   // The 6th world point is the nullspace of this matrix.
-  Mat X6null(6,4); 
+  Mat X6null(6,4);
   X6null << e-d,  0 ,  0 , a-b,
             e-c,  0 ,  a ,  0 ,
             d-c,  b ,  0 ,  0 ,
@@ -93,13 +98,13 @@ void SixPointNView(const Mat2X &points,
   CHECK(points.cols() % 6 == 0);
   int nviews = points.cols() / 6;
 
-  // Convert to homogenous coordinates.
+  // Convert to homogeneous coordinates.
   Mat3X hpoints(3, points.cols());
   hpoints.block(0, 0, 2, 6*nviews) = points;
   hpoints.row(2).setOnes();
 
   // See equation (7.2) p179 of HZ; this is the DLT for solving cameras.
-  // Chose wi = 1, i.e. the homogenous component of each image location is 1.
+  // Chose wi = 1, i.e. the homogeneous component of each image location is 1.
   // Note that As and Bs are on the heap to avoid blowing the stack for a large
   // number of views.
   Mat34 *As = new Mat34[nviews];
@@ -107,7 +112,7 @@ void SixPointNView(const Mat2X &points,
   Mat ws(nviews,5);
 
   for (int i = 0; i < nviews; ++i) {
-    // Extract pencil of camera matricies.
+    // Extract pencil of camera matrices.
     FivePointCameraPencil(hpoints.block(0, 6*i, 3, 5), As+i, Bs+i);
 
     // Calculate Q.
