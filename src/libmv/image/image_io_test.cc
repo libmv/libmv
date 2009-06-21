@@ -20,6 +20,9 @@
 
 #include <iostream>
 #include <string>
+#include <vector>
+
+#include <unistd.h>
 
 #include "libmv/image/image.h"
 #include "libmv/image/image_io.h"
@@ -31,7 +34,26 @@ using libmv::FloatImage;
 using libmv::GetFormat;
 using std::string;
 
+#include <cstdio>
+
 namespace {
+
+class ImageIOTest : public testing::Test {
+ public:
+  string TmpFile(const char *filename) {
+    string temp_filename = string(THIS_SOURCE_DIR) + "/image_test/" + filename;
+    temp_files_.push_back(temp_filename);
+    return temp_filename;
+  }
+  void TearDown() {
+    for (size_t i = 0; i < temp_files_.size(); ++i) {
+      fprintf(stderr, "unlinking: %s\n", temp_files_[i].c_str());
+      unlink(temp_files_[i].c_str());
+    }
+  }
+ private:
+  std::vector<string> temp_files_;
+};
 
 TEST(ReadPnm, InvalidFiles) {
   Array3Du image;
@@ -76,12 +98,11 @@ TEST(ReadPnm, PgmFloat) {
   EXPECT_EQ(image(0,1), 0);
 }
 
-TEST(WritePnm, Pgm) {
+TEST_F(ImageIOTest, Pgm) {
   Array3Du image(1,2);
   image(0,0) = 255;
   image(0,1) = 0;
-  string out_filename = string(THIS_SOURCE_DIR)
-	              + "/image_test/test_write_pnm.pgm";
+  string out_filename = TmpFile("test_write_pnm.pgm");
   EXPECT_TRUE(WritePnm(image, out_filename.c_str()));
 
   Array3Du read_image;
@@ -104,7 +125,7 @@ TEST(ReadPnm, Ppm) {
   EXPECT_EQ(image(0,1,2), (unsigned char)0);
 }
 
-TEST(WritePnm, Ppm) {
+TEST_F(ImageIOTest, Ppm) {
   Array3Du image(1,2,3);
   image(0,0,0) = 255;
   image(0,0,1) = 255;
@@ -112,8 +133,7 @@ TEST(WritePnm, Ppm) {
   image(0,1,0) = 0;
   image(0,1,1) = 0;
   image(0,1,2) = 0;
-  string out_filename = string(THIS_SOURCE_DIR)
-	              + "/image_test/test_write_pnm.ppm";
+  string out_filename = TmpFile("test_write_pnm.ppm");
   EXPECT_TRUE(WritePnm(image, out_filename.c_str()));
 
   Array3Du read_image;
@@ -153,12 +173,11 @@ TEST(ReadPng, PngFloat) {
   EXPECT_EQ(image(0,1), 0);
 }
 
-TEST(WritePng, Png) {
+TEST_F(ImageIOTest, Png) {
   Array3Du image(1,2);
   image(0,0) = 255;
   image(0,1) = 0;
-  string out_filename = string(THIS_SOURCE_DIR)
-	              + "/image_test/test_write_png.png";
+  string out_filename = TmpFile("test_write_png.png");
   EXPECT_TRUE(WritePng(image, out_filename.c_str()));
 
   Array3Du read_image;
@@ -166,7 +185,7 @@ TEST(WritePng, Png) {
   EXPECT_TRUE(read_image == image);
 }
 
-TEST(ReadJpg, InvalidFiles) {
+TEST_F(ImageIOTest, InvalidFiles) {
   Array3Du image;
   Array3Df float_image;
   string pnm_filename = string(THIS_SOURCE_DIR) + "/image_test/two_pixels.ppm";
@@ -198,12 +217,11 @@ TEST(ReadJpg, JpgFloat) {
   EXPECT_EQ(image(0,1), 0);
 }
 
-TEST(WriteJpg, Jpg) {
+TEST_F(ImageIOTest, Jpg) {
   Array3Du image(1,2);
   image(0,0) = 255;
   image(0,1) = 0;
-  string out_filename = string(THIS_SOURCE_DIR)
-	              + "/image_test/test_write_jpg.jpg";
+  string out_filename = TmpFile("test_write_jpg.jpg");
   EXPECT_TRUE(WriteJpg(image, out_filename.c_str(), 100));
 
   Array3Du read_image;
