@@ -1,0 +1,13 @@
+Project: Eigen
+URL: http://eigen.tuxfamily.org/
+License: LGPL3 or GPL2
+Upstream version: 2.0.3, released June 21, 2009
+
+Local modifications:
+
+  * Fixed a minor assert bug in Map.h.
+  * Fixed an "unused variable" warning in SVD.h.
+
+Note: Only the license and Eigen/ directory is included.
+Note: For now, the CMake build system for Eigen is not included because we only
+need the headers; until we need our own sparse bundler it can stay out.
