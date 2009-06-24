@@ -1,10 +1,6 @@
-include_directories(${V3D_INCLUDE_DIRS} ${EXTRA_INC_DIRS})
-link_directories(${V3D_DIR} ${EXTRA_LIB_DIRS})
-link_libraries (V3D ${EXTRA_LIBRARIES} glut)
+include_directories(../Math ../Geometry)
 
-if (V3DLIB_ENABLE_GPGPU)
-  add_subdirectory(GL)
-endif (V3DLIB_ENABLE_GPGPU)
-
-add_v3d_executable (bundle_common bundle_common.cpp)
-add_v3d_executable (bundle_varying bundle_varying.cpp)
+add_executable(bundle_common bundle_common.cpp)
+add_executable(bundle_varying bundle_varying.cpp)
+target_link_libraries(bundle_common V3D ldl colamd)
+target_link_libraries(bundle_varying V3D ldl colamd)
