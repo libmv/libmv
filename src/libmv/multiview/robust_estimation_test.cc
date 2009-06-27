@@ -26,6 +26,20 @@ namespace {
 
 using namespace libmv;
 
+
+TEST(PickSubset, NoRepetions) {
+  for (int total = 1; total < 1000; total *= 2) {
+    for (int num_samples = 1; num_samples <= total; num_samples *= 2) {
+      VecXi s = PickSubset(num_samples, total);
+      std::vector<bool> in_set(total, false);
+      for (int i = 0; i < num_samples; ++i) {
+        EXPECT_FALSE(in_set[i]);
+        in_set[i] = true;
+      }
+    }
+  }
+}
+
 // Robust estimation issues.
 // 
 //  Inlier / outlier classification. Soft? Online? Where does the threshold

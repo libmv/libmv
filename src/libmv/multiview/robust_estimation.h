@@ -36,15 +36,14 @@ namespace libmv {
 // of total size. Surprisingly tricky!
 // Consider: http://stackoverflow.com/questions/136474/best-way-to-pick-a-random-subset-from-a-collection
 VecXi PickSubset(int num_samples, int total) {
-  int i = 0;
-  std::set<int> sample_set;
   VecXi samples(num_samples);
-  while (sample_set.size() < num_samples) {
-    int sample_set_size = sample_set.size();
-    int random_value_in_range = rand() % total;
-    sample_set.insert(random_value_in_range);
-    if (sample_set_size != sample_set.size()) {
-      samples[i++] = random_value_in_range;
+  for (int i = 0; i < num_samples; ++i) {
+    samples[i] = rand() % total;
+    for (int j = 0; j < i; ++j) {
+      if (samples[j] == samples[i]) {
+        --i;
+        break;
+      }
     }
   }
   return samples;
