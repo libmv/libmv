@@ -17,3 +17,5 @@ Local modifications:
     ssba/Apps/bundle_varying.cpp to stop undefined references to strcmp
   * Removed unnecessary elements from the CMakeLists.txt file, including the
     obsoleted local_config.cmake and friends.
+  * Added a virtual destructor to V3D::LevenbergOptimizerCommon in
+    Math/v3d_optimization.h

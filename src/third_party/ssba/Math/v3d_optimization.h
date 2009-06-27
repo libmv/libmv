@@ -47,6 +47,7 @@ namespace V3D
               gradientThreshold(1e-10), updateThreshold(1e-10),
               _nu(2.0)
          { }
+         virtual ~LevenbergOptimizerCommon() {}
 
          // See Madsen et al., "Methods for non-linear least squares problems."
          virtual void increaseLambda()
