@@ -57,6 +57,14 @@ class AutoCalibrationLinear {
     return projections_.size() - 1;
   }
   
+  /** \brief Computes the metric updating transformation.
+   *
+   *  \returns The homography, H, that transforms the space into a metric space.
+   *           If {P, X} is a projective reconstruction, then {P H, H^{-1} X} is
+   *           a metric reconstruction.  Note that this follows the notation of
+   *           HZ section 19.1 page 459, and not the notation of Pollefeys
+   *           paper [1].
+   */
   Mat4 MetricTransformation() {
     // Compute the dual absolute quadric, Q.
     Mat A(constraints_.size(), 10);
