@@ -64,7 +64,7 @@ class vector {
     size_ = size;
   }
 
-  void push_back(const T &value) {	
+  void push_back(const T &value) {
     if (size_ == capacity_) {
       reserve(size_ ? 2*size_ : 1);
     }
@@ -108,9 +108,9 @@ class vector {
     capacity_ = 0;
   }
 
-	void *allocate(int size) {
+  void *allocate(int size) {
     return size ? allocator_.allocate(size) : 0;
-	}
+  }
 
   void deallocate() {
     allocator_.deallocate(data_, size_);
