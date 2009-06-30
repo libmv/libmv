@@ -476,7 +476,8 @@ inline void LogDestination::SetEmailLogging(LogSeverity min_severity,
 static void WriteToStderr(const char* message, size_t len) {
   // Avoid using cerr from this module since we may get called during
   // exit code, and cerr may be partially or fully destroyed by then.
-  fwrite(message, len, 1, stderr);
+  size_t ignored = fwrite(message, len, 1, stderr);
+  (void) ignored;
 }
 
 inline void LogDestination::MaybeLogToStderr(LogSeverity severity,
@@ -736,7 +737,8 @@ void LogFileObject::Write(bool force_flush,
                        << LogDestination::hostname() << '\n'
                        << '\0';
     int header_len = strlen(file_header_string);
-    fwrite(file_header_string, 1, header_len, file_);
+    size_t ignored = fwrite(file_header_string, 1, header_len, file_);
+    (void) ignored;
     file_length_ += header_len;
     bytes_since_flush_ += header_len;
   }
@@ -749,7 +751,8 @@ void LogFileObject::Write(bool force_flush,
     // 4096 bytes. fwrite() returns 4096 for message lengths that are
     // greater than 4096, thereby indicating an error.
     errno = 0;
-    fwrite(message, 1, message_len, file_);
+    size_t ignored = fwrite(message, 1, message_len, file_);
+    (void) ignored;
     if ( FLAGS_stop_logging_if_full_disk &&
          errno == ENOSPC ) {  // disk full, stop writing to disk
       stop_writing = true;  // until the disk is
@@ -1305,8 +1308,10 @@ static bool SendEmailInternal(const char*dest, const char *subject,
     FILE* pipe = popen(cmd.c_str(), "w");
     if (pipe != NULL) {
       // Add the body if we have one
-      if (body)
-        fwrite(body, sizeof(char), strlen(body), pipe);
+      if (body) {
+        size_t ignored = fwrite(body, sizeof(char), strlen(body), pipe);
+        (void) ignored;
+      }
       bool ok = pclose(pipe) != -1;
       if ( !ok ) {
         if ( use_logging ) {

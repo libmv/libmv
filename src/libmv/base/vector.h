@@ -81,7 +81,7 @@ class vector {
     init();
   }
 
-  void reserve(int size) {
+  void reserve(unsigned int size) {
     if (size > size_) {
       T *data = static_cast<T *>(allocate(size)); 
       memcpy(data, data_, sizeof(*data)*size_);

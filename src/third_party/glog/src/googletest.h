@@ -377,7 +377,8 @@ static string Munge(const string& filename) {
 
 static void WriteToFile(const string& body, const string& file) {
   FILE* fp = fopen(file.c_str(), "wb");
-  fwrite(body.data(), 1, body.size(), fp);
+  size_t ignored = fwrite(body.data(), 1, body.size(), fp);
+  (void) ignored;
   fclose(fp);
 }
 
