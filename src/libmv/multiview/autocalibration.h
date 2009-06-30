@@ -22,11 +22,11 @@
 #ifndef LIBMV_MULTIVIEW_AUTOCALIBRATION_H_
 #define LIBMV_MULTIVIEW_AUTOCALIBRATION_H_
 
-#include <vector>
 #include <algorithm>
 
 #include <Eigen/QR>
 
+#include "libmv/base/vector.h"
 #include "libmv/logging/logging.h"
 #include "libmv/numeric/numeric.h"
 
@@ -270,10 +270,10 @@ class AutoCalibrationLinear {
   }
  
  private:
-  std::vector<Mat34> projections_; // The *normalized* projection matrices.
-  std::vector<double> widths_;
-  std::vector<double> heights_;
-  std::vector<Vec10> constraints_;  // Linear constraints on q.
+  vector<Mat34> projections_; // The *normalized* projection matrices.
+  vector<double> widths_;
+  vector<double> heights_;
+  vector<Vec10> constraints_;  // Linear constraints on q.
 };
 
 } // namespace libmv

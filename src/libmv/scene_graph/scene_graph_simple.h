@@ -200,6 +200,8 @@ class Node {
     return !children_.empty();
   }
 
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
  private:
 
   // Transform from the parents space to this object's space.

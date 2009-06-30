@@ -20,14 +20,13 @@
 
 #define V3DLIB_ENABLE_SUITESPARSE 1
 
-#include <vector>
 #include <map>
+
+#include "libmv/multiview/bundle.h"
+#include "libmv/numeric/numeric.h"
 #include "third_party/ssba/Math/v3d_linear.h"
 #include "third_party/ssba/Math/v3d_linear_utils.h"
 #include "third_party/ssba/Geometry/v3d_metricbundle.h"
-
-#include "libmv/numeric/numeric.h"
-#include "libmv/multiview/bundle.h"
 
 namespace libmv {
 
@@ -99,14 +98,14 @@ void EuclideanBAFull(const std::vector<Mat2X> &x,
   scaleMatrixIP(1.0/f0, Knorm);
   Knorm[2][2] = 1.0;
 
-  vector<Vector3d> Xs(num_pointsM);
+  std::vector<Vector3d> Xs(num_pointsM);
   for (int j = 0; j < num_pointsM; ++j) {
     Xs[j][0] = (*X)(0, j);
     Xs[j][1] = (*X)(1, j);
     Xs[j][2] = (*X)(2, j);
   }
 
-  vector<CameraMatrix> cams(num_camsN);
+  std::vector<CameraMatrix> cams(num_camsN);
   for (int i = 0; i < num_camsN; ++i) {
     Matrix3x3d R;
     Vector3d T;
@@ -123,9 +122,9 @@ void EuclideanBAFull(const std::vector<Mat2X> &x,
     cams[i].setTranslation(T);
   }
 
-  vector<Vector2d> measurements;
-  vector<int> correspondingView;
-  vector<int> correspondingPoint;
+  std::vector<Vector2d> measurements;
+  std::vector<int> correspondingView;
+  std::vector<int> correspondingPoint;
 
   measurements.reserve(num_obsK);
   correspondingView.reserve(num_obsK);

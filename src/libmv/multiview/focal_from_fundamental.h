@@ -30,12 +30,14 @@ namespace libmv {
 void EpipolesFromFundamental(const Mat3 &F, Vec3 *e1, Vec3 *e2);
 void RotationToEliminateY(const Vec3 &x, Mat3 *T);
 void FundamentalAlignEpipolesToXAxis(const Mat3 &F, Mat3 *Fp);
+
 void FundamentalShiftPrincipalPoints(const Mat3 &F,
                                      const Vec2 &p1,
                                      const Vec2 &p1_new,
                                      const Vec2 &p2,
                                      const Vec2 &p2_new,
                                      Mat3 *F_new);
+
 void FocalFromFundamental(const Mat3 &F,
                           const Vec2 &principal_point1,
                           const Vec2 &principal_point2,
@@ -43,13 +45,13 @@ void FocalFromFundamental(const Mat3 &F,
                           double *f2);
                           
 void FocalFromFundamentalExhaustive(const Mat3 &F,
-                                const Vec2 &principal_point,
-                                const Mat2X &x1,
-                                const Mat2X &x2,
-                                double min_focal,
-                                double max_focal,
-                                int n_samples,
-                                double *focal);
+                                    const Vec2 &principal_point,
+                                    const Mat2X &x1,
+                                    const Mat2X &x2,
+                                    double min_focal,
+                                    double max_focal,
+                                    int n_samples,
+                                    double *focal);
                                                     
 } // namespace libmv
 

@@ -21,7 +21,7 @@
 #ifndef LIBMV_IMAGE_IMAGE_IMAGE_IO_H
 #define LIBMV_IMAGE_IMAGE_IMAGE_IO_H
 
-#include <math.h>
+#include <cmath>
 
 #include "libmv/image/image.h"
 

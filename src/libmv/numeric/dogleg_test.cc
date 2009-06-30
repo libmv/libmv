@@ -18,8 +18,8 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
-#include "libmv/numeric/dogleg.h"
 #include "testing/testing.h"
+#include "libmv/numeric/dogleg.h"
 
 using namespace libmv;
 

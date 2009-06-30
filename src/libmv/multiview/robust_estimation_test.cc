@@ -18,6 +18,8 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
+#include <vector>
+
 #include "libmv/multiview/robust_estimation.h"
 #include "libmv/numeric/numeric.h"
 #include "testing/testing.h"

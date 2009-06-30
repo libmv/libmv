@@ -18,10 +18,10 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
-#include "libmv/numeric/numeric.h"
-#include "libmv/image/integral_image.h"
 #include "testing/testing.h"
+#include "libmv/image/integral_image.h"
 #include "libmv/logging/logging.h"
+#include "libmv/numeric/numeric.h"
 
 using namespace libmv;
 
@@ -35,13 +35,13 @@ TEST(IntegralImage, SimpleCase) {
   IntegralImage(image, &integral_image);
   LOG(INFO) << integral_image;
   Mat resid;
-  resid.set(integral_image.block<5,10>(0, 0));
+  resid = integral_image.block<5,10>(0, 0);
   EXPECT_MATRIX_NEAR_ZERO(resid, 1e-15);
-  resid.set(integral_image.block<5,10>(5, 0));
+  resid = integral_image.block<5,10>(5, 0);
   EXPECT_MATRIX_NEAR_ZERO(resid, 1e-15);
-  resid.set(integral_image.block<5,10>(0, 10));
+  resid = integral_image.block<5,10>(0, 10);
   EXPECT_MATRIX_NEAR_ZERO(resid, 1e-15);
-  resid.set(integral_image.block<5,10>(5, 10).cwise() - 1.0);
+  resid = integral_image.block<5,10>(5, 10).cwise() - 1.0;
   EXPECT_MATRIX_NEAR_ZERO(resid, 1e-15);
 }
 

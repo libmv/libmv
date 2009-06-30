@@ -24,6 +24,8 @@
 
 #include <vector>
 
+#include <QVector>
+
 #include "ui/tvr/features.h"
 
 struct TvrDocument {

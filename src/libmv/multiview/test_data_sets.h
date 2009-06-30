@@ -21,11 +21,10 @@
 #ifndef LIBMV_MULTIVIEW_TEST_DATA_SETS_H_
 #define LIBMV_MULTIVIEW_TEST_DATA_SETS_H_
 
-#include <vector>
-
-#include "libmv/numeric/numeric.h"
+#include "libmv/base/vector.h"
 #include "libmv/multiview/fundamental.h"
 #include "libmv/multiview/projection.h"
+#include "libmv/numeric/numeric.h"
 
 namespace libmv {
 

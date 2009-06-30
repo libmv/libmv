@@ -19,8 +19,8 @@
 // IN THE SOFTWARE.
 
 #include <cassert>
-#include <vector>
 
+#include "libmv/base/vector.h"
 #include "libmv/numeric/numeric.h"
 #include "libmv/correspondence/klt.h"
 #include "libmv/image/image.h"
@@ -28,7 +28,6 @@
 #include "libmv/image/convolve.h"
 #include "libmv/image/sample.h"
 
-using std::vector;
 using std::max;
 using std::min;
 
@@ -206,7 +205,7 @@ bool KLTContext::TrackFeature(ImagePyramid *pyramid1,
       return false;
     }
   }
-  feature2_pointer->position = position2;
+  feature2_pointer->position = position2.cast<float>();
   return true;
 }
 

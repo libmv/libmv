@@ -112,7 +112,7 @@ template <typename TMat, typename TVec>
 double Nullspace(TMat *A, TVec *nullspace) {
   if (A->rows() >= A->cols()) {
     Eigen::SVD<TMat> svd(*A);
-    nullspace->set(svd.matrixV().col(A->cols()-1));
+    (*nullspace) = svd.matrixV().col(A->cols()-1);
     return svd.singularValues()(A->cols()-1);
   }
   // Extend A with rows of zeros to make it square. It's a hack, but is
@@ -133,8 +133,8 @@ double Nullspace2(TMat *A, TVec1 *x1, TVec2 *x2) {
   if (A->rows() >= A->cols()) {
     Eigen::SVD<TMat> svd(*A);
     Mat V = svd.matrixV();
-    x1->set(V.col(A->cols()-1));
-    x2->set(V.col(A->cols()-2));
+    *x1 = V.col(A->cols() - 1);
+    *x2 = V.col(A->cols() - 2);
     return svd.singularValues()(A->cols()-1);
   }
   // Extend A with rows of zeros to make it square. It's a hack, but is

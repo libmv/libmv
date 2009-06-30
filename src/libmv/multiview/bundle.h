@@ -28,7 +28,6 @@
 
 namespace libmv {
 
-
 /**
  * \brief Euclidean bundle adjustment given a full observation.
  *

@@ -39,11 +39,11 @@ TEST(EuclideanBA, TwoViews) {
   R[1] = d.R2;
   t[1] = d.t2;
   std::vector<Mat2X> x(2);
-  x[0].set(d.x1);
-  x[1].set(d.x2);
+  x[0] = d.x1;
+  x[1] = d.x2;
 
   Mat3X X;
-  X.set(d.X);
+  X = d.X;
   
   for (int i = 0; i < 2; ++i) {               // Add noise to motion.
     K[i](0, 0) *= 1 + (rand() / RAND_MAX - 0.5) * 0.1;

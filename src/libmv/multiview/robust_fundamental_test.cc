@@ -104,7 +104,7 @@ TEST(RobustFundamental,
 TEST(RobustFundamental, FundamentalFromCorrespondences8PointRealistic) {
   TwoViewDataSet d = TwoRealisticCameras();
 
-  d.X.set(3*Mat::Random(3, 50));
+  d.X = 3*Mat::Random(3, 50);
   LOG(INFO) << "X = \n" << d.X;
 
   Project(d.P1, d.X, &d.x1);

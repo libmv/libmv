@@ -18,16 +18,12 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
-#include <vector>
+#include "ui/tvr/3D_viewer.h"
 
 #include <QtGui>
 #include <QtOpenGL>
 
-#include "ui/tvr/3D_viewer.h"
-
-
 using namespace libmv::scene;
-
 
 void SceneCamera::Draw() {
   using namespace libmv;

@@ -19,10 +19,11 @@
 // IN THE SOFTWARE.
 
 #include <cstdio>
+#include <vector>
 
-#include "libmv/numeric/numeric.h"
 #include "libmv/multiview/fundamental.h"
 #include "libmv/multiview/robust_estimation.h"
+#include "libmv/numeric/numeric.h"
 #include "libmv/logging/logging.h"
 
 namespace libmv {

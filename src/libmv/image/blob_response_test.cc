@@ -18,11 +18,10 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
-#include "libmv/numeric/numeric.h"
-#include "libmv/image/image_io.h"
 #include "libmv/image/blob_response.h"
 #include "libmv/image/convolve.h"
 #include "libmv/image/non_maximal_suppression.h"
+#include "libmv/numeric/numeric.h"
 #include "testing/testing.h"
 
 using namespace libmv;

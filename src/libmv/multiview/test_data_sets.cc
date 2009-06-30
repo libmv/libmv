@@ -91,7 +91,7 @@ NViewDataSet NRealisticCameras(int nviews, int npoints) {
                0,  0,  1;
     d.R[i] = LookAt(lookdir);
     d.t[i] = -d.R[i] * camera_center;
-    d.x[i].set(Project(d.P(i), d.X));
+    d.x[i] = Project(d.P(i), d.X);
   }
   return d;
 }

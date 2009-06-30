@@ -26,8 +26,7 @@
 #ifndef LIBMV_MULTIVIEW_NVIEWTRIANGULATION_H
 #define LIBMV_MULTIVIEW_NVIEWTRIANGULATION_H
 
-#include <vector>
-
+#include "libmv/base/vector.h"
 #include "libmv/logging/logging.h"
 #include "libmv/numeric/numeric.h"
 
@@ -37,7 +36,7 @@ namespace libmv {
 // output, X, is a homogeneous four vectors.
 template<typename T>
 void NViewTriangulate(const Matrix<T, 2, Dynamic> &x,
-                      const std::vector<Matrix<T, 3, 4> > &Ps,
+                      const vector<Matrix<T, 3, 4> > &Ps,
                       Matrix<T, 4, 1> *X) {
   int nviews = x.cols();
   assert(nviews == Ps.size());

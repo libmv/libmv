@@ -25,9 +25,7 @@
 // Computer Science; Vol. 1842 archive Proceedings of the 6th European
 // Conference on Computer Vision-Part I pp 632-648, 2000.
 
-#include <set>
-#include <vector>
-
+#include "libmv/base/vector.h"
 #include "libmv/logging/logging.h"
 #include "libmv/multiview/fundamental.h"
 #include "libmv/multiview/sixpointnview.h"
@@ -94,7 +92,7 @@ static Vec4 CalcX6FromDesignMat(
 // TODO(keir): Change 'points' from 2 x 6nviews to be 2n views x 6; this way it
 // can be directly passed from the robust estimation code without copying.
 void SixPointNView(const Mat2X &points,
-                   std::vector<SixPointReconstruction> *reconstructions) {
+                   vector<SixPointReconstruction> *reconstructions) {
   CHECK(points.cols() % 6 == 0);
   int nviews = points.cols() / 6;
 

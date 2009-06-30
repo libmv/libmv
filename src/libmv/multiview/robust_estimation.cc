@@ -22,7 +22,6 @@
 #include <cstdio>
 #include <algorithm>
 #include <set>
-#include <vector>
 
 #include "libmv/multiview/robust_estimation.h"
 #include "libmv/numeric/numeric.h"

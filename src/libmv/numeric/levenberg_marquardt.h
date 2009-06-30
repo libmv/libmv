@@ -143,7 +143,8 @@ class LevenbergMarquardt {
         // Rho is the ratio of the actual reduction in error to the reduction
         // in error that would be obtained if the problem was linear.
         // See [1] for details.
-        Scalar rho((error.norm2() - f_(x_new).norm2()) / dx.dot(u*dx + g));
+        Scalar rho((error.squaredNorm() - f_(x_new).squaredNorm())
+                   / dx.dot(u*dx + g));
         if (rho > 0) {
           // Accept the Gauss-Newton step because the linear model fits well.
           x = x_new;

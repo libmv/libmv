@@ -369,6 +369,9 @@ class SGNotRoot : public virtual SGNode<Object> {
       parent_->AddChildStable(this);
     }
   }
+
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
  protected:  
   SGNode<Object> *parent_;
   char *name_;
@@ -409,8 +412,10 @@ class SGRootNode : public SGNotLeaf<Object> {
     view_.setIdentity();
   }
   ~SGRootNode() {};
+
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
  private:
-  
   Mat4 view_; //store the viewing matrix for the scene in the root node
 };
 

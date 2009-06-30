@@ -19,7 +19,6 @@
 // IN THE SOFTWARE.
 
 #include <cstdio>
-#include <vector>
 
 #include "libmv/image/image_pyramid.h"
 #include "libmv/image/mock_image_sequence.h"

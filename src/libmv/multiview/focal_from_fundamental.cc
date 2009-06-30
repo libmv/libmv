@@ -21,6 +21,7 @@
 // 
 // http://axiom.anu.edu.au/~hartley/Papers/focal-lengths/focal.pdf
 
+#include "libmv/base/vector.h"
 #include "libmv/numeric/numeric.h"
 #include "libmv/multiview/projection.h"
 #include "libmv/multiview/fundamental.h"
@@ -187,7 +188,7 @@ class FocalReprojectionError {
     MotionFromEssentialAndCorrespondence(E, K, x1_.col(0), K, x2_.col(0),
                                          &R, &t);
     
-    std::vector<Mat34> Ps(2);
+    vector<Mat34> Ps(2);
     P_From_KRt(K, Mat3::Identity(), Vec3::Zero(), &Ps[0]);
     P_From_KRt(K, R, t, &Ps[1]);
     

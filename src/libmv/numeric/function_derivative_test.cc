@@ -18,9 +18,9 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
+#include "testing/testing.h"
 #include "libmv/numeric/numeric.h"
 #include "libmv/numeric/function_derivative.h"
-#include "testing/testing.h"
 
 using namespace libmv;
 

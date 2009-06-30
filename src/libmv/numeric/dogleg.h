@@ -130,8 +130,8 @@ class Dogleg {
       Parameters a = alpha * dx_sd;
       const Parameters &b = dx_gn;
       b_minus_a = a - b;
-      Scalar Mbma2 = b_minus_a.norm2();
-      Scalar Ma2 = a.norm2();
+      Scalar Mbma2 = b_minus_a.squaredNorm();
+      Scalar Ma2 = a.squaredNorm();
       Scalar c = a.dot(b_minus_a);
       Scalar radius2 = radius*radius;
       if (c <= 0) {
@@ -177,7 +177,8 @@ class Dogleg {
       //LG << "||f(x)||: " << f_(x).norm();
       //LG << "max(g): " << g.cwise().abs().maxCoeff();
       //LG << "radius: " << radius;
-      Scalar alpha = g.norm2() / (J*g).lazy().norm2();  // Eqn 3.19 from [1]
+      // Eqn 3.19 from [1]
+      Scalar alpha = g.squaredNorm() / (J*g).lazy().squaredNorm();
 
       // Solve for steepest descent direction dx_sd.
       dx_sd = -g;
@@ -207,15 +208,15 @@ class Dogleg {
       }
 
       x_new = x + dx_dl;
-      Scalar actual = f_(x).norm2() - f_(x_new).norm2();
+      Scalar actual = f_(x).squaredNorm() - f_(x_new).squaredNorm();
       Scalar predicted = 0;
       if (step == GAUSS_NEWTON) {
-        predicted = f_(x).norm2();
+        predicted = f_(x).squaredNorm();
       } else if (step == STEEPEST_DESCENT) {
         predicted = radius * (2*alpha*g.norm() - radius) / 2 / alpha;
       } else if (step == DOGLEG) {
-        predicted = 0.5 * alpha * (1-beta)*(1-beta)*g.norm2() +
-                    beta*(2-beta)*f_(x).norm2();
+        predicted = 0.5 * alpha * (1-beta)*(1-beta)*g.squaredNorm() +
+                    beta*(2-beta)*f_(x).squaredNorm();
       }
       Scalar rho = actual / predicted;
 

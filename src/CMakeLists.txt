@@ -52,7 +52,7 @@ INCLUDE_DIRECTORIES(
   third_party/gtest
   third_party/glog/src
   third_party/gtest/include
-  third_party/eigen2
+  third_party/eigen
   third_party/ssba
   third_party
   ${LIBMV_SOURCE_DIR}

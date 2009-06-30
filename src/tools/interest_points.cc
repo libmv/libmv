@@ -20,8 +20,8 @@
 
 #include <algorithm>
 #include <string>
-#include <vector>
 
+#include "libmv/base/vector.h"
 #include "libmv/correspondence/klt.h"
 #include "libmv/image/image.h"
 #include "libmv/image/image_io.h"

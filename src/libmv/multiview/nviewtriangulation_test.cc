@@ -20,6 +20,7 @@
 
 #include <iostream>
 
+#include "libmv/base/vector.h"
 #include "libmv/logging/logging.h"
 #include "libmv/multiview/nviewtriangulation.h"
 #include "libmv/multiview/projection.h"
@@ -37,7 +38,7 @@ TEST(NViewTriangulate, ThreeViews) {
   NViewDataSet d = NRealisticCameras(nviews, npoints);
 
   // Collect P matrices together.
-  std::vector<Mat34> Ps(nviews);
+  vector<Mat34> Ps(nviews);
   for (int j = 0; j < nviews; ++j) {
     Ps[j] = d.P(j);
   }

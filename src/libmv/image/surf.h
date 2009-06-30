@@ -135,7 +135,7 @@ void DetectFeatures(const TImage integral_image,
       rejected++; continue;
     }
     // 'src' is for (sigma, row, column).
-    Vec3f src = maxima[i].cast<float>() + delta;
+    Vec3f src = maxima[i].cast<float>() + delta.cast<float>();
     TPointFeature detection;
     detection.coords << src(2), src(1);  // (x, y).
     detection.coords *= scale;

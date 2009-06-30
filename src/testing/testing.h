@@ -21,9 +21,9 @@
 #ifndef TESTING_TESTING_H_
 #define TESTING_TESTING_H_
 
+#include "libmv/numeric/numeric.h"
 #include "third_party/gtest/include/gtest/gtest.h"
 #include "third_party/gflags/gflags.h"
-#include "libmv/numeric/numeric.h"
 
 DECLARE_string(test_tmpdir);
 

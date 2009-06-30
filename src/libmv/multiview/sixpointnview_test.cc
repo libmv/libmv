@@ -20,12 +20,13 @@
 
 #include <iostream>
 
+#include "libmv/base/vector.h"
+#include "libmv/logging/logging.h"
 #include "libmv/multiview/projection.h"
 #include "libmv/multiview/sixpointnview.h"
 #include "libmv/multiview/test_data_sets.h"
 #include "libmv/numeric/numeric.h"
 #include "testing/testing.h"
-#include "libmv/logging/logging.h"
 
 namespace {
 
@@ -37,7 +38,7 @@ TEST(SixPointNView, ThreeView) {
   NViewDataSet d = NRealisticCameras(nviews, npoints);
 
   Mat2X xs = HStack(HStack(d.x[0], d.x[1]), d.x[2]);
-  std::vector<SixPointReconstruction> reconstructions;
+  vector<SixPointReconstruction> reconstructions;
   SixPointNView(xs, &reconstructions);
 
   LOG(INFO) << "Got " << reconstructions.size() << " reconstructions.";

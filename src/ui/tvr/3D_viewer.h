@@ -22,10 +22,11 @@
 #define UI_TVR_3D_VIEWER_H_
 
 #include <QGLWidget>
-#include <vector>
+#include <QImage>
 
-#include "ui/tvr/tvr_document.h"
+#include "libmv/base/vector.h"
 #include "libmv/scene_graph/scene_graph_simple.h"
+#include "ui/tvr/tvr_document.h"
 #include "ui/tvr/gl_texture.h"
 
 class SceneObject {

@@ -21,8 +21,6 @@
 #ifndef LIBMV_MULTIVIEW_TRIANGULATION_H_
 #define LIBMV_MULTIVIEW_TRIANGULATION_H_
 
-#include <vector>
-
 #include "libmv/numeric/numeric.h"
 
 namespace libmv {

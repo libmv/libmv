@@ -22,6 +22,7 @@
 #include <QFileDialog>
 #include <QtGui>
 
+#include "libmv/base/vector.h"
 #include "libmv/image/array_nd.h"
 #include "libmv/image/surf.h"
 #include "libmv/image/surf_descriptor.h"
@@ -32,7 +33,6 @@
 #include "libmv/multiview/bundle.h"
 #include "libmv/logging/logging.h"
 #include "ui/tvr/main_window.h"
-
 
 TvrMainWindow::TvrMainWindow(QWidget *parent)
   : QMainWindow(parent) {
@@ -377,7 +377,7 @@ void TvrMainWindow::MetricReconstruction() {
   document_.t[1] = t;
 
   // Triangulate features.
-  std::vector<Mat34> Ps(2);
+  vector<Mat34> Ps(2);
   P_From_KRt(document_.K[0], document_.R[0], document_.t[0], &Ps[0]);
   P_From_KRt(document_.K[1], document_.R[1], document_.t[1], &Ps[1]);
   
@@ -415,7 +415,7 @@ void TvrMainWindow::MetricBundle() {
   Mat xs[2];
   PointCorrespondencesAsMatrices(document_.correspondences, &xs[0], &xs[1]);
   for (int i = 0; i < 2; ++i) {
-    x[i].set(xs[i]);
+    x[i] = xs[i];
   }
   
   Mat3X X(3, document_.X.size());

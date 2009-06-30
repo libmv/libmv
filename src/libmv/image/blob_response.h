@@ -23,8 +23,8 @@
 
 #include <cmath>
 
-#include "libmv/numeric/numeric.h"
 #include "libmv/image/integral_image.h"
+#include "libmv/numeric/numeric.h"
 #include "libmv/logging/logging.h"
 
 namespace libmv {

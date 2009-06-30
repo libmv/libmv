@@ -28,14 +28,13 @@
 #ifndef _LIBMV_MULTIVIEW_SIXPOINTNVIEW_H_
 #define _LIBMV_MULTIVIEW_SIXPOINTNVIEW_H_
 
-#include <vector>
-
+#include "libmv/base/vector.h"
 #include "libmv/numeric/numeric.h"
 
 namespace libmv {
 
 struct SixPointReconstruction {
-  std::vector<Mat34> P;
+  vector<Mat34> P;
   Mat46 X;
 };
 
@@ -49,7 +48,7 @@ struct SixPointReconstruction {
  * multiple solutions, which are returned in reconstructions.
  */
 void SixPointNView(const Mat2X &points,
-                   std::vector<SixPointReconstruction> *reconstructions);
+                   vector<SixPointReconstruction> *reconstructions);
 
 }  // namespace libmv
 

@@ -19,7 +19,6 @@
 // IN THE SOFTWARE.
 
 #include <cstdio>
-#include <vector>
 
 #include "libmv/image/image.h"
 #include "libmv/image/filtered_sequence.h"
