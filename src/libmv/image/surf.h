@@ -22,9 +22,8 @@
 #define LIBMV_IMAGE_SURF_H
 
 #include <cmath>
-#include <vector>
 
-#include "libmv/numeric/numeric.h"
+#include "libmv/base/vector.h"
 #include "libmv/correspondence/feature.h"
 #include "libmv/image/array_nd.h"
 #include "libmv/image/blob_response.h"
@@ -34,6 +33,7 @@
 #include "libmv/image/non_maximal_suppression.h"
 #include "libmv/image/surf_descriptor.h"
 #include "libmv/logging/logging.h"
+#include "libmv/numeric/numeric.h"
 
 // TODO(keir): Move the detection routines into surf_detector.h.
 
@@ -95,7 +95,7 @@ void DetectFeatures(const TImage integral_image,
                     int lobe_start,
                     int lobe_increment,
                     int scale,
-                    std::vector<TPointFeature> *features) {
+                    vector<TPointFeature> *features) {
 
   Array3Df blob_responses;
   MakeSURFOctave(integral_image,
@@ -105,7 +105,7 @@ void DetectFeatures(const TImage integral_image,
                  scale,
                  &blob_responses);
 
-  std::vector<Vec3i> maxima;
+  vector<Vec3i> maxima;
   int parameter_maxima_region = 7;
   FindLocalMaxima3D(blob_responses, parameter_maxima_region, &maxima);
 
@@ -154,7 +154,7 @@ template<typename TImage, typename TPointFeature>
 void MultiscaleDetectFeatures(const TImage &integral_image,
                               int num_octaves,
                               int num_intervals,
-                              std::vector<TPointFeature> *features) {
+                              vector<TPointFeature> *features) {
   int scale = 1;
   int lobe_start = 3;
   int lobe_increment = 2;
@@ -184,7 +184,7 @@ template<typename TImage, typename TPointFeature>
 void SurfFeatures(const TImage &image,
                   int num_octaves,
                   int num_intervals,
-                  std::vector<TPointFeature> *detections) {
+                  vector<TPointFeature> *detections) {
   Matf integral_image;
   IntegralImage(image, &integral_image);
 

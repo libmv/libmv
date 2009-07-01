@@ -74,7 +74,7 @@ TEST(FindLocalMaxima3D, EasyCase) {
   A.Fill(0.0);
   A(1, 1, 1) = 1.0;
 
-  std::vector<Vec3i> results;
+  vector<Vec3i> results;
   FindLocalMaxima3D(A, 3, &results);
   EXPECT_EQ(1, results[0][0]);
   EXPECT_EQ(1, results[0][1]);
@@ -88,7 +88,7 @@ TEST(FindLocalMaxima3D, CompeteingMaxesInOneBlock) {
   A(2, 2, 2) = 1.0;  // This is max within the 3x3x3 block.
   A(3, 3, 3) = 3.0;  // But the real max, here, is in another block.
 
-  std::vector<Vec3i> results;
+  vector<Vec3i> results;
   FindLocalMaxima3D(A, 3, &results);
   EXPECT_EQ(3, results[0][0]);
   EXPECT_EQ(3, results[0][1]);
@@ -104,7 +104,7 @@ TEST(FindLocalMaxima3D, MultipleMaxes) {
 
   A(15, 13, 12) = 1.0;
 
-  std::vector<Vec3i> results;
+  vector<Vec3i> results;
   FindLocalMaxima3D(A, 3, &results);
   EXPECT_EQ(3, results[0][0]);
   EXPECT_EQ(3, results[0][1]);
@@ -121,7 +121,7 @@ TEST(FindLocalMaxima3D, MultipleMaxesInSameBlock) {
   A(0, 0, 0) = 1.0;  // This is a local max within a 3x3x3 block.
   A(2, 2, 2) = 3.0;  // And so is this (but the radii are close).
 
-  std::vector<Vec3i> results;
+  vector<Vec3i> results;
   FindLocalMaxima3D(A, 3, &results);
   EXPECT_EQ(0, results[0][0]);
   EXPECT_EQ(0, results[0][1]);

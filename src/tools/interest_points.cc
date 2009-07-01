@@ -48,7 +48,7 @@ int main(int argc, char **argv) {
     return 0;
   }
 
-  std::vector<libmv::SurfFeature> features;
+  libmv::vector<libmv::SurfFeature> features;
   libmv::SurfFeatures(image, 4, 4, &features);
   // TODO(keir): Do something with the extracted features.
   LOG(FATAL) << "Unimplemented!";

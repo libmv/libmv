@@ -22,8 +22,8 @@
 #define LIBMV_IMAGE_NON_MAXIMAL_SUPPRESSION_H
 
 #include <cmath>
-#include <vector>
 
+#include "libmv/base/vector.h"
 #include "libmv/logging/logging.h"
 #include "libmv/numeric/numeric.h"
 
@@ -71,7 +71,7 @@ inline bool IsLocalMax3D(const TArray &f, int width, int x, int y, int z) {
 template<typename TArray>
 inline void FindLocalMaxima3D(const TArray &f,
                               int width,
-                              std::vector<Vec3i> *maxima) {
+                              vector<Vec3i> *maxima) {
   typedef typename TArray::Scalar Scalar;
 
   assert(width % 2 == 1);

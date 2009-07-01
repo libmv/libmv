@@ -22,15 +22,14 @@
 #ifndef UI_TVR_FEATURES_H_
 #define UI_TVR_FEATURES_H_
 
-#include <vector>
-
+#include "libmv/base/vector.h"
 #include "libmv/correspondence/kdtree.h"
 #include "libmv/correspondence/feature.h"
 #include "libmv/correspondence/correspondence.h"
 #include "libmv/image/surf.h"
 
 struct SurfFeatureSet {
-  std::vector<libmv::SurfFeature> features;
+  libmv::vector<libmv::SurfFeature> features;
   libmv::KdTree<libmv::SurfFeature, float> tree;
 };
 

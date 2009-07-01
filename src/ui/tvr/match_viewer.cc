@@ -122,7 +122,7 @@ void MatchViewer::DrawImage(int i) {
 }
 
 void MatchViewer::DrawFeatures(int image_index) {
-  std::vector<libmv::SurfFeature> &features =
+  libmv::vector<libmv::SurfFeature> &features =
       document_->feature_sets[image_index].features;
   
   for (int i = 0; i < features.size(); ++i) {
