@@ -7,6 +7,15 @@ It is not ready yet. If you're interested in contributing, see:
 
   http://code.google.com/p/libmv
 
+The short story:
+
+ $ make
+ $ bin-dbg/ui/tvr/tvr
+
+Try loading two images and making a reconstruction. This UI will almost
+certainly crash on you and may delete your harddrive. There's a reason we claim
+libmv is not finished!
+
 Building
 --------
 
@@ -29,6 +38,26 @@ suite, cd in to the appriate directory and run 'make test'
 
  $ cd bin-dbg
  $ make test
+
+Building uses CMake, so it is possible to build in other directories with
+different CMake flags. However, building inside the toplevel directory with
+CMake will fail; in other words DON'T DO THIS:
+
+ $ ls
+ AUTHORS  contrib  doc  LICENSE  Makefile  README  src
+ $ cmake .
+ $ make  <-- Will fail.
+
+Instead do this:
+
+ $ ls
+ AUTHORS  contrib  doc  LICENSE  Makefile  README  src
+ $ mkdir alternate_build
+ $ cd alternate_build
+ $ cmake ../ # Your options here
+ $ make
+ $ make test
+ $ ...
 
 Problems
 --------
