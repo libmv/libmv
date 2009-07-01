@@ -42,6 +42,9 @@ typedef Eigen::VectorXd Vec;
 typedef Eigen::MatrixXf Matf;
 typedef Eigen::VectorXf Vecf;
 
+typedef Eigen::Matrix<unsigned int, Eigen::Dynamic, Eigen::Dynamic> Matu;
+typedef Eigen::Matrix<unsigned int, Eigen::Dynamic, 1> Vecu;
+
 typedef Eigen::Matrix<double, 2, 2> Mat2;
 typedef Eigen::Matrix<double, 2, 3> Mat23;
 typedef Eigen::Matrix<double, 3, 3> Mat3;

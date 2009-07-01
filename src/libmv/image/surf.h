@@ -156,7 +156,7 @@ void MultiscaleDetectFeatures(const TImage &integral_image,
                               int num_intervals,
                               vector<TPointFeature> *features) {
   int scale = 1;
-  int lobe_start = 3;
+  int lobe_start = 5;
   int lobe_increment = 2;
   for (int i = 0; i < num_octaves; ++i) {
     DetectFeatures(integral_image,
@@ -185,7 +185,7 @@ void SurfFeatures(const TImage &image,
                   int num_octaves,
                   int num_intervals,
                   vector<TPointFeature> *detections) {
-  Matf integral_image;
+  Matu integral_image;
   IntegralImage(image, &integral_image);
 
   MultiscaleDetectFeatures(integral_image, num_octaves, num_intervals,

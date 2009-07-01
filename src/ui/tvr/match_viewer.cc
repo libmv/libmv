@@ -128,7 +128,9 @@ void MatchViewer::DrawFeatures(int image_index) {
   for (int i = 0; i < features.size(); ++i) {
     glPushMatrix();
     glTranslatef(features[i].x(), features[i].y(), 0);
-    glScalef(features[i].scale, features[i].scale, features[i].scale);
+    // Convert from gaussian scale to pixel scale (see surf.h).
+    float scale = features[i].scale * 9.0 / 1.2 / 2.0;
+    glScalef(scale, scale, scale);
     // TODO(pau) when surf orientation will be detected, ensure that this is
     //           turning in the right sense and the right units (deg vs rad).
     glRotatef(features[i].orientation, 0, 0, 1);

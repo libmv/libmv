@@ -232,19 +232,18 @@ void TvrMainWindow::ComputeFeatures(int image_index) {
   // Convert to gray-scale.
   // TODO(keir): Make a libmv image <-> QImage interop library inside libmv for
   // easy bidirectional exchange of images between Qt and libmv.
-  libmv::Array3Df image(height, width, 1);
+  libmv::Matu image(height, width);
   for (int y = 0; y < height; ++y) {
     for (int x = 0; x < width; ++x) {
       // TODO(pau): there are better ways to compute intensity.
       //            Implement one and put it on libmv/image.
       int depth = qimage.depth() / 8;
-      image(y, x) = 0;
-      for (int c = 0; c < depth; ++c) {
-        if (c != 3) {  // Skip alpha channel for RGBA.
-          image(y, x) = float(qimage.bits()[depth*(y * width + x) + c]);
-        }
+      int bands = depth == 4 ? 3 : depth;  // Skip alpha channel for RGBA.
+      int sum = 0;
+      for (int c = 0; c < bands; ++c) {
+        sum += qimage.bits()[depth*(y * width + x) + c];
       }
-      image(y, x) /= depth == 4 ? 3 : depth;
+      image(y, x) = sum / bands;
     }
   }
   libmv::SurfFeatures(image, 3, 4, &fs.features);

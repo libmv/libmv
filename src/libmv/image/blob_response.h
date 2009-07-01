@@ -40,7 +40,8 @@ inline void BlobResponse(const TImage &integral_image,
                          int lobe_size,
                          int scale,
                          TBlobResponse *blob_response) {
-  typedef typename TImage::Scalar Scalar;
+  typedef typename TImage::Scalar ImageScalar;
+  typedef typename TBlobResponse::Scalar BlobScalar;
 
   // See Figure 5 (on page 5) from the SURF paper. The filter size is
   // determined by the lobe size, which must increase by steps of 2 to maintain
@@ -48,7 +49,7 @@ inline void BlobResponse(const TImage &integral_image,
   // filter sizes go by 9, 15, 21, 27, 33, 39, 45, etc.
   const int L = lobe_size;
   const int W = 3*L;
-  Scalar inverse_area = Scalar(1.0) / W / W;
+  BlobScalar inverse_area = BlobScalar(1.0) / W / W;
 
   LOG(INFO) << "Filtering a " << integral_image.cols()
             << "x" << integral_image.rows()
@@ -66,7 +67,7 @@ inline void BlobResponse(const TImage &integral_image,
       // Compute filter responses, which approximate filtering by the
       // derivative of a gaussian kernel (like in the KLT code).
       const TImage &ii = integral_image;
-      Scalar Dxx, Dxy, Dyy;
+      ImageScalar Dxx, Dxy, Dyy;
       Dxx =   UnsafeBoxIntegral(ii, r - L + 1, c - B,     2*L - 1, W)
             - UnsafeBoxIntegral(ii, r - L + 1, c - L / 2, 2*L - 1, L)*3;
       Dyy =   UnsafeBoxIntegral(ii, r - B,     c - L + 1, W, 2*L - 1)
@@ -82,11 +83,12 @@ inline void BlobResponse(const TImage &integral_image,
       Dxy *= inverse_area;
 
       // The 0.91 magic number is from the SURF paper; Equation 4 on page 4.
-      Scalar determinant = (Dxx*Dyy - pow(Scalar(0.91)*Dxy, 2));
+      BlobScalar determinant = Dxx*Dyy - pow(0.91*Dxy, 2);
 
       // Clamp negative determinants, which indicate an edge rather than a blob.
-      Scalar response = (determinant < 0.0) ? 0 : determinant;
-      (*blob_response)(r / scale, c / scale) = response;
+      (*blob_response)(r / scale, c / scale) = determinant > 0.0
+                                             ? determinant
+                                             : 0.0;
     }
   }
 }
