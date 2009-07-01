@@ -134,7 +134,7 @@ class KdTree {
 
     // Compute the number of levels such that any leafs has at least 1 point.
     // This is num_leafs < num_points, with num_leafs = 2**(num_levels - 1).
-    int l = int(floor(log(num_points) / log(2))) + 1;
+    int l = int(floor(log((double)num_points) / log(2.))) + 1;
     num_levels_ = std::min(l, max_levels);
 
     // Allocate room for all the nodes at once.
