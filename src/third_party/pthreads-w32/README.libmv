@@ -1,0 +1,9 @@
+Project: Pthreads-w32
+URL: http://sourceware.org/pthreads-win32/
+License: GNU Lesser General Public License (LGPL)
+Upstream version: 2.8.0 from ftp://sourceware.org/pub/pthreads-win32/pthreads-w32-2-8-0-release.exe
+Local modifications: 
+
+* Most of the source code is omitted.
+* 32-bit binary build is used.
+
