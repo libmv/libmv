@@ -34,6 +34,15 @@
 
 #include <iostream>
 
+#if _WIN32
+  void static
+  sincos (double x, double *sinx, double *cosx)
+  {
+    *sinx = sin(x);
+    *cosx = cos(x);
+  }
+#endif //_WIN32
+
 namespace libmv {
 
 typedef Eigen::MatrixXd Mat;
