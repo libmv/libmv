@@ -8,3 +8,12 @@ Changed some ints to size_t's to fix compiler warnings.
 
 Added #if __WORDSIZE == 64 in gflacs.cc to fix compiler warnings
  See gflags issue 13 @ Project URL
+
+Added definitions for strcasecmp,strtoll,strtoull,snprintf for MSVC
+
+Changed "pthread_once" to "::pthread_once" to fix MSVC ambiguity
+
+Merged #ifdef HAVE_FNMATCH_H from gflags 1.1
+
+Defined __attribute__(X) to be __GNUC__-specific
+

@@ -40,7 +40,9 @@
 #include <errno.h>
 #include <string.h>
 #include <assert.h>
+#ifdef HAVE_FNMATCH_H
 #include <fnmatch.h>
+#endif  // HAVE_FNMATCH_H
 #include <pthread.h>
 #include <string>
 #include <map>
@@ -48,6 +50,14 @@
 #include <utility>     // for pair<>
 #include <algorithm>
 #include "gflags.h"
+
+#ifdef _MSC_VER
+#include <windows.h> // for lstrcmpi
+#define strcasecmp lstrcmpi
+#define strtoll _strtoi64
+#define strtoull _strtoui64
+#define snprintf _snprintf_s
+#endif
 
 #ifndef PATH_SEPARATOR
 #define PATH_SEPARATOR  '/'
@@ -665,7 +675,11 @@ extern "C" int pthread_once(pthread_once_t *, void (*)(void))
 
 FlagRegistry* FlagRegistry::GlobalRegistry() {
   if (pthread_once) {   // means we're running with pthreads
-    pthread_once(&global_registry_once_, &FlagRegistry::InitGlobalRegistry);
+#ifdef _MSC_VER  
+      ::pthread_once(&global_registry_once_, &FlagRegistry::InitGlobalRegistry);
+#else // !MSC_VER
+      pthread_once(&global_registry_once_, &FlagRegistry::InitGlobalRegistry);
+#endif // MSC_VER
   } else {              // not running with pthreads: we're the only thread
     if (global_registry_once_nothreads_++ == 0)
       InitGlobalRegistry();
@@ -1180,9 +1194,18 @@ string CommandLineFlagParser::ProcessOptionsFromStringLocked(
           space = word + strlen(word);
         const string glob(word, space - word);
         // We try matching both against the full argv0 and basename(argv0)
-        if (fnmatch(glob.c_str(), ProgramInvocationName(), FNM_PATHNAME) == 0 ||
-            fnmatch(glob.c_str(), ProgramInvocationShortName(), FNM_PATHNAME) == 0) {
-          flags_are_relevant = true;
+#ifdef HAVE_FNMATCH_H
+        if (fnmatch(glob.c_str(),
+                    ProgramInvocationName(),
+                    FNM_PATHNAME) == 0 ||
+            fnmatch(glob.c_str(),
+                    ProgramInvocationShortName(),
+                    FNM_PATHNAME) == 0) {
+#else  // !HAVE_FNMATCH_H
+        if ((glob == ProgramInvocationName()) ||
+            (glob == ProgramInvocationShortName())) {
+#endif  // HAVE_FNMATCH_H 
+                flags_are_relevant = true;
         }
       }
     }

@@ -72,6 +72,10 @@
 #ifndef BASE_COMMANDLINEFLAGS_H__
 #define BASE_COMMANDLINEFLAGS_H__
 
+#ifndef __GNUC__
+#define __attribute__(X)
+#endif
+
 #include <string>
 #include <vector>
 
