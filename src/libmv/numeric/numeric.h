@@ -35,11 +35,15 @@
 #include <iostream>
 
 #if _WIN32
-  void static
-  sincos (double x, double *sinx, double *cosx)
-  {
+  void static sincos (double x, double *sinx, double *cosx) {
     *sinx = sin(x);
     *cosx = cos(x);
+  }
+  inline long lround(double d) { 
+    return (long)(d>0 ? d+0.5 : ceil(d-0.5)); 
+  }
+  inline int round(double d) {
+    return (d>0) ? int(d+0.5) : int(d-0.5);
   }
 #endif //_WIN32
 
