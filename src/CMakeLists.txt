@@ -66,6 +66,13 @@ INCLUDE_DIRECTORIES(
   ${LIBMV_BINARY_DIR}
 )
 
+IF (WIN32)
+  INCLUDE_DIRECTORIES(
+    third_party/pthreads-w32/include
+    third_party/msinttypes
+  )
+ENDIF (WIN32)
+
 IF (APPLE)
   # Tell gtest not to use mac framworks.
   ADD_DEFINITIONS('-DGTEST_NOT_MAC_FRAMEWORK_MODE')
