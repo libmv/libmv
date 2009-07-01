@@ -253,7 +253,7 @@ class BipartiteGraph {
   }
 
   Iterator ScanEdgesForLeftNode(const LeftNode &left_node) {
-    typename LeftToRightMap::const_iterator it = left_to_right_.find(left_node);
+    typename LeftToRightMap::iterator it = left_to_right_.find(left_node);
     assert(it != left_to_right_.end());
     Iterator iterator;
     iterator.type_ = OVER_RIGHT_NODES;
