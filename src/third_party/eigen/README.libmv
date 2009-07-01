@@ -5,6 +5,7 @@ Upstream version: 2.0.3, released June 21, 2009
 
 Local modifications:
 
+  * Add NumTraits for "unsigned long"; used in our SURF implementation.
   * Fixed a minor assert bug in Map.h.
   * Fixed an "unused variable" warning in SVD.h.
   * Fixed another "unused variable" warning in SVD.h, in release mode.

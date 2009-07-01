@@ -61,6 +61,19 @@ template<> struct NumTraits<int>
   };
 };
 
+template<> struct NumTraits<unsigned int>
+{
+  typedef unsigned int Real;
+  typedef double FloatingPoint;
+  enum {
+    IsComplex = 0,
+    HasFloatingPoint = 0,
+    ReadCost = 1,
+    AddCost = 1,
+    MulCost = 1
+  };
+};
+
 template<> struct NumTraits<float>
 {
   typedef float Real;
