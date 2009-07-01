@@ -14,5 +14,26 @@ Before building, make sure you have the following:
 
 * CMake 2.4 or newer.
 * Qt4.
-* SuiteSparse. (On debian/ubuntu: apt-get install libsuitesparse-dev)
 
+Then run 
+
+ $ make
+
+in the toplevel directory. This builds a debug version, and puts it in bin-dbg.
+To build an optimized version, do
+
+ $ make release
+
+which puts optimized executables and libraries in bin-dbg/. To run the test
+suite, cd in to the appriate directory and run 'make test'
+
+ $ cd bin-dbg
+ $ make test
+
+Problems
+--------
+
+If you encounter problems running the test suite, please mail the mailing list
+or file a ticket on our Google code project page
+
+  http://code.google.com/p/libmv/issues
