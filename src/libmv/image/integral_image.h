@@ -33,17 +33,17 @@ inline void IntegralImage(const TImage &image, TIntegralImage *integral_image) {
   integral_image->resize(image.rows(), image.cols());
 
   // Split first row from the rest to avoid an if in the inner loop.
-  Scalar row_sum = 0.;
+  Scalar row_sum = Scalar(0);
   for (int c = 0; c < image.cols(); ++c) {
-    row_sum += image(0, c);
+    row_sum += Scalar(image(0, c));
     (*integral_image)(0, c) = row_sum;
   }
 
   // Each pixel is a sum of all the pixels to the left and up of that pixel.
   for (int r = 1; r < image.rows(); ++r) {
-    row_sum = 0.;
+    row_sum = Scalar(0);
     for (int c = 0; c < image.cols(); ++c) {
-      row_sum += image(r, c);
+      row_sum += Scalar(image(r, c));
       (*integral_image)(r, c) = row_sum + (*integral_image)(r - 1, c);
     }
   }
@@ -115,9 +115,9 @@ inline typename TImage::Scalar UnsafeBoxIntegral(const TImage &integral_image,
   T C = integral_image(r2, c1);
   T D = integral_image(r2, c2);
 
-  // TODO(keir): This needs to be reworked so it can't overflow with ints. The
+  // FIXME(keir): This needs to be reworked so it can't overflow with ints. The
   // cast to double and subsequent rounding is a hack.
-  T sum = ((double) D) - B - C + A;
+  T sum = T(((double) D) - B - C + A);
   return sum;
 }
 

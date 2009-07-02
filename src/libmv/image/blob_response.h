@@ -48,7 +48,12 @@ inline void BlobResponse(const TImage &integral_image,
   // the odd size (i.e. there is a central pixel). In practice this means
   // filter sizes go by 9, 15, 21, 27, 33, 39, 45, etc.
   const int L = lobe_size;
-  const int W = 3*L;
+  const int W = 3 * L;
+
+  //FIXME(pau): With BlobScalar and ImageScalar being integer types, we have
+  //            to take care when multiplying and dividing stuff.  Here
+  //            inverse_area, and Dxx, Dyy, Dxy should probably be of double
+  //            type independently of the type of BlobScalar and ImageScalar.
   BlobScalar inverse_area = BlobScalar(1.0) / W / W;
 
   LOG(INFO) << "Filtering a " << integral_image.cols()
@@ -68,22 +73,22 @@ inline void BlobResponse(const TImage &integral_image,
       // derivative of a gaussian kernel (like in the KLT code).
       const TImage &ii = integral_image;
       ImageScalar Dxx, Dxy, Dyy;
-      Dxx =   UnsafeBoxIntegral(ii, r - L + 1, c - B,     2*L - 1, W)
-            - UnsafeBoxIntegral(ii, r - L + 1, c - L / 2, 2*L - 1, L)*3;
-      Dyy =   UnsafeBoxIntegral(ii, r - B,     c - L + 1, W, 2*L - 1)
-            - UnsafeBoxIntegral(ii, r - L / 2, c - L + 1, L, 2*L - 1)*3;
+      Dxx =   UnsafeBoxIntegral(ii, r - L + 1, c - B,     2 * L - 1, W)
+            - UnsafeBoxIntegral(ii, r - L + 1, c - L / 2, 2 * L - 1, L)*3;
+      Dyy =   UnsafeBoxIntegral(ii, r - B,     c - L + 1, W, 2 * L - 1)
+            - UnsafeBoxIntegral(ii, r - L / 2, c - L + 1, L, 2 * L - 1)*3;
       Dxy = + UnsafeBoxIntegral(ii, r - L, c + 1, L, L)
             + UnsafeBoxIntegral(ii, r + 1, c - L, L, L)
             - UnsafeBoxIntegral(ii, r - L, c - L, L, L)
             - UnsafeBoxIntegral(ii, r + 1, c + 1, L, L);
 
       // Filter size should not affect response, so normalize by area.
-      Dxx *= inverse_area;
-      Dyy *= inverse_area;
-      Dxy *= inverse_area;
+      Dxx *= ImageScalar(inverse_area);
+      Dyy *= ImageScalar(inverse_area);
+      Dxy *= ImageScalar(inverse_area);
 
       // The 0.91 magic number is from the SURF paper; Equation 4 on page 4.
-      BlobScalar determinant = Dxx*Dyy - pow(0.91*Dxy, 2);
+      BlobScalar determinant = Dxx*Dyy - pow(0.91 * Dxy, 2);
 
       // Clamp negative determinants, which indicate an edge rather than a blob.
       (*blob_response)(r / scale, c / scale) = determinant > 0.0
