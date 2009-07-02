@@ -21,6 +21,10 @@
 #ifndef UI_TVR_MATCH_VIEWER_H_
 #define UI_TVR_MATCH_VIEWER_H_
 
+#if _WIN32
+#define NOMINMAX // Eigen needs this
+#endif _WIN32
+
 #include <vector>
 
 #include <QGLWidget>

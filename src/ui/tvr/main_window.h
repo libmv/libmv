@@ -22,6 +22,9 @@
 #ifndef UI_TVR_MAIN_WINWOW_H_
 #define UI_TVR_MAIN_WINWOW_H_
 
+#if _WIN32
+#define NOMINMAX // Eigen needs this
+#endif _WIN32
 
 #include <QMainWindow>
 #include <QMenu>

@@ -18,6 +18,9 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
+#if _WIN32
+#define NOMINMAX // Eigen needs this
+#endif _WIN32
 
 #include <QtGui>
 #include <QtOpenGL>

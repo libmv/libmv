@@ -21,6 +21,10 @@
 #ifndef UI_TVR_3D_VIEWER_H_
 #define UI_TVR_3D_VIEWER_H_
 
+#if _WIN32
+#define NOMINMAX // Eigen needs this
+#endif _WIN32
+
 #include <QGLWidget>
 #include <QImage>
 
