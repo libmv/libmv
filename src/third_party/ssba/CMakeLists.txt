@@ -16,7 +16,10 @@ include_directories(../ufconfig)
 SET(CMAKE_CXX_FLAGS "")
 
 IF(WIN32)
-  # warning C4530: C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
+  # warning C4530: C++ exception handler used, but unwind semantics are not 
+  # enabled. Specify /EHsc 
+  # MSVC needs /EHsc flag, which I included in root CMakeLists.txt, but 
+  # above SET(CMAKE_CXX_FLAGS "") erases it.
   SET(CMAKE_CXX_FLAGS "/EHsc")  
 ENDIF(WIN32)
 
