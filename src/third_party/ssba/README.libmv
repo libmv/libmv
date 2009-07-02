@@ -7,7 +7,7 @@ Local modifications:
 
   * Added
       SET(CMAKE_CXX_FLAGS "")
-    to CMakeList.txt to prevent warnings from being treated as errors.
+    to CMakeLists.txt to prevent warnings from being treated as errors.
   * Fixed "unused variable" in the header files.  Warnings in the cpps files 
     are still there.
   * Fixed a bug in CameraMatrix::opticalAxis() in file
@@ -19,3 +19,4 @@ Local modifications:
     obsoleted local_config.cmake and friends.
   * Added a virtual destructor to V3D::LevenbergOptimizerCommon in
     Math/v3d_optimization.h
+  * Added /EHsc WIN32-specific flag to CMakeLists.txt

@@ -21,7 +21,11 @@
 #include <iostream>
 #include <string>
 
+#if _WIN32
+
+#else
 #include <unistd.h>
+#endif 
 
 #include "libmv/image/image.h"
 #include "libmv/image/image_io.h"

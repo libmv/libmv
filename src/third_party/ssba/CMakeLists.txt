@@ -15,6 +15,12 @@ include_directories(../ufconfig)
 
 SET(CMAKE_CXX_FLAGS "")
 
+IF(WIN32)
+  # warning C4530: C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
+  SET(CMAKE_CXX_FLAGS "/EHsc")  
+ENDIF(WIN32)
+
+
 add_library(V3D
     Math/v3d_linear.h
     Math/v3d_mathutilities.h
