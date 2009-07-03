@@ -45,6 +45,7 @@
   inline int round(double d) {
     return (d>0) ? int(d+0.5) : int(d-0.5);
   }
+  typedef unsigned int uint;
 #endif //_WIN32
 
 namespace libmv {
