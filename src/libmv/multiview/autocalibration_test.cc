@@ -80,19 +80,19 @@ TEST(AutoCalibrationLinear, MetricTransformation_MetricInput) {
   // Compute metric update transformation.
   Mat H = a.MetricTransformation();
 
-  // Since the input was metric, the transformation should be metric.
-  // The 3x3 submatrix should be orthonormal.
+  // Since the input was metric, the transformation should be a similarity.
+  // The 3x3 submatrix should proportional to an orthonormal matrix.
   Mat R = H.block<3, 3>(0, 0);
   Mat RRt = R * R.transpose();
   Mat Id = Mat::Identity(3, 3);
-  EXPECT_MATRIX_NEAR(Id, RRt, 1e-3);
+  EXPECT_MATRIX_PROP(Id, RRt, 1e-2);
 
   // The plane at infinity should be 0,0,0,1.
   Vec3 p = H.row(3).start<3>();
   EXPECT_NEAR(0, p.norm(), 1e-2);
 }
 
-TEST(AutoCalibrationLinear, MetricTransformation) {
+TEST(AutoCalibrationLinear, RandomInput) {
   const int num_cams = 10;
   double width = 1000, height = 800;
   Mat3 K;
@@ -101,10 +101,10 @@ TEST(AutoCalibrationLinear, MetricTransformation) {
            0,     0,          1;
 
   Mat4 H_real;
-  H_real << 1, 0, 0, 0,
-            0, 1, 0, 0,
-            0, 0, 1, 0,
-            0, 0, 0, 1;
+  H_real << 1,  0, -4,  2,
+            1, -1,  1, -7,
+           -4,  0,  2,  0,
+            1,  2,  3,  1;
 
   AutoCalibrationLinear a;
 
@@ -127,7 +127,7 @@ TEST(AutoCalibrationLinear, MetricTransformation) {
   Mat H_computed = a.MetricTransformation();
   
   for (int i = 0; i < num_cams; ++i) {
-    Mat34 P_metric = Ps[i] * H_computed;
+    Mat34 P_metric = Ps[i] * H_computed;  // Undistort cameras.
     Mat3 K_computed, R;
     Vec3 t;
     KRt_From_P(P_metric, &K_computed, &R, &t);
