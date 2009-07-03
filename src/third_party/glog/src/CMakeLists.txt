@@ -1,3 +1,10 @@
+IF(WIN32)
+  INCLUDE_DIRECTORIES(
+    windows   # for unistd.h implementation
+  )
+ENDIF(WIN32)
+
+
 ADD_LIBRARY(glog
             demangle.cc
             logging.cc

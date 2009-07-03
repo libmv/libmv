@@ -85,7 +85,7 @@ typedef __uint64 uint64;
 // the absence of better information (ie. -fprofile-arcs).
 //
 #ifndef GOOGLE_PREDICT_BRANCH_NOT_TAKEN
-#if 1
+#if !_WIN32
 #define GOOGLE_PREDICT_BRANCH_NOT_TAKEN(x) (__builtin_expect(x, 0))
 #else
 #define GOOGLE_PREDICT_BRANCH_NOT_TAKEN(x) x
