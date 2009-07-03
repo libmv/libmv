@@ -7,3 +7,5 @@ Local modifications:
 * Removed all files, except for *.c, *.h and license-relevant.
 
 * Created CMakeLists.txt for CMake build
+
+* Undefined the USE_MAC_MEMMGR flag in jconfig.mac

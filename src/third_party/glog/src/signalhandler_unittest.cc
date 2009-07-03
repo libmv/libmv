@@ -16,7 +16,7 @@
 using namespace GOOGLE_NAMESPACE;
 
 void* DieInThread(void*) {
-  fprintf(stderr, "0x%lx is dying\n", pthread_self());
+  fprintf(stderr, "0x%lx is dying\n", (long unsigned int)pthread_self());
   // Use volatile to prevent from these to be optimized away.
   volatile int a = 0;
   volatile int b = 1 / a;
@@ -52,6 +52,9 @@ int main(int argc, char **argv) {
     // Tell the shell script
     puts("OK");
   }
+#else
+  (void)argc;
+  (void)argv;
 #endif
   return 0;
 }

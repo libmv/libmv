@@ -37,6 +37,7 @@ IF(CMAKE_COMPILER_IS_GNUCXX)
   # -Wno-deprecated needed for gcc-4.3 on debian/testing;
   # needed due to flens/refcounter.h including deprecated hash_map
   SET(CMAKE_CXX_FLAGS "-Wall -W -Wfatal-errors -Werror -Wno-deprecated -Wno-sign-compare -Wno-strict-aliasing")
+  ADD_DEFINITIONS(-D_GNU_SOURCE)
 ENDIF(CMAKE_COMPILER_IS_GNUCXX)
 
 SET(CMAKE_MODULE_PATH ${LIBMV_SOURCE_DIR}/CMakeModules)
@@ -71,6 +72,14 @@ IF (WIN32)
     third_party/msinttypes
   )
 ENDIF (WIN32)
+
+IF (APPLE)
+  INCLUDE_DIRECTORIES(
+    third_party/png
+    third_party/jpeg-7
+    ${LIBMV_BINARY_DIR}/third_party/jpeg-7
+  )
+ENDIF (APPLE)
 
 IF (APPLE)
   # Tell gtest not to use mac framworks.

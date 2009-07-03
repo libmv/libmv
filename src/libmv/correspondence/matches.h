@@ -68,11 +68,14 @@ class Matches {
       Skip<FeatureT>(&iter_, end_);
       return *this;
     }
+#ifndef __APPLE__ // gcc on the mac complains if this method is private.
    private:
+#endif //__APPLE__
     ImageFeatureIterator(Iterator iter, Iterator end)
         : iter_(iter), end_(end) {
       Skip<FeatureT>(&iter_, end_);
     }
+   private:
     Iterator iter_;
     Iterator end_;
   };
@@ -122,11 +125,14 @@ class Matches {
       Skip<FeatureT>(&iter_, end_);
       return *this;
     }
+#ifndef __APPLE__ // gcc on the mac complains if this method is private.
    private:
+#endif //__APPLE__
     TrackFeatureIterator(Iterator iter, Iterator end)
         : iter_(iter), end_(end) {
       Skip<FeatureT>(&iter_, end_);
     }
+   private:
     Iterator iter_;
     Iterator end_;
   };

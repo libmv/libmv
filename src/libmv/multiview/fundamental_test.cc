@@ -49,7 +49,7 @@ TEST(Fundamental, FundamentalFromProjections) {
   Mat3 F;
   FundamentalFromProjections(P1, P2, &F);
 
-  EXPECT_MATRIX_PROP(F_gt, F, 1e-8);
+  EXPECT_MATRIX_PROP(F_gt, F, 1e-6);
 }
 
 TEST(Fundamental, PreconditionerFromPoints) {

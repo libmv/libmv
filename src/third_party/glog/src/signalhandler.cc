@@ -51,6 +51,8 @@ void* GetPC(void* ucontext_in_void) {
     ucontext_t *context = reinterpret_cast<ucontext_t *>(ucontext_in_void);
     return (void*)context->PC_FROM_UCONTEXT;
   }
+#else
+(void)ucontext_in_void;
 #endif
   return NULL;
 }

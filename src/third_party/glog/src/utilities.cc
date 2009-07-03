@@ -41,6 +41,7 @@ static void DebugWriteToStderr(const char* data, void *unused) {
   (void) ignored;
 }
 
+#ifndef __APPLE__
 // Print a program counter and its symbol name.
 static void DumpPCAndSymbol(DebugWriter *writerfn, void *arg, void *pc,
                             const char * const prefix) {
@@ -57,6 +58,7 @@ static void DumpPCAndSymbol(DebugWriter *writerfn, void *arg, void *pc,
            prefix, kPrintfPointerFieldWidth, pc, symbol);
   writerfn(buf, arg);
 }
+#endif
 
 /* Keir: Unused; comment out to silence GCC.
 // Print a program counter and the corresponding stack frame size.

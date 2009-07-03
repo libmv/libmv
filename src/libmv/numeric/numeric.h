@@ -34,11 +34,14 @@
 
 #include <iostream>
 
-#if _WIN32
+#if _WIN32 || __APPLE__
   void static sincos (double x, double *sinx, double *cosx) {
     *sinx = sin(x);
     *cosx = cos(x);
   }
+#endif //_WIN32 || __APPLE__
+
+#if _WIN32
   inline long lround(double d) { 
     return (long)(d>0 ? d+0.5 : ceil(d-0.5)); 
   }

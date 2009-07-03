@@ -643,6 +643,10 @@ _START_GOOGLE_NAMESPACE_
 
 // TODO: Support other environments.
 bool Symbolize(void *pc, char *out, int out_size) {
+  (void)pc;
+  (void)out;
+  (void)out_size;
+
   assert(0);
   return false;
 }
