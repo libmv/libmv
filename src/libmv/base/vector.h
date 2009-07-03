@@ -118,8 +118,8 @@ class vector {
   }
 
   Allocator allocator_;
-  int size_;
-  int capacity_;
+  unsigned int size_;
+  unsigned int capacity_;
   T *data_;
 };
 
