@@ -24,7 +24,7 @@
 
 #if _WIN32
 #define NOMINMAX // Eigen needs this
-#endif _WIN32
+#endif //_WIN32
 
 #include <QMainWindow>
 #include <QMenu>

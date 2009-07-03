@@ -7,6 +7,8 @@ ADD_SUBDIRECTORY(ssba)
 # TODO(keir): Add Eigen2's cmake stuff once TAUCS or SuperLU is integrated.
 
 # Inactive dependencies for future
-#ADD_SUBDIRECTORY(jpeg-7)
-#ADD_SUBDIRECTORY(zlib)
-#ADD_SUBDIRECTORY(png)
+IF(WIN32)
+  ADD_SUBDIRECTORY(jpeg-7)
+  ADD_SUBDIRECTORY(zlib)
+  ADD_SUBDIRECTORY(png)
+ENDIF(WIN32)

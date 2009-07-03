@@ -12,3 +12,4 @@ Added (void) arg stuff to prevent unused variable warnings.
 Added google:: namespace prefix to GetReferencableValue
 Added assignments for several functions marked with no_ignore_return, where the
 return value was ignored.
+Imported Windows-specific files (windows/ directory) from GLog SVN r51

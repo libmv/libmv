@@ -1,24 +1,11 @@
 ADD_DEFINITIONS(-DTHIS_SOURCE_DIR=\\"${CMAKE_CURRENT_SOURCE_DIR}\\")
 
 IF(WIN32)
-  # TODO(bomboze): Remove next line completely when libjpeg included into 
-  # CMake, instead add ${libjpeg_BINARY_DIR} to INCLUDE_DIRECTORIES
-  CONFIGURE_FILE(../../third_party/jpeg-7/jconfig.vc 
-                 ${PROJECT_BINARY_DIR}/jconfig.h) 
-
   INCLUDE_DIRECTORIES(
-    # TODO(bomboze): replace next 2 lines with '${libjpeg_SOURCE_DIR}' and 
-    # '${libjpeg_BINARY_DIR}' when libjpeg is included into build
-    # Platform-specific jconfig.h is copied into ${libjpeg_BINARY_DIR} 
-    # during make
-      ../../third_party/jpeg-7  
-      ${PROJECT_BINARY_DIR} 
-    # TODO(bomboze): replace next line with '${png_SOURCE_DIR}' when png is 
-    # included into build (maybe PNG_SOURCE_DIR, not sure about caps)
-      ../../third_party/png
-    # TODO(bomboze): replace next line with '${zlib_SOURCE_DIR}' when zlib is 
-    # included
-      ../../third_party/zlib
+    ${libjpeg_SOURCE_DIR}
+    ${libjpeg_BINARY_DIR}
+    ${png_SOURCE_DIR}
+    ${zlib_SOURCE_DIR}
   )
 ENDIF(WIN32)
 
