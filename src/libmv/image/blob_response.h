@@ -40,8 +40,10 @@ inline void BlobResponse(const TImage &integral_image,
                          int lobe_size,
                          int scale,
                          TBlobResponse *blob_response) {
-  typedef typename TImage::Scalar ImageScalar;
-  typedef typename TBlobResponse::Scalar BlobScalar;
+  typedef typename TBlobResponse::Scalar Scalar;
+  
+  // Scalar must be floating point.
+  assert(double(Scalar(0.5)) == 0.5);
 
   // See Figure 5 (on page 5) from the SURF paper. The filter size is
   // determined by the lobe size, which must increase by steps of 2 to maintain
@@ -50,11 +52,7 @@ inline void BlobResponse(const TImage &integral_image,
   const int L = lobe_size;
   const int W = 3 * L;
 
-  //FIXME(pau): With BlobScalar and ImageScalar being integer types, we have
-  //            to take care when multiplying and dividing stuff.  Here
-  //            inverse_area, and Dxx, Dyy, Dxy should probably be of double
-  //            type independently of the type of BlobScalar and ImageScalar.
-  BlobScalar inverse_area = BlobScalar(1.0) / W / W;
+  Scalar inverse_area = Scalar(1.0) / W / W;
 
   LOG(INFO) << "Filtering a " << integral_image.cols()
             << "x" << integral_image.rows()
@@ -72,23 +70,23 @@ inline void BlobResponse(const TImage &integral_image,
       // Compute filter responses, which approximate filtering by the
       // derivative of a gaussian kernel (like in the KLT code).
       const TImage &ii = integral_image;
-      ImageScalar Dxx, Dxy, Dyy;
-      Dxx =   UnsafeBoxIntegral(ii, r - L + 1, c - B,     2 * L - 1, W)
-            - UnsafeBoxIntegral(ii, r - L + 1, c - L / 2, 2 * L - 1, L)*3;
-      Dyy =   UnsafeBoxIntegral(ii, r - B,     c - L + 1, W, 2 * L - 1)
-            - UnsafeBoxIntegral(ii, r - L / 2, c - L + 1, L, 2 * L - 1)*3;
-      Dxy = + UnsafeBoxIntegral(ii, r - L, c + 1, L, L)
-            + UnsafeBoxIntegral(ii, r + 1, c - L, L, L)
-            - UnsafeBoxIntegral(ii, r - L, c - L, L, L)
-            - UnsafeBoxIntegral(ii, r + 1, c + 1, L, L);
+      Scalar Dxx, Dxy, Dyy;
+      Dxx =   Scalar(UnsafeBoxIntegral(ii, r - L + 1, c - B,     2 * L - 1, W))
+            - Scalar(UnsafeBoxIntegral(ii, r - L + 1, c - L / 2, 2 * L - 1, L)*3);
+      Dyy =   Scalar(UnsafeBoxIntegral(ii, r - B,     c - L + 1, W, 2 * L - 1))
+            - Scalar(UnsafeBoxIntegral(ii, r - L / 2, c - L + 1, L, 2 * L - 1)*3);
+      Dxy = + Scalar(UnsafeBoxIntegral(ii, r - L, c + 1, L, L))
+            + Scalar(UnsafeBoxIntegral(ii, r + 1, c - L, L, L))
+            - Scalar(UnsafeBoxIntegral(ii, r - L, c - L, L, L))
+            - Scalar(UnsafeBoxIntegral(ii, r + 1, c + 1, L, L));
 
       // Filter size should not affect response, so normalize by area.
-      Dxx *= ImageScalar(inverse_area);
-      Dyy *= ImageScalar(inverse_area);
-      Dxy *= ImageScalar(inverse_area);
+      Dxx *= Scalar(inverse_area);
+      Dyy *= Scalar(inverse_area);
+      Dxy *= Scalar(inverse_area);
 
       // The 0.91 magic number is from the SURF paper; Equation 4 on page 4.
-      BlobScalar determinant = Dxx*Dyy - pow(0.91 * Dxy, 2);
+      Scalar determinant = Dxx * Dyy - pow(0.91 * Dxy, 2);
 
       // Clamp negative determinants, which indicate an edge rather than a blob.
       (*blob_response)(r / scale, c / scale) = determinant > 0.0

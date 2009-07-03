@@ -92,7 +92,8 @@ inline typename TImage::Scalar BoxIntegral(const TImage &integral_image,
   T C(0); if (r2 >= 0 && c1 >= 0) C = integral_image(r2, c1);
   T D(0); if (r2 >= 0 && c2 >= 0) D = integral_image(r2, c2);
 
-  T sum = A - B - C + D;
+  T sum = T(((double) D) - B - C + A);
+  assert(double(sum) >= 0);
   return sum;
 }
 
@@ -115,9 +116,11 @@ inline typename TImage::Scalar UnsafeBoxIntegral(const TImage &integral_image,
   T C = integral_image(r2, c1);
   T D = integral_image(r2, c2);
 
-  // FIXME(keir): This needs to be reworked so it can't overflow with ints. The
-  // cast to double and subsequent rounding is a hack.
+  // TODO(keir): This and the same code in BoxIntegral (above) need to be
+  // reworked so it can't overflow with ints. The cast to double and subsequent
+  // rounding is a hack.
   T sum = T(((double) D) - B - C + A);
+  assert(double(sum) >= 0);
   return sum;
 }
 

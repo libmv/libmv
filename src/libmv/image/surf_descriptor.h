@@ -33,23 +33,21 @@
 namespace libmv {
 
 template<typename TImage>
-typename TImage::Scalar HarrX(const TImage &integral_image,
-                              int row, int col, int scale) {
+float HarrX(const TImage &integral_image, int row, int col, int scale) {
   // Ignore the center strip for odd scales.
   int HW = scale / 2, W = scale;
   int C = W % 2;
-  return BoxIntegral(integral_image, row - HW, col + C,  W, HW)
-       - BoxIntegral(integral_image, row - HW, col - HW, W, HW);
+  return float(BoxIntegral(integral_image, row - HW, col + C,  W, HW))
+       - float(BoxIntegral(integral_image, row - HW, col - HW, W, HW));
 }
 
 template<typename TImage>
-typename TImage::Scalar HarrY(const TImage &integral_image,
-                              int row, int col, int scale) {
+float HarrY(const TImage &integral_image, int row, int col, int scale) {
   // Ignore the center strip for odd scales.
   int HW = scale / 2, W = scale;
   int C = W % 2;
-  return BoxIntegral(integral_image, row + C,  col - HW,  W, HW)
-       - BoxIntegral(integral_image, row - HW, col - HW,  W, HW);
+  return float(BoxIntegral(integral_image, row + C,  col - HW,  W, HW))
+       - float(BoxIntegral(integral_image, row - HW, col - HW,  W, HW));
 }
 
 template<int blocks, int samples_per_block,
