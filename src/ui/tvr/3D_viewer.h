@@ -84,6 +84,7 @@ class ViewerCamera {
   void MouseTranslate(float x1, float y1, float x2, float y2);
   void MouseRevolve(float x1, float y1, float x2, float y2);
   void MouseZoom(float dw);
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
  private:
   // Intrinsic parameters.
@@ -122,6 +123,7 @@ class Viewer3D : public QGLWidget {
 
   QSize minimumSizeHint() const;
   QSize sizeHint() const;
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
  public slots:
   void SetDocument(TvrDocument *);
