@@ -72,7 +72,9 @@
   // *does* cause problems for FreeBSD, or MacOSX, but isn't needed
   // for locking there.)
 # ifdef __linux__
-#   define _XOPEN_SOURCE 500  // may be needed to get the rwlock calls
+#   ifndef _XOPEN_SOURCE
+#     define _XOPEN_SOURCE 500  // may be needed to get the rwlock calls
+#   endif
 # endif
 # include <pthread.h>
   typedef pthread_rwlock_t MutexType;

@@ -57,7 +57,11 @@
 #include <vector>
 #include <errno.h>                   // for errno
 #include <sstream>
-#include "base/commandlineflags.h"        // to get the program name
+// TODO(keir): For some reason this include doesn't work; it gets some wrong
+// value. Figure out why and remove this to make us closer to upstream.
+//#include "base/commandlineflags.h"        // to get the program name
+#include "third_party/gflags/gflags.h"
+
 #include "glog/logging.h"
 #include "glog/raw_logging.h"
 #include "base/googleinit.h"

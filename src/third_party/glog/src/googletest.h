@@ -89,14 +89,9 @@ static const char TEST_SRC_DIR[] = "../..";
 static const char TEST_SRC_DIR[] = ".";
 #endif
 
-DEFINE_string(test_tmpdir, GetTempDir(), "Dir we use for temp files");
-DEFINE_string(test_srcdir, TEST_SRC_DIR,
-              "Source-dir root, needed to find glog_unittest_flagfile");
-#ifdef NDEBUG
-DEFINE_int32(benchmark_iters, 100000000, "Number of iterations per benchmark");
-#else
-DEFINE_int32(benchmark_iters, 100000, "Number of iterations per benchmark");
-#endif
+DECLARE_string(test_tmpdir);
+DECLARE_string(test_srcdir);
+DECLARE_int32(benchmark_iters);
 
 #ifdef HAVE_LIB_GTEST
 # include <gtest/gtest.h>
@@ -439,7 +434,7 @@ static string Munge(const string& filename) {
   while (fgets(buf, 4095, fp)) {
     string line = MungeLine(buf);
     char null_str[256];
-    sprintf(null_str, "%p", NULL);
+    sprintf(null_str, "%p", (void*) NULL);
     StringReplace(&line, "__NULLP__", null_str);
     // Remove 0x prefix produced by %p. VC++ doesn't put the prefix.
     StringReplace(&line, " 0x", " ");

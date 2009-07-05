@@ -82,6 +82,9 @@
 #include <gflags/gflags.h>
 #endif
 
+#include "third_party/gflags/gflags.h"
+//#include "base/commandlineflags.h"
+
 namespace google {
 
 #if 1      // the C99 format
