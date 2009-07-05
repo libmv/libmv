@@ -72,16 +72,14 @@
   // *does* cause problems for FreeBSD, or MacOSX, but isn't needed
   // for locking there.)
 # ifdef __linux__
-#   ifndef  _XOPEN_SOURCE
-#    define _XOPEN_SOURCE 500  // may be needed to get the rwlock calls
-#   endif
+#   define _XOPEN_SOURCE 500  // may be needed to get the rwlock calls
 # endif
 # include <pthread.h>
   typedef pthread_rwlock_t MutexType;
 #elif defined(HAVE_PTHREAD)
 # include <pthread.h>
   typedef pthread_mutex_t MutexType;
-#elif defined(OS_WINDOWS)
+#elif defined(OS_WINDOWS) || defined(OS_CYGWIN)
 # define WIN32_LEAN_AND_MEAN  // We only need minimal includes
 # ifdef GMUTEX_TRYLOCK
   // We need Windows NT or later for TryEnterCriticalSection().  If you
@@ -93,6 +91,8 @@
 # endif
 // To avoid macro definition of ERROR.
 # define NOGDI
+// To avoid macro definition of min/max.
+# define NOMINMAX
 # include <windows.h>
   typedef CRITICAL_SECTION MutexType;
 #else
@@ -131,7 +131,7 @@ class Mutex {
   MutexType mutex_;
 
   // Catch the error of writing Mutex when intending MutexLock.
-  Mutex(Mutex *ignored) {(void) ignored;}
+  Mutex(Mutex *ignored) {}
   // Disallow "evil" constructors
   Mutex(const Mutex&);
   void operator=(const Mutex&);

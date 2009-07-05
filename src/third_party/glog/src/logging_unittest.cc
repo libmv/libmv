@@ -1,15 +1,45 @@
+// Copyright (c) 2002, Google Inc.
+// All rights reserved.
 //
-// Copyright 2002 Google, Inc.
-// All Rights Reserved.
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are
+// met:
+//
+//     * Redistributions of source code must retain the above copyright
+// notice, this list of conditions and the following disclaimer.
+//     * Redistributions in binary form must reproduce the above
+// copyright notice, this list of conditions and the following disclaimer
+// in the documentation and/or other materials provided with the
+// distribution.
+//     * Neither the name of Google Inc. nor the names of its
+// contributors may be used to endorse or promote products derived from
+// this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 // Author: Ray Sidney
 
+#include "config_for_unittests.h"
 #include "utilities.h"
 
 #include <fcntl.h>
-#include <glob.h>
+#ifdef HAVE_GLOB_H
+# include <glob.h>
+#endif
 #include <sys/stat.h>
-#include <unistd.h>
+#ifdef HAVE_UNISTD_H
+# include <unistd.h>
+#endif
 
 #include <iomanip>
 #include <iostream>
@@ -18,13 +48,42 @@
 #include <string>
 #include <vector>
 
+#include <stdio.h>
+#include <stdlib.h>
+
 #include "base/commandlineflags.h"
 #include "glog/logging.h"
 #include "glog/raw_logging.h"
 #include "googletest.h"
 
+DECLARE_string(log_backtrace_at);  // logging.cc
+
+#ifdef HAVE_LIB_GMOCK
+#include <gmock/gmock.h>
+#include "mock-log.h"
+// Introduce several symbols from gmock.
+using testing::_;
+using testing::AnyNumber;
+using testing::HasSubstr;
+using testing::AllOf;
+using testing::StrNe;
+using testing::StrictMock;
+using testing::InitGoogleMock;
+using GOOGLE_NAMESPACE::glog_testing::ScopedMockLog;
+#endif
+
 using namespace std;
 using namespace GOOGLE_NAMESPACE;
+
+// Some non-advertised functions that we want to test or use.
+_START_GOOGLE_NAMESPACE_
+namespace base {
+namespace internal {
+bool GetExitOnDFatal();
+void SetExitOnDFatal(bool value);
+}  // namespace internal
+}  // namespace base
+_END_GOOGLE_NAMESPACE_
 
 static void TestLogging(bool check_counts);
 static void TestRawLogging();
@@ -32,6 +91,7 @@ static void LogWithLevels(int v, int severity, bool err, bool alsoerr);
 static void TestLoggingLevels();
 static void TestLogString();
 static void TestLogSink();
+static void TestLogToString();
 static void TestLogSinkWaitTillSent();
 static void TestCHECK();
 static void TestDCHECK();
@@ -91,16 +151,23 @@ static void BM_Check2(int n) {
 BENCHMARK(BM_Check2);
 
 static void CheckFailure(int a, int b, const char* file, int line, const char* msg) {
-  (void) a;
-  (void) b;
-  (void) file;
-  (void) line;
-  (void) msg;
 }
 
-int main(int argc, char **argv) {
-  google::ParseCommandLineFlags(&argc, &argv, true);
+static void BM_logspeed(int n) {
+  while (n-- > 0) {
+    LOG(INFO) << "test message";
+  }
+}
+BENCHMARK(BM_logspeed);
 
+static void BM_vlog(int n) {
+  while (n-- > 0) {
+    VLOG(1) << "test message";
+  }
+}
+BENCHMARK(BM_vlog);
+
+int main(int argc, char **argv) {
   // Test some basics before InitGoogleLogging:
   CaptureTestStderr();
   LogWithLevels(FLAGS_v, FLAGS_stderrthreshold,
@@ -108,11 +175,16 @@ int main(int argc, char **argv) {
   LogWithLevels(0, 0, 0, 0);  // simulate "before global c-tors"
   const string early_stderr = GetCapturedTestStderr();
 
-  FLAGS_logtostderr = true;
-
   InitGoogleLogging(argv[0]);
 
   RunSpecifiedBenchmarks();
+
+  FLAGS_logtostderr = true;
+
+  InitGoogleTest(&argc, argv);
+#ifdef HAVE_LIB_GMOCK
+  InitGoogleMock(&argc, argv);
+#endif
 
   // so that death tests run before we use threads
   CHECK_EQ(RUN_ALL_TESTS(), 0);
@@ -127,6 +199,7 @@ int main(int argc, char **argv) {
   TestLoggingLevels();
   TestLogString();
   TestLogSink();
+  TestLogToString();
   TestLogSinkWaitTillSent();
   TestCHECK();
   TestDCHECK();
@@ -145,7 +218,7 @@ int main(int argc, char **argv) {
   TestErrno();
   TestTruncate();
 
-  LOG(INFO) << "PASS";
+  fprintf(stdout, "PASS\n");
   return 0;
 }
 
@@ -363,9 +436,25 @@ void TestLogString() {
   LOG_STRING(WARNING, no_errors) << "LOG_STRING: " << "reported warning";
   LOG_STRING(ERROR, NULL) << "LOG_STRING: " << "reported error";
 
-  for (int i = 0; i < errors.size(); ++i) {
+  for (size_t i = 0; i < errors.size(); ++i) {
     LOG(INFO) << "Captured by LOG_STRING:  " << errors[i];
   }
+}
+
+void TestLogToString() {
+  string error;
+  string* no_error = NULL;
+
+  LOG_TO_STRING(INFO, &error) << "LOG_TO_STRING: " << "collected info";
+  LOG(INFO) << "Captured by LOG_TO_STRING:  " << error;
+  LOG_TO_STRING(WARNING, &error) << "LOG_TO_STRING: " << "collected warning";
+  LOG(INFO) << "Captured by LOG_TO_STRING:  " << error;
+  LOG_TO_STRING(ERROR, &error) << "LOG_TO_STRING: " << "collected error";
+  LOG(INFO) << "Captured by LOG_TO_STRING:  " << error;
+
+  LOG_TO_STRING(INFO, no_error) << "LOG_TO_STRING: " << "reported info";
+  LOG_TO_STRING(WARNING, no_error) << "LOG_TO_STRING: " << "reported warning";
+  LOG_TO_STRING(ERROR, NULL) << "LOG_TO_STRING: " << "reported error";
 }
 
 class TestLogSinkImpl : public LogSink {
@@ -375,7 +464,6 @@ class TestLogSinkImpl : public LogSink {
                     const char* base_filename, int line,
                     const struct tm* tm_time,
                     const char* message, size_t message_len) {
-    (void) full_filename;
     errors.push_back(
       ToString(severity, base_filename, line, tm_time, message, message_len));
   }
@@ -393,8 +481,22 @@ void TestLogSink() {
   LOG_TO_SINK(no_sink, WARNING) << "LOG_TO_SINK: " << "reported warning";
   LOG_TO_SINK(NULL, ERROR) << "LOG_TO_SINK: " << "reported error";
 
+  LOG_TO_SINK_BUT_NOT_TO_LOGFILE(&sink, INFO)
+      << "LOG_TO_SINK_BUT_NOT_TO_LOGFILE: " << "collected info";
+  LOG_TO_SINK_BUT_NOT_TO_LOGFILE(&sink, WARNING)
+      << "LOG_TO_SINK_BUT_NOT_TO_LOGFILE: " << "collected warning";
+  LOG_TO_SINK_BUT_NOT_TO_LOGFILE(&sink, ERROR)
+      << "LOG_TO_SINK_BUT_NOT_TO_LOGFILE: " << "collected error";
+
+  LOG_TO_SINK_BUT_NOT_TO_LOGFILE(no_sink, INFO)
+      << "LOG_TO_SINK_BUT_NOT_TO_LOGFILE: " << "thrashed info";
+  LOG_TO_SINK_BUT_NOT_TO_LOGFILE(no_sink, WARNING)
+      << "LOG_TO_SINK_BUT_NOT_TO_LOGFILE: " << "thrashed warning";
+  LOG_TO_SINK_BUT_NOT_TO_LOGFILE(NULL, ERROR)
+      << "LOG_TO_SINK_BUT_NOT_TO_LOGFILE: " << "thrashed error";
+
   LOG(INFO) << "Captured by LOG_TO_SINK:";
-  for (int i = 0; i < sink.errors.size(); ++i) {
+  for (size_t i = 0; i < sink.errors.size(); ++i) {
     LogMessage("foo", LogMessage::kNoLogPrefix, INFO).stream()
       << sink.errors[i];
   }
@@ -489,6 +591,7 @@ TEST(DeathCheckNN, Simple) {
 // Get list of file names that match pattern
 static void GetFiles(const string& pattern, vector<string>* files) {
   files->clear();
+#if defined(HAVE_GLOB_H)
   glob_t g;
   const int r = glob(pattern.c_str(), 0, NULL, &g);
   CHECK((r == 0) || (r == GLOB_NOMATCH)) << ": error matching " << pattern;
@@ -496,13 +599,32 @@ static void GetFiles(const string& pattern, vector<string>* files) {
     files->push_back(string(g.gl_pathv[i]));
   }
   globfree(&g);
+#elif defined(OS_WINDOWS)
+  WIN32_FIND_DATAA data;
+  HANDLE handle = FindFirstFileA(pattern.c_str(), &data);
+  size_t index = pattern.rfind('\\');
+  if (index == string::npos) {
+    LOG(FATAL) << "No directory separator.";
+  }
+  const string dirname = pattern.substr(0, index + 1);
+  if (FAILED(handle)) {
+    // Finding no files is OK.
+    return;
+  }
+  do {
+    files->push_back(dirname + data.cFileName);
+  } while (FindNextFileA(handle, &data));
+  LOG_SYSRESULT(FindClose(handle));
+#else
+# error There is no way to do glob.
+#endif
 }
 
 // Delete files patching pattern
 static void DeleteFiles(const string& pattern) {
   vector<string> files;
   GetFiles(pattern, &files);
-  for (int i = 0; i < files.size(); i++) {
+  for (size_t i = 0; i < files.size(); i++) {
     CHECK(unlink(files[i].c_str()) == 0) << ": " << strerror(errno);
   }
 }
@@ -527,18 +649,22 @@ static void CheckFile(const string& name, const string& expected_string) {
 
 static void TestBasename() {
   fprintf(stderr, "==== Test setting log file basename\n");
-  string dest = FLAGS_test_tmpdir + "/logging_test_basename";
+  const string dest = FLAGS_test_tmpdir + "/logging_test_basename";
   DeleteFiles(dest + "*");
 
   SetLogDestination(INFO, dest.c_str());
   LOG(INFO) << "message to new base";
   FlushLogFiles(INFO);
+
   CheckFile(dest, "message to new base");
 
+  // Release file handle for the destination file to unlock the file in Windows.
+  LogToStderr();
   DeleteFiles(dest + "*");
 }
 
 static void TestSymlink() {
+#ifndef OS_WINDOWS
   fprintf(stderr, "==== Test setting log file symlink\n");
   string dest = FLAGS_test_tmpdir + "/logging_test_symlink";
   string sym = FLAGS_test_tmpdir + "/symlinkbase";
@@ -553,6 +679,7 @@ static void TestSymlink() {
 
   DeleteFiles(dest + "*");
   DeleteFiles(sym + "*");
+#endif
 }
 
 static void TestExtension() {
@@ -572,6 +699,8 @@ static void TestExtension() {
   CHECK_EQ(filenames.size(), 1);
   CHECK(strstr(filenames[0].c_str(), "specialextension") != NULL);
 
+  // Release file handle for the destination file to unlock the file in Windows.
+  LogToStderr();
   DeleteFiles(dest + "*");
 }
 
@@ -582,8 +711,6 @@ struct MyLogger : public base::Logger {
                      time_t timestamp,
                      const char* message,
                      int length) {
-    (void) should_flush;
-    (void) timestamp;
     data.append(message, length);
   }
 
@@ -643,9 +770,10 @@ static void TestOneTruncate(const char *path, int64 limit, int64 keep,
   CHECK_ERR(lseek(fd, 0, SEEK_SET));
 
   // File should contain the suffix of the original file
-  char buf[statbuf.st_size + 1];
+  int buf_size = statbuf.st_size + 1;
+  char* buf = new char[buf_size];
   memset(buf, 0, sizeof(buf));
-  CHECK_ERR(read(fd, buf, sizeof(buf)));
+  CHECK_ERR(read(fd, buf, buf_size));
 
   const char *p = buf;
   int64 checked = 0;
@@ -655,9 +783,11 @@ static void TestOneTruncate(const char *path, int64 limit, int64 keep,
     checked += bytes;
   }
   close(fd);
+  delete[] buf;
 }
 
 static void TestTruncate() {
+#ifdef HAVE_UNISTD_H
   fprintf(stderr, "==== Test log truncation\n");
   string path = FLAGS_test_tmpdir + "/truncatefile";
 
@@ -673,8 +803,10 @@ static void TestTruncate() {
   TestOneTruncate(path.c_str(), 10, 50, 0, 10, 10);
   TestOneTruncate(path.c_str(), 50, 100, 0, 30, 30);
 
-  // MacOSX 10.4 doesn't fail in this case. Let's just ignore this test.
-#if !defined(OS_MACOSX)
+  // MacOSX 10.4 doesn't fail in this case.
+  // Windows doesn't have symlink.
+  // Let's just ignore this test for these cases.
+#if !defined(OS_MACOSX) && !defined(OS_WINDOWS)
   // Through a symlink should fail to truncate
   string linkname = path + ".link";
   unlink(linkname.c_str());
@@ -691,12 +823,17 @@ static void TestTruncate() {
   snprintf(fdpath, sizeof(fdpath), "/proc/self/fd/%d", fd);
   TestOneTruncate(fdpath, 10, 10, 10, 10, 10);
 #endif
+
+#endif
 }
 
 _START_GOOGLE_NAMESPACE_
+namespace glog_internal_namespace_ {
 extern  // in logging.cc
 bool SafeFNMatch_(const char* pattern, size_t patt_len,
                   const char* str, size_t str_len);
+} // namespace glog_internal_namespace_
+using glog_internal_namespace_::SafeFNMatch_;
 _END_GOOGLE_NAMESPACE_
 
 static bool WrapSafeFNMatch(string pattern, string str) {
@@ -843,7 +980,6 @@ class TestWaitingLogSink : public LogSink {
                     const char* base_filename, int line,
                     const struct tm* tm_time,
                     const char* message, size_t message_len) {
-    (void) full_filename;
     // Push it to Writer thread if we are the original logging thread.
     // Note: Something like ThreadLocalLogSink is a better choice
     //       to do thread-specific LogSink logic for real.
@@ -876,7 +1012,7 @@ static void TestLogSinkWaitTillSent() {
     LOG(WARNING) << "Message 3";
     SleepForMilliseconds(60);
   }
-  for (int i = 0; i < global_messages.size(); ++i) {
+  for (size_t i = 0; i < global_messages.size(); ++i) {
     LOG(INFO) << "Sink capture: " << global_messages[i];
   }
   CHECK_EQ(global_messages.size(), 3);
@@ -885,12 +1021,13 @@ static void TestLogSinkWaitTillSent() {
 TEST(Strerror, logging) {
   int errcode = EINTR;
   char *msg = strdup(strerror(errcode));
-  char buf[strlen(msg) + 1];
+  int buf_size = strlen(msg) + 1;
+  char *buf = new char[buf_size];
   CHECK_EQ(posix_strerror_r(errcode, NULL, 0), -1);
   buf[0] = 'A';
   CHECK_EQ(posix_strerror_r(errcode, buf, 0), -1);
   CHECK_EQ(buf[0], 'A');
-  CHECK_EQ(posix_strerror_r(errcode, NULL, sizeof(buf)), -1);
+  CHECK_EQ(posix_strerror_r(errcode, NULL, buf_size), -1);
 #if defined(OS_MACOSX) || defined(OS_FREEBSD)
   // MacOSX or FreeBSD considers this case is an error since there is
   // no enough space.
@@ -899,9 +1036,10 @@ TEST(Strerror, logging) {
   CHECK_EQ(posix_strerror_r(errcode, buf, 1), 0);
 #endif
   CHECK_STREQ(buf, "");
-  CHECK_EQ(posix_strerror_r(errcode, buf, sizeof(buf)), 0);
+  CHECK_EQ(posix_strerror_r(errcode, buf, buf_size), 0);
   CHECK_STREQ(buf, msg);
   free(msg);
+  delete[] buf;
 }
 
 // Simple routines to look at the sizes of generated code for LOG(FATAL) and
@@ -913,15 +1051,134 @@ void MyCheck(bool a, bool b) {
   CHECK_EQ(a, b);
 }
 
-struct UserDefinedClass {
-  bool operator==(const UserDefinedClass& rhs) const {
-    (void) rhs;
-    return true;
+#ifdef HAVE_LIB_GMOCK
+
+TEST(DVLog, Basic) {
+  ScopedMockLog log;
+
+#if NDEBUG
+  // We are expecting that nothing is logged.
+  EXPECT_CALL(log, Log(_, _, _)).Times(0);
+#else
+  EXPECT_CALL(log, Log(INFO, __FILE__, "debug log"));
+#endif
+
+  FLAGS_v = 1;
+  DVLOG(1) << "debug log";
+}
+
+TEST(DVLog, V0) {
+  ScopedMockLog log;
+
+  // We are expecting that nothing is logged.
+  EXPECT_CALL(log, Log(_, _, _)).Times(0);
+
+  FLAGS_v = 0;
+  DVLOG(1) << "debug log";
+}
+
+TEST(LogAtLevel, Basic) {
+  ScopedMockLog log;
+
+  // The function version outputs "logging.h" as a file name.
+  EXPECT_CALL(log, Log(WARNING, StrNe(__FILE__), "function version"));
+  EXPECT_CALL(log, Log(INFO, __FILE__, "macro version"));
+
+  int severity = WARNING;
+  LogAtLevel(severity, "function version");
+
+  severity = INFO;
+  // We can use the macro version as a C++ stream.
+  LOG_AT_LEVEL(severity) << "macro" << ' ' << "version";
+}
+
+TEST(TestExitOnDFatal, ToBeOrNotToBe) {
+  // Check the default setting...
+  EXPECT_TRUE(base::internal::GetExitOnDFatal());
+
+  // Turn off...
+  base::internal::SetExitOnDFatal(false);
+  EXPECT_FALSE(base::internal::GetExitOnDFatal());
+
+  // We don't die.
+  {
+    ScopedMockLog log;
+    //EXPECT_CALL(log, Log(_, _, _)).Times(AnyNumber());
+    // LOG(DFATAL) has severity FATAL if debugging, but is
+    // downgraded to ERROR if not debugging.
+    const LogSeverity severity =
+#ifdef NDEBUG
+        ERROR;
+#else
+        FATAL;
+#endif
+    EXPECT_CALL(log, Log(severity, __FILE__, "This should not be fatal"));
+    LOG(DFATAL) << "This should not be fatal";
   }
+
+  // Turn back on...
+  base::internal::SetExitOnDFatal(true);
+  EXPECT_TRUE(base::internal::GetExitOnDFatal());
+
+#ifdef GTEST_HAS_DEATH_TEST
+  // Death comes on little cats' feet.
+  EXPECT_DEBUG_DEATH({
+      LOG(DFATAL) << "This should be fatal in debug mode";
+    }, "This should be fatal in debug mode");
+#endif
+}
+
+#ifdef HAVE_STACKTRACE
+
+static void BacktraceAtHelper() {
+  LOG(INFO) << "Not me";
+
+// The vertical spacing of the next 3 lines is significant.
+  LOG(INFO) << "Backtrace me";
+}
+static int kBacktraceAtLine = __LINE__ - 2;  // The line of the LOG(INFO) above
+
+TEST(LogBacktraceAt, DoesNotBacktraceWhenDisabled) {
+  StrictMock<ScopedMockLog> log;
+
+  FLAGS_log_backtrace_at = "";
+
+  EXPECT_CALL(log, Log(_, _, "Backtrace me"));
+  EXPECT_CALL(log, Log(_, _, "Not me"));
+
+  BacktraceAtHelper();
+}
+
+TEST(LogBacktraceAt, DoesBacktraceAtRightLineWhenEnabled) {
+  StrictMock<ScopedMockLog> log;
+
+  char where[100];
+  snprintf(where, 100, "%s:%d", const_basename(__FILE__), kBacktraceAtLine);
+  FLAGS_log_backtrace_at = where;
+
+  // The LOG at the specified line should include a stacktrace which includes
+  // the name of the containing function, followed by the log message.
+  // We use HasSubstr()s instead of ContainsRegex() for environments
+  // which don't have regexp.
+  EXPECT_CALL(log, Log(_, _, AllOf(HasSubstr("stacktrace:"),
+                                   HasSubstr("BacktraceAtHelper"),
+                                   HasSubstr("main"),
+                                   HasSubstr("Backtrace me"))));
+  // Other LOGs should not include a backtrace.
+  EXPECT_CALL(log, Log(_, _, "Not me"));
+
+  BacktraceAtHelper();
+}
+
+#endif // HAVE_STACKTRACE
+
+#endif // HAVE_LIB_GMOCK
+
+struct UserDefinedClass {
+  bool operator==(const UserDefinedClass& rhs) const { return true; }
 };
 
 inline ostream& operator<<(ostream& out, const UserDefinedClass& u) {
-  (void) u;
   out << "OK";
   return out;
 }

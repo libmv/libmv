@@ -1,13 +1,43 @@
-// Copyright 2008 Google Inc. All Rights Reserved.
-// Author: hamaji@google.com (Shinichiro Hamaji)
+// Copyright (c) 2008, Google Inc.
+// All rights reserved.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are
+// met:
+//
+//     * Redistributions of source code must retain the above copyright
+// notice, this list of conditions and the following disclaimer.
+//     * Redistributions in binary form must reproduce the above
+// copyright notice, this list of conditions and the following disclaimer
+// in the documentation and/or other materials provided with the
+// distribution.
+//     * Neither the name of Google Inc. nor the names of its
+// contributors may be used to endorse or promote products derived from
+// this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+// Author: Shinichiro Hamaji
 //
 // Define utilties for glog internal usage.
 
 #ifndef UTILITIES_H__
 #define UTILITIES_H__
 
-#if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__CYGWIN__) || defined(__CYGWIN32__)
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32__)
 # define OS_WINDOWS
+#elif defined(__CYGWIN__) || defined(__CYGWIN32__)
+# define OS_CYGWIN
 #elif defined(linux) || defined(__linux) || defined(__linux__)
 # define OS_LINUX
 #elif defined(macintosh) || defined(__APPLE__) || defined(__APPLE_CC__)
@@ -40,6 +70,10 @@
 
 #include <string>
 
+#if defined(OS_WINDOWS)
+# include "port.h"
+#endif
+
 #include "config.h"
 #include "glog/logging.h"
 
@@ -70,7 +104,7 @@
 #  define STACKTRACE_H "stacktrace_x86-inl.h"
 # elif defined(__x86_64__) && __GNUC__ >= 2
 #  define STACKTRACE_H "stacktrace_x86_64-inl.h"
-# elif ((__ppc__) || defined(__PPC__)) && __GNUC__ >= 2
+# elif (defined(__ppc__) || defined(__PPC__)) && __GNUC__ >= 2
 #  define STACKTRACE_H "stacktrace_powerpc-inl.h"
 # endif
 #endif
@@ -89,6 +123,11 @@
 #elif defined(OS_MACOSX) && defined(HAVE_DLADDR)
 // Use dladdr to symbolize.
 # define HAVE_SYMBOLIZE
+#endif
+
+#ifndef ARRAYSIZE
+// There is a better way, but this is good enough for our purpose.
+# define ARRAYSIZE(a) (sizeof(a) / sizeof(*(a)))
 #endif
 
 _START_GOOGLE_NAMESPACE_
@@ -112,9 +151,18 @@ int64 CycleClock_Now();
 
 int64 UsecToCycles(int64 usec);
 
+typedef double WallTime;
+WallTime WallTime_Now();
+
 int32 GetMainThreadPid();
 
+pid_t GetTID();
+
 const std::string& MyUserName();
+
+// Get the part of filepath after the last path separator.
+// (Doesn't modify filepath, contrary to basename() in libgen.h.)
+const char* const_basename(const char* filepath);
 
 // Wrapper of __sync_val_compare_and_swap. If the GCC extension isn't
 // defined, we try the CPU specific logics (we only support x86 and
@@ -143,6 +191,23 @@ inline T sync_val_compare_and_swap(T* ptr, T oldval, T newval) {
   return ret;
 #endif
 }
+
+void DumpStackTraceToString(std::string* stacktrace);
+
+struct CrashReason {
+  CrashReason() : filename(0), line_number(0), message(0), depth(0) {}
+
+  const char* filename;
+  int line_number;
+  const char* message;
+
+  // We'll also store a bit of stack trace context at the time of crash as
+  // it may not be available later on.
+  void* stack[32];
+  int depth;
+};
+
+void SetCrashReason(const CrashReason* r);
 
 }  // namespace glog_internal_namespace_
 

@@ -1,4 +1,32 @@
-// Copyright 2006 Google Inc. All Rights Reserved.
+// Copyright (c) 2006, Google Inc.
+// All rights reserved.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are
+// met:
+//
+//     * Redistributions of source code must retain the above copyright
+// notice, this list of conditions and the following disclaimer.
+//     * Redistributions in binary form must reproduce the above
+// copyright notice, this list of conditions and the following disclaimer
+// in the documentation and/or other materials provided with the
+// distribution.
+//     * Neither the name of Google Inc. nor the names of its
+// contributors may be used to endorse or promote products derived from
+// this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
 // Author: Satoru Takabayashi
 //
 // Unit tests for functions in symbolize.cc.
@@ -110,10 +138,9 @@ static void *g_pc_to_symbolize;
 static char g_symbolize_buffer[4096];
 static char *g_symbolize_result;
 
-static void EmptySignalHandler(int signo) {(void) signo;}
+static void EmptySignalHandler(int signo) {}
 
 static void SymbolizeSignalHandler(int signo) {
-  (void) signo;
   if (Symbolize(g_pc_to_symbolize, g_symbolize_buffer,
                 sizeof(g_symbolize_buffer))) {
     g_symbolize_result = g_symbolize_buffer;
@@ -166,8 +193,7 @@ static const char *SymbolizeStackConsumption(void *pc, int *stack_consumed) {
   memset(altstack, kAlternateStackFillValue, kAlternateStackSize);
 
   // Set up the alt-signal-stack (and save the older one).
-  stack_t sigstk;
-  memset(&sigstk, 0, sizeof(sigstk));
+  stack_t sigstk = {};  // Zero-clear.
   stack_t old_sigstk;
   sigstk.ss_sp = altstack;
   sigstk.ss_size = kAlternateStackSize;
@@ -175,8 +201,7 @@ static const char *SymbolizeStackConsumption(void *pc, int *stack_consumed) {
   CHECK_ERR(sigaltstack(&sigstk, &old_sigstk));
 
   // Set up SIGUSR1 and SIGUSR2 signal handlers (and save the older ones).
-  struct sigaction sa;
-  memset(&sa, 0, sizeof(sa));
+  struct sigaction sa = {};  // Zero-clear;
   struct sigaction old_sa1, old_sa2;
   sigemptyset(&sa.sa_mask);
   sa.sa_flags = SA_ONSTACK;
@@ -309,9 +334,9 @@ void ATTRIBUTE_NOINLINE TestWithReturnAddress() {
 }
 
 int main(int argc, char **argv) {
-  (void) argc;
   FLAGS_logtostderr = true;
   InitGoogleLogging(argv[0]);
+  InitGoogleTest(&argc, argv);
 #ifdef HAVE_SYMBOLIZE
   // We don't want to get affected by the callback interface, that may be
   // used to install some callback function at InitGoogle() time.

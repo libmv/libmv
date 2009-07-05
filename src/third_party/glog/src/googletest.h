@@ -1,10 +1,43 @@
+// Copyright (c) 2009, Google Inc.
+// All rights reserved.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are
+// met:
+//
+//     * Redistributions of source code must retain the above copyright
+// notice, this list of conditions and the following disclaimer.
+//     * Redistributions in binary form must reproduce the above
+// copyright notice, this list of conditions and the following disclaimer
+// in the documentation and/or other materials provided with the
+// distribution.
+//     * Neither the name of Google Inc. nor the names of its
+// contributors may be used to endorse or promote products derived from
+// this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+// Author: Shinichiro Hamaji
+//   (based on googletest: http://code.google.com/p/googletest/)
+
 #ifdef GOOGLETEST_H__
 #error You must not include this file twice.
 #endif
 #define GOOGLETEST_H__
 
+#include "utilities.h"
+
 #include <ctype.h>
-#include <cstdlib>
 #include <setjmp.h>
 #include <time.h>
 
@@ -13,25 +46,69 @@
 #include <string>
 #include <vector>
 
+#include <stdio.h>
+#include <stdlib.h>
+
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#include <unistd.h>
+#ifdef HAVE_UNISTD_H
+# include <unistd.h>
+#endif
 
-#include "config.h"
-#include "third_party/gflags/gflags.h"
+#include "base/commandlineflags.h"
 
 using std::map;
 using std::string;
 using std::vector;
 
-DECLARE_string(test_tmpdir);
-DECLARE_string(test_srcdir);
-DECLARE_int32(benchmark_iters);
+_START_GOOGLE_NAMESPACE_
+
+extern GOOGLE_GLOG_DLL_DECL void (*g_logging_fail_func)();
+
+_END_GOOGLE_NAMESPACE_
+
+#undef GOOGLE_GLOG_DLL_DECL
+#define GOOGLE_GLOG_DLL_DECL
+
+static string GetTempDir() {
+#ifndef OS_WINDOWS
+  return "/tmp";
+#else
+  char tmp[MAX_PATH];
+  GetTempPathA(MAX_PATH, tmp);
+  return tmp;
+#endif
+}
+
+#ifdef OS_WINDOWS
+// The test will run in glog/vsproject/<project name>
+// (e.g., glog/vsproject/logging_unittest).
+static const char TEST_SRC_DIR[] = "../..";
+#else
+static const char TEST_SRC_DIR[] = ".";
+#endif
+
+DEFINE_string(test_tmpdir, GetTempDir(), "Dir we use for temp files");
+DEFINE_string(test_srcdir, TEST_SRC_DIR,
+              "Source-dir root, needed to find glog_unittest_flagfile");
+#ifdef NDEBUG
+DEFINE_int32(benchmark_iters, 100000000, "Number of iterations per benchmark");
+#else
+DEFINE_int32(benchmark_iters, 100000, "Number of iterations per benchmark");
+#endif
+
+#ifdef HAVE_LIB_GTEST
+# include <gtest/gtest.h>
+// Use our ASSERT_DEATH implementation.
+# undef ASSERT_DEATH
+# undef ASSERT_DEBUG_DEATH
+using testing::InitGoogleTest;
+#else
 
 _START_GOOGLE_NAMESPACE_
 
-extern void (*g_logging_fail_func)();
+void InitGoogleTest(int* argc, char** argv) {}
 
 // The following is some bare-bones testing infrastructure
 
@@ -90,13 +167,44 @@ extern void (*g_logging_fail_func)();
     }                                                                   \
   } while (0)
 
+vector<void (*)()> g_testlist;  // the tests to run
+
+#define TEST(a, b)                                      \
+  struct Test_##a##_##b {                               \
+    Test_##a##_##b() { g_testlist.push_back(&Run); }    \
+    static void Run() { FlagSaver fs; RunTest(); }      \
+    static void RunTest();                              \
+  };                                                    \
+  static Test_##a##_##b g_test_##a##_##b;               \
+  void Test_##a##_##b::RunTest()
+
+
+static int RUN_ALL_TESTS() {
+  vector<void (*)()>::const_iterator it;
+  for (it = g_testlist.begin(); it != g_testlist.end(); ++it) {
+    (*it)();
+  }
+  fprintf(stderr, "Passed %d tests\n\nPASS\n", (int)g_testlist.size());
+  return 0;
+}
+
+_END_GOOGLE_NAMESPACE_
+
+#endif  // ! HAVE_LIB_GTEST
+
+_START_GOOGLE_NAMESPACE_
+
 static bool g_called_abort;
 static jmp_buf g_jmp_buf;
-void CalledAbort() {
+static void CalledAbort() {
   g_called_abort = true;
   longjmp(g_jmp_buf, 1);
 }
 
+#ifdef OS_WINDOWS
+// TODO(hamaji): Death test somehow doesn't work in Windows.
+#define ASSERT_DEATH(fn, msg)
+#else
 #define ASSERT_DEATH(fn, msg)                                           \
   do {                                                                  \
     g_called_abort = false;                                             \
@@ -111,33 +219,13 @@ void CalledAbort() {
       exit(1);                                                          \
     }                                                                   \
   } while (0)
+#endif
 
 #ifdef NDEBUG
 #define ASSERT_DEBUG_DEATH(fn, msg)
 #else
 #define ASSERT_DEBUG_DEATH(fn, msg) ASSERT_DEATH(fn, msg)
 #endif  // NDEBUG
-
-vector<void (*)()> g_testlist;  // the tests to run
-
-#define TEST(a, b)                                      \
-  struct Test_##a##_##b {                               \
-    Test_##a##_##b() { g_testlist.push_back(&Run); }    \
-    static void Run() { FlagSaver fs; RunTest(); }      \
-    static void RunTest();                              \
-  };                                                    \
-  static Test_##a##_##b g_test_##a##_##b;               \
-  void Test_##a##_##b::RunTest()
-
-
-int RUN_ALL_TESTS() {
-  vector<void (*)()>::const_iterator it;
-  for (it = g_testlist.begin(); it != g_testlist.end(); ++it) {
-    (*it)();
-  }
-  fprintf(stderr, "Passed %d tests\n\nPASS\n", (int)g_testlist.size());
-  return 0;
-}
 
 // Benchmark tools.
 
@@ -152,7 +240,7 @@ class BenchmarkRegisterer {
   }
 };
 
-void RunSpecifiedBenchmarks() {
+static void RunSpecifiedBenchmarks() {
   int iter_cnt = FLAGS_benchmark_iters;
   puts("Benchmark\tTime(ns)\tIterations");
   for (map<string, void (*)(int)>::const_iterator iter = g_benchlist.begin();
@@ -231,7 +319,7 @@ static void CaptureTestOutput(int fd, const string & filename) {
   CHECK(s_captured_streams[fd] == NULL);
   s_captured_streams[fd] = new CapturedStream(fd, filename);
 }
-void CaptureTestStderr() {
+static void CaptureTestStderr() {
   CaptureTestOutput(STDERR_FILENO, FLAGS_test_tmpdir + "/captured.err");
 }
 // Return the size (in bytes) of a file
@@ -283,7 +371,7 @@ static string GetCapturedTestOutput(int fd) {
   return content;
 }
 // Get the captured stderr of a test as a string.
-string GetCapturedTestStderr() {
+static string GetCapturedTestStderr() {
   return GetCapturedTestOutput(STDERR_FILENO);
 }
 
@@ -308,15 +396,13 @@ static string MungeLine(const string& line) {
   iss >> logcode_date;
   while (!IsLoggingPrefix(logcode_date)) {
     before += " " + logcode_date;
-    if (iss.eof()) {
+    if (!(iss >> logcode_date)) {
       // We cannot find the header of log output.
       return before;
     }
-    iss >> logcode_date;
   }
   if (!before.empty()) before += " ";
   iss >> time;
-  CHECK_EQ(6, time.size());
   iss >> thread_lineinfo;
   CHECK(!thread_lineinfo.empty());
   if (thread_lineinfo[thread_lineinfo.size() - 1] != ']') {
@@ -353,8 +439,10 @@ static string Munge(const string& filename) {
   while (fgets(buf, 4095, fp)) {
     string line = MungeLine(buf);
     char null_str[256];
-    sprintf(null_str, "%p", (void*) NULL);
+    sprintf(null_str, "%p", NULL);
     StringReplace(&line, "__NULLP__", null_str);
+    // Remove 0x prefix produced by %p. VC++ doesn't put the prefix.
+    StringReplace(&line, " 0x", " ");
 
     char errmsg_buf[100];
     posix_strerror_r(0, errmsg_buf, sizeof(errmsg_buf));
@@ -377,12 +465,11 @@ static string Munge(const string& filename) {
 
 static void WriteToFile(const string& body, const string& file) {
   FILE* fp = fopen(file.c_str(), "wb");
-  size_t ignored = fwrite(body.data(), 1, body.size(), fp);
-  (void) ignored;
+  fwrite(body.data(), 1, body.size(), fp);
   fclose(fp);
 }
 
-bool MungeAndDiffTestStderr(const string& golden_filename) {
+static bool MungeAndDiffTestStderr(const string& golden_filename) {
   CapturedStream* cap = s_captured_streams[STDERR_FILENO];
   CHECK(cap) << ": did you forget CaptureTestStderr()?";
 
@@ -431,17 +518,32 @@ struct FlagSaver {
 };
 #endif
 
-// TODO(hamaji): Make it portable.
 class Thread {
  public:
-  virtual ~Thread() {}
-  void SetJoinable(bool joinable) {(void) joinable;}
+  void SetJoinable(bool joinable) {}
+#if defined(HAVE_PTHREAD)
   void Start() {
     pthread_create(&th_, NULL, &Thread::InvokeThread, this);
   }
   void Join() {
     pthread_join(th_, NULL);
   }
+#elif defined(OS_WINDOWS) || defined(OS_CYGWIN)
+  void Start() {
+    handle_ = CreateThread(NULL,
+                           0,
+                           (LPTHREAD_START_ROUTINE)&Thread::InvokeThread,
+                           (LPVOID)this,
+                           0,
+                           &th_);
+    CHECK(handle_) << "CreateThread";
+  }
+  void Join() {
+    WaitForSingleObject(handle_, INFINITE);
+  }
+#else
+# error No thread implementation.
+#endif
 
  protected:
   virtual void Run() = 0;
@@ -452,12 +554,20 @@ class Thread {
     return NULL;
   }
 
+#if defined(OS_WINDOWS) || defined(OS_CYGWIN)
+  HANDLE handle_;
+  DWORD th_;
+#else
   pthread_t th_;
+#endif
 };
 
-// TODO(hamaji): Make it portable.
-void SleepForMilliseconds(int t) {
+static void SleepForMilliseconds(int t) {
+#ifndef OS_WINDOWS
   usleep(t * 1000);
+#else
+  Sleep(t);
+#endif
 }
 
 // Add hook for operator new to ensure there are no memory allocation.

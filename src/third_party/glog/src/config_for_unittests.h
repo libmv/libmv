@@ -1,4 +1,4 @@
-// Copyright (c) 2007, Google Inc.
+// Copyright (c) 2008, Google Inc.
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -27,58 +27,40 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef BASE_LOG_SEVERITY_H__
-#define BASE_LOG_SEVERITY_H__
+// ---
+// All Rights Reserved.
+//
+// Author: Craig Silverstein
+// Copied from google-perftools and modified by Shinichiro Hamaji
+//
+// This file is needed for windows -- unittests are not part of the
+// glog dll, but still want to include config.h just like the
+// dll does, so they can use internal tools and APIs for testing.
+//
+// The problem is that config.h declares GOOGLE_GLOG_DLL_DECL to be
+// for exporting symbols, but the unittest needs to *import* symbols
+// (since it's not the dll).
+//
+// The solution is to have this file, which is just like config.h but
+// sets GOOGLE_GLOG_DLL_DECL to do a dllimport instead of a dllexport.
+//
+// The reason we need this extra GOOGLE_GLOG_DLL_DECL_FOR_UNITTESTS
+// variable is in case people want to set GOOGLE_GLOG_DLL_DECL explicitly
+// to something other than __declspec(dllexport).  In that case, they
+// may want to use something other than __declspec(dllimport) for the
+// unittest case.  For that, we allow folks to define both
+// GOOGLE_GLOG_DLL_DECL and GOOGLE_GLOG_DLL_DECL_FOR_UNITTESTS explicitly.
+//
+// NOTE: This file is equivalent to config.h on non-windows systems,
+// which never defined GOOGLE_GLOG_DLL_DECL_FOR_UNITTESTS and always
+// define GOOGLE_GLOG_DLL_DECL to the empty string.
 
-// Annoying stuff for windows -- makes sure clients can import these functions
-#ifndef GOOGLE_GLOG_DLL_DECL
-# if defined(_WIN32) && !defined(__CYGWIN__)
-#   define GOOGLE_GLOG_DLL_DECL  __declspec(dllimport)
-# else
-#   define GOOGLE_GLOG_DLL_DECL
-# endif
-#endif
+#include "config.h"
 
-// Variables of type LogSeverity are widely taken to lie in the range
-// [0, NUM_SEVERITIES-1].  Be careful to preserve this assumption if
-// you ever need to change their values or add a new severity.
-typedef int LogSeverity;
-
-const int INFO = 0, WARNING = 1, ERROR = 2, FATAL = 3, NUM_SEVERITIES = 4;
-
-// DFATAL is FATAL in debug mode, ERROR in normal mode
-#ifdef NDEBUG
-#define DFATAL_LEVEL ERROR
+#undef GOOGLE_GLOG_DLL_DECL
+#ifdef GOOGLE_GLOG_DLL_DECL_FOR_UNITTESTS
+# define GOOGLE_GLOG_DLL_DECL  GOOGLE_GLOG_DLL_DECL_FOR_UNITTESTS
 #else
-#define DFATAL_LEVEL FATAL
+// if DLL_DECL_FOR_UNITTESTS isn't defined, use ""
+# define GOOGLE_GLOG_DLL_DECL
 #endif
-
-extern GOOGLE_GLOG_DLL_DECL const char* const LogSeverityNames[NUM_SEVERITIES];
-
-// NDEBUG usage helpers related to (RAW_)DCHECK:
-//
-// DEBUG_MODE is for small !NDEBUG uses like
-//   if (DEBUG_MODE) foo.CheckThatFoo();
-// instead of substantially more verbose
-//   #ifndef NDEBUG
-//     foo.CheckThatFoo();
-//   #endif
-//
-// IF_DEBUG_MODE is for small !NDEBUG uses like
-//   IF_DEBUG_MODE( string error; )
-//   DCHECK(Foo(&error)) << error;
-// instead of substantially more verbose
-//   #ifndef NDEBUG
-//     string error;
-//     DCHECK(Foo(&error)) << error;
-//   #endif
-//
-#ifdef NDEBUG
-enum { DEBUG_MODE = 0 };
-#define IF_DEBUG_MODE(x)
-#else
-enum { DEBUG_MODE = 1 };
-#define IF_DEBUG_MODE(x) x
-#endif
-
-#endif  // BASE_LOG_SEVERITY_H__

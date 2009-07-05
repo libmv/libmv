@@ -1,15 +1,51 @@
-// Copyright 2008 Google Inc. All Rights Reserved.
-// Author: hamaji@google.com (Shinichiro Hamaji)
+// Copyright (c) 2008, Google Inc.
+// All rights reserved.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are
+// met:
+//
+//     * Redistributions of source code must retain the above copyright
+// notice, this list of conditions and the following disclaimer.
+//     * Redistributions in binary form must reproduce the above
+// copyright notice, this list of conditions and the following disclaimer
+// in the documentation and/or other materials provided with the
+// distribution.
+//     * Neither the name of Google Inc. nor the names of its
+// contributors may be used to endorse or promote products derived from
+// this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+// Author: Shinichiro Hamaji
 
 #include "utilities.h"
 
+#include <stdio.h>
+#include <stdlib.h>
+
 #include <signal.h>
-#include <sys/time.h>
+#ifdef HAVE_SYS_TIME_H
+# include <sys/time.h>
+#endif
 #include <time.h>
+#if defined(HAVE_SYSCALL_H)
+#include <syscall.h>                 // for syscall()
+#elif defined(HAVE_SYS_SYSCALL_H)
+#include <sys/syscall.h>                 // for syscall()
+#endif
 
 #include "base/googleinit.h"
-#include "stacktrace.h"
-#include "symbolize.h"
 
 using std::string;
 
@@ -17,6 +53,8 @@ _START_GOOGLE_NAMESPACE_
 
 static const char* g_program_invocation_short_name = NULL;
 static pthread_t g_main_thread_id;
+
+_END_GOOGLE_NAMESPACE_
 
 // The following APIs are all internal.
 #ifdef HAVE_STACKTRACE
@@ -28,6 +66,8 @@ static pthread_t g_main_thread_id;
 DEFINE_bool(symbolize_stacktrace, true,
             "Symbolize the stack trace in the tombstone");
 
+_START_GOOGLE_NAMESPACE_
+
 typedef void DebugWriter(const char*, void*);
 
 // The %p field width for printf() functions is two characters per byte.
@@ -35,13 +75,14 @@ typedef void DebugWriter(const char*, void*);
 static const int kPrintfPointerFieldWidth = 2 + 2 * sizeof(void*);
 
 static void DebugWriteToStderr(const char* data, void *unused) {
-  (void) unused;
   // This one is signal-safe.
-  int ignored = write(STDERR_FILENO, data, strlen(data));
-  (void) ignored;
+  write(STDERR_FILENO, data, strlen(data));
 }
 
-#ifndef __APPLE__
+void DebugWriteToString(const char* data, void *arg) {
+  reinterpret_cast<string*>(arg)->append(data);
+}
+
 // Print a program counter and its symbol name.
 static void DumpPCAndSymbol(DebugWriter *writerfn, void *arg, void *pc,
                             const char * const prefix) {
@@ -58,9 +99,7 @@ static void DumpPCAndSymbol(DebugWriter *writerfn, void *arg, void *pc,
            prefix, kPrintfPointerFieldWidth, pc, symbol);
   writerfn(buf, arg);
 }
-#endif
 
-/* Keir: Unused; comment out to silence GCC.
 // Print a program counter and the corresponding stack frame size.
 static void DumpPCAndFrameSize(DebugWriter *writerfn, void *arg, void *pc,
                                int framesize, const char * const prefix) {
@@ -74,7 +113,6 @@ static void DumpPCAndFrameSize(DebugWriter *writerfn, void *arg, void *pc,
   }
   writerfn(buf, arg);
 }
-*/
 
 static void DumpPC(DebugWriter *writerfn, void *arg, void *pc,
                    const char * const prefix) {
@@ -88,7 +126,7 @@ static void DumpPC(DebugWriter *writerfn, void *arg, void *pc,
 static void DumpStackTrace(int skip_count, DebugWriter *writerfn, void *arg) {
   // Print stack trace
   void* stack[32];
-  int depth = GetStackTrace(stack, sizeof(stack)/sizeof(*stack), skip_count+1);
+  int depth = GetStackTrace(stack, ARRAYSIZE(stack), skip_count+1);
   for (int i = 0; i < depth; i++) {
 #if defined(HAVE_SYMBOLIZE)
     if (FLAGS_symbolize_stacktrace) {
@@ -107,8 +145,7 @@ static void DumpStackTraceAndExit() {
 
   // Set the default signal handler for SIGABRT, to avoid invoking our
   // own signal handler installed by InstallFailedSignalHandler().
-  struct sigaction sig_action;
-  memset(&sig_action, 0, sizeof(sig_action));
+  struct sigaction sig_action = {};  // Zero-clear.
   sigemptyset(&sig_action.sa_mask);
   sig_action.sa_handler = SIG_DFL;
   sigaction(SIGABRT, &sig_action, NULL);
@@ -116,7 +153,11 @@ static void DumpStackTraceAndExit() {
   abort();
 }
 
+_END_GOOGLE_NAMESPACE_
+
 #endif  // HAVE_STACKTRACE
+
+_START_GOOGLE_NAMESPACE_
 
 namespace glog_internal_namespace_ {
 
@@ -143,6 +184,30 @@ bool is_default_thread() {
   }
 }
 
+#ifdef OS_WINDOWS
+struct timeval {
+  long tv_sec, tv_usec;
+};
+
+// Based on: http://www.google.com/codesearch/p?hl=en#dR3YEbitojA/os_win32.c&q=GetSystemTimeAsFileTime%20license:bsd
+// See COPYING for copyright information.
+static int gettimeofday(struct timeval *tv, void* tz) {
+#define EPOCHFILETIME (116444736000000000ULL)
+  FILETIME ft;
+  LARGE_INTEGER li;
+  uint64 tt;
+
+  GetSystemTimeAsFileTime(&ft);
+  li.LowPart = ft.dwLowDateTime;
+  li.HighPart = ft.dwHighDateTime;
+  tt = (li.QuadPart - EPOCHFILETIME) / 10;
+  tv->tv_sec = tt / 1000000;
+  tv->tv_usec = tt % 1000000;
+
+  return 0;
+}
+#endif
+
 int64 CycleClock_Now() {
   // TODO(hamaji): temporary impementation - it might be too slow.
   struct timeval tv;
@@ -154,9 +219,60 @@ int64 UsecToCycles(int64 usec) {
   return usec;
 }
 
+WallTime WallTime_Now() {
+  // Now, cycle clock is retuning microseconds since the epoch.
+  return CycleClock_Now() * 0.000001;
+}
+
 static int32 g_main_thread_pid = getpid();
 int32 GetMainThreadPid() {
   return g_main_thread_pid;
+}
+
+pid_t GetTID() {
+  // On Linux and FreeBSD, we try to use gettid().
+#if defined OS_LINUX || defined OS_FREEBSD || defined OS_MACOSX
+#ifndef __NR_gettid
+#ifdef OS_MACOSX
+#define __NR_gettid SYS_gettid
+#elif ! defined __i386__
+#error "Must define __NR_gettid for non-x86 platforms"
+#else
+#define __NR_gettid 224
+#endif
+#endif
+  static bool lacks_gettid = false;
+  if (!lacks_gettid) {
+    pid_t tid = syscall(__NR_gettid);
+    if (tid != -1) {
+      return tid;
+    }
+    // Technically, this variable has to be volatile, but there is a small
+    // performance penalty in accessing volatile variables and there should
+    // not be any serious adverse effect if a thread does not immediately see
+    // the value change to "true".
+    lacks_gettid = true;
+  }
+#endif  // OS_LINUX || OS_FREEBSD
+
+  // If gettid() could not be used, we use one of the following.
+#if defined OS_LINUX
+  return getpid();  // Linux:  getpid returns thread ID when gettid is absent
+#elif defined OS_WINDOWS || defined OS_CYGWIN
+  return GetCurrentThreadId();
+#else
+  // If none of the techniques above worked, we use pthread_self().
+  return (pid_t)pthread_self();
+#endif
+}
+
+const char* const_basename(const char* filepath) {
+  const char* base = strrchr(filepath, '/');
+#ifdef OS_WINDOWS  // Look for either path separator in Windows
+  if (!base)
+    base = strrchr(filepath, '\\');
+#endif
+  return base ? (base+1) : filepath;
 }
 
 static string g_my_user_name;
@@ -174,9 +290,27 @@ static void MyUserNameInitializer() {
 }
 REGISTER_MODULE_INITIALIZER(utilities, MyUserNameInitializer());
 
+#ifdef HAVE_STACKTRACE
+void DumpStackTraceToString(string* stacktrace) {
+  DumpStackTrace(1, DebugWriteToString, stacktrace);
+}
+#endif
+
+// We use an atomic operation to prevent problems with calling CrashReason
+// from inside the Mutex implementation (potentially through RAW_CHECK).
+static const CrashReason* g_reason = 0;
+
+void SetCrashReason(const CrashReason* r) {
+  sync_val_compare_and_swap(&g_reason,
+                            reinterpret_cast<const CrashReason*>(0),
+                            r);
+}
+
 }  // namespace glog_internal_namespace_
 
 void InitGoogleLogging(const char* argv0) {
+  CHECK(!IsGoogleLoggingInitialized())
+      << "You called InitGoogleLogging() twice!";
   const char* slash = strrchr(argv0, '/');
 #ifdef OS_WINDOWS
   if (!slash)  slash = strrchr(argv0, '\\');

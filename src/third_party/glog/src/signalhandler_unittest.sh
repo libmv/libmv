@@ -1,5 +1,34 @@
 #! /bin/sh
-# Copyright 2008 Google, Inc.  All Rights Reserved.
+#
+# Copyright (c) 2008, Google Inc.
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are
+# met:
+#
+#     * Redistributions of source code must retain the above copyright
+# notice, this list of conditions and the following disclaimer.
+#     * Redistributions in binary form must reproduce the above
+# copyright notice, this list of conditions and the following disclaimer
+# in the documentation and/or other materials provided with the
+# distribution.
+#     * Neither the name of Google Inc. nor the names of its
+# contributors may be used to endorse or promote products derived from
+# this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+# A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+# OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+# LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+# DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+# THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
 # Author: Satoru Takabayashi
 #
 # Unit tests for signalhandler.cc.
@@ -13,6 +42,7 @@ BINDIR=".libs"
 LIBGLOG="$BINDIR/libglog.so"
 
 BINARY="$BINDIR/signalhandler_unittest"
+LOG_INFO="./signalhandler_unittest.INFO"
 
 # Remove temporary files.
 rm -f signalhandler.out*
@@ -43,12 +73,16 @@ if [ x`uname -p` = x"powerpc" ]; then
 fi
 
 # Test for a case the program kills itself by SIGSEGV.
-$BINARY segv 2> signalhandler.out1
+GOOGLE_LOG_DIR=. $BINARY segv 2> signalhandler.out1
 for pattern in SIGSEGV 0xdead main "Aborted at [0-9]"; do
   if ! grep --quiet "$pattern" signalhandler.out1; then
     die "'$pattern' should appear in the output"
   fi
 done
+if ! grep --quiet "a message before segv" $LOG_INFO; then
+  die "'a message before segv' should appear in the INFO log"
+fi
+rm -f $LOG_INFO
 
 # Test for a case the program is killed by this shell script.
 # $! = the process id of the last command run in the background.

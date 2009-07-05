@@ -1,4 +1,32 @@
-// Copyright 2008 Google Inc. All Rights Reserved.
+// Copyright (c) 2008, Google Inc.
+// All rights reserved.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are
+// met:
+//
+//     * Redistributions of source code must retain the above copyright
+// notice, this list of conditions and the following disclaimer.
+//     * Redistributions in binary form must reproduce the above
+// copyright notice, this list of conditions and the following disclaimer
+// in the documentation and/or other materials provided with the
+// distribution.
+//     * Neither the name of Google Inc. nor the names of its
+// contributors may be used to endorse or promote products derived from
+// this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
 // Author: Satoru Takabayashi
 //
 // Implementation of InstallFailureSignalHandler().
@@ -13,17 +41,9 @@
 #ifdef HAVE_UCONTEXT_H
 # include <ucontext.h>
 #endif
-// TODO(keir): This almost certainly needs to be put into a proper configure
-// check.
-# ifndef REG_EIP
-#  define REG_EIP REG_RIP
-# endif
 #include <algorithm>
 
 _START_GOOGLE_NAMESPACE_
-
-// There is a better way, but this is good enough in this file.
-#define NAIVE_ARRAYSIZE(a) (sizeof(a) / sizeof(*(a)))
 
 namespace {
 
@@ -51,8 +71,6 @@ void* GetPC(void* ucontext_in_void) {
     ucontext_t *context = reinterpret_cast<ucontext_t *>(ucontext_in_void);
     return (void*)context->PC_FROM_UCONTEXT;
   }
-#else
-(void)ucontext_in_void;
 #endif
   return NULL;
 }
@@ -121,8 +139,7 @@ class MinimalFormatter {
 
 // Writes the given data with the size to the standard error.
 void WriteToStderr(const char* data, int size) {
-  int ignored = write(STDERR_FILENO, data, size);
-  (void) ignored;
+  write(STDERR_FILENO, data, size);
 }
 
 // The writer function can be changed by InstallFailureWriter().
@@ -147,7 +164,7 @@ void DumpTimeInfo() {
 void DumpSignalInfo(int signal_number, siginfo_t *siginfo) {
   // Get the signal name.
   const char* signal_name = NULL;
-  for (int i = 0; i < NAIVE_ARRAYSIZE(kFailureSignals); ++i) {
+  for (int i = 0; i < ARRAYSIZE(kFailureSignals); ++i) {
     if (signal_number == kFailureSignals[i].number) {
       signal_name = kFailureSignals[i].name;
     }
@@ -215,8 +232,7 @@ void DumpStackFrameInfo(const char* prefix, void* pc) {
 
 // Invoke the default signal handler.
 void InvokeDefaultSignalHandler(int signal_number) {
-  struct sigaction sig_action;
-  memset(&sig_action, 0, sizeof(sig_action));
+  struct sigaction sig_action = {};  // Zero-clear.
   sigemptyset(&sig_action.sa_mask);
   sig_action.sa_handler = SIG_DFL;
   sigaction(signal_number, &sig_action, NULL);
@@ -281,13 +297,27 @@ void FailureSignalHandler(int signal_number,
   // Get the stack traces.
   void *stack[32];
   // +1 to exclude this function.
-  const int depth = GetStackTrace(stack, NAIVE_ARRAYSIZE(stack), 1);
+  const int depth = GetStackTrace(stack, ARRAYSIZE(stack), 1);
   DumpSignalInfo(signal_number, signal_info);
   // Dump the stack traces.
   for (int i = 0; i < depth; ++i) {
     DumpStackFrameInfo("    ", stack[i]);
   }
 #endif
+
+  // *** TRANSITION ***
+  //
+  // BEFORE this point, all code must be async-termination-safe!
+  // (See WARNING above.)
+  //
+  // AFTER this point, we do unsafe things, like using LOG()!
+  // The process could be terminated or hung at any time.  We try to
+  // do more useful things first and riskier things later.
+
+  // Flush the logs before we do anything in case 'anything'
+  // causes problems.
+  FlushLogFilesUnsafe(0);
+
   // Kill ourself by the default signal handler.
   InvokeDefaultSignalHandler(signal_number);
 }
@@ -296,13 +326,12 @@ void FailureSignalHandler(int signal_number,
 
 void InstallFailureSignalHandler() {
   // Build the sigaction struct.
-  struct sigaction sig_action;
-  memset(&sig_action, 0, sizeof(sig_action));
+  struct sigaction sig_action = {};  // Zero-clear.
   sigemptyset(&sig_action.sa_mask);
   sig_action.sa_flags |= SA_SIGINFO;
   sig_action.sa_sigaction = &FailureSignalHandler;
 
-  for (int i = 0; i < NAIVE_ARRAYSIZE(kFailureSignals); ++i) {
+  for (int i = 0; i < ARRAYSIZE(kFailureSignals); ++i) {
     CHECK_ERR(sigaction(kFailureSignals[i].number, &sig_action, NULL));
   }
 }

@@ -1,4 +1,32 @@
-// Copyright 2006 Google Inc. All Rights Reserved.
+// Copyright (c) 2006, Google Inc.
+// All rights reserved.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are
+// met:
+//
+//     * Redistributions of source code must retain the above copyright
+// notice, this list of conditions and the following disclaimer.
+//     * Redistributions in binary form must reproduce the above
+// copyright notice, this list of conditions and the following disclaimer
+// in the documentation and/or other materials provided with the
+// distribution.
+//     * Neither the name of Google Inc. nor the names of its
+// contributors may be used to endorse or promote products derived from
+// this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
 // Author: Satoru Takabayashi
 // Stack-footprint reduction work done by Raksit Ashok
 //
@@ -93,7 +121,7 @@ _START_GOOGLE_NAMESPACE_
 // success, return the number of bytes read.  Otherwise, return -1.
 static ssize_t ReadPersistent(const int fd, void *buf, const size_t count) {
   SAFE_ASSERT(fd >= 0);
-  SAFE_ASSERT(count <= SSIZE_MAX);
+  SAFE_ASSERT(count >= 0 && count <= SSIZE_MAX);
   char *buf0 = reinterpret_cast<char *>(buf);
   ssize_t num_bytes = 0;
   while (num_bytes < count) {
@@ -413,8 +441,7 @@ class LineReader {
   void operator=(const LineReader&);
 
   char *FindLineFeed() {
-    return reinterpret_cast<char *>
-      (memchr(reinterpret_cast<const void *>(bol_), '\n', eod_ - bol_));
+    return reinterpret_cast<char *>(memchr(bol_, '\n', eod_ - bol_));
   }
 
   bool BufferIsEmpty() {
@@ -428,7 +455,7 @@ class LineReader {
   const int fd_;
   char * const buf_;
   const int buf_len_;
-  const char *bol_;
+  char *bol_;
   char *eol_;
   const char *eod_;  // End of data in "buf_".
 };
@@ -643,10 +670,6 @@ _START_GOOGLE_NAMESPACE_
 
 // TODO: Support other environments.
 bool Symbolize(void *pc, char *out, int out_size) {
-  (void)pc;
-  (void)out;
-  (void)out_size;
-
   assert(0);
   return false;
 }

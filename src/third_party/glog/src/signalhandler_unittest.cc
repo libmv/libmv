@@ -1,5 +1,33 @@
-// Copyright 2008 Google Inc. All Rights Reserved.
-// Author: satorux@google.com (Satoru Takabayashi)
+// Copyright (c) 2008, Google Inc.
+// All rights reserved.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are
+// met:
+//
+//     * Redistributions of source code must retain the above copyright
+// notice, this list of conditions and the following disclaimer.
+//     * Redistributions in binary form must reproduce the above
+// copyright notice, this list of conditions and the following disclaimer
+// in the documentation and/or other materials provided with the
+// distribution.
+//     * Neither the name of Google Inc. nor the names of its
+// contributors may be used to endorse or promote products derived from
+// this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+// Author: Satoru Takabayashi
 //
 // This is a helper binary for testing signalhandler.cc.  The actual test
 // is done in signalhandler_unittest.sh.
@@ -16,31 +44,34 @@
 using namespace GOOGLE_NAMESPACE;
 
 void* DieInThread(void*) {
-  fprintf(stderr, "0x%lx is dying\n", (long unsigned int)pthread_self());
+  fprintf(stderr, "0x%lx is dying\n", pthread_self());
   // Use volatile to prevent from these to be optimized away.
   volatile int a = 0;
   volatile int b = 1 / a;
-  (void) b;
-  return NULL;
 }
 
 void WriteToStdout(const char* data, int size) {
-  int ignored = write(STDOUT_FILENO, data, size);
-  (void) ignored;
+  write(STDOUT_FILENO, data, size);
 }
 
 int main(int argc, char **argv) {
 #if defined(HAVE_STACKTRACE) && defined(HAVE_SYMBOLIZE)
   InitGoogleLogging(argv[0]);
+#ifdef HAVE_LIB_GFLAGS
+  ParseCommandLineFlags(&argc, &argv, true);
+#endif
   InstallFailureSignalHandler();
   const std::string command = argc > 1 ? argv[1] : "none";
   if (command == "segv") {
+    // We'll check if this is outputted.
+    LOG(INFO) << "create the log file";
+    LOG(INFO) << "a message before segv";
     // We assume 0xDEAD is not writable.
     int *a = (int*)0xDEAD;
     *a = 0;
   } else if (command == "loop") {
     fprintf(stderr, "looping\n");
-    while (true) {}
+    while (true);
   } else if (command == "die_in_thread") {
     pthread_t thread;
     pthread_create(&thread, NULL, &DieInThread, NULL);
@@ -52,9 +83,6 @@ int main(int argc, char **argv) {
     // Tell the shell script
     puts("OK");
   }
-#else
-  (void)argc;
-  (void)argv;
 #endif
   return 0;
 }
