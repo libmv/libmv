@@ -31,18 +31,9 @@
 
 #include <gtest/gtest.h>
 
-#include "third_party/gflags/gflags.h"
-#include "third_party/glog/src/glog/logging.h"
-
-DEFINE_string(test_tmpdir, "/tmp", "Dir to use for temp files");
-
 int main(int argc, char **argv) {
   std::cout << "Running main() from gtest_main.cc\n";
-  testing::InitGoogleTest(&argc, argv);
-  google::ParseCommandLineFlags(&argc, &argv, true);
-  google::InitGoogleLogging(argv[0]);
 
+  testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
-  // TODO(keir): Make a test_tmpdir temp directory, and delete it after running
-  // the tests.
 }

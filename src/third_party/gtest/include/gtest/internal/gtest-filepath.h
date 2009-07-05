@@ -34,25 +34,13 @@
 // This header file declares classes and functions used internally by
 // Google Test.  They are subject to change without notice.
 //
-// This file is #included in testing/base/internal/gtest-internal.h
+// This file is #included in <gtest/internal/gtest-internal.h>.
 // Do not include this header file separately!
 
 #ifndef GTEST_INCLUDE_GTEST_INTERNAL_GTEST_FILEPATH_H_
 #define GTEST_INCLUDE_GTEST_INTERNAL_GTEST_FILEPATH_H_
 
-#if defined(__APPLE__) && !defined(GTEST_NOT_MAC_FRAMEWORK_MODE)
-// When using Google Test on the Mac as a framework, all the includes will be
-// in the framework headers folder along with gtest.h.
-// Define GTEST_NOT_MAC_FRAMEWORK_MODE if you are building Google Test on
-// the Mac and are not using it as a framework.
-// More info on frameworks available here:
-// http://developer.apple.com/documentation/MacOSX/Conceptual/BPFrameworks/
-// Concepts/WhatAreFrameworks.html.
-#include "gtest-string.h"  // NOLINT
-#else
 #include <gtest/internal/gtest-string.h>
-#endif  // defined(__APPLE__) && !defined(GTEST_NOT_MAC_FRAMEWORK_MODE)
-
 
 namespace testing {
 namespace internal {
@@ -72,8 +60,19 @@ class FilePath {
  public:
   FilePath() : pathname_("") { }
   FilePath(const FilePath& rhs) : pathname_(rhs.pathname_) { }
-  explicit FilePath(const char* pathname) : pathname_(pathname) { }
-  explicit FilePath(const String& pathname) : pathname_(pathname) { }
+
+  explicit FilePath(const char* pathname) : pathname_(pathname) {
+    Normalize();
+  }
+
+  explicit FilePath(const String& pathname) : pathname_(pathname) {
+    Normalize();
+  }
+
+  FilePath& operator=(const FilePath& rhs) {
+    Set(rhs);
+    return *this;
+  }
 
   void Set(const FilePath& rhs) {
     pathname_ = rhs.pathname_;
@@ -81,6 +80,9 @@ class FilePath {
 
   String ToString() const { return pathname_; }
   const char* c_str() const { return pathname_.c_str(); }
+
+  // Returns the current working directory, or "" if unsuccessful.
+  static FilePath GetCurrentDir();
 
   // Given directory = "dir", base_name = "test", number = 0,
   // extension = "xml", returns "dir/test.xml". If number is greater
@@ -90,6 +92,12 @@ class FilePath {
                                const FilePath& base_name,
                                int number,
                                const char* extension);
+
+  // Given directory = "dir", relative_path = "test.xml",
+  // returns "dir/test.xml".
+  // On Windows, uses \ as the separator rather than /.
+  static FilePath ConcatPaths(const FilePath& directory,
+                              const FilePath& relative_path);
 
   // Returns a pathname for a file that does not currently exist. The pathname
   // will be directory/base_name.extension or
@@ -102,6 +110,9 @@ class FilePath {
   static FilePath GenerateUniqueFileName(const FilePath& directory,
                                          const FilePath& base_name,
                                          const char* extension);
+
+  // Returns true iff the path is NULL or "".
+  bool IsEmpty() const { return c_str() == NULL || *c_str() == '\0'; }
 
   // If input name has a trailing separator character, removes it and returns
   // the name, otherwise return the name string unmodified.
@@ -155,11 +166,33 @@ class FilePath {
   // This does NOT check that a directory (or file) actually exists.
   bool IsDirectory() const;
 
- private:
-  String pathname_;
+  // Returns true if pathname describes a root directory. (Windows has one
+  // root directory per disk drive.)
+  bool IsRootDirectory() const;
 
-  // Don't implement operator= because it is banned by the style guide.
-  FilePath& operator=(const FilePath& rhs);
+  // Returns true if pathname describes an absolute path.
+  bool IsAbsolutePath() const;
+
+ private:
+  // Replaces multiple consecutive separators with a single separator.
+  // For example, "bar///foo" becomes "bar/foo". Does not eliminate other
+  // redundancies that might be in a pathname involving "." or "..".
+  //
+  // A pathname with multiple consecutive separators may occur either through
+  // user error or as a result of some scripts or APIs that generate a pathname
+  // with a trailing separator. On other platforms the same API or script
+  // may NOT generate a pathname with a trailing "/". Then elsewhere that
+  // pathname may have another "/" and pathname components added to it,
+  // without checking for the separator already being there.
+  // The script language and operating system may allow paths like "foo//bar"
+  // but some of the functions in FilePath will not handle that correctly. In
+  // particular, RemoveTrailingPathSeparator() only removes one separator, and
+  // it is called in CreateDirectoriesRecursively() assuming that it will change
+  // a pathname from directory syntax (trailing separator) to filename syntax.
+
+  void Normalize();
+
+  String pathname_;
 };  // class FilePath
 
 }  // namespace internal

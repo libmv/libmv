@@ -39,19 +39,24 @@
 
 #include <gtest/internal/gtest-internal.h>
 
+#if GTEST_HAS_DEATH_TEST && GTEST_OS_WINDOWS
+#include <io.h>
+#endif  // GTEST_HAS_DEATH_TEST && GTEST_OS_WINDOWS
+
 namespace testing {
 namespace internal {
 
-GTEST_DECLARE_string(internal_run_death_test);
+GTEST_DECLARE_string_(internal_run_death_test);
 
 // Names of the flags (needed for parsing Google Test flags).
 const char kDeathTestStyleFlag[] = "death_test_style";
+const char kDeathTestUseFork[] = "death_test_use_fork";
 const char kInternalRunDeathTestFlag[] = "internal_run_death_test";
 
-#ifdef GTEST_HAS_DEATH_TEST
+#if GTEST_HAS_DEATH_TEST
 
 // DeathTest is a class that hides much of the complexity of the
-// GTEST_DEATH_TEST macro.  It is abstract; its static Create method
+// GTEST_DEATH_TEST_ macro.  It is abstract; its static Create method
 // returns a concrete class that depends on the prevailing death test
 // style, as defined by the --gtest_death_test_style and/or
 // --gtest_internal_run_death_test flags.
@@ -85,8 +90,8 @@ class DeathTest {
     ~ReturnSentinel() { test_->Abort(TEST_ENCOUNTERED_RETURN_STATEMENT); }
    private:
     DeathTest* const test_;
-    GTEST_DISALLOW_COPY_AND_ASSIGN(ReturnSentinel);
-  } GTEST_ATTRIBUTE_UNUSED;
+    GTEST_DISALLOW_COPY_AND_ASSIGN_(ReturnSentinel);
+  } GTEST_ATTRIBUTE_UNUSED_;
 
   // An enumeration of possible roles that may be taken when a death
   // test is encountered.  EXECUTE means that the death test logic should
@@ -120,8 +125,13 @@ class DeathTest {
   // the last death test.
   static const char* LastMessage();
 
+  static void set_last_death_test_message(const String& message);
+
  private:
-  GTEST_DISALLOW_COPY_AND_ASSIGN(DeathTest);
+  // A string containing a description of the outcome of the last death test.
+  static String last_death_test_message_;
+
+  GTEST_DISALLOW_COPY_AND_ASSIGN_(DeathTest);
 };
 
 // Factory interface for death tests.  May be mocked out for testing.
@@ -145,14 +155,14 @@ bool ExitedUnsuccessfully(int exit_status);
 
 // This macro is for implementing ASSERT_DEATH*, EXPECT_DEATH*,
 // ASSERT_EXIT*, and EXPECT_EXIT*.
-#define GTEST_DEATH_TEST(statement, predicate, regex, fail) \
-  GTEST_AMBIGUOUS_ELSE_BLOCKER \
+#define GTEST_DEATH_TEST_(statement, predicate, regex, fail) \
+  GTEST_AMBIGUOUS_ELSE_BLOCKER_ \
   if (true) { \
     const ::testing::internal::RE& gtest_regex = (regex); \
     ::testing::internal::DeathTest* gtest_dt; \
     if (!::testing::internal::DeathTest::Create(#statement, &gtest_regex, \
         __FILE__, __LINE__, &gtest_dt)) { \
-      goto GTEST_CONCAT_TOKEN(gtest_label_, __LINE__); \
+      goto GTEST_CONCAT_TOKEN_(gtest_label_, __LINE__); \
     } \
     if (gtest_dt != NULL) { \
       ::testing::internal::scoped_ptr< ::testing::internal::DeathTest> \
@@ -160,32 +170,60 @@ bool ExitedUnsuccessfully(int exit_status);
       switch (gtest_dt->AssumeRole()) { \
         case ::testing::internal::DeathTest::OVERSEE_TEST: \
           if (!gtest_dt->Passed(predicate(gtest_dt->Wait()))) { \
-            goto GTEST_CONCAT_TOKEN(gtest_label_, __LINE__); \
+            goto GTEST_CONCAT_TOKEN_(gtest_label_, __LINE__); \
           } \
           break; \
         case ::testing::internal::DeathTest::EXECUTE_TEST: { \
           ::testing::internal::DeathTest::ReturnSentinel \
               gtest_sentinel(gtest_dt); \
-          { statement; } \
+          GTEST_HIDE_UNREACHABLE_CODE_(statement); \
           gtest_dt->Abort(::testing::internal::DeathTest::TEST_DID_NOT_DIE); \
           break; \
         } \
       } \
     } \
   } else \
-    GTEST_CONCAT_TOKEN(gtest_label_, __LINE__): \
+    GTEST_CONCAT_TOKEN_(gtest_label_, __LINE__): \
       fail(::testing::internal::DeathTest::LastMessage())
 // The symbol "fail" here expands to something into which a message
 // can be streamed.
 
-// A struct representing the parsed contents of the
+// A class representing the parsed contents of the
 // --gtest_internal_run_death_test flag, as it existed when
 // RUN_ALL_TESTS was called.
-struct InternalRunDeathTestFlag {
-  String file;
-  int line;
-  int index;
-  int status_fd;
+class InternalRunDeathTestFlag {
+ public:
+  InternalRunDeathTestFlag(const String& file,
+                           int line,
+                           int index,
+                           int status_fd)
+      : file_(file), line_(line), index_(index), status_fd_(status_fd) {}
+
+  ~InternalRunDeathTestFlag() {
+    if (status_fd_ >= 0)
+// Suppress MSVC complaints about POSIX functions.
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable: 4996)
+#endif  // _MSC_VER
+      close(status_fd_);
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif  // _MSC_VER
+  }
+
+  String file() const { return file_; }
+  int line() const { return line_; }
+  int index() const { return index_; }
+  int status_fd() const { return status_fd_; }
+
+ private:
+  String file_;
+  int line_;
+  int index_;
+  int status_fd_;
+
+  GTEST_DISALLOW_COPY_AND_ASSIGN_(InternalRunDeathTestFlag);
 };
 
 // Returns a newly created InternalRunDeathTestFlag object with fields

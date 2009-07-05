@@ -35,26 +35,18 @@
 // Google Test.  They are subject to change without notice. They should not used
 // by code external to Google Test.
 //
-// This header file is #included by testing/base/internal/gtest-internal.h.
+// This header file is #included by <gtest/internal/gtest-internal.h>.
 // It should not be #included by other files.
 
 #ifndef GTEST_INCLUDE_GTEST_INTERNAL_GTEST_STRING_H_
 #define GTEST_INCLUDE_GTEST_INTERNAL_GTEST_STRING_H_
 
 #include <string.h>
-
-#if defined(__APPLE__) && !defined(GTEST_NOT_MAC_FRAMEWORK_MODE)
-// When using Google Test on the Mac as a framework, all the includes will be
-// in the framework headers folder along with gtest.h.
-// Define GTEST_NOT_MAC_FRAMEWORK_MODE if you are building Google Test on
-// the Mac and are not using it as a framework.
-// More info on frameworks available here:
-// http://developer.apple.com/documentation/MacOSX/Conceptual/BPFrameworks/
-// Concepts/WhatAreFrameworks.html.
-#include "gtest-port.h"  // NOLINT
-#else
 #include <gtest/internal/gtest-port.h>
-#endif  // defined(__APPLE__) && !defined(GTEST_NOT_MAC_FRAMEWORK_MODE)
+
+#if GTEST_HAS_GLOBAL_STRING || GTEST_HAS_STD_STRING
+#include <string>
+#endif  // GTEST_HAS_GLOBAL_STRING || GTEST_HAS_STD_STRING
 
 namespace testing {
 namespace internal {
@@ -119,6 +111,32 @@ class String {
   // memory using malloc().
   static const char* CloneCString(const char* c_str);
 
+#ifdef _WIN32_WCE
+  // Windows CE does not have the 'ANSI' versions of Win32 APIs. To be
+  // able to pass strings to Win32 APIs on CE we need to convert them
+  // to 'Unicode', UTF-16.
+
+  // Creates a UTF-16 wide string from the given ANSI string, allocating
+  // memory using new. The caller is responsible for deleting the return
+  // value using delete[]. Returns the wide string, or NULL if the
+  // input is NULL.
+  //
+  // The wide string is created using the ANSI codepage (CP_ACP) to
+  // match the behaviour of the ANSI versions of Win32 calls and the
+  // C runtime.
+  static LPCWSTR AnsiToUtf16(const char* c_str);
+
+  // Creates an ANSI string from the given wide string, allocating
+  // memory using new. The caller is responsible for deleting the return
+  // value using delete[]. Returns the ANSI string, or NULL if the
+  // input is NULL.
+  //
+  // The returned string is created using the ANSI codepage (CP_ACP) to
+  // match the behaviour of the ANSI versions of Win32 calls and the
+  // C runtime.
+  static const char* Utf16ToAnsi(LPCWSTR utf16_str);
+#endif
+
   // Compares two C strings.  Returns true iff they have the same content.
   //
   // Unlike strcmp(), this function can handle NULL argument(s).  A
@@ -152,6 +170,21 @@ class String {
   // including the empty string.
   static bool CaseInsensitiveCStringEquals(const char* lhs,
                                            const char* rhs);
+
+  // Compares two wide C strings, ignoring case.  Returns true iff they
+  // have the same content.
+  //
+  // Unlike wcscasecmp(), this function can handle NULL argument(s).
+  // A NULL C string is considered different to any non-NULL wide C string,
+  // including the empty string.
+  // NB: The implementations on different platforms slightly differ.
+  // On windows, this method uses _wcsicmp which compares according to LC_CTYPE
+  // environment variable. On GNU platform this method uses wcscasecmp
+  // which compares according to LC_CTYPE category of the current locale.
+  // On MacOS X, it uses towlower, which also uses LC_CTYPE category of the
+  // current locale.
+  static bool CaseInsensitiveWideCStringEquals(const wchar_t* lhs,
+                                               const wchar_t* rhs);
 
   // Formats a list of arguments to a String, using the same format
   // spec string as for printf.
@@ -188,6 +221,24 @@ class String {
   // doesn't need to be virtual.
   ~String() { delete[] c_str_; }
 
+  // Allows a String to be implicitly converted to an ::std::string or
+  // ::string, and vice versa.  Converting a String containing a NULL
+  // pointer to ::std::string or ::string is undefined behavior.
+  // Converting a ::std::string or ::string containing an embedded NUL
+  // character to a String will result in the prefix up to the first
+  // NUL character.
+#if GTEST_HAS_STD_STRING
+  String(const ::std::string& str) : c_str_(NULL) { *this = str.c_str(); }
+
+  operator ::std::string() const { return ::std::string(c_str_); }
+#endif  // GTEST_HAS_STD_STRING
+
+#if GTEST_HAS_GLOBAL_STRING
+  String(const ::string& str) : c_str_(NULL) { *this = str.c_str(); }
+
+  operator ::string() const { return ::string(c_str_); }
+#endif  // GTEST_HAS_GLOBAL_STRING
+
   // Returns true iff this is an empty string (i.e. "").
   bool empty() const {
     return (c_str_ != NULL) && (*c_str_ == '\0');
@@ -203,6 +254,10 @@ class String {
   bool operator==(const char* c_str) const {
     return CStringEquals(c_str_, c_str);
   }
+
+  // Returns true iff this String is less than the given C string.  A NULL
+  // string is considered less than "".
+  bool operator<(const String& rhs) const { return Compare(rhs) < 0; }
 
   // Returns true iff this String doesn't equal the given C string.  A NULL
   // string and a non-NULL string are considered not equal.

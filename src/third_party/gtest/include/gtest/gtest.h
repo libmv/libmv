@@ -53,7 +53,6 @@
 
 // The following platform macros are used throughout Google Test:
 //   _WIN32_WCE      Windows CE     (set in project files)
-//   __SYMBIAN32__   Symbian        (set by Symbian tool chain)
 //
 // Note that even though _MSC_VER and _WIN32_WCE really indicate a compiler
 // and a Win32 implementation, respectively, we use them to indicate the
@@ -62,26 +61,15 @@
 // Windows proper with Visual C++ and MS C library (_MSC_VER && !_WIN32_WCE) and
 // Windows Mobile with Visual C++ and no C library (_WIN32_WCE).
 
-#if defined(__APPLE__) && !defined(GTEST_NOT_MAC_FRAMEWORK_MODE)
-// When using Google Test on the Mac as a framework, all the includes
-// will be in the framework headers folder along with gtest.h.  Define
-// GTEST_NOT_MAC_FRAMEWORK_MODE if you are building Google Test on the
-// Mac and are not using it as a framework.  More info on frameworks
-// available here:
-// http://developer.apple.com/documentation/MacOSX/Conceptual/BPFrameworks/
-// Concepts/WhatAreFrameworks.html.
-#include "gtest-death-test.h"  // NOLINT
-#include "gtest-internal.h"  // NOLINT
-#include "gtest-message.h"  // NOLINT
-#include "gtest-string.h"  // NOLINT
-#include "gtest_prod.h"  // NOLINT
-#else
+#include <limits>
 #include <gtest/internal/gtest-internal.h>
 #include <gtest/internal/gtest-string.h>
 #include <gtest/gtest-death-test.h>
 #include <gtest/gtest-message.h>
+#include <gtest/gtest-param-test.h>
 #include <gtest/gtest_prod.h>
-#endif  // defined(__APPLE__) && !defined(GTEST_NOT_MAC_FRAMEWORK_MODE)
+#include <gtest/gtest-test-part.h>
+#include <gtest/gtest-typed-test.h>
 
 // Depending on the platform, different string classes are available.
 // On Windows, ::std::string compiles only when exceptions are
@@ -105,24 +93,58 @@
 
 namespace testing {
 
-// The upper limit for valid stack trace depths.
-const int kMaxStackTraceDepth = 100;
+// Declares the flags.
 
-// This flag specifies the maximum number of stack frames to be
-// printed in a failure message.
-GTEST_DECLARE_int32(stack_trace_depth);
+// This flag temporary enables the disabled tests.
+GTEST_DECLARE_bool_(also_run_disabled_tests);
+
+// This flag brings the debugger on an assertion failure.
+GTEST_DECLARE_bool_(break_on_failure);
+
+// This flag controls whether Google Test catches all test-thrown exceptions
+// and logs them as failures.
+GTEST_DECLARE_bool_(catch_exceptions);
+
+// This flag enables using colors in terminal output. Available values are
+// "yes" to enable colors, "no" (disable colors), or "auto" (the default)
+// to let Google Test decide.
+GTEST_DECLARE_string_(color);
+
+// This flag sets up the filter to select by name using a glob pattern
+// the tests to run. If the filter is not given all tests are executed.
+GTEST_DECLARE_string_(filter);
+
+// This flag causes the Google Test to list tests. None of the tests listed
+// are actually run if the flag is provided.
+GTEST_DECLARE_bool_(list_tests);
+
+// This flag controls whether Google Test emits a detailed XML report to a file
+// in addition to its normal textual output.
+GTEST_DECLARE_string_(output);
+
+// This flags control whether Google Test prints the elapsed time for each
+// test.
+GTEST_DECLARE_bool_(print_time);
+
+// This flag sets how many times the tests are repeated. The default value
+// is 1. If the value is -1 the tests are repeating forever.
+GTEST_DECLARE_int32_(repeat);
 
 // This flag controls whether Google Test includes Google Test internal
 // stack frames in failure stack traces.
-GTEST_DECLARE_bool(show_internal_stack_frames);
+GTEST_DECLARE_bool_(show_internal_stack_frames);
 
-// The possible outcomes of a test part (i.e. an assertion or an
-// explicit SUCCEED(), FAIL(), or ADD_FAILURE()).
-enum TestPartResultType {
-  TPRT_SUCCESS,           // Succeeded.
-  TPRT_NONFATAL_FAILURE,  // Failed but the test can continue.
-  TPRT_FATAL_FAILURE      // Failed and the test should be terminated.
-};
+// This flag specifies the maximum number of stack frames to be
+// printed in a failure message.
+GTEST_DECLARE_int32_(stack_trace_depth);
+
+// When this flag is specified, a failed assertion will throw an
+// exception if exceptions are enabled, or exit the program with a
+// non-zero code otherwise.
+GTEST_DECLARE_bool_(throw_on_failure);
+
+// The upper limit for valid stack trace depths.
+const int kMaxStackTraceDepth = 100;
 
 namespace internal {
 
@@ -232,11 +254,27 @@ class Test {
 
   // Defines types for pointers to functions that set up and tear down
   // a test case.
-  typedef void (*SetUpTestCaseFunc)();
-  typedef void (*TearDownTestCaseFunc)();
+  typedef internal::SetUpTestCaseFunc SetUpTestCaseFunc;
+  typedef internal::TearDownTestCaseFunc TearDownTestCaseFunc;
 
   // The d'tor is virtual as we intend to inherit from Test.
   virtual ~Test();
+
+  // Sets up the stuff shared by all tests in this test case.
+  //
+  // Google Test will call Foo::SetUpTestCase() before running the first
+  // test in test case Foo.  Hence a sub-class can define its own
+  // SetUpTestCase() method to shadow the one defined in the super
+  // class.
+  static void SetUpTestCase() {}
+
+  // Tears down the stuff shared by all tests in this test case.
+  //
+  // Google Test will call Foo::TearDownTestCase() after running the last
+  // test in test case Foo.  Hence a sub-class can define its own
+  // TearDownTestCase() method to shadow the one defined in the super
+  // class.
+  static void TearDownTestCase() {}
 
   // Returns true iff the current test has a fatal failure.
   static bool HasFatalFailure();
@@ -259,22 +297,6 @@ class Test {
  protected:
   // Creates a Test object.
   Test();
-
-  // Sets up the stuff shared by all tests in this test case.
-  //
-  // Google Test will call Foo::SetUpTestCase() before running the first
-  // test in test case Foo.  Hence a sub-class can define its own
-  // SetUpTestCase() method to shadow the one defined in the super
-  // class.
-  static void SetUpTestCase() {}
-
-  // Tears down the stuff shared by all tests in this test case.
-  //
-  // Google Test will call Foo::TearDownTestCase() after running the last
-  // test in test case Foo.  Hence a sub-class can define its own
-  // TearDownTestCase() method to shadow the one defined in the super
-  // class.
-  static void TearDownTestCase() {}
 
   // Sets up the test fixture.
   virtual void SetUp();
@@ -321,13 +343,8 @@ class Test {
   virtual Setup_should_be_spelled_SetUp* Setup() { return NULL; }
 
   // We disallow copying Tests.
-  GTEST_DISALLOW_COPY_AND_ASSIGN(Test);
+  GTEST_DISALLOW_COPY_AND_ASSIGN_(Test);
 };
-
-
-// Defines the type of a function pointer that creates a Test object
-// when invoked.
-typedef Test* (*TestMaker)();
 
 
 // A TestInfo object stores the following information about a test:
@@ -347,33 +364,17 @@ class TestInfo {
   // don't inherit from TestInfo.
   ~TestInfo();
 
-  // Creates a TestInfo object and registers it with the UnitTest
-  // singleton; returns the created object.
-  //
-  // Arguments:
-  //
-  //   test_case_name:   name of the test case
-  //   name:             name of the test
-  //   fixture_class_id: ID of the test fixture class
-  //   set_up_tc:        pointer to the function that sets up the test case
-  //   tear_down_tc:     pointer to the function that tears down the test case
-  //   maker:            pointer to the function that creates a test object
-  //
-  // This is public only because it's needed by the TEST and TEST_F macros.
-  // INTERNAL IMPLEMENTATION - DO NOT USE IN A USER PROGRAM.
-  static TestInfo* MakeAndRegisterInstance(
-      const char* test_case_name,
-      const char* name,
-      internal::TypeId fixture_class_id,
-      Test::SetUpTestCaseFunc set_up_tc,
-      Test::TearDownTestCaseFunc tear_down_tc,
-      TestMaker maker);
-
   // Returns the test case name.
   const char* test_case_name() const;
 
   // Returns the test name.
   const char* name() const;
+
+  // Returns the test case comment.
+  const char* test_case_comment() const;
+
+  // Returns the test comment.
+  const char* comment() const;
 
   // Returns true if this test should run.
   //
@@ -394,13 +395,20 @@ class TestInfo {
   // Returns the result of the test.
   const internal::TestResult* result() const;
  private:
-#ifdef GTEST_HAS_DEATH_TEST
+#if GTEST_HAS_DEATH_TEST
   friend class internal::DefaultDeathTestFactory;
 #endif  // GTEST_HAS_DEATH_TEST
   friend class internal::TestInfoImpl;
   friend class internal::UnitTestImpl;
   friend class Test;
   friend class TestCase;
+  friend TestInfo* internal::MakeAndRegisterTestInfo(
+      const char* test_case_name, const char* name,
+      const char* test_case_comment, const char* comment,
+      internal::TypeId fixture_class_id,
+      Test::SetUpTestCaseFunc set_up_tc,
+      Test::TearDownTestCaseFunc tear_down_tc,
+      internal::TestFactoryBase* factory);
 
   // Increments the number of death tests encountered in this test so
   // far.
@@ -410,14 +418,17 @@ class TestInfo {
   internal::TestInfoImpl* impl() { return impl_; }
   const internal::TestInfoImpl* impl() const { return impl_; }
 
-  // Constructs a TestInfo object.
+  // Constructs a TestInfo object. The newly constructed instance assumes
+  // ownership of the factory object.
   TestInfo(const char* test_case_name, const char* name,
-           internal::TypeId fixture_class_id, TestMaker maker);
+           const char* test_case_comment, const char* comment,
+           internal::TypeId fixture_class_id,
+           internal::TestFactoryBase* factory);
 
   // An opaque implementation object.
   internal::TestInfoImpl* impl_;
 
-  GTEST_DISALLOW_COPY_AND_ASSIGN(TestInfo);
+  GTEST_DISALLOW_COPY_AND_ASSIGN_(TestInfo);
 };
 
 // An Environment object is capable of setting up and tearing down an
@@ -501,7 +512,11 @@ class UnitTest {
   // This method can only be called from the main thread.
   //
   // INTERNAL IMPLEMENTATION - DO NOT USE IN A USER PROGRAM.
-  int Run() GTEST_MUST_USE_RESULT;
+  int Run() GTEST_MUST_USE_RESULT_;
+
+  // Returns the working directory when the first TEST() or TEST_F()
+  // was executed.  The UnitTest object owns the string.
+  const char* original_working_dir() const;
 
   // Returns the TestCase object for the test that's currently running,
   // or NULL if no test is running.
@@ -510,6 +525,12 @@ class UnitTest {
   // Returns the TestInfo object for the test that's currently running,
   // or NULL if no test is running.
   const TestInfo* current_test_info() const;
+
+#if GTEST_HAS_PARAM_TEST
+  // Returns the ParameterizedTestCaseRegistry object used to keep track of
+  // value-parameterized tests and instantiate and register them.
+  internal::ParameterizedTestCaseRegistry& parameterized_test_registry();
+#endif  // GTEST_HAS_PARAM_TEST
 
   // Accessors for the implementation object.
   internal::UnitTestImpl* impl() { return impl_; }
@@ -543,7 +564,7 @@ class UnitTest {
   internal::UnitTestImpl* impl_;
 
   // We disallow copying UnitTest.
-  GTEST_DISALLOW_COPY_AND_ASSIGN(UnitTest);
+  GTEST_DISALLOW_COPY_AND_ASSIGN_(UnitTest);
 };
 
 // A convenient wrapper for adding an environment for the test
@@ -575,13 +596,13 @@ inline Environment* AddGlobalTestEnvironment(Environment* env) {
 //
 // No value is returned.  Instead, the Google Test flag variables are
 // updated.
+//
+// Calling the function for the second time has no user-visible effect.
 void InitGoogleTest(int* argc, char** argv);
 
 // This overloaded version can be used in Windows programs compiled in
 // UNICODE mode.
-#ifdef GTEST_OS_WINDOWS
 void InitGoogleTest(int* argc, wchar_t** argv);
-#endif  // GTEST_OS_WINDOWS
 
 namespace internal {
 
@@ -635,9 +656,19 @@ AssertionResult CmpHelperEQ(const char* expected_expression,
                             const char* actual_expression,
                             const T1& expected,
                             const T2& actual) {
+#ifdef _MSC_VER
+#pragma warning(push)          // Saves the current warning state.
+#pragma warning(disable:4389)  // Temporarily disables warning on
+                               // signed/unsigned mismatch.
+#endif
+
   if (expected == actual) {
     return AssertionSuccess();
   }
+
+#ifdef _MSC_VER
+#pragma warning(pop)          // Restores the warning state.
+#endif
 
   return EqFailure(expected_expression,
                    actual_expression,
@@ -709,7 +740,7 @@ class EqHelper<true> {
   template <typename T1, typename T2>
   static AssertionResult Compare(const char* expected_expression,
                                  const char* actual_expression,
-                                 const T1& expected,
+                                 const T1& /* expected */,
                                  T2* actual) {
     // We already know that 'expected' is a null pointer.
     return CmpHelperEQ(expected_expression, actual_expression,
@@ -727,7 +758,7 @@ class EqHelper<true> {
 // with gcc 4.
 //
 // INTERNAL IMPLEMENTATION - DO NOT USE IN A USER PROGRAM.
-#define GTEST_IMPL_CMP_HELPER(op_name, op)\
+#define GTEST_IMPL_CMP_HELPER_(op_name, op)\
 template <typename T1, typename T2>\
 AssertionResult CmpHelper##op_name(const char* expr1, const char* expr2, \
                                    const T1& val1, const T2& val2) {\
@@ -747,17 +778,17 @@ AssertionResult CmpHelper##op_name(const char* expr1, const char* expr2, \
 // INTERNAL IMPLEMENTATION - DO NOT USE IN A USER PROGRAM.
 
 // Implements the helper function for {ASSERT|EXPECT}_NE
-GTEST_IMPL_CMP_HELPER(NE, !=)
+GTEST_IMPL_CMP_HELPER_(NE, !=)
 // Implements the helper function for {ASSERT|EXPECT}_LE
-GTEST_IMPL_CMP_HELPER(LE, <=)
+GTEST_IMPL_CMP_HELPER_(LE, <=)
 // Implements the helper function for {ASSERT|EXPECT}_LT
-GTEST_IMPL_CMP_HELPER(LT, < )
+GTEST_IMPL_CMP_HELPER_(LT, < )
 // Implements the helper function for {ASSERT|EXPECT}_GE
-GTEST_IMPL_CMP_HELPER(GE, >=)
+GTEST_IMPL_CMP_HELPER_(GE, >=)
 // Implements the helper function for {ASSERT|EXPECT}_GT
-GTEST_IMPL_CMP_HELPER(GT, > )
+GTEST_IMPL_CMP_HELPER_(GT, > )
 
-#undef GTEST_IMPL_CMP_HELPER
+#undef GTEST_IMPL_CMP_HELPER_
 
 // The helper function for {ASSERT|EXPECT}_STREQ.
 //
@@ -901,7 +932,7 @@ class AssertHelper {
   AssertHelper(TestPartResultType type, const char* file, int line,
                const char* message);
   // Message assignment is a semantic trick to enable assertion
-  // streaming; see the GTEST_MESSAGE macro below.
+  // streaming; see the GTEST_MESSAGE_ macro below.
   void operator=(const Message& message) const;
  private:
   TestPartResultType const type_;
@@ -909,10 +940,69 @@ class AssertHelper {
   int                const line_;
   String             const message_;
 
-  GTEST_DISALLOW_COPY_AND_ASSIGN(AssertHelper);
+  GTEST_DISALLOW_COPY_AND_ASSIGN_(AssertHelper);
 };
 
 }  // namespace internal
+
+#if GTEST_HAS_PARAM_TEST
+// The abstract base class that all value-parameterized tests inherit from.
+//
+// This class adds support for accessing the test parameter value via
+// the GetParam() method.
+//
+// Use it with one of the parameter generator defining functions, like Range(),
+// Values(), ValuesIn(), Bool(), and Combine().
+//
+// class FooTest : public ::testing::TestWithParam<int> {
+//  protected:
+//   FooTest() {
+//     // Can use GetParam() here.
+//   }
+//   virtual ~FooTest() {
+//     // Can use GetParam() here.
+//   }
+//   virtual void SetUp() {
+//     // Can use GetParam() here.
+//   }
+//   virtual void TearDown {
+//     // Can use GetParam() here.
+//   }
+// };
+// TEST_P(FooTest, DoesBar) {
+//   // Can use GetParam() method here.
+//   Foo foo;
+//   ASSERT_TRUE(foo.DoesBar(GetParam()));
+// }
+// INSTANTIATE_TEST_CASE_P(OneToTenRange, FooTest, ::testing::Range(1, 10));
+
+template <typename T>
+class TestWithParam : public Test {
+ public:
+  typedef T ParamType;
+
+  // The current parameter value. Is also available in the test fixture's
+  // constructor.
+  const ParamType& GetParam() const { return *parameter_; }
+
+ private:
+  // Sets parameter value. The caller is responsible for making sure the value
+  // remains alive and unchanged throughout the current test.
+  static void SetParam(const ParamType* parameter) {
+    parameter_ = parameter;
+  }
+
+  // Static value used for accessing parameter during a test lifetime.
+  static const ParamType* parameter_;
+
+  // TestClass must be a subclass of TestWithParam<T>.
+  template <class TestClass> friend class internal::ParameterizedTestFactory;
+};
+
+template <typename T>
+const T* TestWithParam<T>::parameter_ = NULL;
+
+#endif  // GTEST_HAS_PARAM_TEST
 
 // Macros for indicating success/failure in test code.
 
@@ -940,42 +1030,53 @@ class AssertHelper {
 //       << "There are still pending requests " << "on port " << port;
 
 // Generates a nonfatal failure with a generic message.
-#define ADD_FAILURE() GTEST_NONFATAL_FAILURE("Failed")
+#define ADD_FAILURE() GTEST_NONFATAL_FAILURE_("Failed")
 
 // Generates a fatal failure with a generic message.
-#define FAIL() GTEST_FATAL_FAILURE("Failed")
+#define FAIL() GTEST_FATAL_FAILURE_("Failed")
 
 // Generates a success with a generic message.
-#define SUCCEED() GTEST_SUCCESS("Succeeded")
+#define SUCCEED() GTEST_SUCCESS_("Succeeded")
+
+// Macros for testing exceptions.
+//
+//    * {ASSERT|EXPECT}_THROW(statement, expected_exception):
+//         Tests that the statement throws the expected exception.
+//    * {ASSERT|EXPECT}_NO_THROW(statement):
+//         Tests that the statement doesn't throw any exception.
+//    * {ASSERT|EXPECT}_ANY_THROW(statement):
+//         Tests that the statement throws an exception.
+
+#define EXPECT_THROW(statement, expected_exception) \
+  GTEST_TEST_THROW_(statement, expected_exception, GTEST_NONFATAL_FAILURE_)
+#define EXPECT_NO_THROW(statement) \
+  GTEST_TEST_NO_THROW_(statement, GTEST_NONFATAL_FAILURE_)
+#define EXPECT_ANY_THROW(statement) \
+  GTEST_TEST_ANY_THROW_(statement, GTEST_NONFATAL_FAILURE_)
+#define ASSERT_THROW(statement, expected_exception) \
+  GTEST_TEST_THROW_(statement, expected_exception, GTEST_FATAL_FAILURE_)
+#define ASSERT_NO_THROW(statement) \
+  GTEST_TEST_NO_THROW_(statement, GTEST_FATAL_FAILURE_)
+#define ASSERT_ANY_THROW(statement) \
+  GTEST_TEST_ANY_THROW_(statement, GTEST_FATAL_FAILURE_)
 
 // Boolean assertions.
 #define EXPECT_TRUE(condition) \
-  GTEST_TEST_BOOLEAN(condition, #condition, false, true, \
-                     GTEST_NONFATAL_FAILURE)
+  GTEST_TEST_BOOLEAN_(condition, #condition, false, true, \
+                      GTEST_NONFATAL_FAILURE_)
 #define EXPECT_FALSE(condition) \
-  GTEST_TEST_BOOLEAN(!(condition), #condition, true, false, \
-                     GTEST_NONFATAL_FAILURE)
+  GTEST_TEST_BOOLEAN_(!(condition), #condition, true, false, \
+                      GTEST_NONFATAL_FAILURE_)
 #define ASSERT_TRUE(condition) \
-  GTEST_TEST_BOOLEAN(condition, #condition, false, true, \
-                     GTEST_FATAL_FAILURE)
+  GTEST_TEST_BOOLEAN_(condition, #condition, false, true, \
+                      GTEST_FATAL_FAILURE_)
 #define ASSERT_FALSE(condition) \
-  GTEST_TEST_BOOLEAN(!(condition), #condition, true, false, \
-                     GTEST_FATAL_FAILURE)
+  GTEST_TEST_BOOLEAN_(!(condition), #condition, true, false, \
+                      GTEST_FATAL_FAILURE_)
 
 // Includes the auto-generated header that implements a family of
 // generic predicate assertion macros.
-#if defined(__APPLE__) && !defined(GTEST_NOT_MAC_FRAMEWORK_MODE)
-// When using Google Test on the Mac as a framework, all the includes will be
-// in the framework headers folder along with gtest.h.
-// Define GTEST_NOT_MAC_FRAMEWORK_MODE if you are building Google Test on
-// the Mac and are not using it as a framework.
-// More info on frameworks available here:
-// http://developer.apple.com/documentation/MacOSX/Conceptual/BPFrameworks/
-// Concepts/WhatAreFrameworks.html.
-#include "gtest_pred_impl.h"  // NOLINT
-#else
 #include <gtest/gtest_pred_impl.h>
-#endif  // defined(__APPLE__) && !defined(GTEST_NOT_MAC_FRAMEWORK_MODE)
 
 // Macros for testing equalities and inequalities.
 //
@@ -1025,7 +1126,7 @@ class AssertHelper {
 
 #define EXPECT_EQ(expected, actual) \
   EXPECT_PRED_FORMAT2(::testing::internal:: \
-                      EqHelper<GTEST_IS_NULL_LITERAL(expected)>::Compare, \
+                      EqHelper<GTEST_IS_NULL_LITERAL_(expected)>::Compare, \
                       expected, actual)
 #define EXPECT_NE(expected, actual) \
   EXPECT_PRED_FORMAT2(::testing::internal::CmpHelperNE, expected, actual)
@@ -1040,7 +1141,7 @@ class AssertHelper {
 
 #define ASSERT_EQ(expected, actual) \
   ASSERT_PRED_FORMAT2(::testing::internal:: \
-                      EqHelper<GTEST_IS_NULL_LITERAL(expected)>::Compare, \
+                      EqHelper<GTEST_IS_NULL_LITERAL_(expected)>::Compare, \
                       expected, actual)
 #define ASSERT_NE(val1, val2) \
   ASSERT_PRED_FORMAT2(::testing::internal::CmpHelperNE, val1, val2)
@@ -1138,16 +1239,17 @@ AssertionResult DoubleLE(const char* expr1, const char* expr2,
                          double val1, double val2);
 
 
-#ifdef GTEST_OS_WINDOWS
+#if GTEST_OS_WINDOWS
 
 // Macros that test for HRESULT failure and success, these are only useful
 // on Windows, and rely on Windows SDK macros and APIs to compile.
 //
 //    * {ASSERT|EXPECT}_HRESULT_{SUCCEEDED|FAILED}(expr)
 //
-// When expr unexpectedly fails or succeeds, Google Test prints the expected result
-// and the actual result with both a human-readable string representation of
-// the error, if available, as well as the hex result code.
+// When expr unexpectedly fails or succeeds, Google Test prints the
+// expected result and the actual result with both a human-readable
+// string representation of the error, if available, as well as the
+// hex result code.
 #define EXPECT_HRESULT_SUCCEEDED(expr) \
     EXPECT_PRED_FORMAT1(::testing::internal::IsHRESULTSuccess, (expr))
 
@@ -1162,6 +1264,20 @@ AssertionResult DoubleLE(const char* expr1, const char* expr2,
 
 #endif  // GTEST_OS_WINDOWS
 
+// Macros that execute statement and check that it doesn't generate new fatal
+// failures in the current thread.
+//
+//   * {ASSERT|EXPECT}_NO_FATAL_FAILURE(statement);
+//
+// Examples:
+//
+//   EXPECT_NO_FATAL_FAILURE(Process());
+//   ASSERT_NO_FATAL_FAILURE(Process()) << "Process() failed";
+//
+#define ASSERT_NO_FATAL_FAILURE(statement) \
+    GTEST_TEST_NO_FATAL_FAILURE_(statement, GTEST_FATAL_FAILURE_)
+#define EXPECT_NO_FATAL_FAILURE(statement) \
+    GTEST_TEST_NO_FATAL_FAILURE_(statement, GTEST_NONFATAL_FAILURE_)
 
 // Causes a trace (including the source file path, the current line
 // number, and the given message) to be included in every test failure
@@ -1175,9 +1291,55 @@ AssertionResult DoubleLE(const char* expr1, const char* expr2,
 // to appear in the same block - as long as they are on different
 // lines.
 #define SCOPED_TRACE(message) \
-  ::testing::internal::ScopedTrace GTEST_CONCAT_TOKEN(gtest_trace_, __LINE__)(\
+  ::testing::internal::ScopedTrace GTEST_CONCAT_TOKEN_(gtest_trace_, __LINE__)(\
     __FILE__, __LINE__, ::testing::Message() << (message))
 
+namespace internal {
+
+// This template is declared, but intentionally undefined.
+template <typename T1, typename T2>
+struct StaticAssertTypeEqHelper;
+
+template <typename T>
+struct StaticAssertTypeEqHelper<T, T> {};
+
+}  // namespace internal
+
+// Compile-time assertion for type equality.
+// StaticAssertTypeEq<type1, type2>() compiles iff type1 and type2 are
+// the same type.  The value it returns is not interesting.
+//
+// Instead of making StaticAssertTypeEq a class template, we make it a
+// function template that invokes a helper class template.  This
+// prevents a user from misusing StaticAssertTypeEq<T1, T2> by
+// defining objects of that type.
+//
+// CAVEAT:
+//
+// When used inside a method of a class template,
+// StaticAssertTypeEq<T1, T2>() is effective ONLY IF the method is
+// instantiated.  For example, given:
+//
+//   template <typename T> class Foo {
+//    public:
+//     void Bar() { testing::StaticAssertTypeEq<int, T>(); }
+//   };
+//
+// the code:
+//
+//   void Test1() { Foo<bool> foo; }
+//
+// will NOT generate a compiler error, as Foo<bool>::Bar() is never
+// actually instantiated.  Instead, you need:
+//
+//   void Test2() { Foo<bool> foo; foo.Bar(); }
+//
+// to cause a compiler error.
+template <typename T1, typename T2>
+bool StaticAssertTypeEq() {
+  internal::StaticAssertTypeEqHelper<T1, T2>();
+  return true;
+}
 
 // Defines a test.
 //
@@ -1195,8 +1357,18 @@ AssertionResult DoubleLE(const char* expr1, const char* expr2,
 //     EXPECT_TRUE(foo.StatusIsOK());
 //   }
 
+// Note that we call GetTestTypeId() instead of GetTypeId<
+// ::testing::Test>() here to get the type ID of testing::Test.  This
+// is to work around a suspected linker bug when using Google Test as
+// a framework on Mac OS X.  The bug causes GetTypeId<
+// ::testing::Test>() to return different values depending on whether
+// the call is from the Google Test framework itself or from user test
+// code.  GetTestTypeId() is guaranteed to always return the same
+// value, as it always calls GetTypeId<>() from the Google Test
+// framework.
 #define TEST(test_case_name, test_name)\
-  GTEST_TEST(test_case_name, test_name, ::testing::Test)
+  GTEST_TEST_(test_case_name, test_name, \
+              ::testing::Test, ::testing::internal::GetTestTypeId())
 
 
 // Defines a test that uses a test fixture.
@@ -1226,7 +1398,8 @@ AssertionResult DoubleLE(const char* expr1, const char* expr2,
 //   }
 
 #define TEST_F(test_fixture, test_name)\
-  GTEST_TEST(test_fixture, test_name, test_fixture)
+  GTEST_TEST_(test_fixture, test_name, test_fixture, \
+              ::testing::internal::GetTypeId<test_fixture>())
 
 // Use this macro in main() to run all tests.  It returns 0 if all
 // tests are successful, or 1 otherwise.

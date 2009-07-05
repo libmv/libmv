@@ -32,27 +32,73 @@
 #include <gtest/internal/gtest-filepath.h>
 #include <gtest/internal/gtest-port.h>
 
-#ifdef _WIN32
+#include <stdlib.h>
+
+#ifdef _WIN32_WCE
+#include <windows.h>
+#elif GTEST_OS_WINDOWS
 #include <direct.h>
 #include <io.h>
-#endif  // _WIN32
-
 #include <sys/stat.h>
+#elif GTEST_OS_SYMBIAN
+// Symbian OpenC has PATH_MAX in sys/syslimits.h
+#include <sys/syslimits.h>
+#include <unistd.h>
+#else
+#include <limits.h>
+#include <sys/stat.h>  // NOLINT
+#include <unistd.h>  // NOLINT
+#include <climits>  // Some Linux distributions define PATH_MAX here.
+#endif  // _WIN32_WCE or _WIN32
+
+#if GTEST_OS_WINDOWS
+#define GTEST_PATH_MAX_ _MAX_PATH
+#elif defined(PATH_MAX)
+#define GTEST_PATH_MAX_ PATH_MAX
+#elif defined(_XOPEN_PATH_MAX)
+#define GTEST_PATH_MAX_ _XOPEN_PATH_MAX
+#else
+#define GTEST_PATH_MAX_ _POSIX_PATH_MAX
+#endif  // GTEST_OS_WINDOWS
 
 #include <gtest/internal/gtest-string.h>
 
 namespace testing {
 namespace internal {
 
-#ifdef GTEST_OS_WINDOWS
+#if GTEST_OS_WINDOWS
 const char kPathSeparator = '\\';
 const char kPathSeparatorString[] = "\\";
+#ifdef _WIN32_WCE
+// Windows CE doesn't have a current directory. You should not use
+// the current directory in tests on Windows CE, but this at least
+// provides a reasonable fallback.
+const char kCurrentDirectoryString[] = "\\";
+// Windows CE doesn't define INVALID_FILE_ATTRIBUTES
+const DWORD kInvalidFileAttributes = 0xffffffff;
+#else
 const char kCurrentDirectoryString[] = ".\\";
+#endif  // _WIN32_WCE
 #else
 const char kPathSeparator = '/';
 const char kPathSeparatorString[] = "/";
 const char kCurrentDirectoryString[] = "./";
 #endif  // GTEST_OS_WINDOWS
+
+// Returns the current working directory, or "" if unsuccessful.
+FilePath FilePath::GetCurrentDir() {
+#ifdef _WIN32_WCE
+// Windows CE doesn't have a current directory, so we just return
+// something reasonable.
+  return FilePath(kCurrentDirectoryString);
+#elif GTEST_OS_WINDOWS
+  char cwd[GTEST_PATH_MAX_ + 1] = {};
+  return FilePath(_getcwd(cwd, sizeof(cwd)) == NULL ? "" : cwd);
+#else
+  char cwd[GTEST_PATH_MAX_ + 1] = {};
+  return FilePath(getcwd(cwd, sizeof(cwd)) == NULL ? "" : cwd);
+#endif
+}
 
 // Returns a copy of the FilePath with the case-insensitive extension removed.
 // Example: FilePath("dir/file.exe").RemoveExtension("EXE") returns
@@ -99,23 +145,39 @@ FilePath FilePath::MakeFileName(const FilePath& directory,
                                 const FilePath& base_name,
                                 int number,
                                 const char* extension) {
-  FilePath dir(directory.RemoveTrailingPathSeparator());
-  if (number == 0) {
-    return FilePath(String::Format("%s%c%s.%s", dir.c_str(), kPathSeparator,
-                                   base_name.c_str(), extension));
-  }
-  return FilePath(String::Format("%s%c%s_%d.%s", dir.c_str(), kPathSeparator,
-                                 base_name.c_str(), number, extension));
+  const FilePath file_name(
+      (number == 0) ?
+      String::Format("%s.%s", base_name.c_str(), extension) :
+      String::Format("%s_%d.%s", base_name.c_str(), number, extension));
+  return ConcatPaths(directory, file_name);
+}
+
+// Given directory = "dir", relative_path = "test.xml", returns "dir/test.xml".
+// On Windows, uses \ as the separator rather than /.
+FilePath FilePath::ConcatPaths(const FilePath& directory,
+                               const FilePath& relative_path) {
+  if (directory.IsEmpty())
+    return relative_path;
+  const FilePath dir(directory.RemoveTrailingPathSeparator());
+  return FilePath(String::Format("%s%c%s", dir.c_str(), kPathSeparator,
+                                 relative_path.c_str()));
 }
 
 // Returns true if pathname describes something findable in the file-system,
 // either a file, directory, or whatever.
 bool FilePath::FileOrDirectoryExists() const {
-#ifdef GTEST_OS_WINDOWS
+#if GTEST_OS_WINDOWS
+#ifdef _WIN32_WCE
+  LPCWSTR unicode = String::AnsiToUtf16(pathname_.c_str());
+  const DWORD attributes = GetFileAttributes(unicode);
+  delete [] unicode;
+  return attributes != kInvalidFileAttributes;
+#else
   struct _stat file_stat = {};
   return _stat(pathname_.c_str(), &file_stat) == 0;
+#endif  // _WIN32_WCE
 #else
-  struct stat file_stat;
+  struct stat file_stat = {};
   return stat(pathname_.c_str(), &file_stat) == 0;
 #endif  // GTEST_OS_WINDOWS
 }
@@ -124,17 +186,57 @@ bool FilePath::FileOrDirectoryExists() const {
 // that exists.
 bool FilePath::DirectoryExists() const {
   bool result = false;
-#ifdef _WIN32
-  FilePath removed_sep(this->RemoveTrailingPathSeparator());
-  struct _stat file_stat = {};
-  result = _stat(removed_sep.c_str(), &file_stat) == 0 &&
-      (_S_IFDIR & file_stat.st_mode) != 0;
+#if GTEST_OS_WINDOWS
+  // Don't strip off trailing separator if path is a root directory on
+  // Windows (like "C:\\").
+  const FilePath& path(IsRootDirectory() ? *this :
+                                           RemoveTrailingPathSeparator());
+#ifdef _WIN32_WCE
+  LPCWSTR unicode = String::AnsiToUtf16(path.c_str());
+  const DWORD attributes = GetFileAttributes(unicode);
+  delete [] unicode;
+  if ((attributes != kInvalidFileAttributes) &&
+      (attributes & FILE_ATTRIBUTE_DIRECTORY)) {
+    result = true;
+  }
 #else
-  struct stat file_stat;
+  struct _stat file_stat = {};
+  result = _stat(path.c_str(), &file_stat) == 0 &&
+      (_S_IFDIR & file_stat.st_mode) != 0;
+#endif  // _WIN32_WCE
+#else
+  struct stat file_stat = {};
   result = stat(pathname_.c_str(), &file_stat) == 0 &&
       S_ISDIR(file_stat.st_mode);
-#endif  // _WIN32
+#endif  // GTEST_OS_WINDOWS
   return result;
+}
+
+// Returns true if pathname describes a root directory. (Windows has one
+// root directory per disk drive.)
+bool FilePath::IsRootDirectory() const {
+#if GTEST_OS_WINDOWS
+  // TODO(wan@google.com): on Windows a network share like
+  // \\server\share can be a root directory, although it cannot be the
+  // current directory.  Handle this properly.
+  return pathname_.GetLength() == 3 && IsAbsolutePath();
+#else
+  return pathname_ == kPathSeparatorString;
+#endif
+}
+
+// Returns true if pathname describes an absolute path.
+bool FilePath::IsAbsolutePath() const {
+  const char* const name = pathname_.c_str();
+#if GTEST_OS_WINDOWS
+  return pathname_.GetLength() >= 3 &&
+     ((name[0] >= 'a' && name[0] <= 'z') ||
+      (name[0] >= 'A' && name[0] <= 'Z')) &&
+     name[1] == ':' &&
+     name[2] == kPathSeparator;
+#else
+  return name[0] == kPathSeparator;
+#endif
 }
 
 // Returns a pathname for a file that does not currently exist. The pathname
@@ -184,8 +286,15 @@ bool FilePath::CreateDirectoriesRecursively() const {
 // directory for any reason, including if the parent directory does not
 // exist. Not named "CreateDirectory" because that's a macro on Windows.
 bool FilePath::CreateFolder() const {
-#ifdef _WIN32
+#if GTEST_OS_WINDOWS
+#ifdef _WIN32_WCE
+  FilePath removed_sep(this->RemoveTrailingPathSeparator());
+  LPCWSTR unicode = String::AnsiToUtf16(removed_sep.c_str());
+  int result = CreateDirectory(unicode, NULL) ? 0 : -1;
+  delete [] unicode;
+#else
   int result = _mkdir(pathname_.c_str());
+#endif  // !WIN32_WCE
 #else
   int result = mkdir(pathname_.c_str(), 0777);
 #endif  // _WIN32
@@ -202,6 +311,32 @@ FilePath FilePath::RemoveTrailingPathSeparator() const {
   return pathname_.EndsWith(kPathSeparatorString)
       ? FilePath(String(pathname_.c_str(), pathname_.GetLength() - 1))
       : *this;
+}
+
+// Normalize removes any redundant separators that might be in the pathname.
+// For example, "bar///foo" becomes "bar/foo". Does not eliminate other
+// redundancies that might be in a pathname involving "." or "..".
+void FilePath::Normalize() {
+  if (pathname_.c_str() == NULL) {
+    pathname_ = "";
+    return;
+  }
+  const char* src = pathname_.c_str();
+  char* const dest = new char[pathname_.GetLength() + 1];
+  char* dest_ptr = dest;
+  memset(dest_ptr, 0, pathname_.GetLength() + 1);
+
+  while (*src != '\0') {
+    *dest_ptr++ = *src;
+    if (*src != kPathSeparator)
+      src++;
+    else
+      while (*src == kPathSeparator)
+        src++;
+  }
+  *dest_ptr = '\0';
+  pathname_ = dest;
+  delete[] dest;
 }
 
 }  // namespace internal

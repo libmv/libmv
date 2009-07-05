@@ -46,20 +46,8 @@
 #ifndef GTEST_INCLUDE_GTEST_GTEST_MESSAGE_H_
 #define GTEST_INCLUDE_GTEST_GTEST_MESSAGE_H_
 
-#if defined(__APPLE__) && !defined(GTEST_NOT_MAC_FRAMEWORK_MODE)
-// When using Google Test on the Mac as a framework, all the includes will be
-// in the framework headers folder along with gtest.h.
-// Define GTEST_NOT_MAC_FRAMEWORK_MODE if you are building Google Test on
-// the Mac and are not using it as a framework.
-// More info on frameworks available here:
-// http://developer.apple.com/documentation/MacOSX/Conceptual/BPFrameworks/
-// Concepts/WhatAreFrameworks.html.
-#include "gtest-string.h"  // NOLINT
-#include "gtest-internal.h"  // NOLINT
-#else
 #include <gtest/internal/gtest-string.h>
 #include <gtest/internal/gtest-internal.h>
-#endif  // defined(__APPLE__) && !defined(GTEST_NOT_MAC_FRAMEWORK_MODE)
 
 namespace testing {
 
@@ -114,7 +102,7 @@ class Message {
   }
 
   ~Message() { delete ss_; }
-#ifdef __SYMBIAN32__
+#if GTEST_OS_SYMBIAN
   // Streams a value (either a pointer or not) to this object.
   template <typename T>
   inline Message& operator <<(const T& value) {
@@ -151,7 +139,7 @@ class Message {
     }
     return *this;
   }
-#endif  // __SYMBIAN32__
+#endif  // GTEST_OS_SYMBIAN
 
   // Since the basic IO manipulators are overloaded for both narrow
   // and wide streams, we have to provide this specialized definition
@@ -199,7 +187,7 @@ class Message {
   }
 
  private:
-#ifdef __SYMBIAN32__
+#if GTEST_OS_SYMBIAN
   // These are needed as the Nokia Symbian Compiler cannot decide between
   // const T& and const T* in a function template. The Nokia compiler _can_
   // decide between class template specializations for T and T*, so a
@@ -216,7 +204,7 @@ class Message {
   inline void StreamHelper(internal::false_type dummy, const T& value) {
     ::GTestStreamToHelper(ss_, value);
   }
-#endif  // __SYMBIAN32__
+#endif  // GTEST_OS_SYMBIAN
 
   // We'll hold the text streamed to this object here.
   internal::StrStream* const ss_;
