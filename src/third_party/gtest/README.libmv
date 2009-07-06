@@ -1,9 +1,7 @@
 Project: Google C++ Testing Framework
 URL: http://code.google.com/p/googletest
 License: New BSD
-Upstream version: 1.0.0
+Upstream version: 1.3.0
 Local modifications:
 
-Modified slightly to compile with no warnings.  Added call to gflags to parse
-command line flags in gtest_main.cc, to avoid requiring a main in every
-unittest.
+Changed some initializations via = {} with memset.
