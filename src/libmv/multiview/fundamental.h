@@ -110,7 +110,6 @@ bool MotionFromEssentialAndCorrespondence(const Mat3 &E,
                                           const Vec2 &x2,
                                           Mat3 *R,
                                           Vec3 *t);
-
   
 } // namespace libmv
 
