@@ -13,6 +13,7 @@ Local modifications:
 * Added some compile flags to silence various warnings, allowing us to keep the
   differences between upstream small.
 * Don't redefine _XOPEN_SOURCE.
+* Added "google::" to GetReferenceableValue in CHECK_OP_LOG.
 
 Old changes which got obsoleted (maybe?) by 0.2.1 merge:
 * Added #ifndef / def REG_EIP; not sure what that is.
