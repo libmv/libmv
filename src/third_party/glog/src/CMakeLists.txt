@@ -5,7 +5,8 @@ IF(WIN32)
 ENDIF(WIN32)
 
 IF(CMAKE_COMPILER_IS_GNUCXX)
-  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused -Wno-type-limits -Wno-empty-body")
+  SET(CMAKE_CXX_FLAGS "")
+  #  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused -Wno-type-limits -Wno-empty-body")
 ENDIF(CMAKE_COMPILER_IS_GNUCXX)
 
 ADD_LIBRARY(glog
