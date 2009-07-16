@@ -10,7 +10,8 @@ ADD_LIBRARY(multiview
             sixpointnview.cc
             triangulation.cc
             bundle.cc
-            autocalibration.cc)
+            autocalibration.cc
+            five_point.cc)
 
 TARGET_LINK_LIBRARIES(multiview numeric
                                 V3D colamd ldl)
@@ -35,6 +36,7 @@ MULTIVIEW_TEST(robust_estimation)
 MULTIVIEW_TEST(sixpointnview)
 MULTIVIEW_TEST(bundle)
 MULTIVIEW_TEST(autocalibration)
+MULTIVIEW_TEST(five_point)
 
 # TODO(keir): Make tests that depend on generated.cc to use generated sources.
 #ADD_GENERATED_SOURCE(generated.cc generator.py)

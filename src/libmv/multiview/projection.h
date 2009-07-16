@@ -54,6 +54,12 @@ inline Vec2 HomogeneousToEuclidean(const Vec3 &h) {
 inline Vec3 HomogeneousToEuclidean(const Vec4 &h) {
   return h.start<3>() / h(3);
 }
+inline Mat2X HomogeneousToEuclidean(const Mat3X &h) {
+  Mat2X e(2, h.cols());
+  e.row(0) = h.row(0).cwise() / h.row(2);
+  e.row(1) = h.row(1).cwise() / h.row(2);
+  return e;
+}
 
 void EuclideanToHomogeneous(const Mat &X, Mat *H);
 void EuclideanToHomogeneous(const Vec2 &X, Vec3 *H);
