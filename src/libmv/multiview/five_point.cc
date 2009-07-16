@@ -261,7 +261,7 @@ void FivePointsRelativePose(const Mat2X &x1, const Mat2X &x2,
     }
   }
       
-  // Recover rotation and transation from E
+  // Recover rotation and translation from E
   Rs->resize(Es->size());
   ts->resize(Es->size());
   for (int s = 0; s < Es->size(); ++s) {
