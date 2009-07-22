@@ -27,7 +27,6 @@ namespace {
 using namespace libmv;
 
 TEST(FundamentalParameterization, Roundtripping) {
-
   Mat3 f, f_roundtrip;
   Vec9 p; p << 1, 2, 3, 4,  // u
                0.,          // s
@@ -53,23 +52,8 @@ TEST(FundamentalParameterization, Roundtripping) {
   LG << "p_roundtrip " << p_roundtrip.transpose();
   LG << "f_roundtrip\n" << f_roundtrip;
 
+  // Check that going from F to p and back to F goes in a circle.
   EXPECT_MATRIX_PROP(f, f_roundtrip, 1e-9);
-}
-
-TEST(FundamentalParameterization, QuaternionConversion) {
-
-  Vec4 r; r << 5, 6, 7, 1;
-  r.normalize();
-  Eigen::Quaterniond q, q2;
-  q = r;
-
-  Mat3 R;
-  R = q.toRotationMatrix();
-  q2 = R;
-
-  LG << "orig: " << q.coeffs().transpose();
-  LG << "resu: " << q2.coeffs().transpose();
-  
 }
 
 } // namespace

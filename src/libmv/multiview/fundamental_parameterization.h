@@ -23,11 +23,11 @@
 
 #include <vector>
 
-#include "libmv/logging/logging.h"
-#include "libmv/numeric/numeric.h"
-
 #include <Eigen/Geometry>
 #include <Eigen/QR>
+
+#include "libmv/logging/logging.h"
+#include "libmv/numeric/numeric.h"
 
 namespace libmv {
 
@@ -49,7 +49,7 @@ class FundamentalRank2Parameterization {
   typedef Eigen::Matrix<T, 9, 1> Parameters;     // u, s, v
   typedef Eigen::Matrix<T, 3, 3> Parameterized;  // F = USV^T
 
-  // Convert to a F matrix from the 9 parameters.
+  // Convert from the 9 parameters to a F matrix.
   static void To(const Parameters &p, Parameterized *f) {
     // TODO(keir): This is fantastically inefficient. Multiply through by the
     // zeros of S symbolically to speed this up.
@@ -69,19 +69,10 @@ class FundamentalRank2Parameterization {
          T(0), s,    T(0),
          T(0), T(0), T(0);
 
-    LG << "S " << S;
-
     *f = u.toRotationMatrix() * S * vt.toRotationMatrix();
-
-    LG << "*f s " << f->svd().singularValues().transpose();
-    LG << "u.toRot\n" << u.toRotationMatrix();
-    LG << "vt.toRot\n" << vt.toRotationMatrix();
-    LG << "u.toRot s " << u.toRotationMatrix().svd().singularValues().transpose();
-    LG << "vt.toRot s " << vt.toRotationMatrix().svd().singularValues().transpose();
-    LG << "u.toRot eigs " << u.toRotationMatrix().determinant();
-    LG << "vt.toRot eigs " << vt.toRotationMatrix().determinant();
   }
 
+  // Convert from a F matrix to the 9 parameters.
   static void From(const Parameterized &f, Parameters *p) {
     // This ignores the third singular value, which should be zero for a real F
     // matrix. If F is rank 3 rather than 2, the assumption that the third
@@ -89,12 +80,9 @@ class FundamentalRank2Parameterization {
     // Frobenius sense.
     Eigen::SVD<Parameterized> svd(f);
 
-    LG << "F --> parameters\n" << f;
-    LG << "svd s " << svd.singularValues().transpose();
-
     // U and V are either rotations or reflections. Since the fundamental
-    // matrix is invariant to scale changes, we can force U and V to be
-    // rotations by flipping their signs.
+    // matrix is invariant to scale changes, force U and V to rotations by
+    // flipping their signs.
     Eigen::Quaternion<T> u, vt;
     u  =   svd.matrixU().determinant() > 0
        ?   svd.matrixU()
@@ -104,21 +92,15 @@ class FundamentalRank2Parameterization {
        ?   svd.matrixV().transpose().eval()
        :  (-svd.matrixV().transpose()).eval();
 
+    // This may not be necessary.
     u.normalize();
     vt.normalize();
-
-    LG << "matrixU \n" << svd.matrixU();
-    LG << "matrixVT \n" << svd.matrixV().transpose();
-
-    LG << "matrixU  det" << svd.matrixU().determinant();
-    LG << "matrixVT det" << svd.matrixV().transpose().determinant();
 
     (*p) << u.coeffs(), 
             sqrt(svd.singularValues()[0] / svd.singularValues()[1] - T(1.0)),
             vt.coeffs();
   }
 };
-
   
 } // namespace libmv
 
