@@ -27,6 +27,7 @@
 #include "libmv/numeric/numeric.h"
 
 #include <Eigen/Geometry>
+#include <Eigen/QR>
 
 namespace libmv {
 
@@ -48,14 +49,19 @@ class FundamentalRank2Parameterization {
   typedef Eigen::Matrix<T, 9, 1> Parameters;     // u, s, v
   typedef Eigen::Matrix<T, 3, 3> Parameterized;  // F = USV^T
 
+  // Convert to a F matrix from the 9 parameters.
   static void To(const Parameters &p, Parameterized *f) {
     // TODO(keir): This is fantastically inefficient. Multiply through by the
     // zeros of S symbolically to speed this up.
     Eigen::Quaternion<T> u, vt;
     u  = p.template start<4>();
     vt = p.template end  <4>();
+
     // Use 1 / (1.0 + s^2) to prevent negative singular values. Use the inverse
     // so that the singular value ordering remains consistent.
+    //
+    // TODO(keir): This parameterization may be to stringent; consider also
+    // letting the second element roam.
     T s = T(1.0) / (T(1.0) + p[4]*p[4]);
 
     Matrix<T, 3, 3> S;
@@ -68,8 +74,12 @@ class FundamentalRank2Parameterization {
     *f = u.toRotationMatrix() * S * vt.toRotationMatrix();
 
     LG << "*f s " << f->svd().singularValues().transpose();
+    LG << "u.toRot\n" << u.toRotationMatrix();
+    LG << "vt.toRot\n" << vt.toRotationMatrix();
     LG << "u.toRot s " << u.toRotationMatrix().svd().singularValues().transpose();
     LG << "vt.toRot s " << vt.toRotationMatrix().svd().singularValues().transpose();
+    LG << "u.toRot eigs " << u.toRotationMatrix().determinant();
+    LG << "vt.toRot eigs " << vt.toRotationMatrix().determinant();
   }
 
   static void From(const Parameterized &f, Parameters *p) {
@@ -79,12 +89,29 @@ class FundamentalRank2Parameterization {
     // Frobenius sense.
     Eigen::SVD<Parameterized> svd(f);
 
+    LG << "F --> parameters\n" << f;
     LG << "svd s " << svd.singularValues().transpose();
 
-    // Convert from rotation matrix to quat via operator=.
+    // U and V are either rotations or reflections. Since the fundamental
+    // matrix is invariant to scale changes, we can force U and V to be
+    // rotations by flipping their signs.
     Eigen::Quaternion<T> u, vt;
-    u = svd.matrixU();
-    vt = svd.matrixV().transpose();
+    u  =   svd.matrixU().determinant() > 0
+       ?   svd.matrixU()
+       : (-svd.matrixU()).eval();
+
+    vt =   svd.matrixV().determinant() > 0
+       ?   svd.matrixV().transpose().eval()
+       :  (-svd.matrixV().transpose()).eval();
+
+    u.normalize();
+    vt.normalize();
+
+    LG << "matrixU \n" << svd.matrixU();
+    LG << "matrixVT \n" << svd.matrixV().transpose();
+
+    LG << "matrixU  det" << svd.matrixU().determinant();
+    LG << "matrixVT det" << svd.matrixV().transpose().determinant();
 
     (*p) << u.coeffs(), 
             sqrt(svd.singularValues()[0] / svd.singularValues()[1] - T(1.0)),
