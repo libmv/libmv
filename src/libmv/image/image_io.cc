@@ -31,7 +31,7 @@
 namespace libmv {
 
 Format GetFormat(const char *c) {
-  char *p = strrchr (c, '.');
+  const char *p = strrchr (c, '.');
 
   if (p == NULL)
     return Unknown;
@@ -165,36 +165,36 @@ int ReadJpgStream(FILE *file, ByteImage *im) {
   JSAMPARRAY buffer;
   cinfo.err = jpeg_std_error(&jerr.pub);
   jerr.pub.error_exit = &jpeg_error;
-  
+
   if (setjmp(jerr.setjmp_buffer)) {
     jpeg_destroy_decompress(&cinfo);
     return 0;
   }
-  
+
   jpeg_create_decompress(&cinfo);
   jpeg_stdio_src(&cinfo, file);
   jpeg_read_header(&cinfo, TRUE);
   jpeg_start_decompress(&cinfo);
-  
+
   int row_stride = cinfo.output_width * cinfo.output_components;
-  
+
   buffer = (*cinfo.mem->alloc_sarray)
     ((j_common_ptr) &cinfo, JPOOL_IMAGE, row_stride, 1);
-  
+
   im->Resize(cinfo.output_height, cinfo.output_width, cinfo.output_components);
-  
+
   unsigned char *ptr = im->Data();
-  
+
   while (cinfo.output_scanline < cinfo.output_height) {
     jpeg_read_scanlines(&cinfo, buffer, 1);
-    
+
     int i;
     for(i=0;i<row_stride;i++) {
       *ptr = (*buffer)[i];
       ptr++;
     }
   }
-  
+
   jpeg_finish_decompress(&cinfo);
   jpeg_destroy_decompress(&cinfo);
   return 1;
@@ -220,18 +220,18 @@ int WriteJpg(const FloatImage &image, const char *filename, int quality) {
 int WriteJpgStream(const ByteImage &im, FILE *file, int quality) {
   if (quality < 0 || quality > 100)
     LOG(ERROR) << "Error: The quality parameter should be between 0 and 100";
-  
+
   struct jpeg_compress_struct cinfo;
   struct jpeg_error_mgr jerr;
-  
+
   cinfo.err = jpeg_std_error(&jerr);
   jpeg_create_compress(&cinfo);
   jpeg_stdio_dest(&cinfo, file);
-  
+
   cinfo.image_width = im.Width();
   cinfo.image_height = im.Height();
   cinfo.input_components = im.Depth();
-  
+
   if (cinfo.input_components==3) {
     cinfo.in_color_space = JCS_RGB;
   } else if (cinfo.input_components==1) {
@@ -241,16 +241,16 @@ int WriteJpgStream(const ByteImage &im, FILE *file, int quality) {
     jpeg_destroy_compress(&cinfo);
     return 0;
   }
-  
+
   jpeg_set_defaults(&cinfo);
   jpeg_set_quality(&cinfo, quality, TRUE);
   jpeg_start_compress(&cinfo, TRUE);
-  
+
   const unsigned char *ptr = im.Data();
   int row_bytes = cinfo.image_width*cinfo.input_components;
-  
+
   JSAMPLE *row = new JSAMPLE[row_bytes];
-  
+
   while (cinfo.next_scanline < cinfo.image_height) {
     int i;
     for(i=0; i<row_bytes; i++)
@@ -258,9 +258,9 @@ int WriteJpgStream(const ByteImage &im, FILE *file, int quality) {
     jpeg_write_scanlines(&cinfo, &row, 1);
     ptr += row_bytes;
   }
-  
+
   delete [] row;
-  
+
   jpeg_finish_compress(&cinfo);
   jpeg_destroy_compress(&cinfo);
   return 1;
