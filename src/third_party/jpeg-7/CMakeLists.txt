@@ -20,7 +20,7 @@ SET(LIBJPEG_DLIB
 )
 
 IF(WIN32)
-  ADD_DEFINITIONS( -DJPEGSTATIC -DUSE_WINDOWS_MESSAGEBOX -D_CRT_SECURE_NO_WARNINGS)
+  ADD_DEFINITIONS( -DJPEGSTATIC -D_CRT_SECURE_NO_WARNINGS)
   # TODO(keir): CMake ignores this, but it should disable the following:
   # C:\...\basetsd.h(78): warning C4142: benign redefinition of type
   SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4142")
