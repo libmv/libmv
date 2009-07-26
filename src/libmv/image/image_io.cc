@@ -126,7 +126,7 @@ int WriteImage(const FloatImage &im, const char *filename){
 }
 
 int ReadJpg(const char *filename, ByteImage *im) {
-  FILE *file = fopen(filename,"r");
+  FILE *file = fopen(filename, "rb");
   if (!file) {
     LOG(ERROR) << "Error: Couldn't open " << filename << " fopen returned 0";
     return 0;
@@ -201,7 +201,7 @@ int ReadJpgStream(FILE *file, ByteImage *im) {
 }
 
 int WriteJpg(const ByteImage &im, const char *filename, int quality) {
-  FILE *file = fopen(filename,"w");
+  FILE *file = fopen(filename, "wb");
   if (!file) {
     LOG(ERROR) << "Error: Couldn't open " << filename << " fopen returned 0";
     return 0;
@@ -267,7 +267,7 @@ int WriteJpgStream(const ByteImage &im, FILE *file, int quality) {
 }
 
 int ReadPng(const char *filename, ByteImage *im) {
-  FILE *file = fopen(filename,"r");
+  FILE *file = fopen(filename, "rb");
   if (!file) {
     LOG(ERROR) << "Error: Couldn't open " << filename << " fopen returned 0";
     return 0;
@@ -349,7 +349,7 @@ int ReadPngStream(FILE *file, ByteImage *im) {
 }
 
 int WritePng(const ByteImage &im, const char *filename) {
-  FILE *file = fopen(filename,"w");
+  FILE *file = fopen(filename, "wb");
   if (!file) {
     LOG(ERROR) << "Error: Couldn't open " << filename << " fopen returned 0";
     return 0;
@@ -434,7 +434,7 @@ int WritePngStream(const ByteImage &im, FILE *file) {
 }
 
 int ReadPnm(const char *filename, ByteImage *im) {
-  FILE *file = fopen(filename,"r");
+  FILE *file = fopen(filename, "rb");
   if (!file) {
     LOG(ERROR) << "Error: Couldn't open " << filename << " fopen returned 0";
     return 0;
@@ -536,7 +536,7 @@ int ReadPnmStream(FILE *file, ByteImage *im) {
 }
 
 int WritePnm(const ByteImage &im, const char *filename) {
-  FILE *file = fopen(filename,"w");
+  FILE *file = fopen(filename, "wb");
   if (!file) {
     LOG(ERROR) << "Error: Couldn't open " << filename << " fopen returned 0";
     return 0;
