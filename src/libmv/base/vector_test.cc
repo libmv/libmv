@@ -41,8 +41,14 @@ TEST(VectorAlignmentTest, PushBack) {
   vs.push_back(x2);
   EXPECT_EQ(2, vs.size());
   EXPECT_EQ(2, vs.capacity());
-  EXPECT_EQ(x1, vs[0]);
-  EXPECT_EQ(x2, vs[1]);
+
+  // The following is necessary because of some bug in gtest; the expected
+  // parameter can't be a fixed size vectorizable type with alignment
+  // requirements.
+  Vec x1r = x1;
+  Vec x2r = x2;
+  EXPECT_EQ(x1r, vs[0]);
+  EXPECT_EQ(x2r, vs[1]);
 
   vs.push_back(x2);
   vs.push_back(x2);

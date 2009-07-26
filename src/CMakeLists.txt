@@ -1,4 +1,4 @@
-# Copyright (c) 2007, 2008 libmv authors.
+# Copyright (c) 2007, 2008, 2009 libmv authors.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to
@@ -29,14 +29,14 @@ PROJECT(LIBMV C CXX)
 
 ENABLE_TESTING()
 
-IF(WIN32)
-  SET(CMAKE_CXX_FLAGS "/EHsc")
-ENDIF(WIN32)
+# TODO(keir): We should use consistent checking here; it may be gcc on win32.
+# Is there something like CMAKE_COMPILER_IS_CL_EXE?
+IF (WIN32)
+  SET (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /EHsc /wd4996 /wd4018 /wd4244")
+ENDIF (WIN32)
 
 IF(CMAKE_COMPILER_IS_GNUCXX)
-  # -Wno-deprecated needed for gcc-4.3 on debian/testing;
-  # needed due to flens/refcounter.h including deprecated hash_map
-  SET(CMAKE_CXX_FLAGS "-Wall -W -Wfatal-errors -Werror -Wno-deprecated -Wno-sign-compare -Wno-strict-aliasing")
+  SET(CMAKE_CXX_FLAGS "-Wall -W -Wfatal-errors -Werror -Wno-sign-compare -Wno-strict-aliasing")
   ADD_DEFINITIONS(-D_GNU_SOURCE)
 ENDIF(CMAKE_COMPILER_IS_GNUCXX)
 
@@ -56,21 +56,21 @@ ENDIF (NOT CMAKE_MODULE_PATH)
 MARK_AS_ADVANCED(LIBMV_CMAKE_MODULE_PATH_OK)
 
 INCLUDE_DIRECTORIES(
+  .
   third_party/gtest
-  third_party/glog/src
   third_party/gtest/include
   third_party/eigen
   third_party/ssba
-  third_party
-  ${LIBMV_SOURCE_DIR}
-  ${LIBMV_BINARY_DIR}
+  third_party/glog/src
 )
 
 IF (WIN32)
   INCLUDE_DIRECTORIES(
-    third_party/pthreads-w32/include
     third_party/msinttypes
-  )
+    third_party/jpeg-7
+    third_party/zlib
+    third_party/pthreads-w32/include
+    third_party/png)
 ENDIF (WIN32)
 
 IF (APPLE)
@@ -85,12 +85,6 @@ IF (APPLE)
   # Tell gtest not to use mac framworks.
   ADD_DEFINITIONS('-DGTEST_NOT_MAC_FRAMEWORK_MODE')
 ENDIF (APPLE)
-
-MACRO (ADD_GENERATED_SOURCE generated_file python_generator)
-    ADD_CUSTOM_COMMAND(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${generated_file}
-       COMMAND python ${CMAKE_CURRENT_SOURCE_DIR}/${python_generator}
-       DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${python_generator})
-ENDMACRO (ADD_GENERATED_SOURCE)
 
 MACRO (LIBMV_TEST NAME EXTRA_LIBS)
   ADD_EXECUTABLE(${NAME}_test ${NAME}_test.cc)
@@ -107,5 +101,7 @@ ENDMACRO (LIBMV_TEST)
 ADD_SUBDIRECTORY(libmv)
 ADD_SUBDIRECTORY(testing)
 ADD_SUBDIRECTORY(third_party)
-ADD_SUBDIRECTORY(ui)
+IF (NOT WIN32)
+  ADD_SUBDIRECTORY(ui)
+ENDIF (NOT WIN32)
 ADD_SUBDIRECTORY(tools)

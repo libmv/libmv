@@ -1,5 +1,3 @@
-ADD_DEFINITIONS(-DTHIS_SOURCE_DIR=\\"${CMAKE_CURRENT_SOURCE_DIR}\\")
-
 ADD_LIBRARY(multiview
             projection.cc
             fundamental.cc
@@ -13,8 +11,7 @@ ADD_LIBRARY(multiview
             autocalibration.cc
             five_point.cc)
 
-TARGET_LINK_LIBRARIES(multiview numeric
-                                V3D colamd ldl)
+TARGET_LINK_LIBRARIES(multiview numeric V3D colamd ldl)
 
 ADD_LIBRARY(multiview_test_data
             test_data_sets.cc)

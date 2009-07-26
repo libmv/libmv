@@ -22,7 +22,7 @@
 
 #include "third_party/gflags/gflags.h"
 #include "third_party/gtest/include/gtest/gtest.h"
-#include "third_party/glog/src/glog/logging.h"
+#include "libmv/logging/logging.h"
 
 DEFINE_string(test_tmpdir, "/tmp", "Dir to use for temp files");
 

@@ -29,6 +29,7 @@ using libmv::SceneGraph;
 using libmv::MakeSGNode;
 using libmv::SGNode;
 using libmv::Mat4;
+using libmv::Mat;
 
 struct TestStruct {
   int data_;
@@ -89,7 +90,8 @@ TEST(SceneGraph, BigGraph) {
 }
 
 TEST(SceneGraph, MatrixTest) {
-  Mat4 mat, ident;
+  // Don't use Mat4 on stack to prevent MSVC alignment breakage.
+  Mat mat(4, 4), ident(4, 4);
   ident.setIdentity();
   mat << 6, 5, 3, 4,
          7, 3, 2, 1,
@@ -101,8 +103,8 @@ TEST(SceneGraph, MatrixTest) {
   scene_graph.UpdateMatrix();
   scene_graph.AddChild(MakeSGNode(new TestStruct(data), "child"));
   SGNode<TestStruct> *ptr = scene_graph.GetAtPath("/child");
-  EXPECT_EQ(ptr->GetMatrix(), mat);
-  EXPECT_EQ(ptr->GetObjectMatrix(), ident);
+  EXPECT_EQ(mat, ptr->GetMatrix());
+  EXPECT_EQ(ident, ptr->GetObjectMatrix());
 }
 
 TEST(SceneGraph, Misc) {

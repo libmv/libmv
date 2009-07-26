@@ -87,7 +87,7 @@ void ConvolveHorizontal(const Array3Df &in,
           sum += in(r, cc) * kernel(k);
         }
       }
-      out(r, c, plane) = sum;
+      out(r, c, plane) = static_cast<float>(sum);
     }
   }
 }
@@ -119,7 +119,7 @@ void ConvolveVertical(const Array3Df &in,
           sum += in(jj, i) * kernel(k);
         }
       }
-      out(j, i, plane) = sum;
+      out(j, i, plane) = static_cast<float>(sum);
     }
   }
 }

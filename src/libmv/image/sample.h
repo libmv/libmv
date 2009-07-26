@@ -93,7 +93,7 @@ inline void DownsampleChannelsBy2(const Array3Df &in, Array3Df *out) {
         (*out)(r, c, k) = (in(2 * r,     2 * c,     k) +
                            in(2 * r + 1, 2 * c,     k) +
                            in(2 * r,     2 * c + 1, k) +
-                           in(2 * r + 1, 2 * c + 1, k)) / 4.0;
+                           in(2 * r + 1, 2 * c + 1, k)) / 4.0f;
       }
     }
   }

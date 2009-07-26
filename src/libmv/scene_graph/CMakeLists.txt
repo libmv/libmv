@@ -1,4 +1,2 @@
-ADD_DEFINITIONS(-DTHIS_SOURCE_DIR=\\"${CMAKE_CURRENT_SOURCE_DIR}\\")
-
 LIBMV_TEST(scene_graph "")
 LIBMV_TEST(scene_graph_simple "")

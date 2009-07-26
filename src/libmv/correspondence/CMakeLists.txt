@@ -1,4 +1,3 @@
-ADD_DEFINITIONS(-DTHIS_SOURCE_DIR=\\"${CMAKE_CURRENT_SOURCE_DIR}\\")
 ADD_LIBRARY(correspondence klt.cc feature.cc correspondence.cc matches.cc)
 LIBMV_TEST(klt "correspondence;image;numeric")
 LIBMV_TEST(bipartite_graph "")

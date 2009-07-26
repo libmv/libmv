@@ -28,6 +28,7 @@ using namespace libmv;
 namespace {
 
 TEST(RefineMaxima3D, SimpleRefinement) {
+  // Make a 3D paraboloid with minima at (2, 2, 2).
   Array3Df f(5, 5, 5);
   f.Fill(0.0);
   for (int x = 0; x < 5; ++x) {
@@ -40,6 +41,8 @@ TEST(RefineMaxima3D, SimpleRefinement) {
       }
     }
   }
+  
+  // Check that all neighbours in a 9x9 block refine to the true minimum.
   for (int dx = -1; dx <= 1; ++dx) {
     for (int dy = -1; dy <= 1; ++dy) {
       for (int dz = -1; dz <= 1; ++dz) {
@@ -48,7 +51,7 @@ TEST(RefineMaxima3D, SimpleRefinement) {
         EXPECT_EQ(-dx, delta(0));
         EXPECT_EQ(-dy, delta(1));
         EXPECT_EQ(-dz, delta(2));
-        LOG(INFO) << "\n" << delta;
+        LOG(INFO) << delta.transpose();
       }
     }
   }

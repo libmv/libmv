@@ -27,7 +27,8 @@ namespace libmv {
 void FloatArrayToScaledByteArray(const Array3Df &float_array,
                                  Array3Du *byte_array) {
   byte_array->ResizeLike(float_array);
-  float minval=HUGE_VAL, maxval=-HUGE_VAL;
+  float minval =  HUGE_VAL;
+  float maxval = -HUGE_VAL;
   for (int i = 0; i < float_array.Height(); ++i) {
     for (int j = 0; j < float_array.Width(); ++j) {
       for (int k = 0; k < float_array.Depth(); ++k) {

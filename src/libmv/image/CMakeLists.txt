@@ -1,11 +1,10 @@
-ADD_DEFINITIONS(-DTHIS_SOURCE_DIR=\\"${CMAKE_CURRENT_SOURCE_DIR}\\")
+ADD_DEFINITIONS(-DTHIS_SOURCE_DIR="\\"${CMAKE_CURRENT_SOURCE_DIR}\\"")
 
 IF(WIN32)
   INCLUDE_DIRECTORIES(
-    ${libjpeg_SOURCE_DIR}
-    ${libjpeg_BINARY_DIR}
-    ${png_SOURCE_DIR}
-    ${zlib_SOURCE_DIR}
+    ${JPEG_SOURCE_DIR}
+    ${PNG_SOURCE_DIR}
+    ${ZLIB_SOURCE_DIR}
   )
 ENDIF(WIN32)
 
@@ -13,7 +12,7 @@ ADD_LIBRARY(image image.cc image_io.cc convolve.cc image_pyramid.cc array_nd.cc
             image_sequence.cc image_sequence_io.cc image_sequence_filters.cc
             filtered_sequence.cc pyramid_sequence.cc)
 
-TARGET_LINK_LIBRARIES(image png jpeg glog gflags pthread)
+TARGET_LINK_LIBRARIES(image png jpeg glog gflags ${PTHREAD})
 
 MACRO (IMAGE_TEST NAME)
   LIBMV_TEST(${NAME} image)

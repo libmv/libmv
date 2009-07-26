@@ -31,10 +31,10 @@ TEST(Image, Nearest) {
   image(0,1) = 1;
   image(1,0) = 2;
   image(1,1) = 3;
-  EXPECT_EQ(0 ,SampleNearest(image, -0.4, -0.4));
-  EXPECT_EQ(0 ,SampleNearest(image,  0.4,  0.4));
-  EXPECT_EQ(3 ,SampleNearest(image,  0.6,  0.6));
-  EXPECT_EQ(3 ,SampleNearest(image,  1.4,  1.4));
+  EXPECT_EQ(0 ,SampleNearest(image, -0.4f, -0.4f));
+  EXPECT_EQ(0 ,SampleNearest(image,  0.4f,  0.4f));
+  EXPECT_EQ(3 ,SampleNearest(image,  0.6f,  0.6f));
+  EXPECT_EQ(3 ,SampleNearest(image,  1.4f,  1.4f));
 }
 
 TEST(Image, Linear) {

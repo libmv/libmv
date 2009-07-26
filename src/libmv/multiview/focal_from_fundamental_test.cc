@@ -76,9 +76,9 @@ TEST(FocalFromFundamental, RotationToEliminateY) {
   Mat3 T;
   RotationToEliminateY(a, &T);
   b = T * a;
-  EXPECT_NEAR(sqrt(2), b(0), 1e-8);
-  EXPECT_NEAR(      0, b(1), 1e-8);
-  EXPECT_NEAR(      0, b(2), 1e-8);
+  EXPECT_NEAR(sqrt(2.0), b(0), 1e-8);
+  EXPECT_NEAR(        0, b(1), 1e-8);
+  EXPECT_NEAR(        0, b(2), 1e-8);
 }
 
 TEST(FocalFromFundamental, FundamentalAlignEpipolesToXAxis) {
@@ -89,14 +89,14 @@ TEST(FocalFromFundamental, FundamentalAlignEpipolesToXAxis) {
   EpipolesFromFundamental(F_rotated, &e1, &e2);
   e1 /= e1(2);
   e2 /= e2(2);
-  EXPECT_NEAR(sqrt(2), fabs(e1(0)), 1e-8); // The sign of x is undetermined.
-                                           // It depends on the sign of z
-                                           // before the alignement.
-  EXPECT_NEAR(      0,       e1(1), 1e-8); // y coordinate is now 0.
-  EXPECT_NEAR(      1,       e1(2), 1e-8);
+  EXPECT_NEAR(sqrt(2.0), fabs(e1(0)), 1e-8);  // The sign of x is undetermined.
+                                              // It depends on the sign of z
+                                              // before the alignement.
+  EXPECT_NEAR(        0,       e1(1), 1e-8);  // y coordinate is now 0.
+  EXPECT_NEAR(        1,       e1(2), 1e-8);
   EXPECT_NEAR(sqrt(2.0), fabs(e2(0)), 1e-8);
-  EXPECT_NEAR(      0,       e2(1), 1e-8); // y coordinate is now 0.
-  EXPECT_NEAR(      1,       e2(2), 1e-8);
+  EXPECT_NEAR(        0,       e2(1), 1e-8);  // y coordinate is now 0.
+  EXPECT_NEAR(        1,       e2(2), 1e-8);
 }
 
 TEST(FocalFromFundamental, FundamentalShiftPrincipalPoints) {
