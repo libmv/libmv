@@ -1,9 +1,12 @@
-Project: Pthreads-w32
+Project: pthreads-w32
 URL: http://sourceware.org/pthreads-win32/
 License: GNU Lesser General Public License (LGPL)
 Upstream version: 2.8.0 from ftp://sourceware.org/pub/pthreads-win32/pthreads-w32-2-8-0-release.exe
 Local modifications: 
 
-* Most of the source code is omitted.
-* 32-bit binary build is used.
+* Added #include <pthread.h> to implement.h. I have no idea why it wasn't there
+  already.
+* The files are split across include/ and src/, which is not the case in the
+  upstream source distribution
 
+Note that I didn't check in the pristine version by accident; however it should be easy to make a diff for implement.h.
