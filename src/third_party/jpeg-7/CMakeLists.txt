@@ -2,9 +2,7 @@ PROJECT(jpeg)
 
 SET(LIBJPEG_SYSDEP jmemnobs.c)
 
-SET(LIBJPEG_COMMON 
-  jaricom.c jcomapi.c jutils.c jerror.c jmemmgr.c
-)
+SET(LIBJPEG_COMMON jaricom.c jcomapi.c jutils.c jerror.c jmemmgr.c)
 
 SET(LIBJPEG_CLIB
   jcapimin.c jcapistd.c jcarith.c  jctrans.c  jcparam.c 
