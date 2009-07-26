@@ -37,8 +37,8 @@
 // acquire any locks, and can therefore be used by low-level memory
 // allocation and synchronization code.
 
-#ifndef BASE_RAW_LOGGING_H_
-#define BASE_RAW_LOGGING_H_
+#ifndef WIN_BASE_RAW_LOGGING_H_
+#define WIN_BASE_RAW_LOGGING_H_
 
 namespace google {
 
@@ -185,4 +185,4 @@ GOOGLE_GLOG_DLL_DECL void RawLog__SetLastTime(const struct ::tm& t, int usecs);
 
 }
 
-#endif  // BASE_RAW_LOGGING_H_
+#endif  // WIN_BASE_RAW_LOGGING_H_

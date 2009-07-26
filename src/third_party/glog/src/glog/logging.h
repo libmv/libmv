@@ -35,14 +35,15 @@
 //
 #ifndef _LOGGING_H_
 #define _LOGGING_H_
+#if defined(_MSC_VER)
+#  include "windows/glog/logging.h"
+#else
 
 #include <errno.h>
 #include <string.h>
 #include <time.h>
 #include <string>
-#if 1
-# include <unistd.h>
-#endif
+#include <unistd.h>
 #ifdef __DEPRECATED
 // Make GCC quiet.
 # undef __DEPRECATED
@@ -127,7 +128,7 @@ typedef unsigned __int64 uint64;
 // the absence of better information (ie. -fprofile-arcs).
 //
 #ifndef GOOGLE_PREDICT_BRANCH_NOT_TAKEN
-#if 1
+#ifdef __GNUC__
 #define GOOGLE_PREDICT_BRANCH_NOT_TAKEN(x) (__builtin_expect(x, 0))
 #else
 #define GOOGLE_PREDICT_BRANCH_NOT_TAKEN(x) x
@@ -1499,4 +1500,5 @@ GOOGLE_GLOG_DLL_DECL void InstallFailureWriter(
 
 }
 
+#endif // _MSC_VER
 #endif // _LOGGING_H_

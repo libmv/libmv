@@ -62,8 +62,8 @@
 // CAVEAT: --vmodule functionality is not available in non gcc compilers.
 //
 
-#ifndef BASE_VLOG_IS_ON_H_
-#define BASE_VLOG_IS_ON_H_
+#ifndef WIN_BASE_VLOG_IS_ON_H_
+#define WIN_BASE_VLOG_IS_ON_H_
 
 #include "glog/log_severity.h"
 
@@ -129,4 +129,4 @@ extern GOOGLE_GLOG_DLL_DECL bool InitVLOG3__(
     const char* fname,
     google::int32 verbose_level);
 
-#endif  // BASE_VLOG_IS_ON_H_
+#endif  // WIN_BASE_VLOG_IS_ON_H_

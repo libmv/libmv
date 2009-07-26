@@ -35,6 +35,9 @@
 
 #ifndef BASE_RAW_LOGGING_H_
 #define BASE_RAW_LOGGING_H_
+#if defined(_MSC_VER)
+#  include "windows/glog/raw_logging.h"
+#else
 
 namespace google {
 
@@ -183,4 +186,5 @@ GOOGLE_GLOG_DLL_DECL void RawLog__SetLastTime(const struct ::tm& t, int usecs);
 
 }
 
+#endif  // defined(_MSC_VER)
 #endif  // BASE_RAW_LOGGING_H_

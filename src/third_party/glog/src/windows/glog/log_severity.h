@@ -31,8 +31,8 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef BASE_LOG_SEVERITY_H__
-#define BASE_LOG_SEVERITY_H__
+#ifndef WIN_BASE_LOG_SEVERITY_H__
+#define WIN_BASE_LOG_SEVERITY_H__
 
 // Annoying stuff for windows -- makes sure clients can import these functions
 #ifndef GOOGLE_GLOG_DLL_DECL
@@ -85,4 +85,4 @@ enum { DEBUG_MODE = 1 };
 #define IF_DEBUG_MODE(x) x
 #endif
 
-#endif  // BASE_LOG_SEVERITY_H__
+#endif  // WIN_BASE_LOG_SEVERITY_H__

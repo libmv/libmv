@@ -1,23 +1,36 @@
-IF(WIN32)
+IF (WIN32)
   INCLUDE_DIRECTORIES(
-    windows   # for unistd.h implementation
+    windows
+    ../../msinttypes
   )
-ENDIF(WIN32)
+ELSE (WIN32)
+  INCLUDE_DIRECTORIES(
+    .
+  )
+ENDIF (WIN32)
 
 IF(CMAKE_COMPILER_IS_GNUCXX)
   SET(CMAKE_CXX_FLAGS "")
   #  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused -Wno-type-limits -Wno-empty-body")
 ENDIF(CMAKE_COMPILER_IS_GNUCXX)
 
-ADD_LIBRARY(glog
-            demangle.cc
-            logging.cc
-            raw_logging.cc
-            signalhandler.cc
-            symbolize.cc
-            utilities.cc
-            vlog_is_on.cc
-)
+IF (WIN32)
+  ADD_LIBRARY(glog
+              logging.cc
+              windows/port.cc
+              raw_logging.cc
+              utilities.cc
+              vlog_is_on.cc)
+ELSE (WIN32)
+  ADD_LIBRARY(glog
+              demangle.cc
+              logging.cc
+              raw_logging.cc
+              signalhandler.cc
+              symbolize.cc
+              utilities.cc
+              vlog_is_on.cc)
+ENDIF (WIN32)
 
 MACRO (GLOG_TEST NAME)
   ADD_EXECUTABLE(${NAME} ${NAME}.cc googletest.cc)
@@ -25,6 +38,7 @@ MACRO (GLOG_TEST NAME)
   ADD_TEST(${NAME} ${NAME})
 ENDMACRO (GLOG_TEST)
 
+IF (NOT WIN32)
 GLOG_TEST(demangle_unittest)
 # These require extra magic...
 #GLOG_TEST(logging_striptest10)
@@ -37,3 +51,4 @@ GLOG_TEST(stacktrace_unittest)
 GLOG_TEST(stl_logging_unittest)
 GLOG_TEST(symbolize_unittest)
 GLOG_TEST(utilities_unittest)
+ENDIF (NOT WIN32)

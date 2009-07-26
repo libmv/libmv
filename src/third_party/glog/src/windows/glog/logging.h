@@ -37,8 +37,8 @@
 // Pretty much everybody needs to #include this file so that they can
 // log various happenings.
 //
-#ifndef _LOGGING_H_
-#define _LOGGING_H_
+#ifndef _WIN_LOGGING_H_
+#define _WIN_LOGGING_H_
 
 #include <errno.h>
 #include <string.h>
@@ -60,7 +60,8 @@
 // Annoying stuff for windows -- makes sure clients can import these functions
 #ifndef GOOGLE_GLOG_DLL_DECL
 # if defined(_WIN32) && !defined(__CYGWIN__)
-#   define GOOGLE_GLOG_DLL_DECL  __declspec(dllimport)
+//#   define GOOGLE_GLOG_DLL_DECL  __declspec(dllimport)
+#   define GOOGLE_GLOG_DLL_DECL   // libmv is statically linking.
 # else
 #   define GOOGLE_GLOG_DLL_DECL
 # endif
@@ -82,9 +83,7 @@
 #include <inttypes.h>           // a third place for uint16_t or u_int16_t
 #endif
 
-#if 0
-#include <gflags/gflags.h>
-#endif
+#include "third_party/gflags/gflags.h"
 
 namespace google {
 
@@ -1500,4 +1499,4 @@ GOOGLE_GLOG_DLL_DECL void InstallFailureWriter(
 
 }
 
-#endif // _LOGGING_H_
+#endif // _WIN_LOGGING_H_

@@ -60,6 +60,9 @@
 
 #ifndef BASE_VLOG_IS_ON_H_
 #define BASE_VLOG_IS_ON_H_
+#if defined(_MSC_VER)
+#  include "windows/glog/vlog_is_on.h"
+#else
 
 #include "glog/log_severity.h"
 
@@ -125,4 +128,5 @@ extern GOOGLE_GLOG_DLL_DECL bool InitVLOG3__(
     const char* fname,
     google::int32 verbose_level);
 
+#endif  // defined(_MSC_VER)
 #endif  // BASE_VLOG_IS_ON_H_

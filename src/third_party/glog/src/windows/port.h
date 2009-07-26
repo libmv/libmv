@@ -41,9 +41,9 @@
 #ifndef CTEMPLATE_WINDOWS_PORT_H_
 #define CTEMPLATE_WINDOWS_PORT_H_
 
-#include "config.h"
+#include "windows/config.h"
 
-#ifdef _WIN32
+#ifdef _MSC_VER
 
 #define WIN32_LEAN_AND_MEAN  /* We always want minimal includes */
 #include <windows.h>
@@ -144,6 +144,6 @@ inline char* strerror_r(int errnum, char* buf, size_t buflen) {
 #define inline
 #endif
 
-#endif  /* _WIN32 */
+#endif  /* _MSC_VER */
 
 #endif  /* CTEMPLATE_WINDOWS_PORT_H_ */
