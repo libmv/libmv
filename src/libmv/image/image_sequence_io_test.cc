@@ -31,6 +31,7 @@ using libmv::ImageCache;
 using libmv::ImageSequence;
 using libmv::ImageSequenceFromFiles;
 using libmv::Array3Df;
+using std::string;
 
 namespace {
 
@@ -42,8 +43,8 @@ TEST(ImageSequenceIO, FromFiles) {
   image2(0,0) = 0.f;
   image2(0,1) = 1.f;
 
-  std::string image1_fn = FLAGS_test_tmpdir + "/1.pgm";
-  std::string image2_fn = FLAGS_test_tmpdir + "/2.pgm";
+  string image1_fn = string(THIS_SOURCE_DIR) + "/1.pgm";
+  string image2_fn = string(THIS_SOURCE_DIR) + "/2.pgm";
   WritePnm(image1, image1_fn.c_str());
   WritePnm(image2, image2_fn.c_str());
 
@@ -72,6 +73,9 @@ TEST(ImageSequenceIO, FromFiles) {
 
   sequence->Unpin(0);
   sequence->Unpin(1);
+
+  unlink(image1_fn.c_str());
+  unlink(image2_fn.c_str());
 }
 
 }  // namespace
