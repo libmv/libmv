@@ -177,7 +177,7 @@ main(int argc, char * argv[])
    for (int k = 0; k < K; ++k)
    {
       int view, point;
-      Vector3d p, np;
+      Vector3d p;
 
       is >> view >> point;
       is >> p[0] >> p[1] >> p[2];
