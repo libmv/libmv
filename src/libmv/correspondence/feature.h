@@ -31,7 +31,7 @@ class Feature {
   virtual ~Feature();
 };
 
-struct PointFeature : public Feature {
+class PointFeature : public Feature {
  public:
   virtual ~PointFeature();
 
