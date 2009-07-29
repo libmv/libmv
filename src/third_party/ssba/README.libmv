@@ -20,3 +20,4 @@ Local modifications:
   * Added a virtual destructor to V3D::LevenbergOptimizerCommon in
     Math/v3d_optimization.h
   * Added /EHsc WIN32-specific flag to CMakeLists.txt
+  * Remove unused variable Vector3d np in bundle_common.cpp and bundle_varying (in main() function).
