@@ -1,15 +1,15 @@
 // Copyright (c) 2007, 2008 libmv authors.
-// 
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
 // deal in the Software without restriction, including without limitation the
 // rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
 // sell copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -21,8 +21,6 @@
 #include "libmv/numeric/numeric.h"
 #include "libmv/multiview/projection.h"
 #include "libmv/multiview/triangulation.h"
-#include "libmv/multiview/nviewtriangulation.h"
-#include "libmv/multiview/bundle.h"
 #include "libmv/multiview/fundamental.h"
 
 namespace libmv {
@@ -152,8 +150,8 @@ double FundamentalFromCorrespondences8Point(const Mat &x1,
 
   // Estimate the fundamental matrix.
   double smaller_singular_value;
-  smaller_singular_value = 
-      FundamentalFromCorrespondencesLinear(x1_normalized, x2_normalized, F);
+  smaller_singular_value =
+      FundamentalFromCorrespondencesLinear(x1_normalized, x2_normalized, &(*F));
   EnforceFundamentalRank2Constraint(F);
 
   // Denormalize the fundamental matrix.
@@ -167,10 +165,10 @@ void FundamentalFromCorrespondencesSampson(const Mat2X &x1,
                                            Mat3 *F) {
   (void)x1;
   (void)x2;
-  (void)F;                               
+  (void)F;
 }
-                                            
-void NormalizeFundamental(const Mat3 F, Mat3 *F_normalized) {
+
+void NormalizeFundamental(const Mat3 &F, Mat3 *F_normalized) {
   *F_normalized = F / FrobeniusNorm(F);
   if((*F_normalized)(2,2) < 0) {
     *F_normalized *= -1;
@@ -223,7 +221,7 @@ void RelativeCameraMotionBugged(const Mat3 &R1,
                                 Vec3 *t) {
   *R = R2 * R1.transpose();
   *t = t2 - (*R) * t1;
- 
+
 using namespace std;
 cout << R1 << endl;
 cout << R2 << endl;

@@ -1,15 +1,15 @@
 // Copyright (c) 2007, 2008 libmv authors.
-// 
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
 // deal in the Software without restriction, including without limitation the
 // rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
 // sell copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -51,7 +51,7 @@ void FundamentalFromCorrespondencessSampson(const Mat2X &x1,
                                             const Mat2X &x2,
                                             Mat3 *F);
 
-void NormalizeFundamental(const Mat3 F, Mat3 *F_normalized);
+void NormalizeFundamental(const Mat3 &F, Mat3 *F_normalized);
 
 
 // Approximation of reprojection error; page 287 of HZ equation 11.9. This
@@ -67,7 +67,7 @@ double SymmetricEpipolarDistance2(const Mat &F, const Vec2 &x1, const Vec2 &x2);
 // Given the motion parameters of two cameras, computes the motion parameters
 // of the second one assuming the first one to be at the origin.
 // If T1 and T2 are the camera motions, the computed relative motion is
-// 
+//
 //      T = T2 T1^{-1}
 //
 void RelativeCameraMotion(const Mat3 &R1,
@@ -110,7 +110,7 @@ bool MotionFromEssentialAndCorrespondence(const Mat3 &E,
                                           const Vec2 &x2,
                                           Mat3 *R,
                                           Vec3 *t);
-  
+
 } // namespace libmv
 
 #endif  // LIBMV_MULTIVIEW_FUNDAMENTAL_H_
