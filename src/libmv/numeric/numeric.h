@@ -42,8 +42,8 @@
 #endif //_WIN32 || __APPLE__
 
 #if _WIN32
-  inline long lround(double d) { 
-    return (long)(d>0 ? d+0.5 : ceil(d-0.5)); 
+  inline long lround(double d) {
+    return (long)(d>0 ? d+0.5 : ceil(d-0.5));
   }
   inline int round(double d) {
     return (d>0) ? int(d+0.5) : int(d-0.5);
@@ -232,8 +232,6 @@ template<typename T>
 inline T Square(T x) {
   return x * x;
 }
-  
-Mat Identity(int n);
 
 Mat3 RotationAroundX(double angle);
 Mat3 RotationAroundY(double angle);
@@ -282,7 +280,7 @@ void MeanAndVarianceAlongRows(const Mat &A,
   template<typename Derived1, typename Derived2>
   struct hstack_return {
     typedef typename Derived1::Scalar Scalar;
-    enum { 
+    enum {
          RowsAtCompileTime = Derived1::RowsAtCompileTime,
          ColsAtCompileTime = SUM_OR_DYNAMIC(Derived1::ColsAtCompileTime, Derived2::ColsAtCompileTime),
          Options = Derived1::Flags&Eigen::RowMajorBit ? Eigen::RowMajor : 0,
@@ -310,7 +308,7 @@ void MeanAndVarianceAlongRows(const Mat &A,
   template<typename Derived1, typename Derived2>
   struct vstack_return {
     typedef typename Derived1::Scalar Scalar;
-    enum { 
+    enum {
          RowsAtCompileTime = SUM_OR_DYNAMIC(Derived1::RowsAtCompileTime, Derived2::RowsAtCompileTime),
          ColsAtCompileTime = Derived1::ColsAtCompileTime,
          Options = Derived1::Flags&Eigen::RowMajorBit ? Eigen::RowMajor : 0,
@@ -362,7 +360,7 @@ void MeanAndVarianceAlongRows(const Mat &A,
     int n = left.rows();
     int m1 = left.cols();
     int m2 = right.cols();
-  
+
     Eigen::Matrix<T, ROWS, COLS> stacked(n, m1 + m2);
     stacked.block(0, 0,  n, m1) = left;
     stacked.block(0, m1, n, m2) = right;
@@ -390,7 +388,7 @@ void MeanAndVarianceAlongRows(const Mat &A,
   }
   #undef COLS
   #undef ROWS
-#endif //_WIN32 
+#endif //_WIN32
 
 
 

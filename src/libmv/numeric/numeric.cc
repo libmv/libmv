@@ -23,15 +23,6 @@
 
 namespace libmv {
 
-Mat Identity(int n) {
-  Mat I(n, n);
-  I.setZero();
-  for (int i = 0; i < n; ++i) {
-    I(i, i) = 1;
-  }
-  return I;
-}
-
 Mat3 RotationAroundX(double angle) {
   double c, s;
   sincos(angle, &s, &c);
