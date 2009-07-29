@@ -1,15 +1,15 @@
 // Copyright (c) 2007, 2008 libmv authors.
-// 
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
 // deal in the Software without restriction, including without limitation the
 // rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
 // sell copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -31,10 +31,10 @@ namespace libmv {
 struct FundamentalModel {
  public:
   FundamentalModel() {}
-  FundamentalModel(Mat3 F) : F(F) {}
+  FundamentalModel(const Mat3 &F) : F(F) {}
 
   template<typename TVec>
-  double Error(TVec x1x2) {
+  double Error(const TVec &x1x2) {
     double sampson_error2 = SampsonDistance2(F, x1x2.start(2), x1x2.end(2));
     VLOG(5) << "Sampson error^2 = " << sampson_error2;
     return sampson_error2;
@@ -45,7 +45,7 @@ struct FundamentalModel {
 // Simple linear fitter.
 class FundamentalFitter {
  public:
-  void Fit(Mat4X &x1x2, std::vector<FundamentalModel> *models) {
+  void Fit(const Mat4X &x1x2, std::vector<FundamentalModel> *models) {
     Mat3 F;
     int n = x1x2.cols();
     Mat2X x1s(x1x2.block(0, 0, 2, n));
