@@ -1,15 +1,15 @@
 // Copyright (c) 2007, 2008 libmv authors.
-// 
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
 // deal in the Software without restriction, including without limitation the
 // rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
 // sell copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -56,7 +56,7 @@ TEST(Fundamental, PreconditionerFromPoints) {
   int n = 4;
   Mat points(2,n);
   points << 0, 0, 1, 1,
-            0, 2, 1, 3; 
+            0, 2, 1, 3;
 
   Mat3 T;
   PreconditionerFromPoints(points, &T);
@@ -96,14 +96,7 @@ TEST(Fundamental, FundamentalFromCorrespondencesLinear) {
     F_x = F * x;
     y_F_x(i) = y.dot(F_x);
   }
-  EXPECT_NEAR(0, y_F_x(0), 1e-8);
-  EXPECT_NEAR(0, y_F_x(1), 1e-8);
-  EXPECT_NEAR(0, y_F_x(2), 1e-8);
-  EXPECT_NEAR(0, y_F_x(3), 1e-8);
-  EXPECT_NEAR(0, y_F_x(4), 1e-8);
-  EXPECT_NEAR(0, y_F_x(5), 1e-8);
-  EXPECT_NEAR(0, y_F_x(6), 1e-8);
-  EXPECT_NEAR(0, y_F_x(7), 1e-8);
+	EXPECT_MATRIX_NEAR_ZERO(y_F_x, 1e-8);
 }
 
 TEST(Fundamental, FundamentalFromCorrespondences8Point) {
@@ -129,14 +122,7 @@ TEST(Fundamental, FundamentalFromCorrespondences8Point) {
     F_x = F * x;
     y_F_x(i) = y.dot(F_x);
   }
-  EXPECT_NEAR(0, y_F_x(0), 1e-8);
-  EXPECT_NEAR(0, y_F_x(1), 1e-8);
-  EXPECT_NEAR(0, y_F_x(2), 1e-8);
-  EXPECT_NEAR(0, y_F_x(3), 1e-8);
-  EXPECT_NEAR(0, y_F_x(4), 1e-8);
-  EXPECT_NEAR(0, y_F_x(5), 1e-8);
-  EXPECT_NEAR(0, y_F_x(6), 1e-8);
-  EXPECT_NEAR(0, y_F_x(7), 1e-8);
+	EXPECT_MATRIX_NEAR_ZERO(y_F_x, 1e-8);
 
   EXPECT_NEAR(0, F.determinant(), 1e-8);
 }
@@ -147,7 +133,7 @@ TEST(Fundamental, FundamentalFromCorrespondencesLinearRealistic) {
   // Compute fundamental matrix from correspondences.
   Mat3 F_estimated;
   FundamentalFromCorrespondencesLinear(d.x1, d.x2, &F_estimated);
-  
+
   // Compare with ground truth.
   EXPECT_MATRIX_PROP(d.F, F_estimated, 1e-6);
 }
@@ -158,7 +144,7 @@ TEST(Fundamental, FundamentalFromCorrespondences8PointRealistic) {
   // Compute fundamental matrix from correspondences.
   Mat3 F_estimated;
   FundamentalFromCorrespondences8Point(d.x1, d.x2, &F_estimated);
-  
+
   // Compare with ground truth.
   EXPECT_MATRIX_PROP(d.F, F_estimated, 1e-6);
 }
@@ -206,11 +192,11 @@ TEST(Fundamental, SampsonDistance2) {
   double dist5 = SampsonDistance2(F, x5, y5);
 
   VLOG(1) << "SampsonDistance2: "
-          << dist0 << " " 
-          << dist1 << " " 
-          << dist2 << " " 
-          << dist3 << " " 
-          << dist4 << " " 
+          << dist0 << " "
+          << dist1 << " "
+          << dist2 << " "
+          << dist3 << " "
+          << dist4 << " "
           << dist5 << "\n";
 
   // The expected distance are two times (one per image) the distance from the
@@ -264,7 +250,7 @@ TEST(Fundamental, SymmetricEpipolarDistance2) {
 
 TEST(Fundamental, EssentialFromFundamental) {
   TwoViewDataSet d = TwoRealisticCameras();
-  
+
   Mat3 E_from_Rt;
   EssentialFromRt(d.R1, d.t1, d.R2, d.t2, &E_from_Rt);
 
@@ -287,7 +273,7 @@ TEST(Fundamental, MotionFromEssential) {
 
   std::vector<Mat3> Rs;
   std::vector<Vec3> ts;
-  MotionFromEssential(E, &Rs, &ts); 
+  MotionFromEssential(E, &Rs, &ts);
   bool one_solution_is_correct = false;
   for (size_t i = 0; i < Rs.size(); ++i) {
     if(FrobeniusDistance(Rs[i], R) < 1e-8 && DistanceL2(ts[i], t) < 1e-8) {
@@ -311,7 +297,7 @@ TEST(Fundamental, MotionFromEssentialChooseSolution) {
 
   std::vector<Mat3> Rs;
   std::vector<Vec3> ts;
-  MotionFromEssential(E, &Rs, &ts); 
+  MotionFromEssential(E, &Rs, &ts);
 
   Vec2 x1, x2;
   MatrixColumn(d.x1, 0, &x1);
@@ -342,10 +328,114 @@ TEST(Fundamental, MotionFromEssentialAndCorrespondence) {
   Mat3 R_estimated;
   Vec3 t_estimated;
   MotionFromEssentialAndCorrespondence(E, d.K1, x1, d.K2, x2,
-                                       &R_estimated, &t_estimated); 
+                                       &R_estimated, &t_estimated);
 
   EXPECT_LE(FrobeniusDistance(R_estimated, R), 1e-8);
   EXPECT_LE(DistanceL2(t_estimated, t), 1e-8);
 }
- 
+
+TEST(Fundamental, FundamentalFromCorrespondences7Point) {
+
+  int n = 7;
+  Mat x1(2,n);
+  x1 << 0, 0, 0, 1, 1, 1, 2,
+        0, 1, 2, 0, 1, 2, 0;
+
+  Mat x2(2,n);
+  x2 = x1;
+  for (int i = 0; i < n; ++i) {
+    x2(1,i) += 1;
+  }
+
+  std::vector<Mat3> Fvec;
+  FundamentalFromCorrespondences7Point(x1, x2, &Fvec);
+
+	for(int i=0; i < Fvec.size(); ++i)
+	{
+		Mat3 F = Fvec[i];
+
+		Vec y_F_x(n);
+		for (int i = 0; i < n; ++i) {
+			Vec3 x, y, F_x;
+			x << x1(0, i), x1(1, i), 1;
+			y << x2(0, i), x2(1, i), 1;
+			F_x 		 = F * x;
+			y_F_x(i) = y.dot(F_x);
+		}
+		EXPECT_MATRIX_NEAR_ZERO(y_F_x, 1e-8);
+		EXPECT_NEAR(0, F.determinant(), 1e-8);
+	}
+}
+
+TEST(Fundamental, FundamentalFromCorrespondences7Point_RealisticDataset)
+{
+	//-- First test with real image coordinates data :
+	{
+		int n = 7;
+		Mat x1(2,n);
+
+		x1 <<	723, 1091, 1691, 447, 971, 1903, 1483,
+					887, 699,  811,  635, 91,  447,  1555;
+
+		Mat x2(2,n);
+
+		x2 <<	1251, 1603, 2067, 787, 1355, 2163, 1875,
+					1243, 923,  1031,  484, 363,  743,  1715;
+
+		std::vector<Mat3> Fvec;
+		FundamentalFromCorrespondences7Point(x1, x2, &Fvec);
+
+		for(int k=0; k < Fvec.size(); ++k)
+		{
+			Mat3 F = Fvec[k];
+
+			Vec y_F_x(n);
+			for (int i = 0; i < n; ++i) {
+				Vec3 x, y, F_x;
+				x << x1(0, i), x1(1, i), 1;
+				y << x2(0, i), x2(1, i), 1;
+				F_x 		 = F * x;
+				y_F_x(i) = y.dot(F_x);
+			}
+			EXPECT_MATRIX_NEAR_ZERO(y_F_x, 1e-8);
+			//-- Cannot be true because point coords are not normalized
+			//EXPECT_NEAR(0, F.determinant(), 1e-8);
+		}
+  }
+
+  //-- Second dataset with libmv internal realistic dataset :
+  {
+		const int n = 7;
+
+		TwoViewDataSet d = TwoRealisticCameras();
+
+		// 7 points of a cube and their projections ( miss the last corner).
+		d.X.resize(3,n);
+		d.X << 0, 1, 0, 1, 0, 1, 0,
+					 0, 0, 1, 1, 0, 0, 1,
+					 0, 0, 0, 0, 1, 1, 1;
+		Project(d.P1, d.X, &d.x1);
+		Project(d.P2, d.X, &d.x2);
+
+		// Compute fundamental matrix from correspondences.
+		std::vector<Mat3> F_estimated;
+		FundamentalFromCorrespondences7Point(d.x1, d.x2, &F_estimated);
+
+		for(int k=0; k < F_estimated.size(); ++k)
+		{
+			Mat3 F = F_estimated[k];
+
+			Vec y_F_x(n);
+			for (int i = 0; i < n; ++i) {
+				Vec3 x, y, F_x;
+				x << d.x1(0, i), d.x1(1, i), 1;
+				y << d.x2(0, i), d.x2(1, i), 1;
+				F_x = F * x;
+				y_F_x(i) = y.dot(F_x);
+			}
+			EXPECT_MATRIX_NEAR_ZERO(y_F_x, 1e-8);
+		}
+  }
+}
+
 } // namespace

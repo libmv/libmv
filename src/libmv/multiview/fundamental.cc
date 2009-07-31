@@ -19,6 +19,7 @@
 // IN THE SOFTWARE.
 
 #include "libmv/numeric/numeric.h"
+#include "libmv/numeric/poly.h"
 #include "libmv/multiview/projection.h"
 #include "libmv/multiview/triangulation.h"
 #include "libmv/multiview/fundamental.h"
@@ -90,6 +91,7 @@ void ApplyTransformationToPoints(const Mat &points,
 }
 
 // HZ 11.1 pag.279 (x1 = x, x2 = x')
+// http://www.cs.unc.edu/~marc/tutorial/node54.html
 double FundamentalFromCorrespondencesLinear(const Mat &x1,
                                             const Mat &x2,
                                             Mat3 *F) {
@@ -158,6 +160,189 @@ double FundamentalFromCorrespondences8Point(const Mat &x1,
   *F = T2.transpose() * (*F) * T1;
 
   return smaller_singular_value;
+}
+
+// Compute the real roots of a third order polynomial
+// returns 1 or 3, the number of roots found
+
+int FindCubicRoots(float coeff[4],float x[3])
+{
+	float a1 = coeff[2] / coeff[3];
+	float a2 = coeff[1] / coeff[3];
+	float a3 = coeff[0] / coeff[3];
+
+	double Q = (a1 * a1 - 3 * a2) / 9;
+	double R = (2 * a1 * a1 * a1 - 9 * a1 * a2 + 27 * a3) / 54;
+	double Qcubed = Q * Q * Q;
+	double d = Qcubed - R * R;
+
+	/* Three real roots */
+	if (d >= 0)
+	{
+		double theta = acos(R / sqrt(Qcubed));
+		double sqrtQ = sqrt(Q);
+		x[0] = -2 * sqrtQ * cos( theta             / 3) - a1 / 3;
+		x[1] = -2 * sqrtQ * cos((theta + 2 * M_PI) / 3) - a1 / 3;
+		x[2] = -2 * sqrtQ * cos((theta + 4 * M_PI) / 3) - a1 / 3;
+		return (3);
+	}
+
+	/* One real root */
+	else
+	{
+		double e = pow(sqrt(-d) + fabs(R), 1. / 3.);
+		if (R > 0)
+			e = -e;
+		x[0] = (e + Q / e) - a1 / 3.;
+		return (1);
+	}
+}
+
+double FundamentalFromCorrespondences7Point(const Mat &x1,
+                                            const Mat &x2,
+                                            std::vector<Mat3> *F)
+{
+  assert(2 == x1.rows());
+  assert(7 <= x1.cols());
+  assert(x1.rows() == x2.rows());
+  assert(x1.cols() == x2.cols());
+
+  // Normalize the data.
+  Mat3 T1, T2;
+  PreconditionerFromPoints(x1, &T1);
+  PreconditionerFromPoints(x2, &T2);
+  Mat x1_normalized, x2_normalized;
+  ApplyTransformationToPoints(x1, T1, &x1_normalized);
+  ApplyTransformationToPoints(x2, T2, &x2_normalized);
+
+  // Estimate the fundamental matrix.
+  double smaller_singular_value;
+  smaller_singular_value = FundamentalFrom7CorrespondencesLinear(x1_normalized, x2_normalized, &(*F));
+
+  for(int k=0; k < F->size(); ++k)
+  {
+		Mat3 & Fmat = (*F)[k];
+		//Denormalize the fundamental matrix.
+		Fmat = T2.transpose() * Fmat * T1;
+  }
+	return smaller_singular_value;
+}
+
+//-- Seven-point algorithm
+//http://www.cs.unc.edu/~marc/tutorial/node55.html
+double FundamentalFrom7CorrespondencesLinear(const Mat &x1,
+											                       const Mat &x2,
+											                       std::vector<Mat3> *F)
+{
+  //-- Assert that input parameter have the required size
+  assert(2 == x1.rows());
+  assert(7 <= x1.cols());
+  assert(x1.rows() == x2.rows());
+  assert(x1.cols() == x2.cols());
+
+  int n = x1.cols();
+  Mat A(n, 9);
+  // build 9xn matrix from point matches
+  for (int i = 0; i < n; ++i) {
+    A(i, 0) = x1(0, i) * x2(0, i); //0 represent x coords, and 1 represent y coords
+    A(i, 1) = x1(1, i) * x2(0, i);
+    A(i, 2) = x2(0, i);
+    A(i, 3) = x1(0, i) * x2(1, i);
+    A(i, 4) = x1(1, i) * x2(1, i);
+    A(i, 5) = x2(1, i);
+    A(i, 6) = x1(0, i);
+    A(i, 7) = x1(1, i);
+    A(i, 8) = 1.0;
+  }
+
+  Mat A_extended(A.cols(), A.cols());
+  A_extended.block(A.rows(), 0, A.cols() - A.rows(), A.cols()).setZero();
+  A_extended.block(0,0, A.rows(), A.cols()) = A;
+
+  Eigen::SVD<Mat> svd(A_extended);
+  Mat V = svd.matrixV();
+  Vec S = svd.singularValues();
+
+  //S contains the singular values, V contains the side singular vectors
+	int imin1,imin2;
+	float wmin1,wmin2;
+
+  // look for the two smallest eigenvalue of A'A
+	if (S(1)<S(2)) {
+		imin1 = 0;
+		imin2 = 1;
+	} else {
+		imin2 = 0;
+		imin1 = 1;
+	}
+	wmin1 = S(imin1);
+	wmin2 = S(imin2);
+
+	for (int i=2;i<9;++i) {
+		if (S(i)<wmin1) {imin2=imin1; wmin2=wmin1; wmin1=S(i); imin1=i;}
+		else if (S(i)<wmin2) {wmin2=S(i); imin2=i;}
+	}
+
+	// build basis of solutions
+	Mat3 F1,F2;
+	for (int i=0;i<3;++i)
+	{
+		for (int j=0;j<3;++j)
+		{
+			F1(i,j) = V(i*3+j,imin1);
+			F2(i,j) = V(i*3+j,imin2)-F1(i,j);
+		}
+	}
+
+	// build cubic polynomial P(x)=det(F1+xF2)
+	float a[4]={0.f,0.f,0.f,0.f};
+	for (int i=0;i<3;++i)
+	{
+		const int i2 = i%3;
+		const int i3 = i2%3;
+		a[0] += F1(i,0)*F1(i2,1)*F1(i3,2);
+		a[1] +=
+			F2(i,0)*F1(i2,1)*F1(i3,2)+
+			F1(i,0)*F2(i2,1)*F1(i3,2)+
+			F1(i,0)*F1(i2,1)*F2(i3,2);
+		a[2] +=
+			F1(i,0)*F2(i2,1)*F2(i3,2)+
+			F2(i,0)*F1(i2,1)*F2(i3,2)+
+			F2(i,0)*F2(i2,1)*F1(i3,2);
+		a[3] += F2(i,0)*F2(i2,1)*F2(i3,2);
+	}
+	for (int i=0;i<3;++i)
+	{
+		const int i2 = i%3;
+		const int i3 = i2%3;
+		a[0] -= F1(i,0)*F1(i2,1)*F1(i3,2);
+		a[1] -=
+			F2(i,0)*F1(i2,1)*F1(i3,2)+
+			F1(i,0)*F2(i2,1)*F1(i3,2)+
+			F1(i,0)*F1(i2,1)*F2(i3,2);
+		a[2] -=
+			F1(i,0)*F2(i2,1)*F2(i3,2)+
+			F2(i,0)*F1(i2,1)*F2(i3,2)+
+			F2(i,0)*F2(i2,1)*F1(i3,2);
+		a[3] -= F2(i,0)*F2(i2,1)*F2(i3,2);
+	}
+
+	float z[3]={0.0f,0.0f,0.0f}; //-- To store the three roots
+	int nbRoots = FindCubicRoots(a,z);
+	//a[0] x^3 + a[1]x^2 + a[2]x + a[3] = 0
+
+	//-- Can I use the Cubic Polynomial solver as the following ? (I have try it, but I do not find the same result => 29 inliers instead of 30 for the realistic dataset)
+	//int nbRoots = SolveCubicPolynomial(a[1]/a[0], a[1]/a[0], a[2]/a[0], &z[0], &z[1], &z[2]);
+	//- As a suggestion : Another solution could be to implement something like : http://www.flipcode.com/archives/Polynomial_Root-Finder.shtml
+
+	//-- Build fundamental matrix ( F1 + Lambda*F2 )
+	for(int k=0; k < nbRoots; ++k)
+	{
+		//-- Rank2 constraint was already applied
+		F->push_back( F1 + (z[k] *F2) );
+	}
+
+	return S(imin1);
 }
 
 void FundamentalFromCorrespondencesSampson(const Mat2X &x1,
