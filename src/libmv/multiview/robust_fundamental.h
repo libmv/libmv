@@ -1,15 +1,15 @@
 // Copyright (c) 2007, 2008 libmv authors.
-// 
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
 // deal in the Software without restriction, including without limitation the
 // rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
 // sell copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -27,12 +27,22 @@
 
 namespace libmv {
 
+//-- Estimate robustly the Fundamental matrix between two dataset of 2d point (image coords space).
+//- The fundamental solver rely on the 8 point solution.
 double FundamentalFromCorrespondences8PointRobust(
     const Mat &x1,
     const Mat &x2,
     double max_error,
     Mat3 *F,
     std::vector<int> *inliers = NULL);
+
+//-- Estimate robustly the Fundamental matrix between two dataset of 2d point (image coords space).
+//- The fundamental solver rely on the 7 point solution.
+double FundamentalFromCorrespondences7PointRobust(const Mat &x1,
+		const Mat &x2,
+		double max_error,
+		Mat3 * F,
+		std::vector<int> *inliers);
 
 } // namespace libmv
 

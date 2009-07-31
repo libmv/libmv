@@ -81,4 +81,47 @@ double FundamentalFromCorrespondences8PointRobust(const Mat &x1,
   return 0.0;  // This doesn't mean much for the robust case.
 }
 
+
+// Simple linear fitter (for the fundamental Matrix from 7 points).
+class FundamentalFitter7Points {
+ public:
+  void Fit(Mat4X &x1x2, std::vector<FundamentalModel> *models) {
+    std::vector<Mat3> F;
+    int n = x1x2.cols();
+    Mat2X x1s(x1x2.block(0, 0, 2, n));
+    Mat2X x2s(x1x2.block(2, 0, 2, n));
+    FundamentalFromCorrespondences7Point(x1s, x2s, &F);
+    VLOG(4) << "x1\n" << x1s << "\n";
+    VLOG(4) << "x2\n" << x2s << "\n";
+
+    for(int i=0; i < F.size(); ++i)	//--We can have 1 or 3 fundamental matrix
+    {
+    	VLOG(4) << "F\n" << F[i] << "\n";
+			models->push_back(FundamentalModel(F[i]));
+    }
+  }
+  int MinimumSamples() {   return 7;  }
+};
+
+
+double FundamentalFromCorrespondences7PointRobust(const Mat &x1,
+                                                  const Mat &x2,
+                                                  double max_error,
+                                                  Mat3 * F,
+                                                  std::vector<int> *inliers) {
+  // The threshold is on the sum of the squared errors in the two images.
+  // Actually, Sampson's approximation of this error.
+  double threshold = 2 * Square(max_error);
+  Mat4X x1x2;
+  VerticalStack(x1, x2, &x1x2);
+  FundamentalModel model =
+      Estimate<FundamentalModel>(x1x2,
+                                 FundamentalFitter7Points(),
+                                 ThresholdClassifier(threshold),
+                                 MLECost(threshold),
+                                 inliers);
+  *F = model.F;
+  return 0.0;  // This doesn't mean much for the robust case.
+}
+
 }  // namespace libmv
