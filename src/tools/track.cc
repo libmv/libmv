@@ -70,7 +70,7 @@ int main(int argc, char **argv) {
   // This is not the place for this. I am experimenting with what sort of API
   // will be convenient for the tracking base classes.
   std::vector<string> files;
-  for (int i = 0; i < argc; ++i) {
+  for (int i = 1; i < argc; ++i) {
     files.push_back(argv[i]);
   }
   sort(files.begin(), files.end());

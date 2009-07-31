@@ -34,9 +34,8 @@ namespace libmv {
 struct KLTPointFeature : public PointFeature {
   // (x, y) position (not row, column).
   virtual const Vec2f &Point() const {
-    return position;
+    return coords;
   }
-  Vec2f position;
   int half_window_size;
   float trackness;
 };

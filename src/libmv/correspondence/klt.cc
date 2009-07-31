@@ -48,8 +48,8 @@ static void FindLocalMaxima(const FloatImage &trackness,
           && trackness(i,j) >= trackness(i+1, j  )
           && trackness(i,j) >= trackness(i+1, j+1)) {
         KLTPointFeature *p = new KLTPointFeature;
-        p->position(1) = i;
-        p->position(0) = j;
+        p->coords(1) = i;
+        p->coords(0) = j;
         p->trackness = trackness(i,j);
         features->push_back(p);
       }
@@ -128,7 +128,7 @@ static void RemoveTooCloseFeatures(KLTContext::FeatureList *features,
     KLTContext::FeatureList::iterator j = i;
     ++j;
     while (j != features->end() && !i_deleted) {
-      if (dist2((*i)->position, (*j)->position) < mindist2) {
+      if (dist2((*i)->coords, (*j)->coords) < mindist2) {
         KLTContext::FeatureList::iterator to_delete;
         if ((*i)->trackness < (*j)->trackness) {
           to_delete = i;
@@ -185,13 +185,13 @@ bool KLTContext::TrackFeature(ImagePyramid *pyramid1,
                               ImagePyramid *pyramid2,
                               KLTPointFeature *feature2_pointer) {
   Vec2 position1, position2;
-  position2(0) = feature1.position(0);
-  position2(1) = feature1.position(1);
+  position2(0) = feature1.coords(0);
+  position2(1) = feature1.coords(1);
   position2 /= pow(2., pyramid1->NumLevels());
 
   for (int i = pyramid1->NumLevels() - 1; i >= 0; --i) {
-    position1(0) = feature1.position(0) / pow(2., i);
-    position1(1) = feature1.position(1) / pow(2., i);
+    position1(0) = feature1.coords(0) / pow(2., i);
+    position1(1) = feature1.coords(1) / pow(2., i);
     position2 *= 2;
 
     bool succeeded = TrackFeatureOneLevel(pyramid1->Level(i),
@@ -205,7 +205,7 @@ bool KLTContext::TrackFeature(ImagePyramid *pyramid1,
       return false;
     }
   }
-  feature2_pointer->position = position2.cast<float>();
+  feature2_pointer->coords = position2.cast<float>();
   return true;
 }
 

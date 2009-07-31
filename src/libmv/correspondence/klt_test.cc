@@ -42,8 +42,8 @@ TEST(KLTContext, DetectGoodFeaturesSimple) {
   klt.DetectGoodFeatures(derivatives, &features);
 
   EXPECT_EQ(features.size(), 1u);
-  EXPECT_EQ(features.back()->position(0), 25);
-  EXPECT_EQ(features.back()->position(1), 25);
+  EXPECT_EQ(features.back()->coords(0), 25);
+  EXPECT_EQ(features.back()->coords(1), 25);
   delete features.back();
 }
 
@@ -90,12 +90,12 @@ TEST(KLTContext, TrackFeature) {
 
   KLTContext klt;
   KLTPointFeature feature1, feature2;
-  feature1.position << x0, y0;
-  feature2.position << x0, y0;
+  feature1.coords << x0, y0;
+  feature2.coords << x0, y0;
   klt.TrackFeature(pyramid1, feature1, pyramid2, &feature2);
 
-  EXPECT_NEAR(feature2.position(0), x0 + dx, 0.001);
-  EXPECT_NEAR(feature2.position(1), y0 + dy, 0.001);
+  EXPECT_NEAR(feature2.coords(0), x0 + dx, 0.001);
+  EXPECT_NEAR(feature2.coords(1), y0 + dy, 0.001);
 
   delete pyramid1;
   delete pyramid2;
