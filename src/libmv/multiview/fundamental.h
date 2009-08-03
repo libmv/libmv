@@ -30,31 +30,29 @@ namespace libmv {
 void FundamentalFromProjections(const Mat34 &P1, const Mat34 &P2, Mat3 *F);
 void ProjectionsFromFundamental(const Mat3 &F, Mat34 *P1, Mat34 *P2);
 
-//----------------------------------
-//-- Point conditionning :
-
+// Point conditionning :
 // TODO(pau) These two functions should go in a more general header.
 void PreconditionerFromPoints(const Mat &points, Mat3 *T);
-
 
 void ApplyTransformationToPoints(const Mat &points,
                                  const Mat3 &T,
                                  Mat *transformed_points);
 
-//----------------------------------
-//-- Fundamental matrix computation :
-//- 8 points (normalized points coordinates):
+// Fundamental matrix computation :
+// 8 points (points coordinates must be normalized before):
 double FundamentalFromCorrespondencesLinear(const Mat &x1,
                                             const Mat &x2,
                                             Mat3 *F);
-//- 8 points (points coordinates in image space):
+
+// 8 points (points coordinates must be in image space):
 double FundamentalFromCorrespondences8Point(const Mat &x1,
                                             const Mat &x2,
                                             Mat3 *F);
-//- 7 points (minimal case, normalized points coordinates) :
+
+// 7 points (minimal case, points coordinates must be normalized before) :
 double FundamentalFrom7CorrespondencesLinear(	const Mat &x1, const Mat &x2, std::vector<Mat3> *F);
 
-//- 8 points (points coordinates in image space):
+// 8 points (points coordinates must be in image space):
 double FundamentalFromCorrespondences7Point(const Mat &x1, const Mat &x2, std::vector<Mat3> *F);
 
 
@@ -62,7 +60,7 @@ double FundamentalFromCorrespondences7Point(const Mat &x1, const Mat &x2, std::v
 void FundamentalFromCorrespondencessSampson(const Mat2X &x1,
                                             const Mat2X &x2,
                                             Mat3 *F);
-//- Fundamental matrix utility function :
+// Fundamental matrix utility function :
 void EnforceFundamentalRank2Constraint(Mat3 *F);
 
 void NormalizeFundamental(const Mat3 &F, Mat3 *F_normalized);
