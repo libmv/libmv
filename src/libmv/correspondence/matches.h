@@ -68,8 +68,10 @@ class Matches {
       Skip<FeatureT>(&iter_, end_);
       return *this;
     }
-#ifndef __APPLE__ // gcc on the mac complains if this method is private.
+#if !defined(__APPLE__) // gcc on the mac and windows complains if this method is private.
+#if !defined(WIN32) 
    private:
+#endif //WIN32
 #endif //__APPLE__
     ImageFeatureIterator(Iterator iter, Iterator end)
         : iter_(iter), end_(end) {
@@ -125,8 +127,10 @@ class Matches {
       Skip<FeatureT>(&iter_, end_);
       return *this;
     }
-#ifndef __APPLE__ // gcc on the mac complains if this method is private.
+#if !defined( __APPLE__)// gcc on the mac and windows complains if this method is private.
+#if !defined(WIN32) 
    private:
+#endif //WIN32
 #endif //__APPLE__
     TrackFeatureIterator(Iterator iter, Iterator end)
         : iter_(iter), end_(end) {
