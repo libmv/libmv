@@ -1,4 +1,4 @@
-// Copyright (c) 2007, 2008 libmv authors.
+// Copyright (c) 2007, 2008, 2009 libmv authors.
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
@@ -200,9 +200,13 @@ class LRUCache : public Cache<K, V> {
     return res;
   }
   // O(log n)
+  // Using this function prevents the need to do a lookup for the CachedItem
+  // (when not debugging). It returns whether the item was entirely unpinned
+  // and hence whether DeleteUnpinnedItemsIfNecessary() should be called.
   bool Unpin(const K &key, CachedItem *item) {
     assert(ContainsKey(key));
     assert(item->use_count > 0);
+    assert(item == &(items_[key]));
     bool res = false;
     if (item->use_count == 1) {
       unpinned_items_.Enqueue(key);

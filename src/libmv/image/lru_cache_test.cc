@@ -1,4 +1,4 @@
-// Copyright (c) 2007, 2008 libmv authors.
+// Copyright (c) 2007, 2008, 2009 libmv authors.
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
@@ -25,6 +25,100 @@ namespace {
 
 typedef libmv::LRUCache<int, int> TestCache;
 
+using libmv::lru_cache::SetQueue;
+
+TEST(SetQueue, QueueAndDequeueOrder) {
+  SetQueue<int> queue;
+  int n;
+  
+  EXPECT_TRUE(queue.Empty());
+  EXPECT_EQ(queue.Size(), 0);
+  
+  queue.Enqueue(10);
+  
+  EXPECT_FALSE(queue.Empty());
+  EXPECT_EQ(queue.Size(), 1);
+  
+  queue.Enqueue(20);
+  
+  EXPECT_FALSE(queue.Empty());
+  EXPECT_EQ(queue.Size(), 2);
+  
+  queue.Enqueue(30);
+  
+  EXPECT_FALSE(queue.Empty());
+  EXPECT_EQ(queue.Size(), 3);
+  
+  queue.Dequeue(&n);
+  
+  EXPECT_EQ(n, 10);
+  EXPECT_FALSE(queue.Empty());
+  EXPECT_EQ(queue.Size(), 2);
+  
+  queue.Dequeue(&n);
+  
+  EXPECT_EQ(n, 20);
+  EXPECT_FALSE(queue.Empty());
+  EXPECT_EQ(queue.Size(), 1);
+  
+  queue.Dequeue(&n);
+  
+  EXPECT_EQ(n, 30);
+  EXPECT_TRUE(queue.Empty());
+  EXPECT_EQ(queue.Size(), 0);
+}
+
+TEST(SetQueue, Clear) {
+  SetQueue<int> queue;
+  
+  EXPECT_TRUE(queue.Empty());
+  EXPECT_EQ(queue.Size(), 0);
+  
+  queue.Enqueue(10);  
+  queue.Enqueue(20);  
+  queue.Enqueue(30);
+  
+  EXPECT_FALSE(queue.Empty());
+  EXPECT_EQ(queue.Size(), 3);
+  
+  queue.Clear();
+  
+  EXPECT_TRUE(queue.Empty());
+  EXPECT_EQ(queue.Size(), 0);
+}
+
+TEST(SetQueue, Remove) {
+  SetQueue<int> queue;
+  int n;
+  
+  EXPECT_TRUE(queue.Empty());
+  EXPECT_EQ(queue.Size(), 0);
+  
+  queue.Enqueue(10);  
+  queue.Enqueue(20);  
+  queue.Enqueue(30);
+  
+  EXPECT_FALSE(queue.Empty());
+  EXPECT_EQ(queue.Size(), 3);
+  
+  queue.Remove(10);
+  
+  EXPECT_FALSE(queue.Empty());
+  EXPECT_EQ(queue.Size(), 2);
+  
+  queue.Remove(30);
+  
+  EXPECT_FALSE(queue.Empty());
+  EXPECT_EQ(queue.Size(), 1);
+  
+  queue.Dequeue(&n);
+  
+  EXPECT_EQ(n, 20);
+  
+  EXPECT_TRUE(queue.Empty());
+  EXPECT_EQ(queue.Size(), 0);
+}
+
 TEST(LRUCache, NullOnEmptyKey) {
   TestCache cache(10);
   int *ptr = NULL;
@@ -48,6 +142,8 @@ TEST(LRUCache, SizeIncreasesWithAddedItems) {
   EXPECT_EQ(cache.Size(), 1);
   cache.StoreAndPin(5, new int(40));
   EXPECT_EQ(cache.Size(), 2);
+  cache.StoreAndPinSized(10, new int(40), 10);
+  EXPECT_EQ(cache.Size(), 12);
 }
 
 TEST(LRUCache, MaxSizeExceededWhenItemsPinned) {
