@@ -255,7 +255,7 @@ double FundamentalFrom7CorrespondencesLinear(const Mat &x1,
           h=F1(2,1), q=F2(2,1),
           i=F1(2,2), r=F2(2,2);
 
-  float P[4]={0.f,0.f,0.f,0.f};
+  double P[4]={0.f,0.f,0.f,0.f};
   P[0] = a*e*i-a*e*r-a*i*n+a*r*n-a*f*h+a*f*q+a*h*o-a*q*o-e*i*j+e*r*j-e*g*c
     +e*g*l+e*p*c-e*p*l+i*n*j-i*b*d+i*b*m+i*d*k-i*m*k-r*n*j+r*b*d-r*b*m
     -r*d*k+r*m*k+n*g*c-n*g*l-n*p*c+n*p*l+f*h*j-f*q*j+f*b*g-f*b*p-f*g*k
@@ -271,7 +271,7 @@ double FundamentalFrom7CorrespondencesLinear(const Mat &x1,
     -3*q*m*l+o*b*p+o*g*k-3*o*p*k;
   P[3] = r*n*j-r*m*k-n*p*l-q*o*j+q*m*l+o*p*k;
 
-  float roots[3]={0.0f,0.0f,0.0f};
+  double roots[3]={0.0f,0.0f,0.0f};
 	// Solve for the root(s) : P[0] x^3 + P[1]x^2 + P[2]x + P[3] = 0
 	int nbRoots = SolveCubicPolynomial(P[1]/P[0], P[2]/P[0], P[3]/P[0], &roots[0], &roots[1], &roots[2]);
 
