@@ -151,8 +151,7 @@ double FundamentalFromCorrespondences8Point(const Mat &x1,
   ApplyTransformationToPoints(x2, T2, &x2_normalized);
 
   // Estimate the fundamental matrix.
-  double smaller_singular_value;
-  smaller_singular_value =
+  double smaller_singular_value =
       FundamentalFromCorrespondencesLinear(x1_normalized, x2_normalized, &(*F));
   EnforceFundamentalRank2Constraint(F);
 
@@ -160,42 +159,6 @@ double FundamentalFromCorrespondences8Point(const Mat &x1,
   *F = T2.transpose() * (*F) * T1;
 
   return smaller_singular_value;
-}
-
-// Compute the real roots of a third order polynomial
-// returns 1 or 3, the number of roots found
-
-int FindCubicRoots(float coeff[4],float x[3])
-{
-	float a1 = coeff[2] / coeff[3];
-	float a2 = coeff[1] / coeff[3];
-	float a3 = coeff[0] / coeff[3];
-
-	double Q = (a1 * a1 - 3 * a2) / 9;
-	double R = (2 * a1 * a1 * a1 - 9 * a1 * a2 + 27 * a3) / 54;
-	double Qcubed = Q * Q * Q;
-	double d = Qcubed - R * R;
-
-	/* Three real roots */
-	if (d >= 0)
-	{
-		double theta = acos(R / sqrt(Qcubed));
-		double sqrtQ = sqrt(Q);
-		x[0] = -2 * sqrtQ * cos( theta             / 3) - a1 / 3;
-		x[1] = -2 * sqrtQ * cos((theta + 2 * M_PI) / 3) - a1 / 3;
-		x[2] = -2 * sqrtQ * cos((theta + 4 * M_PI) / 3) - a1 / 3;
-		return (3);
-	}
-
-	/* One real root */
-	else
-	{
-		double e = pow(sqrt(-d) + fabs(R), 1. / 3.);
-		if (R > 0)
-			e = -e;
-		x[0] = (e + Q / e) - a1 / 3.;
-		return (1);
-	}
 }
 
 double FundamentalFromCorrespondences7Point(const Mat &x1,
@@ -216,36 +179,36 @@ double FundamentalFromCorrespondences7Point(const Mat &x1,
   ApplyTransformationToPoints(x2, T2, &x2_normalized);
 
   // Estimate the fundamental matrix.
-  double smaller_singular_value;
-  smaller_singular_value = FundamentalFrom7CorrespondencesLinear(x1_normalized, x2_normalized, &(*F));
+  double smaller_singular_value =
+    FundamentalFrom7CorrespondencesLinear(x1_normalized, x2_normalized, &(*F));
 
   for(int k=0; k < F->size(); ++k)
   {
 		Mat3 & Fmat = (*F)[k];
-		//Denormalize the fundamental matrix.
+		// Denormalize the fundamental matrix.
 		Fmat = T2.transpose() * Fmat * T1;
   }
 	return smaller_singular_value;
 }
 
-//-- Seven-point algorithm
-//http://www.cs.unc.edu/~marc/tutorial/node55.html
+// Seven-point algorithm.
+// http://www.cs.unc.edu/~marc/tutorial/node55.html
 double FundamentalFrom7CorrespondencesLinear(const Mat &x1,
 											                       const Mat &x2,
 											                       std::vector<Mat3> *F)
 {
-  //-- Assert that input parameter have the required size
   assert(2 == x1.rows());
   assert(7 <= x1.cols());
   assert(x1.rows() == x2.rows());
   assert(x1.cols() == x2.cols());
 
-  int n = x1.cols();
-  Mat A(n, 9);
-  // build 9xn matrix from point matches
-  for (int i = 0; i < n; ++i) {
-    A(i, 0) = x1(0, i) * x2(0, i); //0 represent x coords, and 1 represent y coords
-    A(i, 1) = x1(1, i) * x2(0, i);
+  const int nCols = x1.cols();
+  Mat A(nCols, 9);
+  A.setZero();
+  // Build 9xn matrix from point matches.
+  for (int i = 0; i < nCols; ++i) {
+    A(i, 0) = x1(0, i) * x2(0, i); // 0 represent x coords,
+    A(i, 1) = x1(1, i) * x2(0, i); // 1 represent y coords.
     A(i, 2) = x2(0, i);
     A(i, 3) = x1(0, i) * x2(1, i);
     A(i, 4) = x1(1, i) * x2(1, i);
@@ -263,86 +226,61 @@ double FundamentalFrom7CorrespondencesLinear(const Mat &x1,
   Mat V = svd.matrixV();
   Vec S = svd.singularValues();
 
-  //S contains the singular values, V contains the side singular vectors
-	int imin1,imin2;
-	float wmin1,wmin2;
-
-  // look for the two smallest eigenvalue of A'A
-	if (S(1)<S(2)) {
-		imin1 = 0;
-		imin2 = 1;
-	} else {
-		imin2 = 0;
-		imin1 = 1;
-	}
-	wmin1 = S(imin1);
-	wmin2 = S(imin2);
-
-	for (int i=2;i<9;++i) {
-		if (S(i)<wmin1) {imin2=imin1; wmin2=wmin1; wmin1=S(i); imin1=i;}
-		else if (S(i)<wmin2) {wmin2=S(i); imin2=i;}
-	}
-
-	// build basis of solutions
-	Mat3 F1,F2;
+  // Setup the det(F) = 0 and rank 2 constraint.
+  // Det(lambda*F1 +(1 - lambda)*F2) = 0.
+  Mat3 F1,F2; int cpt=0;
 	for (int i=0;i<3;++i)
-	{
-		for (int j=0;j<3;++j)
-		{
-			F1(i,j) = V(i*3+j,imin1);
-			F2(i,j) = V(i*3+j,imin2)-F1(i,j);
+		for (int j=0;j<3;++j)	{
+      F1(i,j) = V.col(7)(cpt);
+      F2(i,j) = V.col(8)(cpt);
+      ++cpt;
 		}
+
+  // By using Xcas symbolic calculus I can find the symbolic representation of the a_X factor of lambda.
+  // Det(lambda*F1 +(1 - lambda)*F2) == a_3*lambda + a_2*lambda + a_1 *lambda + a_0 = 0.
+  // I have Xcas as the following to perform the symbolic decomposition :
+  // f = det( (alpha* [ [a1,b1,c1] , [d1,e1,f1] , [g1,h1,i1] ]) * ( (1-alpha) * [ [a2,b2,c2] , [d2,e2,f2] , [g2,h2,i2] ] ) );
+  // coeff(f,alpha,3) => give the a_3 factor => P[0]
+  // coeff(f,alpha,2) => give the a_2 factor => P[1]
+  // coeff(f,alpha,1) => give the a_1 factor => P[2]
+  // coeff(f,alpha,0) => give the a_0 factor => P[3]
+
+  double  a=F1(0,0), j=F2(0,0),
+          b=F1(0,1), k=F2(0,1),
+          c=F1(0,2), l=F2(0,2),
+          d=F1(1,0), m=F2(1,0),
+          e=F1(1,1), n=F2(1,1),
+          f=F1(1,2), o=F2(1,2),
+          g=F1(2,0), p=F2(2,0),
+          h=F1(2,1), q=F2(2,1),
+          i=F1(2,2), r=F2(2,2);
+
+  float P[4]={0.f,0.f,0.f,0.f};
+  P[0] = a*e*i-a*e*r-a*i*n+a*r*n-a*f*h+a*f*q+a*h*o-a*q*o-e*i*j+e*r*j-e*g*c
+    +e*g*l+e*p*c-e*p*l+i*n*j-i*b*d+i*b*m+i*d*k-i*m*k-r*n*j+r*b*d-r*b*m
+    -r*d*k+r*m*k+n*g*c-n*g*l-n*p*c+n*p*l+f*h*j-f*q*j+f*b*g-f*b*p-f*g*k
+    +f*p*k-h*o*j+h*d*c-h*d*l-h*m*c+h*m*l+q*o*j-q*d*c+q*d*l+q*m*c-q*m*l
+    -o*b*g+o*b*p+o*g*k-o*p*k;
+  P[1] = a*e*r+a*i*n-2*a*r*n-a*f*q-a*h*o+2*a*q*o+e*i*j-2*e*r*j-e*g*l-e*p*c
+    +2*e*p*l-2*i*n*j-i*b*m-i*d*k+2*i*m*k+3*r*n*j-r*b*d+2*r*b*m+2*r*d*k
+    -3*r*m*k-n*g*c+2*n*g*l+2*n*p*c-3*n*p*l-f*h*j+2*f*q*j+f*b*p+f*g*k
+    -2*f*p*k+2*h*o*j+h*d*l+h*m*c-2*h*m*l-3*q*o*j+q*d*c-2*q*d*l
+    -2*q*m*c+3*q*m*l+o*b*g-2*o*b*p-2*o*g*k+3*o*p*k;
+  P[2] = a*r*n-a*q*o+e*r*j-e*p*l+i*n*j-i*m*k-3*r*n*j-r*b*m-r*d*k+3*r*m*k
+    -n*g*l-n*p*c+3*n*p*l-f*q*j+f*p*k-h*o*j+h*m*l+3*q*o*j+q*d*l+q*m*c
+    -3*q*m*l+o*b*p+o*g*k-3*o*p*k;
+  P[3] = r*n*j-r*m*k-n*p*l-q*o*j+q*m*l+o*p*k;
+
+  float roots[3]={0.0f,0.0f,0.0f};
+	// Solve for the root(s) : P[0] x^3 + P[1]x^2 + P[2]x + P[3] = 0
+	int nbRoots = SolveCubicPolynomial(P[1]/P[0], P[2]/P[0], P[3]/P[0], &roots[0], &roots[1], &roots[2]);
+
+	// Build fundamental matrix ( lambda*F1 + (1-Lambda)*F2 ).
+	for(int k=0; k < nbRoots; ++k)	{
+		F->push_back( roots[k]*F1 + ((1-roots[k]) *F2) );
 	}
 
-	// build cubic polynomial P(x)=det(F1+xF2)
-	float a[4]={0.f,0.f,0.f,0.f};
-	for (int i=0;i<3;++i)
-	{
-		const int i2 = i%3;
-		const int i3 = i2%3;
-		a[0] += F1(i,0)*F1(i2,1)*F1(i3,2);
-		a[1] +=
-			F2(i,0)*F1(i2,1)*F1(i3,2)+
-			F1(i,0)*F2(i2,1)*F1(i3,2)+
-			F1(i,0)*F1(i2,1)*F2(i3,2);
-		a[2] +=
-			F1(i,0)*F2(i2,1)*F2(i3,2)+
-			F2(i,0)*F1(i2,1)*F2(i3,2)+
-			F2(i,0)*F2(i2,1)*F1(i3,2);
-		a[3] += F2(i,0)*F2(i2,1)*F2(i3,2);
-	}
-	for (int i=0;i<3;++i)
-	{
-		const int i2 = i%3;
-		const int i3 = i2%3;
-		a[0] -= F1(i,0)*F1(i2,1)*F1(i3,2);
-		a[1] -=
-			F2(i,0)*F1(i2,1)*F1(i3,2)+
-			F1(i,0)*F2(i2,1)*F1(i3,2)+
-			F1(i,0)*F1(i2,1)*F2(i3,2);
-		a[2] -=
-			F1(i,0)*F2(i2,1)*F2(i3,2)+
-			F2(i,0)*F1(i2,1)*F2(i3,2)+
-			F2(i,0)*F2(i2,1)*F1(i3,2);
-		a[3] -= F2(i,0)*F2(i2,1)*F2(i3,2);
-	}
-
-	float z[3]={0.0f,0.0f,0.0f}; //-- To store the three roots
-	int nbRoots = FindCubicRoots(a,z);
-	//a[0] x^3 + a[1]x^2 + a[2]x + a[3] = 0
-
-	//-- Can I use the Cubic Polynomial solver as the following ? (I have try it, but I do not find the same result => 29 inliers instead of 30 for the realistic dataset)
-	//int nbRoots = SolveCubicPolynomial(a[1]/a[0], a[1]/a[0], a[2]/a[0], &z[0], &z[1], &z[2]);
-	//- As a suggestion : Another solution could be to implement something like : http://www.flipcode.com/archives/Polynomial_Root-Finder.shtml
-
-	//-- Build fundamental matrix ( F1 + Lambda*F2 )
-	for(int k=0; k < nbRoots; ++k)
-	{
-		//-- Rank2 constraint was already applied
-		F->push_back( F1 + (z[k] *F2) );
-	}
-
-	return S(imin1);
+	return S(8);
 }
 
 void FundamentalFromCorrespondencesSampson(const Mat2X &x1,
