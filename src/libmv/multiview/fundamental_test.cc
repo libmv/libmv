@@ -27,10 +27,26 @@
 #include "libmv/numeric/numeric.h"
 #include "testing/testing.h"
 
-//#include "libmv/multiview/generated.cc"
-
 namespace {
 using namespace libmv;
+
+// Check the properties of a fundamental matrix :
+// Check that the determinant is 0
+// Check that the inliers are projected under the expected precision
+// TODO : test rank 2 properties ?
+#define CHECK_FUNDAMENTAL_PROPERTIES( Fmatrix, ptsA, ptsB, expected_precision ) \
+{ \
+  EXPECT_NEAR(0, Fmatrix.determinant(), expected_precision);\
+  assert( ptsA.cols() == ptsB.cols() );\
+  const int n = ptsA.cols();\
+  for (int i = 0; i < n; ++i) {\
+    Vec3 x, y;\
+    x << ptsA(0, i), ptsA(1, i), 1;\
+    y << ptsB(0, i), ptsB(1, i), 1;\
+    double y_F_x = y.dot(Fmatrix * x);\
+    EXPECT_NEAR(0.0, y_F_x, expected_precision);\
+  }\
+}
 
 TEST(Fundamental, FundamentalFromProjections) {
   Mat34 P1_gt, P2_gt;
@@ -79,8 +95,7 @@ TEST(Fundamental, FundamentalFromCorrespondencesLinear) {
   x1 << 0, 0, 0, 1, 1, 1, 2, 2,
         0, 1, 2, 0, 1, 2, 0, 1;
 
-  Mat x2(2,n);
-  x2 = x1;
+  Mat x2 = x1;
   for (int i = 0; i < n; ++i) {
     x2(1,i) += 1;
   }
@@ -88,15 +103,7 @@ TEST(Fundamental, FundamentalFromCorrespondencesLinear) {
   Mat3 F;
   FundamentalFromCorrespondencesLinear(x1, x2, &F);
 
-  Vec y_F_x(n);
-  for (int i = 0; i < n; ++i) {
-    Vec3 x, y, F_x;
-    x << x1(0, i), x1(1, i), 1;
-    y << x2(0, i), x2(1, i), 1;
-    F_x = F * x;
-    y_F_x(i) = y.dot(F_x);
-  }
-	EXPECT_MATRIX_NEAR_ZERO(y_F_x, 1e-8);
+  CHECK_FUNDAMENTAL_PROPERTIES( F, x1, x2, 1e-8);
 }
 
 TEST(Fundamental, FundamentalFromCorrespondences8Point) {
@@ -114,17 +121,7 @@ TEST(Fundamental, FundamentalFromCorrespondences8Point) {
   Mat3 F;
   FundamentalFromCorrespondences8Point(x1, x2, &F);
 
-  Vec y_F_x(n);
-  for (int i = 0; i < n; ++i) {
-    Vec3 x, y, F_x;
-    x << x1(0, i), x1(1, i), 1;
-    y << x2(0, i), x2(1, i), 1;
-    F_x = F * x;
-    y_F_x(i) = y.dot(F_x);
-  }
-	EXPECT_MATRIX_NEAR_ZERO(y_F_x, 1e-8);
-
-  EXPECT_NEAR(0, F.determinant(), 1e-8);
+  CHECK_FUNDAMENTAL_PROPERTIES( F, x1, x2, 1e-8);
 }
 
 TEST(Fundamental, FundamentalFromCorrespondencesLinearRealistic) {
@@ -336,13 +333,12 @@ TEST(Fundamental, MotionFromEssentialAndCorrespondence) {
 
 TEST(Fundamental, FundamentalFromCorrespondences7Point) {
 
-  int n = 7;
+  const int n = 7;
   Mat x1(2,n);
   x1 << 0, 0, 0, 1, 1, 1, 2,
         0, 1, 2, 0, 1, 2, 0;
 
-  Mat x2(2,n);
-  x2 = x1;
+  Mat x2 = x1;
   for (int i = 0; i < n; ++i) {
     x2(1,i) += 1;
   }
@@ -352,89 +348,60 @@ TEST(Fundamental, FundamentalFromCorrespondences7Point) {
 
 	for(int i=0; i < Fvec.size(); ++i)
 	{
-		Mat3 F = Fvec[i];
+		const Mat3 & F = Fvec[i];
 
-		Vec y_F_x(n);
-		for (int i = 0; i < n; ++i) {
-			Vec3 x, y, F_x;
-			x << x1(0, i), x1(1, i), 1;
-			y << x2(0, i), x2(1, i), 1;
-			F_x 		 = F * x;
-			y_F_x(i) = y.dot(F_x);
-		}
-		EXPECT_MATRIX_NEAR_ZERO(y_F_x, 1e-8);
-		EXPECT_NEAR(0, F.determinant(), 1e-8);
+    CHECK_FUNDAMENTAL_PROPERTIES( F, x1, x2, 1e-8);
 	}
 }
 
 TEST(Fundamental, FundamentalFromCorrespondences7Point_RealisticDataset)
 {
-	//-- First test with real image coordinates data :
-	{
-		int n = 7;
-		Mat x1(2,n);
+  //-- First test with real image coordinates data :
+  {
+    const int n = 7;
+    Mat x1(2,n);
 
-		x1 <<	723, 1091, 1691, 447, 971, 1903, 1483,
-					887, 699,  811,  635, 91,  447,  1555;
+    x1 <<	723, 1091, 1691, 447, 971, 1903, 1483,
+          887, 699,  811,  635, 91,  447,  1555;
 
-		Mat x2(2,n);
+    Mat x2(2,n);
 
-		x2 <<	1251, 1603, 2067, 787, 1355, 2163, 1875,
-					1243, 923,  1031,  484, 363,  743,  1715;
+    x2 <<	1251, 1603, 2067, 787, 1355, 2163, 1875,
+          1243, 923,  1031,  484, 363,  743,  1715;
 
-		std::vector<Mat3> Fvec;
-		FundamentalFromCorrespondences7Point(x1, x2, &Fvec);
+    std::vector<Mat3> Fvec;
+    FundamentalFromCorrespondences7Point(x1, x2, &Fvec);
 
-		for(int k=0; k < Fvec.size(); ++k)
-		{
-			Mat3 F = Fvec[k];
+    for(int k=0; k < Fvec.size(); ++k) {
+      const Mat3 & F = Fvec[k];
 
-			Vec y_F_x(n);
-			for (int i = 0; i < n; ++i) {
-				Vec3 x, y, F_x;
-				x << x1(0, i), x1(1, i), 1;
-				y << x2(0, i), x2(1, i), 1;
-				F_x 		 = F * x;
-				y_F_x(i) = y.dot(F_x);
-			}
-			EXPECT_MATRIX_NEAR_ZERO(y_F_x, 1e-8);
-			//-- Cannot be true because point coords are not normalized
-			//EXPECT_NEAR(0, F.determinant(), 1e-8);
-		}
+      CHECK_FUNDAMENTAL_PROPERTIES( F, x1, x2, 1e-8);
+    }
   }
 
   //-- Second dataset with libmv internal realistic dataset :
   {
-		const int n = 7;
+    const int n = 7;
 
-		TwoViewDataSet d = TwoRealisticCameras();
+    TwoViewDataSet d = TwoRealisticCameras();
 
-		// 7 points of a cube and their projections ( miss the last corner).
-		d.X.resize(3,n);
-		d.X << 0, 1, 0, 1, 0, 1, 0,
-					 0, 0, 1, 1, 0, 0, 1,
-					 0, 0, 0, 0, 1, 1, 1;
-		Project(d.P1, d.X, &d.x1);
-		Project(d.P2, d.X, &d.x2);
+    // 7 points of a cube and their projections ( miss the last corner).
+    d.X.resize(3,n);
+    d.X <<  0, 1, 0, 1, 0, 1, 0, // X,
+            0, 0, 1, 1, 0, 0, 1, // Y,
+            0, 0, 0, 0, 1, 1, 1; // Z.
+    Project(d.P1, d.X, &d.x1);
+    Project(d.P2, d.X, &d.x2);
 
-		// Compute fundamental matrix from correspondences.
-		std::vector<Mat3> F_estimated;
-		FundamentalFromCorrespondences7Point(d.x1, d.x2, &F_estimated);
+    // Compute fundamental matrix from correspondences.
+    std::vector<Mat3> F_estimated;
+    FundamentalFromCorrespondences7Point(d.x1, d.x2, &F_estimated);
 
-		for(int k=0; k < F_estimated.size(); ++k)
-		{
-			Mat3 F = F_estimated[k];
+    for(int k=0; k < F_estimated.size(); ++k)	{
+      const Mat3 & F = F_estimated[k];
 
-			Vec y_F_x(n);
-			for (int i = 0; i < n; ++i) {
-				Vec3 x, y, F_x;
-				x << d.x1(0, i), d.x1(1, i), 1;
-				y << d.x2(0, i), d.x2(1, i), 1;
-				F_x = F * x;
-				y_F_x(i) = y.dot(F_x);
-			}
-			EXPECT_MATRIX_NEAR_ZERO(y_F_x, 1e-8);
-		}
+      CHECK_FUNDAMENTAL_PROPERTIES( F, d.x1, d.x2, 1e-8);
+    }
   }
 }
 
