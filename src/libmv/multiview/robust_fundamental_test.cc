@@ -32,16 +32,34 @@ namespace {
 
 using namespace libmv;
 
+// Check the properties of a fundamental matrix :
+// Check that the determinant is 0
+// Check that the inliers are projected under the expected precision
+// TODO : test rank 2 properties ?
+#define CHECK_FUNDAMENTAL_PROPERTIES( Fmatrix, ptsA, ptsB, expected_precision ) \
+{ \
+  EXPECT_NEAR(0, Fmatrix.determinant(), expected_precision);\
+  assert( ptsA.cols() == ptsB.cols() );\
+  const int n = ptsA.cols();\
+  for (int i = 0; i < n; ++i) {\
+    Vec3 x, y;\
+    x << ptsA(0, i), ptsA(1, i), 1;\
+    y << ptsB(0, i), ptsB(1, i), 1;\
+    double y_F_x = y.dot(Fmatrix * x);\
+    EXPECT_NEAR(0.0, y_F_x, expected_precision);\
+  }\
+}
+
+
 TEST(RobustFundamental, FundamentalFromCorrespondences8PointRobust) {
-  int n = 16;
+  const int n = 16;
   Mat x1(2,n);
   x1 << 0, 0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4,   5,
         0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2,   5;
 
-  Mat x2(2,n);
-  x2 = x1;
+  Mat x2 = x1;
   for (int i = 0; i < n; ++i) {
-    x2(0, i) += i % 2;  // Multiple horitzontal disparities.
+    x2(0, i) += i % 2;  // Multiple horizontal disparities.
   }
   x2(0, n - 1) = 10;
   x2(1, n - 1) = 10;   // The outlier has vertical disparity.
@@ -88,16 +106,7 @@ TEST(RobustFundamental,
   EXPECT_MATRIX_NEAR(F_gt_norm, F_estimated_norm, 1e-8);
 
   // Check fundamental properties.
-  int n = d.X.cols();
-  Vec y_F_x(n);
-  for (int i = 0; i < n; ++i) {
-    Vec3 x, y;
-    x << d.x1(0, i), d.x1(1, i), 1;
-    y << d.x2(0, i), d.x2(1, i), 1;
-    y_F_x(i) = y.dot(F_estimated * x);
-  }
-  EXPECT_MATRIX_NEAR_ZERO(y_F_x, 1e-8);
-  EXPECT_NEAR(0, F_estimated.determinant(), 1e-8);
+  CHECK_FUNDAMENTAL_PROPERTIES( F_estimated, d.x1, d.x2, 1e-8);
 }
 
 
@@ -137,29 +146,19 @@ TEST(RobustFundamental, FundamentalFromCorrespondences8PointRealistic) {
   EXPECT_MATRIX_NEAR(F_gt_norm, F_estimated_norm, 1e-8);
 
   // Check fundamental properties.
-  int n = d.X.cols();
-  Vec y_F_x(n);
-  for (int i = 0; i < n; ++i) {
-    Vec3 x, y;
-    x << d.x1(0, i), d.x1(1, i), 1;
-    y << d.x2(0, i), d.x2(1, i), 1;
-    y_F_x(i) = y.dot(F_estimated * x);
-  }
-  EXPECT_MATRIX_NEAR_ZERO(y_F_x, 1e-8);
-  EXPECT_NEAR(0, F_estimated.determinant(), 1e-8);
+  CHECK_FUNDAMENTAL_PROPERTIES( F_estimated, d.x1, d.x2, 1e-8);
 }
 
 
 TEST(RobustFundamental, FundamentalFromCorrespondences7PointRobust) {
-  int n = 16;
+  const int n = 16;
   Mat x1(2,n);
-  x1 << 0, 0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4,   5,
-        0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2,   5;
+  x1 << 0, 0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4, 5,
+        0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 5;
 
-  Mat x2(2,n);
-  x2 = x1;
+  Mat x2 = x1;
   for (int i = 0; i < n; ++i) {
-    x2(0, i) += i % 2;  // Multiple horitzontal disparities.
+    x2(0, i) += i % 2;  // Multiple horizontal disparities.
   }
   x2(0, n - 1) = 10;
   x2(1, n - 1) = 10;   // The outlier has vertical disparity.
@@ -171,20 +170,26 @@ TEST(RobustFundamental, FundamentalFromCorrespondences7PointRobust) {
   LOG(INFO) << "F\n" << F << "\n";
   LOG(INFO) << "INLIERS " << inliers.size() << "\n";
 
-  // F should be 0, 0,  0,
-  //             0, 0, -1,
-  //             0, 1,  0
-  EXPECT_NEAR(0.0, F(0,0), 1e-8);
-  EXPECT_NEAR(0.0, F(0,1), 1e-8);
-  EXPECT_NEAR(0.0, F(0,2), 1e-8);
-  EXPECT_NEAR(0.0, F(1,0), 1e-8);
-  EXPECT_NEAR(0.0, F(1,1), 1e-8);
-  EXPECT_NEAR(0.0, F(2,0), 1e-8);
-  EXPECT_NEAR(0.0, F(2,2), 1e-8);
-  EXPECT_NEAR(F(1,2), -F(2,1), 1e-8);
+  // F should be similar to :
+  // 0, 0,  0, //Up to a scale factor and an alpha value
+  // 0, 0, -1,
+  // 0, 1,  0
+  const double expectedPrecision = 1e-2;
+  const double & ep = expectedPrecision;
+  EXPECT_NEAR(0.0, F(0,0), ep);
+  EXPECT_NEAR(0.0, F(0,1), ep);
+  EXPECT_NEAR(0.0, F(0,2), ep);
+  EXPECT_NEAR(0.0, F(1,0), ep);
+  EXPECT_NEAR(0.0, F(1,1), ep);
+  EXPECT_NEAR(0.0, F(2,0), ep);
+  EXPECT_NEAR(0.0, F(2,2), ep);
+  EXPECT_NEAR(F(1,2), -F(2,1), 0.1);
+
 
   EXPECT_EQ(n - 1, inliers.size());
+  EXPECT_NEAR(0, F.determinant(), 1e-8);
 }
+
 
 TEST(RobustFundamental, FundamentalFromCorrespondences7PointRealisticNoOutliers) {
   TwoViewDataSet d = TwoRealisticCameras();
@@ -203,19 +208,9 @@ TEST(RobustFundamental, FundamentalFromCorrespondences7PointRealisticNoOutliers)
   LOG(INFO) << "F_gt_norm =\n" << F_gt_norm;
   LOG(INFO) << "F_estimated_norm =\n" << F_estimated_norm;
 
-  EXPECT_MATRIX_NEAR(F_gt_norm, F_estimated_norm, 1e-8);
+  EXPECT_MATRIX_NEAR(F_gt_norm, F_estimated_norm, 1e-2);
 
-  // Check fundamental properties.
-  int n = d.X.cols();
-  Vec y_F_x(n);
-  for (int i = 0; i < n; ++i) {
-    Vec3 x, y;
-    x << d.x1(0, i), d.x1(1, i), 1;
-    y << d.x2(0, i), d.x2(1, i), 1;
-    y_F_x(i) = y.dot(F_estimated * x);
-  }
-  EXPECT_MATRIX_NEAR_ZERO(y_F_x, 1e-8);
-  EXPECT_NEAR(0, F_estimated.determinant(), 1e-8);
+  CHECK_FUNDAMENTAL_PROPERTIES( F_estimated, d.x1, d.x2, 1e-6 );
 }
 
 } // namespace
