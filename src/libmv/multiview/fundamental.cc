@@ -184,11 +184,11 @@ double FundamentalFromCorrespondences7Point(const Mat &x1,
 
   for(int k=0; k < F->size(); ++k)
   {
-		Mat3 & Fmat = (*F)[k];
-		// Denormalize the fundamental matrix.
-		Fmat = T2.transpose() * Fmat * T1;
+    Mat3 & Fmat = (*F)[k];
+    // Denormalize the fundamental matrix.
+    Fmat = T2.transpose() * Fmat * T1;
   }
-	return smaller_singular_value;
+  return smaller_singular_value;
 }
 
 // Seven-point algorithm.
@@ -223,12 +223,12 @@ double FundamentalFrom7CorrespondencesLinear(const Mat &x1,
   Vec9 f1, f2;
   double s = Nullspace2(&A, &f1, &f2);
   Mat3 F1, F2;
-	for (int i = 0, kk = 0; i < 3; ++i) {
-		for (int j = 0; j < 3; ++j)	{
+  for (int i = 0, kk = 0; i < 3; ++i) {
+   for (int j = 0; j < 3; ++j) {
       F1(i,j) = f1(kk);
       F2(i,j) = f2(kk);
       ++kk;
-		}
+    }
   }
 
   // Then, use the condition det(F) = 0 to determine F. In other words, solve
@@ -254,15 +254,15 @@ double FundamentalFrom7CorrespondencesLinear(const Mat &x1,
     j*n*r + k*o*p + l*m*q - j*o*q - k*m*r - l*n*p,
   };
 
-	// Solve for the root(s) : P[0] x^3 + P[1]x^2 + P[2]x + P[3] = 0
+  // Solve for the root(s) : P[0] x^3 + P[1]x^2 + P[2]x + P[3] = 0
   double roots[3];
-	int num_roots = SolveCubicPolynomial(P, roots);
+  int num_roots = SolveCubicPolynomial(P, roots);
 
-	// Build the fundamental matrix for each solution.
-	for (int kk = 0; kk < num_roots; ++kk)	{
-		F->push_back(F1 + roots[kk] * F2);
-	}
-	return s;
+  // Build the fundamental matrix for each solution.
+  for (int kk = 0; kk < num_roots; ++kk)  {
+    F->push_back(F1 + roots[kk] * F2);
+  }
+  return s;
 }
 
 void FundamentalFromCorrespondencesSampson(const Mat2X &x1,
