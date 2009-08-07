@@ -254,7 +254,7 @@ double FundamentalFrom7CorrespondencesLinear(const Mat &x1,
     j*n*r + k*o*p + l*m*q - j*o*q - k*m*r - l*n*p,
   };
 
-  // Solve for the root(s) : P[0] x^3 + P[1]x^2 + P[2]x + P[3] = 0
+  // Solve for the roots of P[3]*x^3 + P[2]*x^2 + P[1]*x + P[0] = 0.
   double roots[3];
   int num_roots = SolveCubicPolynomial(P, roots);
 
