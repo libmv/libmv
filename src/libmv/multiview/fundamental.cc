@@ -207,26 +207,26 @@ double FundamentalFrom7CorrespondencesLinear(const Mat &x1,
   // nullspace should be rank two; the two dimensions correspond to the set of
   // F matrices satisfying the epipolar geometry.
   Matrix<double, 7, 9> A;
-  for (int i = 0; i < 7; ++i) {
-    A(i, 0) = x1(0, i) * x2(0, i);  // 0 represents x coords,
-    A(i, 1) = x1(1, i) * x2(0, i);  // 1 represents y coords.
-    A(i, 2) = x2(0, i);
-    A(i, 3) = x1(0, i) * x2(1, i);
-    A(i, 4) = x1(1, i) * x2(1, i);
-    A(i, 5) = x2(1, i);
-    A(i, 6) = x1(0, i);
-    A(i, 7) = x1(1, i);
-    A(i, 8) = 1.0;
+  for (int ii = 0; ii < 7; ++ii) {
+    A(ii, 0) = x1(0, ii) * x2(0, ii);  // 0 represents x coords,
+    A(ii, 1) = x1(1, ii) * x2(0, ii);  // 1 represents y coords.
+    A(ii, 2) = x2(0, ii);
+    A(ii, 3) = x1(0, ii) * x2(1, ii);
+    A(ii, 4) = x1(1, ii) * x2(1, ii);
+    A(ii, 5) = x2(1, ii);
+    A(ii, 6) = x1(0, ii);
+    A(ii, 7) = x1(1, ii);
+    A(ii, 8) = 1.0;
   }
 
   // Find the two F matrices in the nullspace of A.
   Vec9 f1, f2;
   double s = Nullspace2(&A, &f1, &f2);
   Mat3 F1, F2;
-  for (int i = 0, kk = 0; i < 3; ++i) {
-   for (int j = 0; j < 3; ++j) {
-      F1(i,j) = f1(kk);
-      F2(i,j) = f2(kk);
+  for (int ii = 0, kk = 0; ii < 3; ++ii) {
+   for (int jj = 0; jj < 3; ++jj) {
+      F1(ii, jj) = f1(kk);
+      F2(ii, jj) = f2(kk);
       ++kk;
     }
   }
