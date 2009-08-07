@@ -163,8 +163,7 @@ double FundamentalFromCorrespondences8Point(const Mat &x1,
 
 double FundamentalFromCorrespondences7Point(const Mat &x1,
                                             const Mat &x2,
-                                            std::vector<Mat3> *F)
-{
+                                            std::vector<Mat3> *F) {
   assert(2 == x1.rows());
   assert(7 <= x1.cols());
   assert(x1.rows() == x2.rows());
@@ -182,8 +181,7 @@ double FundamentalFromCorrespondences7Point(const Mat &x1,
   double smaller_singular_value =
     FundamentalFrom7CorrespondencesLinear(x1_normalized, x2_normalized, &(*F));
 
-  for(int k=0; k < F->size(); ++k)
-  {
+  for(int k=0; k < F->size(); ++k) {
     Mat3 & Fmat = (*F)[k];
     // Denormalize the fundamental matrix.
     Fmat = T2.transpose() * Fmat * T1;
@@ -222,14 +220,8 @@ double FundamentalFrom7CorrespondencesLinear(const Mat &x1,
   // Find the two F matrices in the nullspace of A.
   Vec9 f1, f2;
   double s = Nullspace2(&A, &f1, &f2);
-  Mat3 F1, F2;
-  for (int ii = 0, kk = 0; ii < 3; ++ii) {
-   for (int jj = 0; jj < 3; ++jj) {
-      F1(ii, jj) = f1(kk);
-      F2(ii, jj) = f2(kk);
-      ++kk;
-    }
-  }
+  Mat3 F1 = Map<RMat3>(f1.data());
+  Mat3 F2 = Map<RMat3>(f2.data());
 
   // Then, use the condition det(F) = 0 to determine F. In other words, solve
   // det(F1 + a*F2) = 0 for a.
