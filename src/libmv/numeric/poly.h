@@ -52,7 +52,7 @@ int SolveCubicPolynomial(Real a, Real b, Real c,
   if (R == 0 && Q == 0) {
     // Tripple root in one place.
     *x0 = *x1 = *x2 = -a / 3 ;
-    return 3 ;
+    return 3;
 
   } else if (CR2 == CQ3) {
     // This test is actually R2 == Q3, written in a form suitable for exact
@@ -67,11 +67,11 @@ int SolveCubicPolynomial(Real a, Real b, Real c,
       *x1 =      sqrtQ - a / 3;
       *x2 =      sqrtQ - a / 3;
     } else {
-      *x0 =    -sqrtQ - a / 3;
-      *x1 =    -sqrtQ - a / 3;
-      *x2 = 2 * sqrtQ - a / 3;
+      *x0 =     -sqrtQ - a / 3;
+      *x1 =     -sqrtQ - a / 3;
+      *x2 =  2 * sqrtQ - a / 3;
     }
-    return 3 ;
+    return 3;
 
   } else if (CR2 < CQ3) {
     // This case is equivalent to R2 < Q3.
@@ -100,6 +100,23 @@ int SolveCubicPolynomial(Real a, Real b, Real c,
   Real B = Q / A ;
   *x0 = A + B - a / 3;
   return 1;
+}
+
+// The coefficients are in ascending powers, i.e. coeffs[N]*x^N.
+template<typename Real>
+int SolveCubicPolynomial(const Real *coeffs, Real *solutions) {
+  if (coeffs[0] == 0.0) {
+    // TODO(keir): This is a quadratic not a cubic. Implement a quadratic
+    // solver!
+    return 0;
+  }
+  Real a = coeffs[2] / coeffs[3];
+  Real b = coeffs[1] / coeffs[3];
+  Real c = coeffs[0] / coeffs[3];
+  return SolveCubicPolynomial(a, b, c,
+                              solutions + 0,
+                              solutions + 1,
+                              solutions + 2);
 }
 
 }  // namespace libmv

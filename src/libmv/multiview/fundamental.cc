@@ -194,21 +194,22 @@ double FundamentalFromCorrespondences7Point(const Mat &x1,
 // Seven-point algorithm.
 // http://www.cs.unc.edu/~marc/tutorial/node55.html
 double FundamentalFrom7CorrespondencesLinear(const Mat &x1,
-											                       const Mat &x2,
-											                       std::vector<Mat3> *F)
-{
+                                             const Mat &x2,
+                                             std::vector<Mat3> *F) {
   assert(2 == x1.rows());
-  assert(7 <= x1.cols());
+  assert(7 == x1.cols());
   assert(x1.rows() == x2.rows());
   assert(x1.cols() == x2.cols());
 
-  const int nCols = x1.cols();
-  Mat A(nCols, 9);
-  A.setZero();
-  // Build 9xn matrix from point matches.
-  for (int i = 0; i < nCols; ++i) {
-    A(i, 0) = x1(0, i) * x2(0, i); // 0 represent x coords,
-    A(i, 1) = x1(1, i) * x2(0, i); // 1 represent y coords.
+  // Build a 9 x n matrix from point matches, where each row is equivalent to
+  // the equation x'T*F*x = 0 for a single correspondence pair (x', x). The
+  // domain of the matrix is a 9 element vector corresponding to F. The
+  // nullspace should be rank two; the two dimensions correspond to the set of
+  // F matrices satisfying the epipolar geometry.
+  Matrix<double, 7, 9> A;
+  for (int i = 0; i < 7; ++i) {
+    A(i, 0) = x1(0, i) * x2(0, i);  // 0 represents x coords,
+    A(i, 1) = x1(1, i) * x2(0, i);  // 1 represents y coords.
     A(i, 2) = x2(0, i);
     A(i, 3) = x1(0, i) * x2(1, i);
     A(i, 4) = x1(1, i) * x2(1, i);
@@ -218,69 +219,50 @@ double FundamentalFrom7CorrespondencesLinear(const Mat &x1,
     A(i, 8) = 1.0;
   }
 
-  Mat A_extended(A.cols(), A.cols());
-  A_extended.block(A.rows(), 0, A.cols() - A.rows(), A.cols()).setZero();
-  A_extended.block(0,0, A.rows(), A.cols()) = A;
-
-  Eigen::SVD<Mat> svd(A_extended);
-  Mat V = svd.matrixV();
-  Vec S = svd.singularValues();
-
-  // Setup the det(F) = 0 and rank 2 constraint.
-  // Det(lambda*F1 +(1 - lambda)*F2) = 0.
-  Mat3 F1,F2; int cpt=0;
-	for (int i=0;i<3;++i)
-		for (int j=0;j<3;++j)	{
-      F1(i,j) = V.col(7)(cpt);
-      F2(i,j) = V.col(8)(cpt);
-      ++cpt;
+  // Find the two F matrices in the nullspace of A.
+  Vec9 f1, f2;
+  double s = Nullspace2(&A, &f1, &f2);
+  Mat3 F1, F2;
+	for (int i = 0, kk = 0; i < 3; ++i) {
+		for (int j = 0; j < 3; ++j)	{
+      F1(i,j) = f1(kk);
+      F2(i,j) = f2(kk);
+      ++kk;
 		}
+  }
 
-  // By using Xcas symbolic calculus I can find the symbolic representation of the a_X factor of lambda.
-  // Det(lambda*F1 +(1 - lambda)*F2) == a_3*lambda + a_2*lambda + a_1 *lambda + a_0 = 0.
-  // I have Xcas as the following to perform the symbolic decomposition :
-  // f = det( (alpha* [ [a1,b1,c1] , [d1,e1,f1] , [g1,h1,i1] ]) * ( (1-alpha) * [ [a2,b2,c2] , [d2,e2,f2] , [g2,h2,i2] ] ) );
-  // coeff(f,alpha,3) => give the a_3 factor => P[0]
-  // coeff(f,alpha,2) => give the a_2 factor => P[1]
-  // coeff(f,alpha,1) => give the a_1 factor => P[2]
-  // coeff(f,alpha,0) => give the a_0 factor => P[3]
+  // Then, use the condition det(F) = 0 to determine F. In other words, solve
+  // det(F1 + a*F2) = 0 for a.
+  double a = F1(0, 0), j = F2(0, 0),
+         b = F1(0, 1), k = F2(0, 1),
+         c = F1(0, 2), l = F2(0, 2),
+         d = F1(1, 0), m = F2(1, 0),
+         e = F1(1, 1), n = F2(1, 1),
+         f = F1(1, 2), o = F2(1, 2),
+         g = F1(2, 0), p = F2(2, 0),
+         h = F1(2, 1), q = F2(2, 1),
+         i = F1(2, 2), r = F2(2, 2);
 
-  double  a=F1(0,0), j=F2(0,0),
-          b=F1(0,1), k=F2(0,1),
-          c=F1(0,2), l=F2(0,2),
-          d=F1(1,0), m=F2(1,0),
-          e=F1(1,1), n=F2(1,1),
-          f=F1(1,2), o=F2(1,2),
-          g=F1(2,0), p=F2(2,0),
-          h=F1(2,1), q=F2(2,1),
-          i=F1(2,2), r=F2(2,2);
+  // Run fundamental_7point_coeffs.py to get the below coefficients.
+  // The coefficients are in ascending powers of alpha, i.e. P[N]*x^N.
+  double P[4] = {
+    a*e*i + b*f*g + c*d*h - a*f*h - b*d*i - c*e*g,
+    a*e*r + a*i*n + b*f*p + b*g*o + c*d*q + c*h*m + d*h*l + e*i*j + f*g*k -
+    a*f*q - a*h*o - b*d*r - b*i*m - c*e*p - c*g*n - d*i*k - e*g*l - f*h*j,
+    a*n*r + b*o*p + c*m*q + d*l*q + e*j*r + f*k*p + g*k*o + h*l*m + i*j*n -
+    a*o*q - b*m*r - c*n*p - d*k*r - e*l*p - f*j*q - g*l*n - h*j*o - i*k*m,
+    j*n*r + k*o*p + l*m*q - j*o*q - k*m*r - l*n*p,
+  };
 
-  double P[4]={0.f,0.f,0.f,0.f};
-  P[0] = a*e*i-a*e*r-a*i*n+a*r*n-a*f*h+a*f*q+a*h*o-a*q*o-e*i*j+e*r*j-e*g*c
-    +e*g*l+e*p*c-e*p*l+i*n*j-i*b*d+i*b*m+i*d*k-i*m*k-r*n*j+r*b*d-r*b*m
-    -r*d*k+r*m*k+n*g*c-n*g*l-n*p*c+n*p*l+f*h*j-f*q*j+f*b*g-f*b*p-f*g*k
-    +f*p*k-h*o*j+h*d*c-h*d*l-h*m*c+h*m*l+q*o*j-q*d*c+q*d*l+q*m*c-q*m*l
-    -o*b*g+o*b*p+o*g*k-o*p*k;
-  P[1] = a*e*r+a*i*n-2*a*r*n-a*f*q-a*h*o+2*a*q*o+e*i*j-2*e*r*j-e*g*l-e*p*c
-    +2*e*p*l-2*i*n*j-i*b*m-i*d*k+2*i*m*k+3*r*n*j-r*b*d+2*r*b*m+2*r*d*k
-    -3*r*m*k-n*g*c+2*n*g*l+2*n*p*c-3*n*p*l-f*h*j+2*f*q*j+f*b*p+f*g*k
-    -2*f*p*k+2*h*o*j+h*d*l+h*m*c-2*h*m*l-3*q*o*j+q*d*c-2*q*d*l
-    -2*q*m*c+3*q*m*l+o*b*g-2*o*b*p-2*o*g*k+3*o*p*k;
-  P[2] = a*r*n-a*q*o+e*r*j-e*p*l+i*n*j-i*m*k-3*r*n*j-r*b*m-r*d*k+3*r*m*k
-    -n*g*l-n*p*c+3*n*p*l-f*q*j+f*p*k-h*o*j+h*m*l+3*q*o*j+q*d*l+q*m*c
-    -3*q*m*l+o*b*p+o*g*k-3*o*p*k;
-  P[3] = r*n*j-r*m*k-n*p*l-q*o*j+q*m*l+o*p*k;
-
-  double roots[3]={0.0f,0.0f,0.0f};
 	// Solve for the root(s) : P[0] x^3 + P[1]x^2 + P[2]x + P[3] = 0
-	int nbRoots = SolveCubicPolynomial(P[1]/P[0], P[2]/P[0], P[3]/P[0], &roots[0], &roots[1], &roots[2]);
+  double roots[3];
+	int num_roots = SolveCubicPolynomial(P, roots);
 
-	// Build fundamental matrix ( lambda*F1 + (1-Lambda)*F2 ).
-	for(int k=0; k < nbRoots; ++k)	{
-		F->push_back( roots[k]*F1 + ((1-roots[k]) *F2) );
+	// Build the fundamental matrix for each solution.
+	for (int kk = 0; kk < num_roots; ++kk)	{
+		F->push_back(F1 + roots[kk] * F2);
 	}
-
-	return S(8);
+	return s;
 }
 
 void FundamentalFromCorrespondencesSampson(const Mat2X &x1,
