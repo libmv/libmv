@@ -87,6 +87,7 @@ typedef Eigen::Matrix<double, 4, Eigen::Dynamic> Mat4X;
 typedef Eigen::Matrix<double, Eigen::Dynamic, 2> MatX2;
 typedef Eigen::Matrix<double, Eigen::Dynamic, 3> MatX3;
 typedef Eigen::Matrix<double, Eigen::Dynamic, 4> MatX4;
+typedef Eigen::Matrix<double, Eigen::Dynamic, 9> MatX9;
 
 typedef Eigen::Vector2d Vec2;
 typedef Eigen::Vector3d Vec3;
@@ -413,7 +414,7 @@ void MatrixColumn(const Mat &A, int i, Vec3 *v);
 void MatrixColumn(const Mat &A, int i, Vec4 *v);
 
 template <typename TMat, typename TCols>
-TMat ExtractColumns(const TMat &A, TCols columns) {
+TMat ExtractColumns(const TMat &A, const TCols &columns) {
   TMat compressed(A.rows(), columns.size());
   for (int i = 0; i < columns.size(); ++i) {
     compressed.col(i) = A.col(columns[i]);
