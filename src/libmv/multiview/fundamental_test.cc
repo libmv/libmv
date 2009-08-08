@@ -181,31 +181,26 @@ TEST(Fundamental, SampsonDistance2) {
   Vec2 x4(0, 0), y4(  0,  10); // Biggest error.
   Vec2 x5(0, 0), y5(100,  10); // Biggest error with horitzontal disparity.
 
-  double dist0 = SampsonDistance2(F, x0, y0);
-  double dist1 = SampsonDistance2(F, x1, y1);
-  double dist2 = SampsonDistance2(F, x2, y2);
-  double dist3 = SampsonDistance2(F, x3, y3);
-  double dist4 = SampsonDistance2(F, x4, y4);
-  double dist5 = SampsonDistance2(F, x5, y5);
+  Vec6 dists;
+  dists << SampsonDistance2(F, x0, y0),
+           SampsonDistance2(F, x1, y1),
+           SampsonDistance2(F, x2, y2),
+           SampsonDistance2(F, x3, y3),
+           SampsonDistance2(F, x4, y4),
+           SampsonDistance2(F, x5, y5);
 
-  VLOG(1) << "SampsonDistance2: "
-          << dist0 << " "
-          << dist1 << " "
-          << dist2 << " "
-          << dist3 << " "
-          << dist4 << " "
-          << dist5 << "\n";
+  VLOG(1) << "SampsonDistance2: " << dists.transpose();
 
   // The expected distance are two times (one per image) the distance from the
   // point to the reprojection of the best triangulated point.  For this
   // particular example this reprojection is the midpoint between the point and
   // the epipolar line.
-  EXPECT_EQ(0, dist0);
-  EXPECT_EQ(0, dist1);
-  EXPECT_EQ(2 * Square(0.1 / 2), dist2);
-  EXPECT_EQ(2 * Square(1.0 / 2), dist3);
-  EXPECT_EQ(2 * Square(10. / 2), dist4);
-  EXPECT_EQ(2 * Square(10. / 2), dist5);
+  EXPECT_EQ(0, dists[0]);
+  EXPECT_EQ(0, dists[1]);
+  EXPECT_EQ(2 * Square(0.1 / 2), dists[2]);
+  EXPECT_EQ(2 * Square(1.0 / 2), dists[3]);
+  EXPECT_EQ(2 * Square(10. / 2), dists[4]);
+  EXPECT_EQ(2 * Square(10. / 2), dists[5]);
 }
 
 TEST(Fundamental, SymmetricEpipolarDistance2) {
@@ -220,29 +215,24 @@ TEST(Fundamental, SymmetricEpipolarDistance2) {
   Vec2 x4(0, 0), y4(  0,  10); // Biggest error.
   Vec2 x5(0, 0), y5(100,  10); // Biggest error with horitzontal disparity.
 
-  double dist0 = SymmetricEpipolarDistance2(F, x0, y0);
-  double dist1 = SymmetricEpipolarDistance2(F, x1, y1);
-  double dist2 = SymmetricEpipolarDistance2(F, x2, y2);
-  double dist3 = SymmetricEpipolarDistance2(F, x3, y3);
-  double dist4 = SymmetricEpipolarDistance2(F, x4, y4);
-  double dist5 = SymmetricEpipolarDistance2(F, x5, y5);
+  Vec6 dists;
+  dists << SymmetricEpipolarDistance2(F, x0, y0), 
+           SymmetricEpipolarDistance2(F, x1, y1),
+           SymmetricEpipolarDistance2(F, x2, y2),
+           SymmetricEpipolarDistance2(F, x3, y3),
+           SymmetricEpipolarDistance2(F, x4, y4),
+           SymmetricEpipolarDistance2(F, x5, y5);
 
-  VLOG(1) << "SymmetricEpiporalDistance2: "
-          << dist0 << " "
-          << dist1 << " "
-          << dist2 << " "
-          << dist3 << " "
-          << dist4 << " "
-          << dist5 << "\n";
+  VLOG(1) << "SymmetricEpiporalDistance2: " << dists.transpose();
 
   // The expected distances are two times (one per image) the distance from the
   // point to the epipolar line.
-  EXPECT_EQ(0, dist0);
-  EXPECT_EQ(0, dist1);
-  EXPECT_EQ(2 * Square(0.1), dist2);
-  EXPECT_EQ(2 * Square(1), dist3);
-  EXPECT_EQ(2 * Square(10), dist4);
-  EXPECT_EQ(2 * Square(10), dist5);
+  EXPECT_EQ(0, dists[0]);
+  EXPECT_EQ(0, dists[1]);
+  EXPECT_EQ(2 * Square(0.1), dists[2]);
+  EXPECT_EQ(2 * Square(1.0), dists[3]);
+  EXPECT_EQ(2 * Square(10),  dists[4]);
+  EXPECT_EQ(2 * Square(10),  dists[5]);
 }
 
 TEST(Fundamental, EssentialFromFundamental) {
@@ -385,7 +375,7 @@ TEST(Fundamental, Solver7PointWithPointsOnTheCube) {
   std::vector<Mat3> F_estimated;
   FundamentalFromCorrespondences7Point(d.x1, d.x2, &F_estimated);
 
-  for(int k=0; k < F_estimated.size(); ++k)  {
+  for(int k = 0; k < F_estimated.size(); ++k)  {
     ExpectFundamentalProperties(F_estimated[k], d.x1, d.x2, 1e-8);
   }
 }
