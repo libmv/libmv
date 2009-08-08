@@ -28,24 +28,28 @@
 #include "testing/testing.h"
 
 namespace {
+
 using namespace libmv;
 
-// Check the properties of a fundamental matrix :
-// Check that the determinant is 0
-// Check that the inliers are projected under the expected precision
-// TODO : test rank 2 properties ?
-#define CHECK_FUNDAMENTAL_PROPERTIES( Fmatrix, ptsA, ptsB, expected_precision ) \
-{ \
-  EXPECT_NEAR(0, Fmatrix.determinant(), expected_precision);\
-  assert( ptsA.cols() == ptsB.cols() );\
-  const int n = ptsA.cols();\
-  for (int i = 0; i < n; ++i) {\
-    Vec3 x, y;\
-    x << ptsA(0, i), ptsA(1, i), 1;\
-    y << ptsB(0, i), ptsB(1, i), 1;\
-    double y_F_x = y.dot(Fmatrix * x);\
-    EXPECT_NEAR(0.0, y_F_x, expected_precision);\
-  }\
+// Check the properties of a fundamental matrix:
+//
+//   1. The determinant is 0 (rank deficient)
+//   2. The condition x'T*F*x = 0 is satisfied to precision.
+//
+template<typename TMat>
+void ExpectFundamentalProperties(const TMat &F,
+                                 const Mat &ptsA,
+                                 const Mat &ptsB,
+                                 double precision) {
+  EXPECT_NEAR(0, F.determinant(), precision);
+  assert(ptsA.cols() == ptsB.cols());
+  Mat hptsA, hptsB;
+  EuclideanToHomogeneous(ptsA, &hptsA);
+  EuclideanToHomogeneous(ptsB, &hptsB);
+  for (int i = 0; i < ptsA.cols(); ++i) {
+    double residual = hptsB.col(i).dot(F * hptsA.col(i));
+    EXPECT_NEAR(0.0, residual, precision);
+  }
 }
 
 TEST(Fundamental, FundamentalFromProjections) {
@@ -70,7 +74,7 @@ TEST(Fundamental, FundamentalFromProjections) {
 
 TEST(Fundamental, PreconditionerFromPoints) {
   int n = 4;
-  Mat points(2,n);
+  Mat points(2, n);
   points << 0, 0, 1, 1,
             0, 2, 1, 3;
 
@@ -91,58 +95,54 @@ TEST(Fundamental, PreconditionerFromPoints) {
 
 TEST(Fundamental, FundamentalFromCorrespondencesLinear) {
   int n = 8;
-  Mat x1(2,n);
+  Mat x1(2, n);
   x1 << 0, 0, 0, 1, 1, 1, 2, 2,
         0, 1, 2, 0, 1, 2, 0, 1;
 
   Mat x2 = x1;
   for (int i = 0; i < n; ++i) {
-    x2(1,i) += 1;
+    x2(1, i) += 1;
   }
 
   Mat3 F;
   FundamentalFromCorrespondencesLinear(x1, x2, &F);
 
-  CHECK_FUNDAMENTAL_PROPERTIES( F, x1, x2, 1e-8);
+  ExpectFundamentalProperties(F, x1, x2, 1e-8);
 }
 
 TEST(Fundamental, FundamentalFromCorrespondences8Point) {
   int n = 8;
-  Mat x1(2,n);
+  Mat x1(2, n);
   x1 << 0, 0, 0, 1, 1, 1, 2, 2,
         0, 1, 2, 0, 1, 2, 0, 1;
 
-  Mat x2(2,n);
+  Mat x2(2, n);
   x2 = x1;
   for (int i = 0; i < n; ++i) {
-    x2(1,i) += 1;
+    x2(1, i) += 1;
   }
 
   Mat3 F;
   FundamentalFromCorrespondences8Point(x1, x2, &F);
 
-  CHECK_FUNDAMENTAL_PROPERTIES( F, x1, x2, 1e-8);
+  ExpectFundamentalProperties(F, x1, x2, 1e-8);
 }
 
 TEST(Fundamental, FundamentalFromCorrespondencesLinearRealistic) {
   TwoViewDataSet d = TwoRealisticCameras();
 
-  // Compute fundamental matrix from correspondences.
   Mat3 F_estimated;
   FundamentalFromCorrespondencesLinear(d.x1, d.x2, &F_estimated);
 
-  // Compare with ground truth.
   EXPECT_MATRIX_PROP(d.F, F_estimated, 1e-6);
 }
 
 TEST(Fundamental, FundamentalFromCorrespondences8PointRealistic) {
   TwoViewDataSet d = TwoRealisticCameras();
 
-  // Compute fundamental matrix from correspondences.
   Mat3 F_estimated;
   FundamentalFromCorrespondences8Point(d.x1, d.x2, &F_estimated);
 
-  // Compare with ground truth.
   EXPECT_MATRIX_PROP(d.F, F_estimated, 1e-6);
 }
 
@@ -203,7 +203,7 @@ TEST(Fundamental, SampsonDistance2) {
   EXPECT_EQ(0, dist0);
   EXPECT_EQ(0, dist1);
   EXPECT_EQ(2 * Square(0.1 / 2), dist2);
-  EXPECT_EQ(2 * Square(1. / 2), dist3);
+  EXPECT_EQ(2 * Square(1.0 / 2), dist3);
   EXPECT_EQ(2 * Square(10. / 2), dist4);
   EXPECT_EQ(2 * Square(10. / 2), dist5);
 }
@@ -228,12 +228,12 @@ TEST(Fundamental, SymmetricEpipolarDistance2) {
   double dist5 = SymmetricEpipolarDistance2(F, x5, y5);
 
   VLOG(1) << "SymmetricEpiporalDistance2: "
-      << dist0 << " "
-      << dist1 << " "
-      << dist2 << " "
-      << dist3 << " "
-      << dist4 << " "
-      << dist5 << "\n";
+          << dist0 << " "
+          << dist1 << " "
+          << dist2 << " "
+          << dist3 << " "
+          << dist4 << " "
+          << dist5 << "\n";
 
   // The expected distances are two times (one per image) the distance from the
   // point to the epipolar line.
@@ -332,76 +332,61 @@ TEST(Fundamental, MotionFromEssentialAndCorrespondence) {
 }
 
 TEST(Fundamental, FundamentalFromCorrespondences7Point) {
-
   const int n = 7;
-  Mat x1(2,n);
+  Mat x1(2, n);
   x1 << 0, 0, 0, 1, 1, 1, 2,
         0, 1, 2, 0, 1, 2, 0;
 
   Mat x2 = x1;
   for (int i = 0; i < n; ++i) {
-    x2(1,i) += 1;
+    x2(1, i) += 1;
   }
 
   std::vector<Mat3> Fvec;
   FundamentalFromCorrespondences7Point(x1, x2, &Fvec);
 
-	for(int i=0; i < Fvec.size(); ++i)
-	{
-		const Mat3 & F = Fvec[i];
-
-    CHECK_FUNDAMENTAL_PROPERTIES( F, x1, x2, 1e-8);
-	}
+  for(int i = 0; i < Fvec.size(); ++i) {
+    //const Mat3 &F = Fvec[i];
+    ExpectFundamentalProperties(Fvec[i], x1, x2, 1e-8);
+    //ExpectFundamentalProperties(F, x1, x2, 1e-8);
+  }
 }
 
-TEST(Fundamental, FundamentalFromCorrespondences7Point_RealisticDataset)
-{
-  //-- First test with real image coordinates data :
-  {
-    const int n = 7;
-    Mat x1(2,n);
+TEST(Fundamental, Solver7PointRealCorrespondences) {
+  const int n = 7;
+  Mat x1(2, n);
+  Mat x2(2, n);
 
-    x1 <<	723, 1091, 1691, 447, 971, 1903, 1483,
-          887, 699,  811,  635, 91,  447,  1555;
+  x1 <<  723, 1091, 1691, 447,  971, 1903, 1483,
+         887,  699,  811, 635,   91,  447, 1555;
+  x2 << 1251, 1603, 2067, 787, 1355, 2163, 1875,
+        1243,  923, 1031, 484,  363,  743, 1715;
 
-    Mat x2(2,n);
+  std::vector<Mat3> Fvec;
+  FundamentalFromCorrespondences7Point(x1, x2, &Fvec);
 
-    x2 <<	1251, 1603, 2067, 787, 1355, 2163, 1875,
-          1243, 923,  1031,  484, 363,  743,  1715;
-
-    std::vector<Mat3> Fvec;
-    FundamentalFromCorrespondences7Point(x1, x2, &Fvec);
-
-    for(int k=0; k < Fvec.size(); ++k) {
-      const Mat3 & F = Fvec[k];
-
-      CHECK_FUNDAMENTAL_PROPERTIES( F, x1, x2, 1e-8);
-    }
+  for (int k = 0; k < Fvec.size(); ++k) {
+    ExpectFundamentalProperties(Fvec[k], x1, x2, 1e-8);
   }
+}
 
-  //-- Second dataset with libmv internal realistic dataset :
-  {
-    const int n = 7;
+TEST(Fundamental, Solver7PointWithPointsOnTheCube) {
+  TwoViewDataSet d = TwoRealisticCameras();
 
-    TwoViewDataSet d = TwoRealisticCameras();
+  // Try the 7 points of a cube and their projections, missing the last corner.
+  const int n = 7;
+  d.X.resize(3, n);
+  d.X <<  0, 1, 0, 1, 0, 1, 0, // X,
+          0, 0, 1, 1, 0, 0, 1, // Y,
+          0, 0, 0, 0, 1, 1, 1; // Z.
+  Project(d.P1, d.X, &d.x1);
+  Project(d.P2, d.X, &d.x2);
 
-    // 7 points of a cube and their projections ( miss the last corner).
-    d.X.resize(3,n);
-    d.X <<  0, 1, 0, 1, 0, 1, 0, // X,
-            0, 0, 1, 1, 0, 0, 1, // Y,
-            0, 0, 0, 0, 1, 1, 1; // Z.
-    Project(d.P1, d.X, &d.x1);
-    Project(d.P2, d.X, &d.x2);
+  std::vector<Mat3> F_estimated;
+  FundamentalFromCorrespondences7Point(d.x1, d.x2, &F_estimated);
 
-    // Compute fundamental matrix from correspondences.
-    std::vector<Mat3> F_estimated;
-    FundamentalFromCorrespondences7Point(d.x1, d.x2, &F_estimated);
-
-    for(int k=0; k < F_estimated.size(); ++k)	{
-      const Mat3 & F = F_estimated[k];
-
-      CHECK_FUNDAMENTAL_PROPERTIES( F, d.x1, d.x2, 1e-8);
-    }
+  for(int k=0; k < F_estimated.size(); ++k)  {
+    ExpectFundamentalProperties(F_estimated[k], d.x1, d.x2, 1e-8);
   }
 }
 
