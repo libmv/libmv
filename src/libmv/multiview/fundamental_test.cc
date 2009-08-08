@@ -336,9 +336,7 @@ TEST(Fundamental, FundamentalFromCorrespondences7Point) {
   FundamentalFromCorrespondences7Point(x1, x2, &Fvec);
 
   for(int i = 0; i < Fvec.size(); ++i) {
-    //const Mat3 &F = Fvec[i];
     ExpectFundamentalProperties(Fvec[i], x1, x2, 1e-8);
-    //ExpectFundamentalProperties(F, x1, x2, 1e-8);
   }
 }
 
