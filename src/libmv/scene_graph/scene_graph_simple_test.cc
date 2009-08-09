@@ -89,9 +89,12 @@ TEST(SceneGraph, HangingPtrs) {
     Node<int> *node = new Node<int>(test_names[i], new int(10));
     scene.AddChild(node);
   }
-  for (Node<int>::iterator it = scene.begin(); it != scene.end(); ++it) {
+  for (Node<int>::iterator it = scene.begin(); it != scene.end();) {
     it->DeleteObject();
+    Node<int>::iterator cp = it;
+    ++cp;
     delete &*it;
+    it = cp;
   }
   EXPECT_EQ(scene.NumChildren(), 0);
 }

@@ -43,9 +43,12 @@ class Node {
   typedef std::map<string, NodeT *> ChildMap;
  public:
   virtual ~Node() {
-    typename ChildMap::iterator it;
-    for (it = children_.begin(); it != children_.end(); ++it) {
+    typename ChildMap::iterator it,cp;
+    for (it = children_.begin(); it != children_.end();) {
+      cp = it;
+      ++cp;
       delete it->second;
+      it = cp;
     }
     SetParent(NULL);
   }
