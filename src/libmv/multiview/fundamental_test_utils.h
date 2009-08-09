@@ -24,6 +24,7 @@
 
 #include "testing/testing.h"
 #include "libmv/numeric/numeric.h"
+#include "projection.h"
 
 namespace libmv {
 
