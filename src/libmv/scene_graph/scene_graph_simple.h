@@ -45,7 +45,6 @@ class Node {
   virtual ~Node() {
     typename ChildMap::iterator it;
     for (it = children_.begin(); it != children_.end(); ++it) {
-      it->second->SetParent(NULL);
       delete it->second;
     }
     // TODO (Daniel): If a node is deleted it is not removed from its parent's
