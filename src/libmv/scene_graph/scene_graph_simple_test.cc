@@ -81,3 +81,17 @@ TEST(SceneGraph, SetName) {
     it->DeleteObject();
   }
 }
+
+TEST(SceneGraph, HangingPtrs) {
+  Node<int> scene("root node", new int(0));
+  const char * test_names[] = { "bar", "foo", "zap" };
+  for (int i = 0; i < 3; ++i) {
+    Node<int> *node = new Node<int>(test_names[i], new int(10));
+    scene.AddChild(node);
+  }
+  for (Node<int>::iterator it = scene.begin(); it != scene.end(); ++it) {
+    it->DeleteObject();
+    delete &*it;
+  }
+  EXPECT_EQ(scene.NumChildren(), 0);
+}

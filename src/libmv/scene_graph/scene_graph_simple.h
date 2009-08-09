@@ -47,8 +47,7 @@ class Node {
     for (it = children_.begin(); it != children_.end(); ++it) {
       delete it->second;
     }
-    // TODO (Daniel): If a node is deleted it is not removed from its parent's
-    // map
+    SetParent(NULL);
   }
   
   Node() : parent_(NULL), object_(NULL) {
