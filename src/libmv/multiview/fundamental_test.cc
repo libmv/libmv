@@ -22,6 +22,7 @@
 
 #include "libmv/logging/logging.h"
 #include "libmv/multiview/fundamental.h"
+#include "libmv/multiview/fundamental_test_utils.h"
 #include "libmv/multiview/projection.h"
 #include "libmv/multiview/test_data_sets.h"
 #include "libmv/numeric/numeric.h"
@@ -31,26 +32,7 @@ namespace {
 
 using namespace libmv;
 
-// Check the properties of a fundamental matrix:
-//
-//   1. The determinant is 0 (rank deficient)
-//   2. The condition x'T*F*x = 0 is satisfied to precision.
-//
-template<typename TMat>
-void ExpectFundamentalProperties(const TMat &F,
-                                 const Mat &ptsA,
-                                 const Mat &ptsB,
-                                 double precision) {
-  EXPECT_NEAR(0, F.determinant(), precision);
-  assert(ptsA.cols() == ptsB.cols());
-  Mat hptsA, hptsB;
-  EuclideanToHomogeneous(ptsA, &hptsA);
-  EuclideanToHomogeneous(ptsB, &hptsB);
-  for (int i = 0; i < ptsA.cols(); ++i) {
-    double residual = hptsB.col(i).dot(F * hptsA.col(i));
-    EXPECT_NEAR(0.0, residual, precision);
-  }
-}
+
 
 TEST(Fundamental, FundamentalFromProjections) {
   Mat34 P1_gt, P2_gt;

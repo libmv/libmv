@@ -22,6 +22,7 @@
 
 #include "libmv/multiview/fundamental.h"
 #include "libmv/multiview/robust_fundamental.h"
+#include "libmv/multiview/fundamental_test_utils.h"
 #include "libmv/multiview/projection.h"
 #include "libmv/multiview/test_data_sets.h"
 #include "libmv/numeric/numeric.h"
@@ -31,25 +32,6 @@
 namespace {
 
 using namespace libmv;
-
-// Check the properties of a fundamental matrix :
-// Check that the determinant is 0
-// Check that the inliers are projected under the expected precision
-// TODO : test rank 2 properties ?
-#define CHECK_FUNDAMENTAL_PROPERTIES( Fmatrix, ptsA, ptsB, expected_precision ) \
-{ \
-  EXPECT_NEAR(0, Fmatrix.determinant(), expected_precision);\
-  assert( ptsA.cols() == ptsB.cols() );\
-  const int n = ptsA.cols();\
-  for (int i = 0; i < n; ++i) {\
-    Vec3 x, y;\
-    x << ptsA(0, i), ptsA(1, i), 1;\
-    y << ptsB(0, i), ptsB(1, i), 1;\
-    double y_F_x = y.dot(Fmatrix * x);\
-    EXPECT_NEAR(0.0, y_F_x, expected_precision);\
-  }\
-}
-
 
 TEST(RobustFundamental, FundamentalFromCorrespondences8PointRobust) {
   const int n = 16;
@@ -106,7 +88,7 @@ TEST(RobustFundamental,
   EXPECT_MATRIX_NEAR(F_gt_norm, F_estimated_norm, 1e-8);
 
   // Check fundamental properties.
-  CHECK_FUNDAMENTAL_PROPERTIES( F_estimated, d.x1, d.x2, 1e-8);
+  ExpectFundamentalProperties( F_estimated, d.x1, d.x2, 1e-8);
 }
 
 
@@ -146,7 +128,7 @@ TEST(RobustFundamental, FundamentalFromCorrespondences8PointRealistic) {
   EXPECT_MATRIX_NEAR(F_gt_norm, F_estimated_norm, 1e-8);
 
   // Check fundamental properties.
-  CHECK_FUNDAMENTAL_PROPERTIES( F_estimated, d.x1, d.x2, 1e-8);
+  ExpectFundamentalProperties( F_estimated, d.x1, d.x2, 1e-8);
 }
 
 
@@ -170,22 +152,19 @@ TEST(RobustFundamental, FundamentalFromCorrespondences7PointRobust) {
   LOG(INFO) << "F\n" << F << "\n";
   LOG(INFO) << "INLIERS " << inliers.size() << "\n";
 
-  // F should be similar to :
-  // 0, 0,  0, //Up to a scale factor and an alpha value
-  // 0, 0, -1,
-  // 0, 1,  0
-  const double expectedPrecision = 1e-2;
+  // F should be similar to:
+  // 0, -a,  -b,
+  // a,  0,  -c,
+  // b,  c,   0
+  const double expectedPrecision = 1e-8;
   const double & ep = expectedPrecision;
   EXPECT_NEAR(0.0, F(0,0), ep);
-  EXPECT_NEAR(0.0, F(0,1), ep);
-  EXPECT_NEAR(0.0, F(0,2), ep);
-  EXPECT_NEAR(0.0, F(1,0), ep);
   EXPECT_NEAR(0.0, F(1,1), ep);
-  EXPECT_NEAR(0.0, F(2,0), ep);
   EXPECT_NEAR(0.0, F(2,2), ep);
-  EXPECT_NEAR(F(1,2), -F(2,1), 0.1);
-
-
+  EXPECT_NEAR(F(0,1), -F(1,0), ep);
+  EXPECT_NEAR(F(0,2), -F(2,0), ep);
+  EXPECT_NEAR(F(1,2), -F(2,1), ep);
+  
   EXPECT_EQ(n - 1, inliers.size());
   EXPECT_NEAR(0, F.determinant(), 1e-8);
 }
@@ -210,7 +189,7 @@ TEST(RobustFundamental, FundamentalFromCorrespondences7PointRealisticNoOutliers)
 
   EXPECT_MATRIX_NEAR(F_gt_norm, F_estimated_norm, 1e-2);
 
-  CHECK_FUNDAMENTAL_PROPERTIES( F_estimated, d.x1, d.x2, 1e-6 );
+  ExpectFundamentalProperties( F_estimated, d.x1, d.x2, 1e-6 );
 }
 
 } // namespace
