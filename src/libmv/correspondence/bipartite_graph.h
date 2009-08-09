@@ -186,6 +186,29 @@ class BipartiteGraph {
       Assign();
     }
     void Assign() {
+#ifdef WIN32
+      // On windows the STL depends on the microsoft implementation and we
+      // cannot call a function over an iterator that equal to end.
+      switch( type_ ) {
+        case OVER_EDGES:
+        if (iter_ == edges_->end()) {
+          return;
+        }
+        break;
+        case OVER_LEFT_NODES:
+        if (left_iter_ == left_nodes_->end()) {
+          return;
+        }
+        break;
+        case OVER_RIGHT_NODES:
+        if (right_iter_ == right_nodes_->end()) {
+          return;
+        }
+        break;
+        default :
+        assert(0);
+      }
+#endif
       if (type_ == OVER_EDGES) {
         left_ = iter_->first.first;
         right_ = iter_->first.second;
@@ -231,10 +254,10 @@ class BipartiteGraph {
     Iterator iterator;
     iterator.type_ = OVER_EDGES;
     iterator.iter_ = edges_.begin();
-    iterator.Assign();
     iterator.edges_ = &edges_;
     iterator.deleted_ = false;
     iterator.graph_ = this;
+    iterator.Assign();    
     return iterator;
   }
 
@@ -247,8 +270,8 @@ class BipartiteGraph {
     iterator.left_nodes_ = &it->second;
     iterator.right_ = right_node;
     iterator.deleted_ = false;
-    iterator.Assign();
     iterator.graph_ = this;
+    iterator.Assign();    
     return iterator;
   }
 
@@ -261,8 +284,8 @@ class BipartiteGraph {
     iterator.right_nodes_ = &it->second;
     iterator.left_ = left_node;
     iterator.deleted_ = false;
-    iterator.Assign();
     iterator.graph_ = this;
+    iterator.Assign();    
     return iterator;
   }
 
