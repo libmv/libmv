@@ -134,14 +134,14 @@ TEST(o2, Evaluation) {
   p1(coef_yy) = double(rand()) / RAND_MAX;
   p1(coef_yz) = double(rand()) / RAND_MAX;
   p1(coef_zz) = double(rand()) / RAND_MAX;
-  p1(coef_x) = double(rand()) / RAND_MAX;
-  p1(coef_y) = double(rand()) / RAND_MAX;
-  p1(coef_z) = double(rand()) / RAND_MAX;
-  p1(coef_1) = double(rand()) / RAND_MAX;
-  p2(coef_x) = double(rand()) / RAND_MAX;
-  p2(coef_y) = double(rand()) / RAND_MAX;
-  p2(coef_z) = double(rand()) / RAND_MAX;
-  p2(coef_1) = double(rand()) / RAND_MAX;
+  p1(coef_x)  = double(rand()) / RAND_MAX;
+  p1(coef_y)  = double(rand()) / RAND_MAX;
+  p1(coef_z)  = double(rand()) / RAND_MAX;
+  p1(coef_1)  = double(rand()) / RAND_MAX;
+  p2(coef_x)  = double(rand()) / RAND_MAX;
+  p2(coef_y)  = double(rand()) / RAND_MAX;
+  p2(coef_z)  = double(rand()) / RAND_MAX;
+  p2(coef_1)  = double(rand()) / RAND_MAX;
 
   Vec p3 = o2(p1, p2);
 
