@@ -22,152 +22,118 @@
 #define LIBMV_MULTIVIEW_ROBUST_ESTIMATION_H_
 
 #include <set>
-#include <vector>
 
+#include "libmv/base/vector.h"
 #include "libmv/logging/logging.h"
+#include "libmv/multiview/random_sample.h"
 #include "libmv/numeric/numeric.h"
 
 namespace libmv {
 
-// A random subset of the integers [0, total), in random order.
-// Note that this can behave badly if num_samples is close to total; runtime
-// could be unlimited!
-// TODO(keir): Implement smarter O(nlogn) method for this which is independent
-// of total size. Surprisingly tricky!
-// Consider: http://stackoverflow.com/questions/136474/best-way-to-pick-a-random-subset-from-a-collection
-VecXi PickSubset(int num_samples, int total) {
-  VecXi samples(num_samples);
-  for (int i = 0; i < num_samples; ++i) {
-    samples[i] = rand() % total;
-    for (int j = 0; j < i; ++j) {
-      if (samples[j] == samples[i]) {
-        --i;
-        break;
+template<typename Kernel>
+class MLEScorer {
+ public:
+  MLEScorer(double threshold) : threshold_(threshold) {}
+  double Score(const Kernel &kernel,
+               const typename Kernel::Model &model,
+               const vector<int> &samples,
+               vector<int> *inliers) const {
+    double cost = 0;
+    for (int j = 0; j < samples.size(); ++j) {
+      double error = kernel.Error(samples[j], model);
+      if (error < threshold_) {
+        cost += error;
+        inliers->push_back(samples[j]);
+      } else {
+        cost += threshold_;
       }
     }
+    return cost;
   }
-  return samples;
+ private:
+  double threshold_;
+};
+
+uint IterationsRequired(int min_samples,
+                        double desired_certainty,
+                        double inlier_ratio) {
+  return static_cast<uint>(
+      log(desired_certainty) / log(1 - pow(inlier_ratio, min_samples)));
 }
 
-// From the following papers:
+// 1. The model.
+// 2. The minimum number of samples needed to fit.
+// 3. A way to convert samples to a model.
+// 4. A way to convert samples and a model to an error.
 //
-// Chum, O. and Matas. J.: Optimal Randomized RANSAC, PAMI, August 2008
-// http://cmp.felk.cvut.cz/~chum/papers/chum-pami08.pdf
-//
-// Capel, D.P., An Effective Bail-out Test for RANSAC Consensus Scoring, BMVC05.
-// http://www.comp.leeds.ac.uk/bmvc2008/proceedings/2005/papers/224/Capel224.pdf
-//
-// The bailout technique used is the one from Capel's paper. The technique in
-// the Chum paper is considerably more involved to implement for only marginal
-// gains compared to the one in the Capel paper.
+// 1. Kernel::Model
+// 2. Kernel::MINIMUM_SAMPLES
+// 3. Kernel::Fit(vector<int>, vector<Kernel::Model> *)
+// 4. Kernel::Error(Model, int) -> error
 
-// From equation (8) in the Capel paper.
-// TODO(keir): This is unused below for now; add the early bailout!
-double SigmaApprox(int num_inliers, int num_sampled, int num_total) {
-  double inlier_ratio = num_inliers;
-  inlier_ratio /= num_total;  // e hat in equation (8).
-  return num_sampled * inlier_ratio * (1 - inlier_ratio) *
-    (num_total - num_sampled) / (num_total - 1);
-}
 
-template<typename Model, typename TMat, typename Fitter, typename Classifier,
-         typename CostFunction>
-Model Estimate(const TMat &samples, Fitter fitter, Classifier classifier,
-               CostFunction cost_function, std::vector<int> *inliers = NULL) {
+template<typename Kernel, typename Scorer>
+typename Kernel::Model Estimate(const Kernel &kernel,
+                                const Scorer &scorer,
+                                vector<int> *best_inliers = NULL) {
   uint iteration = 0;
   uint max_iterations = 100;
   const uint really_max_iterations = 1000;
-  int min_samples = fitter.MinimumSamples();
-  int total_samples = samples.cols();
+
+  int min_samples = Kernel::MINIMUM_SAMPLES;
+  int total_samples = kernel.NumSamples();
 
   int best_num_inliers = 0;
   double best_cost = HUGE_VAL;
   double best_inlier_ratio = 0.0;
-  Model best_model;
+  typename Kernel::Model best_model;
 
+  // In this robust estimator, the scorer always works on all the data points
+  // at once. So precompute the list ahead of time.
+  vector<int> all_samples;
+  for (int i = 0; i < total_samples; ++i) {
+    all_samples.push_back(i);
+  }
+
+  vector<int> sample;
   for (iteration = 0;
        iteration < max_iterations &&
        iteration < really_max_iterations; ++iteration) {
-    VecXi subset_indices = PickSubset(min_samples, total_samples);
-    TMat subset = ExtractColumns(samples, subset_indices);
-    VLOG(2) << "Random subset: (" << subset_indices.size() << ")\n"
-             << subset_indices;
+    UniformSample(min_samples, total_samples, &sample);
 
-    std::vector<Model> models;
-    fitter.Fit(subset, &models);
+    vector<typename Kernel::Model> models;
+    kernel.Fit(sample, &models);
     VLOG(2) << "Fitted subset; found " << models.size() << " model(s).";
 
+    // Compute costs for each fit.
     for (int i = 0; i < models.size(); ++i) {
-      // Compute costs for each fit, possibly bailing early if the model looks
-      // like it does not promise to beat the current best.
-      int num_inliers = 0;
-      double inlier_error = 0;
-      double cost = 0;
-      for (int j = 0; j < total_samples; ++j) {
-        double error_j = models[i].Error(samples.col(j));
-        double cost_j = cost_function.Cost(error_j);
-        bool is_inlier = classifier.IsInlier(error_j);
-        cost += cost_j;
-        num_inliers += is_inlier ? 1 : 0;
-        inlier_error += is_inlier ? error_j : 0;
-        VLOG(4) << "error_j=" << error_j
-                << " cost_j=" << cost_j
-                << " is_inlier=" << is_inlier;
-        // TODO(keir): Add hypergometric early-breakout.
-      }
-      VLOG(5) << "Fit cost: " << cost << ", number of inliers: " << num_inliers;
+      vector<int> inliers;
+      double cost = scorer.Score(kernel, models[i], all_samples, &inliers);
+      VLOG(3) << "Fit cost: " << cost
+              << ", number of inliers: " << inliers.size();
 
       if (cost < best_cost) {
         best_cost = cost;
-        best_inlier_ratio = num_inliers / float(total_samples);
-        best_num_inliers = num_inliers;
+        best_inlier_ratio = inliers.size() / float(total_samples);
+        best_num_inliers = inliers.size();
         best_model = models[i];
+        if (best_inliers) {
+          *best_inliers = inliers;
+        }
         VLOG(2) << "New best cost: " << best_cost << " with "
                 << best_num_inliers << " inlying of "
-                << total_samples << " total samples. Inlier error:"
-                << inlier_error;
-        // TODO(keir): Add refinement (Lo-RANSAC) here.
+                << total_samples << " total samples.";
       }
     }
 
-    // TODO(keir): This is a knob that likely should be exposed.
-    const double desired_certainty = 0.03;
-    double needed_iterations = log(desired_certainty)
-                             / log(1 - pow(best_inlier_ratio, min_samples));
-    max_iterations = static_cast<uint>(needed_iterations);
+    max_iterations = IterationsRequired(min_samples, 0.03, best_inlier_ratio);
 
     VLOG(2) << "Max iterations needed given best inlier ratio: "
             << max_iterations << "; best inlier ratio: " << best_inlier_ratio;
   }
 
-  // Compute inliers for best_model.
-  if (inliers) {
-    for (int j = 0; j < total_samples; ++j) {
-      double error_j = best_model.Error(samples.col(j));
-      if (classifier.IsInlier(error_j)) {
-        inliers->push_back(j);
-      }
-    }
-  }
-
   return best_model;
 }
-
-struct ThresholdClassifier {
-  ThresholdClassifier(double threshold) : threshold_(threshold) {}
-  bool IsInlier(double error) {
-    return error < threshold_;
-  }
-  double threshold_;
-};
-
-struct MLECost {
-  MLECost(double threshold) : threshold_(threshold) {}
-  double Cost(double error) {
-    return error < threshold_ ? error : threshold_;
-  }
-  double threshold_;
-};
 
 } // namespace libmv
 

@@ -1,4 +1,4 @@
-// Copyright (c) 2007, 2008, 2009 libmv authors.
+// Copyright (c) 2009 libmv authors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
@@ -18,59 +18,70 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
-#include <iostream>
-
+#include "libmv/base/vector.h"
 #include "libmv/logging/logging.h"
-#include "libmv/multiview/homography.h"
-#include "libmv/multiview/test_data_sets.h"
+#include "libmv/multiview/homography_kernel.h"
 #include "libmv/numeric/numeric.h"
 #include "testing/testing.h"
+
+using testing::Types;
 
 namespace {
 
 using namespace libmv;
+using namespace libmv::homography::kernel;
 
-TEST(Homography, HomographyFromCorrespondencesLinearRobust) {
+template <class Kernel>
+struct HomographyKernelTest : public testing::Test {
+};
+
+typedef Types<Kernel,
+              UnnormalizedKernel>
+  HomographyKernelImplementations;
+
+TYPED_TEST_CASE(HomographyKernelTest, HomographyKernelImplementations);
+
+TYPED_TEST(HomographyKernelTest, Fitting) {
   // Define a few homographies.
-  const int num_h = 3;
-  Mat3 H_gt[num_h];
+  vector<Mat3> H_gt(3);
+
   H_gt[0] = Mat3::Identity();
-  H_gt[1] << 1, 0, -4,
-             0, 1,  5,
-             0, 0,  1;
+  H_gt[1] << 1,  0, -4,
+             0,  1,  5,
+             0,  0,  1;
   H_gt[2] << 1, -2,  3,
              4,  5, -6,
             -7,  8,  1;
 
   // Define a set of points.
-  int n = 20;
-  Mat x(2,n), xh;
-  x << 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3,
-       0, 1, 2, 3, 4, 0, 1, 2, 3, 4, 0, 1, 2, 3, 4, 0, 1, 2, 3, 4;
+  Mat x(2, 9), xh;
+  x << 0, 0, 0, 1, 1, 1, 2, 2, 2,
+       0, 1, 2, 0, 1, 2, 0, 1, 2;
   EuclideanToHomogeneous(x, &xh);
 
-  Mat3 H[num_h];
-  for (int i = 0; i < num_h; ++i) {
+  for (int i = 0; i < H_gt.size(); ++i) {
+    SCOPED_TRACE(i);
+
     // Transform points by the ground truth homography.
-    Mat yh = H_gt[i] * xh;
-    Mat y;
+    Mat y, yh = H_gt[i] * xh;
     HomogeneousToEuclidean(yh, &y);
 
-    // Inroduce outliers.
-    for (int j = 0; j < 8; j++) {
-      x(0,j) = x(0,j) + j * 5.5;
-      x(1,j) = x(1,j) + 7.8;
+    TypeParam kernel(x, y);
+
+    vector<int> samples;
+    samples.push_back(0);
+    samples.push_back(1);
+    samples.push_back(2);
+    samples.push_back(3);
+    samples.push_back(4);
+    for (int j = 4; samples.size() < x.cols(); samples.push_back(j++)) {
+      SCOPED_TRACE(samples.size());
+      vector<Mat3> Hs;
+      kernel.Fit(samples, &Hs);
+      ASSERT_EQ(1, Hs.size());
+      EXPECT_MATRIX_PROP(H_gt[i], Hs[0], 5e-8);
     }
-
-    // Estimate homography from points.
-    vector<int> inliers;
-    HomographyFromCorrespondencesLinearRobust(x, y, 0.1, &H[i], &inliers);
-    H[i] /= H[i](2,2);
   }
-
-  EXPECT_MATRIX_NEAR(H_gt[0], H[0], 1e-8);
-  EXPECT_MATRIX_NEAR(H_gt[1], H[1], 1e-8);
-  EXPECT_MATRIX_NEAR(H_gt[2], H[2], 1e-8);
 }
 
 }  // namespace

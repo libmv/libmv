@@ -20,14 +20,14 @@
 
 #include "libmv/multiview/focal_from_fundamental.h"
 #include "libmv/multiview/fundamental.h"
+#include "libmv/multiview/fundamental_kernel.h"
 #include "libmv/multiview/projection.h"
 #include "libmv/multiview/test_data_sets.h"
 #include "libmv/numeric/numeric.h"
 #include "testing/testing.h"
 
+namespace libmv {
 namespace {
-
-using namespace libmv;
 
 // Two cameras looking with orthogonal (non-crossing) viewing rays.
 // One at the origin and looking to the z direction.
@@ -182,7 +182,10 @@ TEST(FocalFromFundamental, TwoViewReconstruction) {
 
   // Compute fundamental matrix from correspondences.
   Mat3 F_estimated;
-  FundamentalFromCorrespondences8Point(d.x1, d.x2, &F_estimated);
+  Mat x1s = d.x1, x2s = d.x2;
+  vector<Mat3> Fs;
+  fundamental::kernel::EightPointSolver::Solve(x1s, x2s, &Fs);
+  F_estimated = Fs[0];
 
   Mat3 F_gt_norm, F_estimated_norm;
   NormalizeFundamental(d.F, &F_gt_norm);
@@ -236,7 +239,10 @@ TEST(FocalFromFundamentalExhaustive, TwoViewReconstruction) {
 
   // Compute fundamental matrix from correspondences.
   Mat3 F_estimated;
-  FundamentalFromCorrespondences8Point(d.x1, d.x2, &F_estimated);
+  Mat x1s = d.x1, x2s = d.x2;
+  vector<Mat3> Fs;
+  fundamental::kernel::EightPointSolver::Solve(x1s, x2s, &Fs);
+  F_estimated = Fs[0];
 
   Mat3 F_gt_norm, F_estimated_norm;
   NormalizeFundamental(d.F, &F_gt_norm);
@@ -280,4 +286,5 @@ TEST(FocalFromFundamentalExhaustive, TwoViewReconstruction) {
   EXPECT_LE(DistanceL2(t, t_estimated), 1e-8);
 }
 
-}
+}  // namespace
+}  // namespace libmv

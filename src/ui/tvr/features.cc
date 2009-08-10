@@ -20,6 +20,7 @@
 
 
 #include "libmv/multiview/fundamental.h"
+#include "libmv/multiview/fundamental_kernel.h"
 #include "libmv/multiview/robust_fundamental.h"
 #include "ui/tvr/features.h"
 
@@ -73,7 +74,7 @@ void ComputeFundamental(libmv::Correspondences &all_matches,
   VLOG(2) << "x1\n" << x[0] << "\nx2\n" << x[1] << "\n";
 
   // Compute Fundamental matrix and inliers.
-  std::vector<int> inliers;
+  vector<int> inliers;
   // TODO(pau) Expose the threshold.
   FundamentalFromCorrespondences8PointRobust(x[0], x[1], 1, F, &inliers);
   VLOG(1) << inliers.size() << " inliers\n";
@@ -107,7 +108,16 @@ void ComputeFundamental(libmv::Correspondences &all_matches,
       x[it.image()](1,i) = it.feature()->y();
       i++;
     }
-    FundamentalFromCorrespondences8Point(x[0], x[1], F);
+    vector<Mat3> Fs;
+    fundamental::kernel::NormalizedEightPointKernel kernel(x[0], x[1]);
+    // TODO(keir): It's too awkward to invoke the kernel directly :(
+    vector<int> samples;
+    for (int i = 0; i <kernel.NumSamples(); ++i) {
+      samples.push_back(i);
+    }
+    kernel.Fit(samples, &Fs);
+    *F = Fs[0];
+
     NormalizeFundamental(*F, F);
     
     LOG(INFO) << "F:\n" << *F;

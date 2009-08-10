@@ -21,28 +21,11 @@
 #ifndef LIBMV_MULTIVIEW_HOMOGRAPHY_H_
 #define LIBMV_MULTIVIEW_HOMOGRAPHY_H_
 
-#include <vector>
-
+#include "libmv/base/vector.h"
 #include "libmv/numeric/numeric.h"
 
 namespace libmv {
-
-/** 
- * \brief Computes the homography that transforms x to y using the linear
- * method (DLT).
- * 
- * \param[out] H  The computed homography.
- * \param[in]  x  A 2xN matrix of column vectors.
- * \param[in]  y  A 2xN matrix of column vectors.
- * 
- * The estimated homography should approximatelly hold the condition y = H x.
- * 
- * \see HomographyFromCorrespondencesLinearRobust
- */
-void HomographyFromCorrespondencesLinear(const Mat &x,
-                                         const Mat &y,
-                                         Mat3 *H);
-
+  
 /** 
  * \brief Computes the homography that transforms x to y using RANSAC.
  * 
@@ -63,7 +46,7 @@ void HomographyFromCorrespondencesLinearRobust(const Mat &x,
                                                const Mat &y,
                                                double max_error,
                                                Mat3 *H,
-                                               std::vector<int> *inliers);
+                                               vector<int> *inliers);
 
 /**
  * \brief Squared Euclidean distance between y and H x.

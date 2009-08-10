@@ -26,7 +26,6 @@
 
 namespace libmv {
 
-
 void EliminateRow(const Mat34 &P, int row, Mat *X) {
   X->resize(2,4);
   int first_row = (row + 1) % 3;
@@ -92,9 +91,7 @@ void ApplyTransformationToPoints(const Mat &points,
 
 // HZ 11.1 pag.279 (x1 = x, x2 = x')
 // http://www.cs.unc.edu/~marc/tutorial/node54.html
-double FundamentalFromCorrespondencesLinear(const Mat &x1,
-                                            const Mat &x2,
-                                            Mat3 *F) {
+double EightPointSolver(const Mat &x1, const Mat &x2, Mat3 *F) {
   assert(2 == x1.rows());
   assert(8 <= x1.cols());
   assert(x1.rows() == x2.rows());
@@ -114,14 +111,9 @@ double FundamentalFromCorrespondencesLinear(const Mat &x1,
     A(i, 8) = 1;
   }
 
-  Vec f;
-  double smaller_singular_value;
-  smaller_singular_value = Nullspace(&A, &f);
-  for (int i = 0; i < 3; ++i) {
-    for (int j = 0; j < 3; ++j) {
-      (*F)(i, j) = f(3 * i + j);
-    }
-  }
+  Vec9 f;
+  double smaller_singular_value = Nullspace(&A, &f);
+  *F = Map<RMat3>(f.data());
   return smaller_singular_value;
 }
 
@@ -134,9 +126,9 @@ void EnforceFundamentalRank2Constraint(Mat3 *F) {
 }
 
 // HZ 11.2 pag.281 (x1 = x, x2 = x')
-double FundamentalFromCorrespondences8Point(const Mat &x1,
-                                            const Mat &x2,
-                                            Mat3 *F) {
+double NormalizedEightPointSolver(const Mat &x1,
+                                  const Mat &x2,
+                                  Mat3 *F) {
   assert(2 == x1.rows());
   assert(8 <= x1.cols());
   assert(x1.rows() == x2.rows());
@@ -152,7 +144,7 @@ double FundamentalFromCorrespondences8Point(const Mat &x1,
 
   // Estimate the fundamental matrix.
   double smaller_singular_value =
-      FundamentalFromCorrespondencesLinear(x1_normalized, x2_normalized, &(*F));
+      EightPointSolver(x1_normalized, x2_normalized, &(*F));
   EnforceFundamentalRank2Constraint(F);
 
   // Denormalize the fundamental matrix.
@@ -178,8 +170,10 @@ double FundamentalFromCorrespondences7Point(const Mat &x1,
   ApplyTransformationToPoints(x2, T2, &x2_normalized);
 
   // Estimate the fundamental matrix.
-  double smaller_singular_value =
+  double smaller_singular_value = 0.0;
+  /*
     FundamentalFrom7CorrespondencesLinear(x1_normalized, x2_normalized, &(*F));
+    */
 
   for(int k=0; k < F->size(); ++k) {
     Mat3 & Fmat = (*F)[k];
@@ -191,9 +185,9 @@ double FundamentalFromCorrespondences7Point(const Mat &x1,
 
 // Seven-point algorithm.
 // http://www.cs.unc.edu/~marc/tutorial/node55.html
-double FundamentalFrom7CorrespondencesLinear(const Mat &x1,
-                                             const Mat &x2,
-                                             std::vector<Mat3> *F) {
+double FundamentalFrom7Points(const Mat &x1,
+                              const Mat &x2,
+                              std::vector<Mat3> *F) {
   assert(2 == x1.rows());
   assert(7 == x1.cols());
   assert(x1.rows() == x2.rows());
@@ -310,21 +304,6 @@ void EssentialFromFundamental(const Mat3 &F,
   *E = K2.transpose() * F * K1;
 }
 
-void RelativeCameraMotionBugged(const Mat3 &R1,
-                                const Vec3 &t1,
-                                const Mat3 &R2,
-                                const Vec3 &t2,
-                                Mat3 *R,
-                                Vec3 *t) {
-  *R = R2 * R1.transpose();
-  *t = t2 - (*R) * t1;
-
-using namespace std;
-cout << R1 << endl;
-cout << R2 << endl;
-cout << *R << endl; // This sometimes prints nan.
-}
-
 void RelativeCameraMotion(const Mat3 &R1,
                           const Vec3 &t1,
                           const Mat3 &R2,
@@ -345,8 +324,7 @@ void EssentialFromRt(const Mat3 &R1,
   Vec3 t;
   RelativeCameraMotion(R1, t1, R2, t2, &R, &t);
   Mat3 Tx = CrossProductMatrix(t);
-
-  *E = Tx * R;  // With FLENS this gave nans; possibly investigate with Eigen!
+  *E = Tx * R;
 }
 
 void MotionFromEssential(const Mat3 &E,
@@ -427,8 +405,7 @@ bool MotionFromEssentialAndCorrespondence(const Mat3 &E,
     *R = Rs[solution];
     *t = ts[solution];
     return true;
-  }
-  else {
+  } else {
     return false;
   }
 }

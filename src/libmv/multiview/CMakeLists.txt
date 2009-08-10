@@ -1,8 +1,10 @@
 ADD_LIBRARY(multiview
             projection.cc
             fundamental.cc
+            fundamental_kernel.cc
             robust_fundamental.cc
             homography.cc
+            homography_kernel.cc
             robust_estimation.cc
             focal_from_fundamental.cc
             sixpointnview.cc
@@ -23,8 +25,10 @@ ENDMACRO (MULTIVIEW_TEST)
 MULTIVIEW_TEST(projection)
 MULTIVIEW_TEST(triangulation)
 MULTIVIEW_TEST(fundamental)
+MULTIVIEW_TEST(fundamental_kernel)
 MULTIVIEW_TEST(fundamental_parameterization)
 MULTIVIEW_TEST(homography)
+MULTIVIEW_TEST(homography_kernel)
 MULTIVIEW_TEST(focal_from_fundamental)
 MULTIVIEW_TEST(nviewtriangulation)
 MULTIVIEW_TEST(resection)

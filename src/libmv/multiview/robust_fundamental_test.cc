@@ -20,6 +20,7 @@
 
 #include <iostream>
 
+#include "libmv/base/vector.h"
 #include "libmv/multiview/fundamental.h"
 #include "libmv/multiview/robust_fundamental.h"
 #include "libmv/multiview/fundamental_test_utils.h"
@@ -47,7 +48,7 @@ TEST(RobustFundamental, FundamentalFromCorrespondences8PointRobust) {
   x2(1, n - 1) = 10;   // The outlier has vertical disparity.
 
   Mat3 F;
-  std::vector<int> inliers;
+  vector<int> inliers;
   FundamentalFromCorrespondences8PointRobust(x1, x2, 0.1, &F, &inliers);
 
   LOG(INFO) << "F\n" << F << "\n";
@@ -73,7 +74,7 @@ TEST(RobustFundamental,
   TwoViewDataSet d = TwoRealisticCameras();
 
   Mat3 F_estimated;
-  std::vector<int> inliers;
+  vector<int> inliers;
   FundamentalFromCorrespondences8PointRobust(d.x1, d.x2, 3.0,
                                              &F_estimated, &inliers);
   EXPECT_EQ(d.x1.cols(), inliers.size());
@@ -109,7 +110,7 @@ TEST(RobustFundamental, FundamentalFromCorrespondences8PointRealistic) {
 
   // Compute fundamental matrix from correspondences.
   Mat3 F_estimated;
-  std::vector<int> inliers;
+  vector<int> inliers;
   FundamentalFromCorrespondences8PointRobust(x1s, x2s, 1,
                                              &F_estimated, &inliers);
 
@@ -146,7 +147,7 @@ TEST(RobustFundamental, FundamentalFromCorrespondences7PointRobust) {
   x2(1, n - 1) = 10;   // The outlier has vertical disparity.
 
   Mat3 F;
-  std::vector<int> inliers;
+  vector<int> inliers;
   FundamentalFromCorrespondences7PointRobust(x1, x2, 0.1, &F, &inliers);
 
   LOG(INFO) << "F\n" << F << "\n";
@@ -174,7 +175,7 @@ TEST(RobustFundamental, FundamentalFromCorrespondences7PointRealisticNoOutliers)
   TwoViewDataSet d = TwoRealisticCameras();
 
   Mat3 F_estimated;
-  std::vector<int> inliers;
+  vector<int> inliers;
   FundamentalFromCorrespondences7PointRobust(d.x1, d.x2, 3.0,
                                              &F_estimated, &inliers);
   EXPECT_EQ(d.x1.cols(), inliers.size());

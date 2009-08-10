@@ -21,28 +21,27 @@
 #ifndef LIBMV_MULTIVIEW_ROBUST_FUNDAMENTAL_H_
 #define LIBMV_MULTIVIEW_ROBUST_FUNDAMENTAL_H_
 
-#include <vector>
-
+#include "libmv/base/vector.h"
 #include "libmv/numeric/numeric.h"
 
 namespace libmv {
 
-//-- Estimate robustly the Fundamental matrix between two dataset of 2d point (image coords space).
-//- The fundamental solver rely on the 8 point solution.
+// Estimate robustly the fundamental matrix between two dataset of 2D point
+// (image coords space). The fundamental solver relies on the 8 point solution.
 double FundamentalFromCorrespondences8PointRobust(
     const Mat &x1,
     const Mat &x2,
     double max_error,
     Mat3 *F,
-    std::vector<int> *inliers = NULL);
+    vector<int> *inliers = NULL);
 
-//-- Estimate robustly the Fundamental matrix between two dataset of 2d point (image coords space).
-//- The fundamental solver rely on the 7 point solution.
+// Estimate robustly the fundamental matrix between two dataset of 2D point
+// (image coords space). The fundamental solver relies on the 7 point solution.
 double FundamentalFromCorrespondences7PointRobust(const Mat &x1,
 		const Mat &x2,
 		double max_error,
 		Mat3 * F,
-		std::vector<int> *inliers);
+		vector<int> *inliers);
 
 } // namespace libmv
 

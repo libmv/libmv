@@ -59,11 +59,12 @@ TwoViewDataSet TwoRealisticCameras(bool same_K) {
 }
 
 // TODO(keir): Make this more configurable.
-const int fx     =  1000;
-const int fy     =  1000;
-const int cx     =   500;
-const int cy     =   500;
-const double dist   =  1.5;
+const int fx = 1000;
+const int fy = 1000;
+const int cx =  500;
+const int cy =  500;
+
+const double dist = 1.5;
 const double jitter_amount = 0.01;
 
 NViewDataSet NRealisticCameras(int nviews, int npoints) {
