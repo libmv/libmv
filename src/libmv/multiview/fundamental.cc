@@ -144,7 +144,7 @@ double NormalizedEightPointSolver(const Mat &x1,
 
   // Estimate the fundamental matrix.
   double smaller_singular_value =
-      EightPointSolver(x1_normalized, x2_normalized, &(*F));
+      EightPointSolver(x1_normalized, x2_normalized, F);
   EnforceFundamentalRank2Constraint(F);
 
   // Denormalize the fundamental matrix.

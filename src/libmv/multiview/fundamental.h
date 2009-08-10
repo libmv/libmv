@@ -49,11 +49,15 @@ double FundamentalFromCorrespondences8Point(const Mat &x1,
                                             const Mat &x2,
                                             Mat3 *F);
 
-// 7 points (minimal case, points coordinates must be normalized before) :
-double FundamentalFrom7CorrespondencesLinear(	const Mat &x1, const Mat &x2, std::vector<Mat3> *F);
+// 7 points (minimal case, points coordinates must be normalized before):
+double FundamentalFrom7CorrespondencesLinear(const Mat &x1,
+                                             const Mat &x2,
+                                             std::vector<Mat3> *F);
 
 // 8 points (points coordinates must be in image space):
-double FundamentalFromCorrespondences7Point(const Mat &x1, const Mat &x2, std::vector<Mat3> *F);
+double FundamentalFromCorrespondences7Point(const Mat &x1,
+                                            const Mat &x2,
+                                            std::vector<Mat3> *F);
 
 
 

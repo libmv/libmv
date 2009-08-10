@@ -38,10 +38,10 @@ double FundamentalFromCorrespondences8PointRobust(
 // Estimate robustly the fundamental matrix between two dataset of 2D point
 // (image coords space). The fundamental solver relies on the 7 point solution.
 double FundamentalFromCorrespondences7PointRobust(const Mat &x1,
-		const Mat &x2,
-		double max_error,
-		Mat3 * F,
-		vector<int> *inliers);
+                                                  const Mat &x2,
+                                                  double max_error,
+                                                  Mat3 * F,
+                                                  vector<int> *inliers);
 
 } // namespace libmv
 
