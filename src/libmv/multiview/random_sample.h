@@ -22,6 +22,7 @@
 #define LIBMV_MULTIVIEW_RANDOM_SAMPLE_H_
 
 #include "libmv/base/vector.h"
+#include "libmv/logging/logging.h"
 
 namespace libmv {
 
@@ -42,7 +43,7 @@ void UniformSample(int num_samples, int total_samples, vector<int> *samples) {
   samples->resize(0);
   while (samples->size() < num_samples) {
     int sample = rand() % total_samples;
-    bool found;
+    bool found = false;
     for (int j = 0; j < samples->size(); ++j) {
       found = (*samples)[j] == sample;
       if (found) {

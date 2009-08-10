@@ -44,7 +44,7 @@ TEST(Homography, HomographyFromCorrespondencesLinearRobust) {
 
   // Define a set of points.
   int n = 20;
-  Mat x(2,n), xh;
+  Mat x(2, n), xh;
   x << 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3,
        0, 1, 2, 3, 4, 0, 1, 2, 3, 4, 0, 1, 2, 3, 4, 0, 1, 2, 3, 4;
   EuclideanToHomogeneous(x, &xh);

@@ -52,7 +52,7 @@ struct FourPointSolver {
 struct AsymmetricError {
   static double Error(const Mat &H, const Vec2 &x1, const Vec2 &x2) {
     Vec3 x2h_est = H * EuclideanToHomogeneous(x1);
-    Vec2 x2_est = x2_est.start<2>() / x2_est[2];
+    Vec2 x2_est = x2h_est.start<2>() / x2h_est[2];
     return (x2 - x2_est).squaredNorm();
   }
 };
