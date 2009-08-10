@@ -170,7 +170,20 @@ TEST(FivePointsRelativePose, Random) {
   vector<Mat3> Es;
   vector<Mat3> Rs;
   vector<Vec3> ts;
-  FivePointsRelativePose(d.x1, d.x2, &Es, &Rs, &ts);
+  FivePointsRelativePose(d.x1, d.x2, &Es);
+
+  // Recover rotation and translation from E
+  Rs.resize(Es.size());
+  ts.resize(Es.size());
+  for (int s = 0; s < Es.size(); ++s) {
+    MotionFromEssentialAndCorrespondence(Es[s],
+                                         Mat3::Identity(),
+                                         d.x1.col(0),
+                                         Mat3::Identity(),
+                                         d.x2.col(0),
+                                         &Rs[s],
+                                         &ts[s]);
+  }
 
   bool solution_found = false;
   for (int i = 0; i < Rs.size(); ++i) {

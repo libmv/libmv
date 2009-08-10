@@ -20,36 +20,16 @@
 
 #include <Eigen/QR>
 #include "libmv/multiview/fundamental.h"
+#include "libmv/multiview/fundamental_kernel.h"
 #include "libmv/multiview/five_point.h"
 
 namespace libmv {
 
 Mat FivePointsNullspaceBasis(const Mat2X &x1, const Mat2X &x2) {
-  int n = x1.cols();
-  Mat A(n, 9);
-  for (int i = 0; i < n; ++i) {
-    A(i, 0) = x2(0, i) * x1(0, i);
-    A(i, 1) = x2(0, i) * x1(1, i);
-    A(i, 2) = x2(0, i);
-    A(i, 3) = x2(1, i) * x1(0, i);
-    A(i, 4) = x2(1, i) * x1(1, i);
-    A(i, 5) = x2(1, i);
-    A(i, 6) = x1(0, i);
-    A(i, 7) = x1(1, i);
-    A(i, 8) = 1;
-  }
-
-  if (A.rows() < A.cols()) {
-    // Extend A with rows of zeros to make it square. It's a hack, but is
-    // necessary until Eigen supports SVD with more columns than rows.
-    Mat A_extended(A.cols(), A.cols());
-    A_extended.block(A.rows(), 0, A.cols() - A.rows(), A.cols()).setZero();
-    A_extended.block(0,0, A.rows(), A.cols()) = A;
-    A = A_extended;
-  }
-
-  Eigen::SVD<Mat> svd(A);
-  return svd.matrixV().corner<9,4>(Eigen::TopRight);
+  Matrix<double, 9, 9> A;
+  A.setZero();  // Make A square until Eigen supports rectangular SVD.
+  fundamental::kernel::EncodeEpipolarEquation(x1, x2, &A);
+  return A.svd().matrixV().corner<9,4>(Eigen::TopRight);
 }
 
 Vec o1(const Vec &a, const Vec &b) {
@@ -198,9 +178,9 @@ void FivePointsGaussJordan(Mat *Mp) {
   }
 }
 
-void FivePointsRelativePose(const Mat2X &x1, const Mat2X &x2,
-                            vector<Mat3> *Es,
-                            vector<Mat3> *Rs, vector<Vec3> *ts) {
+void FivePointsRelativePose(const Mat2X &x1,
+                            const Mat2X &x2,
+                            vector<Mat3> *Es) {
   // Step 1: Nullspace Exrtraction.
   Mat E_basis = FivePointsNullspaceBasis(x1, x2);
 
@@ -259,19 +239,6 @@ void FivePointsRelativePose(const Mat2X &x1, const Mat2X &x2,
       }
       Es->push_back(E);
     }
-  }
-      
-  // Recover rotation and translation from E
-  Rs->resize(Es->size());
-  ts->resize(Es->size());
-  for (int s = 0; s < Es->size(); ++s) {
-    MotionFromEssentialAndCorrespondence((*Es)[s],
-                                         Mat3::Identity(),
-                                         x1.col(0),
-                                         Mat3::Identity(),
-                                         x2.col(0),
-                                         &(*Rs)[s],
-                                         &(*ts)[s]);
   }
 }
   

@@ -114,6 +114,38 @@ typedef two_view::kernel::Kernel<EightPointSolver,
                                  Mat3>
   EssentialKernel;
 
+/**
+ * Build a 9 x n matrix from point matches, where each row is equivalent to the
+ * equation x'T*F*x = 0 for a single correspondence pair (x', x). The domain of
+ * the matrix is a 9 element vector corresponding to F. In other words, set up
+ * the linear system
+ * 
+ *   Af = 0,
+ * 
+ * where f is the F matrix as a 9-vector rather than a 3x3 matrix (row
+ * major). If the points are well conditioned and there are 8 or more, then
+ * the nullspace should be rank one. If the nullspace is two dimensional,
+ * then the rank 2 constraint must be enforced to identify the appropriate F
+ * matrix.
+ *
+ * Note that this does not resize the matrix A; it is expected to have the
+ * appropriate size already.
+ */
+template<typename TMatX, typename TMatA>
+inline void EncodeEpipolarEquation(const TMatX &x1, const TMatX &x2, TMatA *A) {
+  for (int i = 0; i < x1.cols(); ++i) {
+    (*A)(i, 0) = x2(0, i) * x1(0, i);  // 0 represents x coords,
+    (*A)(i, 1) = x2(0, i) * x1(1, i);  // 1 represents y coords.
+    (*A)(i, 2) = x2(0, i);
+    (*A)(i, 3) = x2(1, i) * x1(0, i);
+    (*A)(i, 4) = x2(1, i) * x1(1, i);
+    (*A)(i, 5) = x2(1, i);
+    (*A)(i, 6) = x1(0, i);
+    (*A)(i, 7) = x1(1, i);
+    (*A)(i, 8) = 1.0;
+  }
+}
+
 }  // namespace kernel
 }  // namespace fundamental
 }  // namespace libmv

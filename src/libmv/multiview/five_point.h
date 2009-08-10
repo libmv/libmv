@@ -41,14 +41,11 @@ namespace libmv {
 /** Computes the relative pose of two calibrated cameras from 5 correspondences.
  *
  * \param x1 Points in the first image.  One per column.
- * \param x2 Corresponding points in the second image.  One per column.
- * \param E A list of at most 10 candidate essential matrix solutions.
- * \param R The rotations corresponding to each solution.
- * \param t The translations corresponding to each solution.
+ * \param x2 Corresponding points in the second image. One per column.
+ * \param E  A list of at most 10 candidate essential matrix solutions.
  */
 void FivePointsRelativePose(const Mat2X &x1, const Mat2X &x2,
-                            vector<Mat3> *E,
-                            vector<Mat3> *R, vector<Vec3> *t);
+                            vector<Mat3> *E);
 
 
 // In the following code, polynomials are expressed as vectors containing

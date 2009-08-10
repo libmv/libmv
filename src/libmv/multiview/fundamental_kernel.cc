@@ -32,34 +32,6 @@ namespace libmv {
 namespace fundamental {
 namespace kernel {
 
-// Build a 9 x n matrix from point matches, where each row is equivalent to the
-// equation x'T*F*x = 0 for a single correspondence pair (x', x). The domain of
-// the matrix is a 9 element vector corresponding to F. In other words, set up
-// the linear system
-//
-//   Af = 0,
-//
-// where f is the F matrix as a 9-vector rather than a 3x3 matrix (row
-// major). If the points are well conditioned and there are 8 or more, then
-// the nullspace should be rank one. If the nullspace is two dimensional,
-// then the rank 2 constraint must be enforced to identify the appropriate F
-// matrix.
-template<typename TMat>
-void CreateLinearSystem(const Mat &x1, const Mat &x2, TMat *A) {
-  A->resize(x1.cols(), 9);
-  for (int i = 0; i < x1.cols(); ++i) {
-    (*A)(i, 0) = x1(0, i) * x2(0, i);  // 0 represents x coords,
-    (*A)(i, 1) = x1(1, i) * x2(0, i);  // 1 represents y coords.
-    (*A)(i, 2) = x2(0, i);
-    (*A)(i, 3) = x1(0, i) * x2(1, i);
-    (*A)(i, 4) = x1(1, i) * x2(1, i);
-    (*A)(i, 5) = x2(1, i);
-    (*A)(i, 6) = x1(0, i);
-    (*A)(i, 7) = x1(1, i);
-    (*A)(i, 8) = 1.0;
-  }
-}
-
 void SevenPointSolver::Solve(const Mat &x1, const Mat &x2, vector<Mat3> *F) {
   assert(2 == x1.rows());
   assert(7 == x1.cols());
@@ -68,7 +40,7 @@ void SevenPointSolver::Solve(const Mat &x1, const Mat &x2, vector<Mat3> *F) {
  
   // Set up the homogeneous system Af = 0 from the equations x'T*F*x = 0.
   Matrix<double, 7, 9> A;
-  CreateLinearSystem(x1, x2, &A);
+  EncodeEpipolarEquation(x1, x2, &A);
  
   // Find the two F matrices in the nullspace of A.
   Vec9 f1, f2;
@@ -116,8 +88,8 @@ void EightPointSolver::Solve(const Mat &x1, const Mat &x2, vector<Mat3> *Fs) {
   assert(x1.rows() == x2.rows());
   assert(x1.cols() == x2.cols());
  
-  MatX9 A;
-  CreateLinearSystem(x1, x2, &A);
+  MatX9 A(x1.cols(), 9);
+  EncodeEpipolarEquation(x1, x2, &A);
 
   Vec9 f;
   Nullspace(&A, &f);
