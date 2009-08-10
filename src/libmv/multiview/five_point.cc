@@ -64,13 +64,13 @@ Vec o1(const Vec &a, const Vec &b) {
   res(coef_yz) = a(coef_y) * b(coef_z)
                + a(coef_z) * b(coef_y);
   res(coef_zz) = a(coef_z) * b(coef_z);
-  res(coef_x) = a(coef_x) * b(coef_1)
-              + a(coef_1) * b(coef_x);
-  res(coef_y) = a(coef_y) * b(coef_1)
-              + a(coef_1) * b(coef_y);
-  res(coef_z) = a(coef_z) * b(coef_1)
-              + a(coef_1) * b(coef_z);
-  res(coef_1) = a(coef_1) * b(coef_1);
+  res(coef_x)  = a(coef_x) * b(coef_1)
+               + a(coef_1) * b(coef_x);
+  res(coef_y)  = a(coef_y) * b(coef_1)
+               + a(coef_1) * b(coef_y);
+  res(coef_z)  = a(coef_z) * b(coef_1)
+               + a(coef_1) * b(coef_z);
+  res(coef_1)  = a(coef_1) * b(coef_1);
 
   return res;
 }
@@ -96,28 +96,28 @@ Vec o2(const Vec &a, const Vec &b) {
   res(coef_yzz) = a(coef_yz) * b(coef_z)
                 + a(coef_zz) * b(coef_y);
   res(coef_zzz) = a(coef_zz) * b(coef_z);
-  res(coef_xx) = a(coef_xx) * b(coef_1)
-               + a(coef_x) * b(coef_x);
-  res(coef_xy) = a(coef_xy) * b(coef_1)
-               + a(coef_x) * b(coef_y)
-               + a(coef_y) * b(coef_x);
-  res(coef_xz) = a(coef_xz) * b(coef_1)
-               + a(coef_x) * b(coef_z)
-               + a(coef_z) * b(coef_x);
-  res(coef_yy) = a(coef_yy) * b(coef_1)
-               + a(coef_y) * b(coef_y);
-  res(coef_yz) = a(coef_yz) * b(coef_1)
-               + a(coef_y) * b(coef_z)
-               + a(coef_z) * b(coef_y);
-  res(coef_zz) = a(coef_zz) * b(coef_1)
-               + a(coef_z) * b(coef_z);
-  res(coef_x) = a(coef_x) * b(coef_1)
-              + a(coef_1) * b(coef_x);
-  res(coef_y) = a(coef_y) * b(coef_1)
-              + a(coef_1) * b(coef_y);
-  res(coef_z) = a(coef_z) * b(coef_1)
-              + a(coef_1) * b(coef_z);
-  res(coef_1) = a(coef_1) * b(coef_1);
+  res(coef_xx)  = a(coef_xx) * b(coef_1)
+                + a(coef_x)  * b(coef_x);
+  res(coef_xy)  = a(coef_xy) * b(coef_1)
+                + a(coef_x)  * b(coef_y)
+                + a(coef_y)  * b(coef_x);
+  res(coef_xz)  = a(coef_xz) * b(coef_1)
+                + a(coef_x)  * b(coef_z)
+                + a(coef_z)  * b(coef_x);
+  res(coef_yy)  = a(coef_yy) * b(coef_1)
+                + a(coef_y)  * b(coef_y);
+  res(coef_yz)  = a(coef_yz) * b(coef_1)
+                + a(coef_y)  * b(coef_z)
+                + a(coef_z)  * b(coef_y);
+  res(coef_zz)  = a(coef_zz) * b(coef_1)
+                + a(coef_z)  * b(coef_z);
+  res(coef_x)   = a(coef_x)  * b(coef_1)
+                + a(coef_1)  * b(coef_x);
+  res(coef_y)   = a(coef_y)  * b(coef_1)
+                + a(coef_1)  * b(coef_y);
+  res(coef_z)   = a(coef_z)  * b(coef_1)
+                + a(coef_1)  * b(coef_z);
+  res(coef_1)   = a(coef_1)  * b(coef_1);
 
   return res;
 }
