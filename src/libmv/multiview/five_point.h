@@ -60,7 +60,7 @@ void FivePointsRelativePose(const Mat2X &x1, const Mat2X &x2,
 //
 // But this is not the basis used in the rest of the paper, neither in
 // the code they provide.  I (pau) have spend 4 hours debugging and
-// reverse engeniering their code to find the problem. :(
+// reverse engineering their code to find the problem. :(
 enum {
   coef_xxx,
   coef_xxy,
