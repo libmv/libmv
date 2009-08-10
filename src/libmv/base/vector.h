@@ -41,9 +41,21 @@ template <typename T,
           typename Allocator = Eigen::aligned_allocator<T> > 
 class vector {
  public:
+  ~vector()                        { clear();                 }
+
   vector()                         { init();                  }
   vector(int size)                 { init(); resize(size);    }
-  ~vector()                        { clear();                 }
+
+  // Copy constructor and assignment.
+  vector(const vector<T, Allocator> &rhs) {
+    init();
+    copy(rhs);
+  }
+  vector<T, Allocator> &operator=(const vector<T, Allocator> &rhs) {
+    copy(rhs);
+    return *this;
+  }
+
 
   int      size()            const { return size_;            }
   int      capacity()        const { return capacity_;        }
@@ -66,7 +78,7 @@ class vector {
 
   void push_back(const T &value) {
     if (size_ == capacity_) {
-      reserve(size_ ? 2*size_ : 1);
+      reserve(size_ ? 2 * size_ : 1);
     }
     new (&data_[size_++]) T(value);
   }
@@ -115,6 +127,13 @@ class vector {
   void deallocate() {
     allocator_.deallocate(data_, size_);
     data_ = 0;
+  }
+
+  void copy(const vector<T, Allocator> &rhs) {
+    resize(rhs.size());
+    for (int i = 0; i < rhs.size(); ++i) {
+      (*this)[i] = rhs[i];
+    }
   }
 
   Allocator allocator_;

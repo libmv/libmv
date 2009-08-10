@@ -156,4 +156,33 @@ TEST_F(VectorTest, PushPopBack) {
   EXPECT_EQ(1, foo_destruct_calls);
 }
 
+TEST_F(VectorTest, CopyConstructor) {
+  vector<int> a;
+  a.push_back(1);
+  a.push_back(5);
+  a.push_back(3);
+
+  vector<int> b(a);
+  EXPECT_EQ(a.size(),     b.size());
+  //EXPECT_EQ(a.capacity(), b.capacity());
+  for (int i = 0; i < a.size(); ++i) {
+    EXPECT_EQ(a[i], b[i]);
+  }
+}
+
+TEST_F(VectorTest, OperatorEquals) {
+  vector<int> a, b;
+  a.push_back(1);
+  a.push_back(5);
+  a.push_back(3);
+
+  b = a;
+
+  EXPECT_EQ(a.size(),     b.size());
+  //EXPECT_EQ(a.capacity(), b.capacity());
+  for (int i = 0; i < a.size(); ++i) {
+    EXPECT_EQ(a[i], b[i]);
+  }
+}
+
 }  // namespace
