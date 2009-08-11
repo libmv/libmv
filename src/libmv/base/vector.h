@@ -52,7 +52,9 @@ class vector {
     copy(rhs);
   }
   vector<T, Allocator> &operator=(const vector<T, Allocator> &rhs) {
-    copy(rhs);
+    if (&rhs != this) {
+      copy(rhs);
+    }
     return *this;
   }
 
