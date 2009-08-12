@@ -131,6 +131,10 @@ class Kernel {
   int NumSamples() const {
     return x1_.cols();
   }
+  static void Solve(const Mat &x1, const Mat &x2, vector<Model> *models) {
+    // By offering this, Kernel types can be passed to templates.
+    Solver::Solve(x1, x2, models);
+  }
  private:
   const Mat &x1_;
   const Mat &x2_;
