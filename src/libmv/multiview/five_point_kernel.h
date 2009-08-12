@@ -39,7 +39,7 @@ struct FivePointSolver {
     // Mat2X is the right type, not Mat.
     Mat2X x1fixed = x1;
     Mat2X x2fixed = x2;
-    FivePointsRelativePose(x1fixed, &x2fixed, Es);
+    FivePointsRelativePose(x1fixed, x2fixed, Es);
   }
 };
 
