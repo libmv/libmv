@@ -257,51 +257,47 @@ void TvrMainWindow::ComputeFeatures(int image_index) {
 void TvrMainWindow::ComputeCandidateMatches() {
   FindCandidateMatches(document_.feature_sets[0],
                        document_.feature_sets[1],
-                       &document_.correspondences);
+                       &document_.matches);
   UpdateViewers();
 }
 
 void TvrMainWindow::ComputeRobustMatches() {
-  libmv::Correspondences new_correspondences;
+  libmv::Matches new_matches;
 
-  ComputeFundamental(document_.correspondences,
-                     &document_.F, &new_correspondences);
+  ComputeFundamental(document_.matches,
+                     &document_.F, &new_matches);
   
   // TODO(pau) Make sure this is not copying too many things.  We could
   //           implement an efficient swap for the biparted graph (just swaping
   //           the maps), or remove outlier tracks from the candidate matches
   //           instead of constructing a new correspondance set.
-  std::swap(document_.correspondences, new_correspondences);
+  std::swap(document_.matches, new_matches);
   UpdateViewers();
 }
 
-static void PointCorrespondencesAsMatrices(libmv::Correspondences &c,
+static void PointCorrespondencesAsMatrices(libmv::Matches &c,
                                            libmv::Mat *x1,
                                            libmv::Mat *x2) {
   using namespace libmv;
 
   x1->resize(2, c.NumTracks());
   x2->resize(2, c.NumTracks());
-  Mat *x[2] = { x1, x2 };
+  libmv::Mat *x[] = {x1, x2};
   int i = 0;
-  for (Correspondences::TrackIterator t = c.ScanAllTracks();
-       !t.Done(); t.Next()) {
-    PointCorrespondences::Iterator it =
-        PointCorrespondences(&c).ScanFeaturesForTrack(t.track());
-    (*x[it.image()])(0, i) = it.feature()->x();
-    (*x[it.image()])(1, i) = it.feature()->y();
-    it.Next();
-    (*x[it.image()])(0, i) = it.feature()->x();
-    (*x[it.image()])(1, i) = it.feature()->y();
-    i++;
+  // TODO(keir): This relies on the ordering; should be more explicit!
+  for (Matches::Points r = c.All<PointFeature>(); r; ++r) {
+    (*x[r.image()])(0, i) = r.feature()->x();
+    (*x[r.image()])(1, i) = r.feature()->y();
+    ++r;
+    (*x[r.image()])(0, i) = r.feature()->x();
+    (*x[r.image()])(1, i) = r.feature()->y();
+    ++i;
   }
 }
-
-  
   
 void TvrMainWindow::FocalFromFundamental() {
   libmv::Mat x1, x2;
-  PointCorrespondencesAsMatrices(document_.correspondences, &x1, &x2);
+  PointCorrespondencesAsMatrices(document_.matches, &x1, &x2);
 
   libmv::Vec2 p0((document_.images[0].width() - 1) / 2.,
                  (document_.images[0].height() - 1) / 2.);
@@ -359,7 +355,7 @@ void TvrMainWindow::MetricReconstruction() {
 
   // Get matches from the corresponcence structure.
   Mat x0, x1;
-  PointCorrespondencesAsMatrices(document_.correspondences, &x0, &x1);
+  PointCorrespondencesAsMatrices(document_.matches, &x0, &x1);
     
   // Recover R, t from E and K
   Mat3 R;
@@ -412,7 +408,7 @@ void TvrMainWindow::MetricBundle() {
   }
   std::vector<Mat2X> x(2);
   Mat xs[2];
-  PointCorrespondencesAsMatrices(document_.correspondences, &xs[0], &xs[1]);
+  PointCorrespondencesAsMatrices(document_.matches, &xs[0], &xs[1]);
   for (int i = 0; i < 2; ++i) {
     x[i] = xs[i];
   }

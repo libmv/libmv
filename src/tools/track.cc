@@ -22,7 +22,7 @@
 #include <string>
 #include <vector>
 
-#include "libmv/correspondence/correspondence.h"
+#include "libmv/correspondence/matches.h"
 #include "libmv/correspondence/feature.h"
 #include "libmv/correspondence/klt.h"
 #include "libmv/image/image.h"
@@ -43,7 +43,7 @@ using std::sort;
 using std::string;
 
 void WriteOutputImage(const FloatImage &image,
-                      CorrespondencesView<KLTPointFeature>::Iterator features,
+                      Matches::Points features,
                       const char *output_filename) {
   FloatImage output_image(image.Height(), image.Width(), 3);
   for (int i = 0; i < image.Height(); ++i) {
@@ -56,7 +56,7 @@ void WriteOutputImage(const FloatImage &image,
 
   Vec3 green;
   green << 0, 1, 0;
-  for (; !features.Done(); features.Next()) {
+  for (; features; ++features) {
     DrawFeature(*features.feature(), green, &output_image);
   }
 
@@ -86,7 +86,7 @@ int main(int argc, char **argv) {
       MakePyramidSequence(source, FLAGS_pyramid_levels, FLAGS_sigma);
 
   KLTContext klt;
-  Correspondences correspondences;
+  Matches matches;
 
   // TODO(keir): Really have to get a scoped_ptr<> implementation!
   // Consider taking the one from boost but editing out the cruft.
@@ -96,27 +96,24 @@ int main(int argc, char **argv) {
   int i = 0;
   for (KLTContext::FeatureList::iterator it = features.begin();
        it != features.end(); ++it, ++i) {
-    correspondences.Insert(0, i, *it);
+    matches.Insert(0, i, *it);
   }
 
-  CorrespondencesView<KLTPointFeature> klt_correspondences(&correspondences);
   if (FLAGS_debug_images) {
     WriteOutputImage(
         pyramid_sequence->Pyramid(0)->Level(0),
-        klt_correspondences.ScanFeaturesForImage(0),
+        matches.InImage<PointFeature>(0),
         (files[0]+".out.ppm").c_str());
   }
-  // TODO(keir): Use correspondences here!
   for (size_t i = 1; i < files.size(); ++i) {
     printf("Tracking %2zd features in %s\n", features.size(), files[i].c_str());
 
-    CorrespondencesView<KLTPointFeature>::Iterator it =
-        klt_correspondences.ScanFeaturesForImage(i-1);
-    for (; !it.Done(); it.Next()) {
+    for (Matches::Features<KLTPointFeature> r =
+         matches.InImage<KLTPointFeature>(i-1); r; ++r) {
       KLTPointFeature *next_position = new KLTPointFeature;
-      if (klt.TrackFeature(pyramid_sequence->Pyramid(i-1), *it.feature(),
+      if (klt.TrackFeature(pyramid_sequence->Pyramid(i-1), *r.feature(),
                            pyramid_sequence->Pyramid(i), next_position)) {
-        correspondences.Insert(i, it.track(), next_position);
+        matches.Insert(i, r.track(), next_position);
       } else {
         delete next_position;
       }
@@ -125,7 +122,7 @@ int main(int argc, char **argv) {
     if (FLAGS_debug_images) {
       WriteOutputImage(
           pyramid_sequence->Pyramid(i)->Level(0),
-          klt_correspondences.ScanFeaturesForImage(i),
+          matches.InImage<PointFeature>(i),
           (files[i]+".out.ppm").c_str());
     }
   }

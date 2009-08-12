@@ -27,6 +27,7 @@
 
 using libmv::Matches;
 using libmv::Feature;
+using libmv::PointFeature;
 
 namespace {
 
@@ -42,149 +43,26 @@ struct SiblingTestFeature : public Feature {
   virtual ~SiblingTestFeature() {}
 };
 
-TEST(Matches, FilteringIterators) {
+TEST(Matches, Views) {
   Matches matches;
-  int expected_its[] = {
-    1, 1, 11,
-    1, 2, 12,
-    2, 8, 14,
-    3, 9, 15,
-    0
-  };
+  matches.Insert(1, 1, new SiblingTestFeature);
+  matches.Insert(1, 2, new MyPoint(30));
+  matches.Insert(1, 4, new SiblingTestFeature);
+  Matches::Features<Feature> r1 = matches.All<Feature>();
+  ++r1;  // Ordering means the test feature will be 2nd.
+  ASSERT_TRUE(r1);
+  EXPECT_TRUE(r1.feature() != NULL);
+  EXPECT_EQ(1, r1.image());
+  EXPECT_EQ(2, r1.track());
 
-  int max_i = 0;
-  for (; expected_its[max_i]; max_i += 3) {
-    matches.Insert(expected_its[max_i + 0],
-                   expected_its[max_i + 1], 
-                   new MyPoint(expected_its[max_i + 2])); 
-      LOG(INFO) << "Inserting " << expected_its[max_i + 0]
-                << ", " << expected_its[max_i + 1] 
-                << ", " << expected_its[max_i + 2]; 
-  }
+  Matches::Features<MyPoint> r = matches.All<MyPoint>();
+  ASSERT_TRUE(r);
+  ASSERT_TRUE(r.feature() != NULL);
+  EXPECT_EQ(30, r.feature()->tag);
+  EXPECT_EQ(1,  r.image());
+  EXPECT_EQ(2,  r.track());
 
-  // Add other types of features to filter out.
-  matches.Insert(0, 0,  new SiblingTestFeature);
-  matches.Insert(4, 4,  new SiblingTestFeature);
-  matches.Insert(2, 4,  new SiblingTestFeature);
-  matches.Insert(9, 5,  new SiblingTestFeature);
-  matches.Insert(9, 10, new SiblingTestFeature);
-
-  // Over images, then features in each image.
-  int i = 0;
-  for (Matches::ImageIterator it = matches.ImageBegin();
-       it != matches.ImageEnd(); ++it) {
-    for (Matches::ImageFeatureIterator<MyPoint> tt = it.begin<MyPoint>();
-         tt != it.end<MyPoint>(); ++tt) {
-      LOG(INFO) << "tt.image() " << tt.image()
-                << " tt.track() " << tt.track()
-                << " tt.feature()->tag() " << tt.feature()->tag;
-      ASSERT_LT(i, max_i);
-      EXPECT_EQ(expected_its[i+0], tt.image());
-      EXPECT_EQ(expected_its[i+1], tt.track());
-      EXPECT_EQ(expected_its[i+2], tt.feature()->tag);
-      i += 3;
-    }
-  }
-  EXPECT_EQ(12, i);
-
-  // Over tracks, then features in each track. Because of specially selected
-  // bipartite graph edges, the ordering is the same as above.
-  i = 0;
-  for (Matches::TrackIterator it = matches.TrackBegin();
-       it != matches.TrackEnd(); ++it) {
-    for (Matches::TrackFeatureIterator<MyPoint> tt = it.begin<MyPoint>();
-         tt != it.end<MyPoint>(); ++tt) {
-      LOG(INFO) << "tt.image() " << tt.image()
-                << " tt.track() " << tt.track()
-                << " tt.feature()->tag() " << tt.feature()->tag;
-      ASSERT_LT(i, max_i);
-      EXPECT_EQ(expected_its[i+0], tt.image());
-      EXPECT_EQ(expected_its[i+1], tt.track());
-      EXPECT_EQ(expected_its[i+2], tt.feature()->tag);
-      i += 3;
-    }
-  }
-  EXPECT_EQ(12, i);
-
-  DeleteMatchFeatures(&matches);
-}
-
-TEST(Matches, IteratingOverTracksInCertainImages) {
-  // It's often necessary to iterate over either all the tracks that are
-  // visible in a given set of images. We do this with an iterator, shown
-  // below, which takes a set of images and then iterates over the tracks which
-  // appear in all images.
-
-  int features[] = {
-    // Image ID, track ID, feature tag.
-    1, 1, 11,  // Track 1 is in all 3 images.
-    2, 1, 12,
-    3, 1, 13,
-    1, 2, 14,  // This track, 2, should be ignored.
-    2, 2, 15,
-    1, 3, 16,  // Track 3 is in all 3 images.
-    2, 3, 17,
-    3, 3, 18,
-    6, 3, 19,  // This feature should not be scanned.
-    6, 4, 20,  // This track should not be scanned.
-    0
-  };
-
-  Matches matches;
-
-  int max_i = 0;
-  for (; features[max_i]; max_i += 3) {
-    matches.Insert(features[max_i + 0],
-                   features[max_i + 1], 
-                   new MyPoint(features[max_i + 2])); 
-    LOG(INFO) << "> " << features[max_i + 0]
-              << ", " << features[max_i + 1]
-              << ", " << features[max_i + 2];
-  }
-  EXPECT_EQ(max_i, 30);
-
-  // Insert some distractor tracks
-  matches.Insert(1, 50, new SiblingTestFeature);
-  matches.Insert(2, 50, new SiblingTestFeature);
-  matches.Insert(3, 50, new SiblingTestFeature);
-  matches.Insert(1, 51, new SiblingTestFeature);
-  matches.Insert(2, 51, new SiblingTestFeature);
-  matches.Insert(3, 51, new SiblingTestFeature);
-
-  std::set<Matches::Image> images;
-  images.insert(1);
-  images.insert(2);
-  images.insert(3);
-
-  int expected_features[] = {
-    // Image ID, track ID, feature tag.
-    1, 1, 11,  // Track 1 is in all 3 images.
-    2, 1, 12,
-    3, 1, 13,
-    1, 3, 16,  // Track 3 is in all 3 images.
-    2, 3, 17,
-    3, 3, 18,
-    0
-  };
-  int i = 0;
-  int num_tracks = 0;
-  // For each track...
-  for (Matches::TracksInImagesIterator<MyPoint> it =
-             matches.TracksInImagesBegin<MyPoint>(images);
-       it != matches.TracksInImagesEnd<MyPoint>(images); ++it) {
-    // For each feature...
-    for (Matches::TracksInImagesFeatureIterator<MyPoint> tt =
-         it.begin(); tt != it.end(); ++tt) {
-      EXPECT_EQ(expected_features[i + 0], tt.image());
-      EXPECT_EQ(expected_features[i + 1], tt.track());
-      EXPECT_EQ(expected_features[i + 2], tt.feature()->tag);
-      i += 3;
-    }
-    LOG(INFO) << "Track: " << *it;
-    ++num_tracks;
-  }
-  EXPECT_EQ(18, i);
-  EXPECT_EQ(2, num_tracks);
+  //DeleteCorrespondenceFeatures(&matches);
 }
 
 }  // namespace

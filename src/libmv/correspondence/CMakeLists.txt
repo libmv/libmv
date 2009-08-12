@@ -1,7 +1,5 @@
-ADD_LIBRARY(correspondence klt.cc feature.cc correspondence.cc matches.cc)
+ADD_LIBRARY(correspondence klt.cc feature.cc matches.cc)
 LIBMV_TEST(klt "correspondence;image;numeric")
 LIBMV_TEST(bipartite_graph "")
-LIBMV_TEST(bipartite_graph_new "")
 LIBMV_TEST(kdtree "")
-LIBMV_TEST(correspondence "correspondence;image;numeric")
 LIBMV_TEST(matches "correspondence;image;numeric")

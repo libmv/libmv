@@ -24,10 +24,11 @@
 #include "libmv/multiview/robust_fundamental.h"
 #include "ui/tvr/features.h"
 
+using libmv::Matches;
 
 void FindCandidateMatches(const SurfFeatureSet &left,
                           const SurfFeatureSet &right,
-                          libmv::Correspondences *correspondences) {
+                          libmv::Matches *matches) {
   int max_track_number = 0;
   for (size_t i = 0; i < left.features.size(); ++i) {
     size_t j, k;
@@ -39,8 +40,8 @@ void FindCandidateMatches(const SurfFeatureSet &left,
     // Left image is image 0, right is 1 for now.
     if (i == k) {
       // Both kdtrees matched the same feature, so it is probably a match.
-      correspondences->Insert(0, max_track_number, &left.features[i]);
-      correspondences->Insert(1, max_track_number, &right.features[j]);
+      matches->Insert(0, max_track_number, &left.features[i]);
+      matches->Insert(1, max_track_number, &right.features[j]);
       max_track_number++;
     }
   }
@@ -48,29 +49,15 @@ void FindCandidateMatches(const SurfFeatureSet &left,
 
 //TODO(pau) Once stable, this has to move to libmv.
 //TODO(pau) candidate should be const; we need const_iterator in Correspondence.
-void ComputeFundamental(libmv::Correspondences &all_matches,
+void ComputeFundamental(libmv::Matches &all_matches,
                         libmv::Mat3 *F,
-                        libmv::Correspondences *consistent_matches) {
+                        libmv::Matches *consistent_matches) {
   using namespace libmv;
 
   // Construct matrices containing the matches.
   int n = all_matches.NumTracks();
   Mat x[2] = {Mat(2,n), Mat(2,n)};
-  std::vector<TrackID> track_ids(n);
-
-  int i = 0;
-  for (Correspondences::TrackIterator t = all_matches.ScanAllTracks();
-       !t.Done(); t.Next()) {
-    PointCorrespondences::Iterator it =
-        PointCorrespondences(&all_matches).ScanFeaturesForTrack(t.track());
-    x[it.image()](0,i) = it.feature()->x();
-    x[it.image()](1,i) = it.feature()->y();
-    it.Next();
-    x[it.image()](0,i) = it.feature()->x();
-    x[it.image()](1,i) = it.feature()->y();
-    track_ids[i] = t.track();
-    i++;
-  }
+  PointMatchesAsMatrices(all_matches, &x[0], &x[1]);
   VLOG(2) << "x1\n" << x[0] << "\nx2\n" << x[1] << "\n";
 
   // Compute Fundamental matrix and inliers.
@@ -84,42 +71,27 @@ void ComputeFundamental(libmv::Correspondences &all_matches,
 
   // Build new correspondence graph containing only inliers.
   for (int j = 0; j < inliers.size(); ++j) {
-    PointCorrespondences::Iterator it = PointCorrespondences(&all_matches)
+    Matches::Points r = PointCorrespondences(&all_matches)
         .ScanFeaturesForTrack(track_ids[inliers[j]]);
-    consistent_matches->Insert(it.image(), j, it.feature());
-    it.Next();
-    consistent_matches->Insert(it.image(), j, it.feature());
+    consistent_matches->Insert(r.image(), j, r.feature());
+    r.Next();
+    consistent_matches->Insert(r.image(), j, r.feature());
   }
   
+// XXX disabled until the API for getting matrices from Matches() is settled.
+#if 0
   // Compute Fundamental matrix using all inliers.
   {
     int n = consistent_matches->NumTracks();
     Mat x[2] = {Mat(2,n), Mat(2,n)};
-    int i = 0;
-    for (Correspondences::TrackIterator t = consistent_matches->ScanAllTracks();
-       !t.Done(); t.Next()) {
-      PointCorrespondences::Iterator it =
-          PointCorrespondences(consistent_matches)
-              .ScanFeaturesForTrack(t.track());
-      x[it.image()](0,i) = it.feature()->x();
-      x[it.image()](1,i) = it.feature()->y();
-      it.Next();
-      x[it.image()](0,i) = it.feature()->x();
-      x[it.image()](1,i) = it.feature()->y();
-      i++;
-    }
+    PointMatchesAsMatrices(consistent_matches, &x[0], &x[1]);
     vector<Mat3> Fs;
-    fundamental::kernel::NormalizedEightPointKernel kernel(x[0], x[1]);
-    // TODO(keir): It's too awkward to invoke the kernel directly :(
-    vector<int> samples;
-    for (int i = 0; i <kernel.NumSamples(); ++i) {
-      samples.push_back(i);
-    }
-    kernel.Fit(samples, &Fs);
+    fundamental::kernel::NormalizedEightPointKernel::Solve(x[0], x[1], &fs);
     *F = Fs[0];
 
     NormalizeFundamental(*F, F);
     
     LOG(INFO) << "F:\n" << *F;
   }
+#endif
 }

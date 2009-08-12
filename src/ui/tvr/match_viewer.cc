@@ -28,6 +28,9 @@
 
 #include "ui/tvr/match_viewer.h"
 
+using libmv::Matches;
+using libmv::PointFeature;
+
 static bool ImageContains(OnScreenImage &im, GLTexture &tex, float x, float y) {
   return im.posx < x && x < im.posx + tex.width
       && im.posy < y && y < im.posy + tex.height;
@@ -153,16 +156,10 @@ void MatchViewer::DrawCandidateMatches() {
   float yoff[2] = { screen_images_[0].posy, screen_images_[1].posy};
   
   glBegin(GL_LINES);  // TODO(keir): Note that this will break with > 2 images.
-  for (libmv::Correspondences::TrackIterator t =
-          document_->correspondences.ScanAllTracks();
-       !t.Done(); t.Next()) {
-    for (libmv::PointCorrespondences::Iterator it =
-            libmv::PointCorrespondences(&document_->correspondences)
-              .ScanFeaturesForTrack(t.track());
-         !it.Done(); it.Next()) {
-      glVertex2f(xoff[it.image()] +  it.feature()->x(),
-                 yoff[it.image()] +  it.feature()->y());
-    }
+  for (Matches::Points r =
+      document_->matches.AllReversed<PointFeature>(); r; ++r) {
+    glVertex2f(xoff[r.image()] +  r.feature()->x(),
+               yoff[r.image()] +  r.feature()->y());
   }
   glEnd();
 }
