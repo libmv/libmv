@@ -141,8 +141,6 @@ inline void TracksInAllImages(const Matches &c,
   if (!images.size()) {
     return;
   }
-  // TODO(keir): There is a clever way to do this with set_intersection and
-  // vectors that's faster than what I have here. Fix it!
   std::vector<std::vector<Matches::Track> > all_tracks;
   all_tracks.resize(images.size());
   for (int i = 0; i < images.size(); ++i) {
