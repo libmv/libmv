@@ -55,9 +55,12 @@ void ComputeFundamental(libmv::Matches &all_matches,
   using namespace libmv;
 
   // Construct matrices containing the matches.
-  int n = all_matches.NumTracks();
-  Mat x[2] = {Mat(2,n), Mat(2,n)};
-  PointMatchesAsMatrices(all_matches, &x[0], &x[1]);
+  vector<Mat> x;
+  vector<int> tracks;
+  vector<int> images;
+  images.push_back(0);
+  images.push_back(1);
+  PointMatchMatrices(all_matches, images, &tracks, &x);
   VLOG(2) << "x1\n" << x[0] << "\nx2\n" << x[1] << "\n";
 
   // Compute Fundamental matrix and inliers.
@@ -71,27 +74,20 @@ void ComputeFundamental(libmv::Matches &all_matches,
 
   // Build new correspondence graph containing only inliers.
   for (int j = 0; j < inliers.size(); ++j) {
-    Matches::Points r = PointCorrespondences(&all_matches)
-        .ScanFeaturesForTrack(track_ids[inliers[j]]);
-    consistent_matches->Insert(r.image(), j, r.feature());
-    r.Next();
-    consistent_matches->Insert(r.image(), j, r.feature());
+    int k = inliers[j];
+    consistent_matches->Insert(images[k], tracks[k],
+        all_matches.Get(images[k], tracks[k]));
   }
   
-// XXX disabled until the API for getting matrices from Matches() is settled.
-#if 0
   // Compute Fundamental matrix using all inliers.
   {
-    int n = consistent_matches->NumTracks();
-    Mat x[2] = {Mat(2,n), Mat(2,n)};
-    PointMatchesAsMatrices(consistent_matches, &x[0], &x[1]);
+    TwoViewPointMatchMatrices(*consistent_matches, 0, 1, &x);
     vector<Mat3> Fs;
-    fundamental::kernel::NormalizedEightPointKernel::Solve(x[0], x[1], &fs);
+    fundamental::kernel::NormalizedEightPointKernel::Solve(x[0], x[1], &Fs);
     *F = Fs[0];
 
     NormalizeFundamental(*F, F);
     
     LOG(INFO) << "F:\n" << *F;
   }
-#endif
 }

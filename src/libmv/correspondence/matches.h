@@ -130,12 +130,12 @@ void Intersect(std::vector< std::vector<T> > *sorted_items) {
  * Extract matrices from a set of matches, containing the point locations. Only
  * points for tracks which appear in all images are returned in tracks.
  *
- * \param c       The matches from which to extract the points.
+ * \param matches The matches from which to extract the points.
  * \param images  Which images to extract the points from.
  * \param xs      The resulting matrices containing the points. The entries will
  *                match the ordering of images.
  */
-inline void TracksInAllImages(const Matches &c,
+inline void TracksInAllImages(const Matches &matches,
                               const vector<Matches::Image> &images,
                               vector<Matches::Track> *tracks) {
   if (!images.size()) {
@@ -144,7 +144,7 @@ inline void TracksInAllImages(const Matches &c,
   std::vector<std::vector<Matches::Track> > all_tracks;
   all_tracks.resize(images.size());
   for (int i = 0; i < images.size(); ++i) {
-    for (Matches::Points r = c.InImage<PointFeature>(images[i]); r; ++r) {
+    for (Matches::Points r = matches.InImage<PointFeature>(images[i]); r; ++r) {
       all_tracks[i].push_back(r.track());
     }
   }
@@ -161,27 +161,37 @@ inline void TracksInAllImages(const Matches &c,
  * matrix is of size 2 x N, where N is the number of tracks that are in all the
  * images.
  *
- * \param c       The matches from which to extract the points.
+ * \param matches The matches from which to extract the points.
  * \param images  Which images to extract the points from.
  * \param xs      The resulting matrices containing the points. The entries will
  *                match the ordering of images.
  */
-inline void PointMatchMatrices(const Matches &c,
+inline void PointMatchMatrices(const Matches &matches,
                                const vector<Matches::Image> &images,
                                vector<Matches::Track> *tracks,
                                vector<Mat> *xs) {
-  TracksInAllImages(c, images, tracks);
+  TracksInAllImages(matches, images, tracks);
 
   xs->resize(images.size());
   for (int i = 0; i < images.size(); ++i) {
     (*xs)[i].resize(2, tracks->size());
     for (int j = 0; j < tracks->size(); ++j) {
       const PointFeature *f = static_cast<const PointFeature *>(
-          c.Get(images[i], (*tracks)[j]));
+          matches.Get(images[i], (*tracks)[j]));
       (*xs)[i](0, j) = f->x();
       (*xs)[i](1, j) = f->y();
     }
   }
+}
+
+inline void TwoViewPointMatchMatrices(const Matches &matches,
+                                      int image1, int image2,
+                                      vector<Mat> *xs) {
+  vector<int> tracks;
+  vector<int> images;
+  images.push_back(image1);
+  images.push_back(image2);
+  PointMatchMatrices(matches, images, &tracks, xs);
 }
 
 // Delete the features in a correspondences. Uses const_cast to avoid the
