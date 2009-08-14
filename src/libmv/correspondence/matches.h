@@ -21,8 +21,10 @@
 #ifndef LIBMV_CORRESPONDENCE_MATCHES_H_
 #define LIBMV_CORRESPONDENCE_MATCHES_H_
 
-#include <set>
+#include <algorithm>
+#include <vector>
 
+#include "libmv/base/vector.h"
 #include "libmv/correspondence/bipartite_graph.h"
 #include "libmv/logging/logging.h"
 #include "libmv/correspondence/feature.h"
@@ -102,20 +104,85 @@ class Matches {
   std::set<Track> tracks_;
 };
 
-// TODO(keir): This doesn't belong here. Also, it's broken for non-two views.
-inline void PointMatchesAsMatrices(const Matches &c, Mat *x1, Mat *x2) {
-  x1->resize(2, c.NumTracks());
-  x2->resize(2, c.NumTracks());
-  Mat *x[] = {x1, x2};
-  int i = 0;
-  // TODO(keir): This relies on the ordering; should be more explicit!
-  for (Matches::Points r = c.All<PointFeature>(); r; ++r) {
-    (*x[r.image()])(0, i) = r.feature()->x();
-    (*x[r.image()])(1, i) = r.feature()->y();
-    ++r;
-    (*x[r.image()])(0, i) = r.feature()->x();
-    (*x[r.image()])(1, i) = r.feature()->y();
-    ++i;
+
+/**
+ * Intersect sorted lists. Destroys originals; leaves results as the single
+ * entry in sorted_items.
+ */ 
+template<typename T>
+void Intersect(std::vector< std::vector<T> > *sorted_items) {
+  std::vector<T> tmp;
+  while (sorted_items->size() > 1) {
+    int n = sorted_items->size();
+    std::vector<T> &s1 = (*sorted_items)[n - 1];
+    std::vector<T> &s2 = (*sorted_items)[n - 2];
+    tmp.resize(std::min(s1.size(), s2.size()));
+    typename std::vector<T>::iterator it = std::set_intersection(
+        s1.begin(), s1.end(), s2.begin(), s2.end(), tmp.begin());
+    tmp.resize(int(it - tmp.begin()));
+    std::swap(tmp, s2);
+    tmp.resize(0);
+    sorted_items->pop_back();
+  }
+}
+
+/**
+ * Extract matrices from a set of matches, containing the point locations. Only
+ * points for tracks which appear in all images are returned in tracks.
+ *
+ * \param c       The matches from which to extract the points.
+ * \param images  Which images to extract the points from.
+ * \param xs      The resulting matrices containing the points. The entries will
+ *                match the ordering of images.
+ */
+inline void TracksInAllImages(const Matches &c,
+                              const vector<Matches::Image> &images,
+                              vector<Matches::Track> *tracks) {
+  if (!images.size()) {
+    return;
+  }
+  // TODO(keir): There is a clever way to do this with set_intersection and
+  // vectors that's faster than what I have here. Fix it!
+  std::vector<std::vector<Matches::Track> > all_tracks;
+  all_tracks.resize(images.size());
+  for (int i = 0; i < images.size(); ++i) {
+    for (Matches::Points r = c.InImage<PointFeature>(images[i]); r; ++r) {
+      all_tracks[i].push_back(r.track());
+    }
+  }
+  Intersect(&all_tracks);
+  CHECK(all_tracks.size() == 1);
+  for (int i = 0; i < all_tracks[0].size(); ++i) {
+    tracks->push_back(all_tracks[0][i]);
+  }
+}
+
+/**
+ * Extract matrices from a set of matches, containing the point locations. Only
+ * points for tracks which appear in all images are returned in xs. Each output
+ * matrix is of size 2 x N, where N is the number of tracks that are in all the
+ * images.
+ *
+ * \param c       The matches from which to extract the points.
+ * \param images  Which images to extract the points from.
+ * \param xs      The resulting matrices containing the points. The entries will
+ *                match the ordering of images.
+ */
+inline void PointMatchMatrices(const Matches &c,
+                               const vector<Matches::Image> &images,
+                               vector<Matches::Track> *tracks,
+                               vector<Mat> *xs) {
+  TracksInAllImages(c, images, tracks);
+
+  xs->resize(images.size());
+  for (int i = 0; i < images.size(); ++i) {
+    (*xs)[i].resize(2, tracks->size());
+    for (int j = 0; j < tracks->size(); ++j) {
+      const PointFeature *f = static_cast<const PointFeature *>(
+          c.Get(images[i], (*tracks)[j]));
+      (*xs)[i](0, j) = f->x();
+      (*xs)[i](1, j) = f->y();
+    }
   }
 }
 

@@ -35,6 +35,12 @@ class PointFeature : public Feature {
  public:
   virtual ~PointFeature();
 
+  PointFeature() {}
+  PointFeature(float xx, float yy) {
+    coords[0] = xx;
+    coords[1] = yy;
+  }
+
   float x() const { return coords(0); }
   float y() const { return coords(1); }
 
