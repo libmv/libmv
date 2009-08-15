@@ -65,7 +65,7 @@ class BipartiteGraph {
   }
 
   Range AllReversed() const {
-    return Range(left_to_right_.begin(), left_to_right_.end(), false);
+    return Range(right_to_left_.begin(), right_to_left_.end(), true);
   }
 
   Range ToLeft(T left) const {

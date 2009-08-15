@@ -75,19 +75,17 @@ void ComputeFundamental(libmv::Matches &all_matches,
   // Build new correspondence graph containing only inliers.
   for (int j = 0; j < inliers.size(); ++j) {
     int k = inliers[j];
-    consistent_matches->Insert(images[k], tracks[k],
-        all_matches.Get(images[k], tracks[k]));
+    for (int i = 0; i < 2; ++i) {
+      consistent_matches->Insert(images[i], tracks[k],
+          all_matches.Get(images[i], tracks[k]));
+    }
   }
   
   // Compute Fundamental matrix using all inliers.
-  {
-    TwoViewPointMatchMatrices(*consistent_matches, 0, 1, &x);
-    vector<Mat3> Fs;
-    fundamental::kernel::NormalizedEightPointKernel::Solve(x[0], x[1], &Fs);
-    *F = Fs[0];
-
-    NormalizeFundamental(*F, F);
-    
-    LOG(INFO) << "F:\n" << *F;
-  }
+  TwoViewPointMatchMatrices(*consistent_matches, 0, 1, &x);
+  vector<Mat3> Fs;
+  fundamental::kernel::NormalizedEightPointKernel::Solve(x[0], x[1], &Fs);
+  *F = Fs[0];
+  NormalizeFundamental(*F, F);
+  LOG(INFO) << "F:\n" << *F;
 }

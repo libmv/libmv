@@ -128,18 +128,19 @@ void MatchViewer::DrawImage(int i) {
 }
 
 void MatchViewer::DrawFeatures(int image_index) {
-  libmv::vector<libmv::SurfFeature> &features =
-      document_->feature_sets[image_index].features;
+  //libmv::vector<libmv::SurfFeature> &features =
+  //    document_->feature_sets[image_index].features;
   
-  for (int i = 0; i < features.size(); ++i) {
+  for (Matches::Points r =
+      document_->matches.InImage<PointFeature>(image_index); r; ++r) {
     glPushMatrix();
-    glTranslatef(features[i].x(), features[i].y(), 0);
+    glTranslatef(r.feature()->x(), r.feature()->y(), 0);
     // Convert from gaussian scale to pixel scale (see surf.h).
-    float scale = features[i].scale * 9.0 / 1.2 / 2.0;
+    float scale = r.feature()->scale * 9.0 / 1.2 / 2.0;
     glScalef(scale, scale, scale);
     // TODO(pau) when surf orientation will be detected, ensure that this is
     //           turning in the right sense and the right units (deg vs rad).
-    glRotatef(features[i].orientation, 0, 0, 1);
+    //glRotatef(features[i].orientation, 0, 0, 1);
     glBegin(GL_LINES);
     glVertex2f(-1, -1); glVertex2f( 1, -1); // Square Box.
     glVertex2f( 1, -1); glVertex2f( 1,  1);

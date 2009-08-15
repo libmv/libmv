@@ -34,6 +34,10 @@
 #include "libmv/logging/logging.h"
 #include "ui/tvr/main_window.h"
 
+
+using libmv::Mat;
+using libmv::vector;
+
 TvrMainWindow::TvrMainWindow(QWidget *parent)
   : QMainWindow(parent) {
   
@@ -275,29 +279,11 @@ void TvrMainWindow::ComputeRobustMatches() {
   UpdateViewers();
 }
 
-static void PointCorrespondencesAsMatrices(libmv::Matches &c,
-                                           libmv::Mat *x1,
-                                           libmv::Mat *x2) {
-  using namespace libmv;
-
-  x1->resize(2, c.NumTracks());
-  x2->resize(2, c.NumTracks());
-  libmv::Mat *x[] = {x1, x2};
-  int i = 0;
-  // TODO(keir): This relies on the ordering; should be more explicit!
-  for (Matches::Points r = c.All<PointFeature>(); r; ++r) {
-    (*x[r.image()])(0, i) = r.feature()->x();
-    (*x[r.image()])(1, i) = r.feature()->y();
-    ++r;
-    (*x[r.image()])(0, i) = r.feature()->x();
-    (*x[r.image()])(1, i) = r.feature()->y();
-    ++i;
-  }
-}
-  
 void TvrMainWindow::FocalFromFundamental() {
-  libmv::Mat x1, x2;
-  PointCorrespondencesAsMatrices(document_.matches, &x1, &x2);
+  vector<Mat> xs;
+  TwoViewPointMatchMatrices(document_.matches, 0, 1, &xs);
+  Mat &x1 = xs[0];
+  Mat &x2 = xs[1];
 
   libmv::Vec2 p0((document_.images[0].width() - 1) / 2.,
                  (document_.images[0].height() - 1) / 2.);
@@ -354,8 +340,10 @@ void TvrMainWindow::MetricReconstruction() {
   EssentialFromFundamental(document_.F, K0, K1, &E);
 
   // Get matches from the corresponcence structure.
-  Mat x0, x1;
-  PointCorrespondencesAsMatrices(document_.matches, &x0, &x1);
+  vector<Mat> xs(2);
+  TwoViewPointMatchMatrices(document_.matches, 0, 1, &xs);
+  Mat &x0 = xs[0];
+  Mat &x1 = xs[1];
     
   // Recover R, t from E and K
   Mat3 R;
@@ -407,8 +395,8 @@ void TvrMainWindow::MetricBundle() {
     t[i] = document_.t[i];
   }
   std::vector<Mat2X> x(2);
-  Mat xs[2];
-  PointCorrespondencesAsMatrices(document_.matches, &xs[0], &xs[1]);
+  vector<Mat> xs(2);
+  TwoViewPointMatchMatrices(document_.matches, 0, 1, &xs);
   for (int i = 0; i < 2; ++i) {
     x[i] = xs[i];
   }
