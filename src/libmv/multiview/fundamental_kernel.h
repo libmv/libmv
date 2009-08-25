@@ -107,7 +107,7 @@ typedef two_view::kernel::Kernel<
 typedef NormalizedSevenPointKernel Kernel;
 
 // TODO(keir): Convert this to a solver that enforces the essential
-// constrsaints; in particular det(F) = 0 and the two nonzero singular values
+// constraints; in particular det(F) = 0 and the two nonzero singular values
 // are equal.
 typedef two_view::kernel::Kernel<EightPointSolver,
                                  SampsonError,
@@ -119,9 +119,9 @@ typedef two_view::kernel::Kernel<EightPointSolver,
  * equation x'T*F*x = 0 for a single correspondence pair (x', x). The domain of
  * the matrix is a 9 element vector corresponding to F. In other words, set up
  * the linear system
- * 
+ *
  *   Af = 0,
- * 
+ *
  * where f is the F matrix as a 9-vector rather than a 3x3 matrix (row
  * major). If the points are well conditioned and there are 8 or more, then
  * the nullspace should be rank one. If the nullspace is two dimensional,
