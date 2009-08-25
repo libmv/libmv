@@ -37,7 +37,7 @@ double FundamentalFromCorrespondences8PointRobust(const Mat &x1,
   // The threshold is on the sum of the squared errors in the two images.
   // Actually, Sampson's approximation of this error.
   double threshold = 2 * Square(max_error);
-  typedef fundamental::kernel::Kernel Kernel;
+  typedef fundamental::kernel::NormalizedEightPointKernel Kernel;
   Kernel kernel(x1, x2);
   *F = Estimate(kernel, MLEScorer<Kernel>(threshold), inliers);
   return 0.0;  // This doesn't mean much for the robust case.
@@ -51,7 +51,7 @@ double FundamentalFromCorrespondences7PointRobust(const Mat &x1,
   // The threshold is on the sum of the squared errors in the two images.
   // Actually, Sampson's approximation of this error.
   double threshold = 2 * Square(max_error);
-  typedef fundamental::kernel::NormalizedEightPointKernel Kernel;
+  typedef fundamental::kernel::NormalizedSevenPointKernel Kernel;
   Kernel kernel(x1, x2);
   *F = Estimate(kernel, MLEScorer<Kernel>(threshold), inliers);
   return 0.0;  // This doesn't mean much for the robust case.
