@@ -29,6 +29,7 @@
 #include "libmv/numeric/numeric.h"
 #include "testing/testing.h"
 #include "libmv/logging/logging.h"
+#include <algorithm>
 
 namespace {
 
@@ -148,7 +149,7 @@ TEST(RobustFundamental, FundamentalFromCorrespondences7PointRobust) {
 
   Mat3 F;
   vector<int> inliers;
-  FundamentalFromCorrespondences7PointRobust(x1, x2, 0.1, &F, &inliers);
+  FundamentalFromCorrespondences7PointRobust(x1, x2, 0.005, &F, &inliers);
 
   LOG(INFO) << "F\n" << F << "\n";
   LOG(INFO) << "INLIERS " << inliers.size() << "\n";
@@ -165,9 +166,10 @@ TEST(RobustFundamental, FundamentalFromCorrespondences7PointRobust) {
   EXPECT_NEAR(F(0,1), -F(1,0), ep);
   EXPECT_NEAR(F(0,2), -F(2,0), ep);
   EXPECT_NEAR(F(1,2), -F(2,1), ep);
-  
+
   EXPECT_EQ(n - 1, inliers.size());
-  EXPECT_NEAR(0, F.determinant(), 1e-8);
+  //15 must not be in inliers indices list
+  EXPECT_EQ( std::find( inliers.begin(), inliers.end(), 15 ) == inliers.end() , true );
 }
 
 
