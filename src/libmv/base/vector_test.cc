@@ -1,15 +1,15 @@
 // Copyright (c) 2009 libmv authors.
-// 
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
 // deal in the Software without restriction, including without limitation the
 // rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
 // sell copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -21,6 +21,7 @@
 #include "libmv/base/vector.h"
 #include "libmv/numeric/numeric.h"
 #include "testing/testing.h"
+#include <algorithm>
 
 namespace {
 using namespace libmv;
@@ -183,6 +184,27 @@ TEST_F(VectorTest, OperatorEquals) {
   for (int i = 0; i < a.size(); ++i) {
     EXPECT_EQ(a[i], b[i]);
   }
+}
+
+TEST_F(VectorTest, Algorithm_Find) {
+  vector<int> a;
+  a.push_back(1);
+  a.push_back(5);
+  a.push_back(3);
+
+  // Find return an int *
+  EXPECT_EQ( std::find( &a[0], &a[2], 1 ) == &a[0], true);
+  EXPECT_EQ( std::find( &a[0], &a[2], 5 ) == &a[1], true);
+  EXPECT_EQ( std::find( &a[0], &a[2], 3 ) == &a[2], true);
+
+  // Find return a const int *
+  EXPECT_EQ( std::find( a.begin(), a.end(), 1 ) == &a[0], true);
+  EXPECT_EQ( std::find( a.begin(), a.end(), 5 ) == &a[1], true);
+  EXPECT_EQ( std::find( a.begin(), a.end(), 3 ) == &a[2], true);
+
+  // Search value that are not in the vector
+  EXPECT_EQ( std::find( a.begin(), a.end(), 0 ) == a.end(), true);
+  EXPECT_EQ( std::find( a.begin(), a.end(), 52 ) == a.end(), true);
 }
 
 }  // namespace

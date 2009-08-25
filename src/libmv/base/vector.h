@@ -38,7 +38,7 @@ namespace libmv {
 // vectorization. Don't use this container for classes that cannot be copied
 // via memcpy.
 template <typename T,
-          typename Allocator = Eigen::aligned_allocator<T> > 
+          typename Allocator = Eigen::aligned_allocator<T> >
 class vector {
  public:
   ~vector()                        { clear();                 }
@@ -78,6 +78,9 @@ class vector {
     size_ = size;
   }
 
+  const T * begin() const {return data_;}
+  const T * end() const {return data_+size_;}
+
   void push_back(const T &value) {
     if (size_ == capacity_) {
       reserve(size_ ? 2 * size_ : 1);
@@ -97,7 +100,7 @@ class vector {
 
   void reserve(unsigned int size) {
     if (size > size_) {
-      T *data = static_cast<T *>(allocate(size)); 
+      T *data = static_cast<T *>(allocate(size));
       memcpy(data, data_, sizeof(*data)*size_);
       allocator_.deallocate(data_, capacity_);
       data_ = data;
