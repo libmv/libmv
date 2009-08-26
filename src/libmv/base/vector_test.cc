@@ -186,7 +186,7 @@ TEST_F(VectorTest, OperatorEquals) {
   }
 }
 
-TEST_F(VectorTest, Algorithm_Find) {
+TEST_F(VectorTest, STLFind) {
   vector<int> a;
   a.push_back(1);
   a.push_back(5);

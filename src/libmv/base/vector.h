@@ -67,6 +67,8 @@ class vector {
         T& front()                 { return data_[0];         }
   const T& operator[](int n) const { return data_[n];         }
         T& operator[](int n)       { return data_[n];         }
+  const T * begin()          const { return data_;            }
+  const T * end()            const { return data_+size_;      }
 
   void resize(int size) {
     reserve(size);
@@ -78,8 +80,7 @@ class vector {
     size_ = size;
   }
 
-  const T * begin() const {return data_;}
-  const T * end() const {return data_+size_;}
+
 
   void push_back(const T &value) {
     if (size_ == capacity_) {
