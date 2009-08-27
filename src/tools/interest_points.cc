@@ -25,12 +25,15 @@
 #include "libmv/correspondence/klt.h"
 #include "libmv/image/image.h"
 #include "libmv/image/image_io.h"
+#include "libmv/image/image_drawing.h"
 #include "libmv/image/surf.h"
 #include "libmv/image/surf_descriptor.h"
 #include "libmv/tools/tool.h"
 
 using namespace libmv;
 using namespace std;
+
+void DrawSurfFeatures( Array3Df & im, const libmv::vector<libmv::SurfFeature> & feat);
 
 int main(int argc, char **argv) {
   libmv::Init("track a sequence", &argc, &argv);
@@ -40,7 +43,7 @@ int main(int argc, char **argv) {
     return 1;
   }
 
-  string filename = argv[1];
+  const string filename = argv[1];
 
   Array3Df image;
   if (!ReadPnm(filename.c_str(), &image)) {
@@ -48,9 +51,36 @@ int main(int argc, char **argv) {
     return 0;
   }
 
+  // TODO(pmoulon) Assert that the image value is within [0.f;255.f]
+  //for(int j=0; j < image.Height(); ++j)
+  //for(int i=0; i < image.Width(); ++i)
+  //  image(j,i) *=255;
+
   libmv::vector<libmv::SurfFeature> features;
   libmv::SurfFeatures(image, 4, 4, &features);
-  // TODO(keir): Do something with the extracted features.
-  LOG(FATAL) << "Unimplemented!";
+
+  DrawSurfFeatures(image, features);
+  WritePnm(image, "SurfOutput.pnm");
+
   return 0;
 }
+
+void DrawSurfFeatures( Array3Df & im, const libmv::vector<libmv::SurfFeature> & feat)
+{
+  std::cout << feat.size() << " Detected points " <<std::endl;
+  for(int i=0; i<feat.size(); ++i)
+  {
+
+    const libmv::SurfFeature & feature = feat[i];
+    const int x = feature.x();
+    const int y = feature.y();
+    const float scale = 2*feature.getScale();
+    //std::cout << i << " " << x << " " << y << " " << feature.getScale() <<std::endl;
+
+    DrawCircle( x, y, scale, im, (unsigned char) 255);
+    const float angle = feature.getOrientation();
+    DrawLine( x, y, x+scale*cos(angle), y+scale*sin(angle), im, (unsigned char) 255);
+  }
+}
+
+
