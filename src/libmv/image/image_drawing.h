@@ -30,7 +30,8 @@ namespace libmv {
 // So it's better the use the Andres method.
 // http://fr.wikipedia.org/wiki/Algorithme_de_tracé_de_cercle_d'Andres.
 template <class Image, class Color>
-void DrawCircle(int x, int y, int radius, Image &im, const Color &col) {
+void DrawCircle(int x, int y, int radius, const Color &col, Image *pim) {
+  Image &im = *pim;
   if (  im.Contains(y + radius, x + radius)
      && im.Contains(y + radius, x - radius)
      && im.Contains(y - radius, x + radius)
@@ -67,7 +68,8 @@ void DrawCircle(int x, int y, int radius, Image &im, const Color &col) {
 
 // Bresenham algorithm
 template <class Image, class Color>
-void DrawLine(int xa, int ya, int xb, int yb, Image &im, const Color &col) {
+void DrawLine(int xa, int ya, int xb, int yb, const Color &col, Image *pim) {
+  Image &im = *pim;
   // TODO(pau): Deal with start and end points outside the image.
   if (!im.Contains(ya, xa) && !im.Contains(yb, xb))
     return;
