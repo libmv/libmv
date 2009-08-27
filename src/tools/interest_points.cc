@@ -74,11 +74,11 @@ void DrawSurfFeatures( Array3Df & im, const libmv::vector<libmv::SurfFeature> & 
     const libmv::SurfFeature & feature = feat[i];
     const int x = feature.x();
     const int y = feature.y();
-    const float scale = 2*feature.getScale();
+    const float scale = 2*feature.scale;
     //std::cout << i << " " << x << " " << y << " " << feature.getScale() <<std::endl;
 
     DrawCircle( x, y, scale, im, (unsigned char) 255);
-    const float angle = feature.getOrientation();
+    const float angle = feature.orientation;
     DrawLine( x, y, x+scale*cos(angle), y+scale*sin(angle), im, (unsigned char) 255);
   }
 }
