@@ -64,12 +64,10 @@ class FundamentalRank2Parameterization {
     // letting the second element roam.
     T s = T(1.0) / (T(1.0) + p[4]*p[4]);
 
-    Matrix<T, 3, 3> S;
-    S << T(1), T(0), T(0),
-         T(0), s,    T(0),
-         T(0), T(0), T(0);
+    Matrix<T, 3, 1> S;
+    S << T(1), s, T(0);
 
-    *f = u.toRotationMatrix() * S * vt.toRotationMatrix();
+    *f = u.toRotationMatrix() * S.asDiagonal() * vt.toRotationMatrix();
   }
 
   // Convert from a F matrix to the 9 parameters.
