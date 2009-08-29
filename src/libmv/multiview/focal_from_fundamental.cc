@@ -164,7 +164,6 @@ T GoldenRatioSearch(const Tf &f, T a, T b, T tol, int max_it) {
   return c;
 }
 
-
 class FocalReprojectionError {
  public:
   FocalReprojectionError(const Mat3 &F,
