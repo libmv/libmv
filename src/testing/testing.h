@@ -84,7 +84,8 @@ do { \
 
 template<class TMat>
 double CosinusBetweenMatrices(const TMat &a, const TMat &b) {
-  return (a.cwise() * b).sum() / FrobeniusNorm(a) / FrobeniusNorm(b);
+  return (a.cwise() * b).sum() / 
+      libmv::FrobeniusNorm(a) / libmv::FrobeniusNorm(b);
 }
 
 #endif  // TESTING_TESTING_H_
