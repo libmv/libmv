@@ -33,34 +33,47 @@
 using namespace libmv;
 using namespace std;
 
+void usage() {
+  LOG(ERROR) << " interest_points ImageNameIn.pgm ImageNameOut.pgm " <<std::endl
+    << " ImageNameIn.pgm  : the input image on which surf features will be extrated, " << std::endl
+    << " ImageNameOut.pgm : the surf keypoints will be displayed on it. " << std::endl
+    << " INFO : work with pgm image only." << std::endl;
+}
 void DrawSurfFeatures( Array3Df & im, const libmv::vector<libmv::SurfFeature> & feat);
 
 int main(int argc, char **argv) {
-  libmv::Init("track a sequence", &argc, &argv);
+  libmv::Init("Extract surf feature from an image", &argc, &argv);
 
-  if (argc != 2) {
-    LOG(ERROR) << "Missing an image.";
+  if (argc != 3 || !(GetFormat(argv[1])==Pnm && GetFormat(argv[2])==Pnm)) {
+    usage();
+    LOG(ERROR) << "Missing parameters or errors in the command line.";
     return 1;
   }
 
-  const string filename = argv[1];
+  // Parse input parameter
+  const string sImageIn = argv[1];
+  const string sImageOut = argv[2];
 
-  Array3Df image;
-  if (!ReadPnm(filename.c_str(), &image)) {
-    LOG(FATAL) << "Failed loading image: " << filename;
+  Array3Du imageIn;
+  if (!ReadPnm(sImageIn.c_str(), &imageIn)) {
+    LOG(FATAL) << "Failed loading image: " << sImageIn;
     return 0;
   }
 
+  Array3Df image;
+  ByteArrayToScaledFloatArray(imageIn, &image);
   // TODO(pmoulon) Assert that the image value is within [0.f;255.f]
-  //for(int j=0; j < image.Height(); ++j)
-  //for(int i=0; i < image.Width(); ++i)
-  //  image(j,i) *=255;
+  for(int j=0; j < image.Height(); ++j)
+  for(int i=0; i < image.Width(); ++i)
+    image(j,i) *=255;
 
   libmv::vector<libmv::SurfFeature> features;
   libmv::SurfFeatures(image, 4, 4, &features);
 
   DrawSurfFeatures(image, features);
-  WritePnm(image, "SurfOutput.pnm");
+  if (!WritePnm(image, sImageOut.c_str())) {
+    LOG(FATAL) << "Failed saving output image: " << sImageOut;
+  }
 
   return 0;
 }
@@ -68,9 +81,8 @@ int main(int argc, char **argv) {
 void DrawSurfFeatures( Array3Df & im, const libmv::vector<libmv::SurfFeature> & feat)
 {
   std::cout << feat.size() << " Detected points " <<std::endl;
-  for(int i=0; i<feat.size(); ++i)
+  for (int i = 0; i < feat.size(); ++i)
   {
-
     const libmv::SurfFeature & feature = feat[i];
     const int x = feature.x();
     const int y = feature.y();
