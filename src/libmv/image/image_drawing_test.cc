@@ -104,7 +104,7 @@ TEST(ImageDrawing, Circle) {
   for ( int j = 0; j < image.Height(); ++j)
   for ( int i = 0; i < image.Width(); ++i) {
     if (image(j, i) == 255)  {
-      const float distance =  sqrt((j-y)*(j-y) + (i-x)*(i-x));
+      const float distance =  sqrt((float)((j-y)*(j-y) + (i-x)*(i-x)));
       EXPECT_NEAR(radius, distance, 1.0f);
       // Due to discretisation we cannot expect better precision
     }
