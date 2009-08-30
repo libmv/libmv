@@ -341,7 +341,6 @@ int ReadPngStream(FILE *file, ByteImage *im) {
   int i, j;
   for (j = 0; j < im->Height(); ++j)
     for (i = 0; i < im->Width(); ++i) {
-      //memcpy(ptr, &row_pointers[j][0], im->Width() * sizeof(unsigned char) );
       *ptr = row_pointers[j][i];
       ptr++;
     }
