@@ -38,29 +38,34 @@ Format GetFormat(const char *c) {
 
   int len = strlen(p);
 
-  if (len != 4) {
-    LOG(ERROR) << "Error: Couldn't open " << c << " Unknown file format";
-    return Unknown;
-  }
+  switch (len) {
+    case 4:
+      if (tolower(p[1]) == 'p' && tolower(p[2]) == 'n' && tolower(p[3]) == 'g')
+        return Png;
 
-  if (tolower(p[1]) == 'p' && tolower(p[2]) == 'n' && tolower(p[3]) == 'g')
-    return Png;
+      if (tolower(p[1]) == 'p' && tolower(p[2]) == 'p' && tolower(p[3]) == 'm')
+        return Pnm;
 
-  if (tolower(p[1]) == 'p' && tolower(p[2]) == 'p' && tolower(p[3]) == 'm')
-    return Pnm;
+      if (tolower(p[1]) == 'p' && tolower(p[2]) == 'g' && tolower(p[3]) == 'm')
+        return Pnm;
 
-  if (tolower(p[1]) == 'p' && tolower(p[2]) == 'g' && tolower(p[3]) == 'm')
-    return Pnm;
+      if (tolower(p[1]) == 'p' && tolower(p[2]) == 'b' && tolower(p[3]) == 'm')
+        return Pnm;
 
-  if (tolower(p[1]) == 'p' && tolower(p[2]) == 'b' && tolower(p[3]) == 'm')
-    return Pnm;
+      if (tolower(p[1]) == 'p' && tolower(p[2]) == 'n' && tolower(p[3]) == 'm')
+        return Pnm;
 
-  if (tolower(p[1]) == 'p' && tolower(p[2]) == 'n' && tolower(p[3]) == 'm')
-    return Pnm;
-
-  if (tolower(p[1]) == 'j' && tolower(p[2]) == 'p' && tolower(p[3]) == 'g')
-    return Jpg;
-
+      if (tolower(p[1]) == 'j' && tolower(p[2]) == 'p' && tolower(p[3]) == 'g')
+        return Jpg;
+      
+      break;
+    case 5:
+      if (tolower(p[1]) == 'j' && tolower(p[2]) == 'p' && tolower(p[3]) == 'e'
+        && tolower(p[4]) == 'g')
+        return Jpg;
+      break;
+  }  
+  
   LOG(ERROR) << "Error: Couldn't open " << c << " Unknown file format";
   return Unknown;
 }
@@ -336,6 +341,7 @@ int ReadPngStream(FILE *file, ByteImage *im) {
   int i, j;
   for (j = 0; j < im->Height(); ++j)
     for (i = 0; i < im->Width(); ++i) {
+      //memcpy(ptr, &row_pointers[j][0], im->Width() * sizeof(unsigned char) );
       *ptr = row_pointers[j][i];
       ptr++;
     }
