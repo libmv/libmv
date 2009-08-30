@@ -90,7 +90,7 @@ inline float GaussianScaleForInterval(float interval,
 
 // Detect features. Each result colum stores x, y, s.
 template<typename TImage, typename TPointFeature>
-void DetectFeatures(const TImage integral_image,
+void DetectFeatures(const TImage &integral_image,
                     int num_intervals,
                     int lobe_start,
                     int lobe_increment,
