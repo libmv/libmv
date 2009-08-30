@@ -29,7 +29,7 @@ namespace {
 
 // Horizontal / Vertical scanlines
 // Assert that pixels was drawn at the good place
-TEST(Image, DrawLine_Scanlines) {
+TEST(ImageDrawing, Scanlines) {
 
   const int w = 10, h = 10;
   Array3Du image(h,w);
@@ -44,7 +44,7 @@ TEST(Image, DrawLine_Scanlines) {
   const int y = 5;
   DrawLine( 0, y, w-1, y, 255, &image);
   for(int i=0; i < w; ++i)
-    ASSERT_EQ( image(y,i), 255);
+    EXPECT_EQ( image(y,i), 255);
 
   image.Fill(0);
 
@@ -56,13 +56,13 @@ TEST(Image, DrawLine_Scanlines) {
   //  |____e|___|
   const int x = 5;
   DrawLine( x, 0, x, h-1, 255, &image);
-  for(int i=0; i < h; ++i)
-    ASSERT_EQ( image(i,y), 255);
+  for (int i = 0; i < h; ++i)
+    EXPECT_EQ(image(i,y), 255);
 }
 
 // Lines with a given angle +/-45°
 // Assert that pixels was drawn at the good place
-TEST(Image, DrawLine_Lines) {
+TEST(ImageDrawing, Lines45) {
 
   const int w = 10, h = 10;
   Array3Du image(h,w);
@@ -73,9 +73,9 @@ TEST(Image, DrawLine_Lines) {
   //  | \ |
   //  |__\|
 
-  DrawLine( 0, 0, w-1, h-1, 255, &image);
-  for(int i=0; i < w; ++i)
-    ASSERT_EQ( image(i,i), 255);
+  DrawLine(0, 0, w-1, h-1, 255, &image);
+  for (int i = 0; i < w; ++i)
+    EXPECT_EQ(image(i,i), 255);
 
   image.Fill(0);
 
@@ -83,14 +83,14 @@ TEST(Image, DrawLine_Lines) {
   //  |  / |
   //  | /  |
   //  |/___|_
-  DrawLine( 0, h-1, w-1, 0, 255, &image);
-  for(int i=0; i < h; ++i)
-    ASSERT_EQ( image(h-1-i,i), 255);
+  DrawLine(0, h-1, w-1, 0, 255, &image);
+  for (int i = 0; i < h; ++i)
+    EXPECT_EQ(image(h-1-i,i), 255);
 }
 
 // Draw a circle in an image and assert that all the points are
 // at a distance equal to the radius.
-TEST(Image, CircleDrawing) {
+TEST(ImageDrawing, Circle) {
 
   Array3Du image(10,10);
   image.Fill(0);
@@ -101,11 +101,11 @@ TEST(Image, CircleDrawing) {
   DrawCircle(x, y, radius, (unsigned char)255, &image);
 
   // Distance checking :
-  for(int j=0; j<image.Height(); ++j)
-  for(int i=0; i<image.Width(); ++i) {
-    if( image(j,i) == 255 )  {
-      const float distance =  sqrt( (j-y)*(j-y) + (i-x)*(i-x) );
-      EXPECT_NEAR( radius, distance, 1.0f);
+  for ( int j = 0; j < image.Height(); ++j)
+  for ( int i = 0; i < image.Width(); ++i) {
+    if (image(j, i) == 255)  {
+      const float distance =  sqrt((j-y)*(j-y) + (i-x)*(i-x));
+      EXPECT_NEAR(radius, distance, 1.0f);
       // Due to discretisation we cannot expect better precision
     }
   }
