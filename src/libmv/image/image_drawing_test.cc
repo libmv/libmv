@@ -25,8 +25,6 @@
 
 using namespace libmv;
 
-namespace {
-
 // Horizontal / Vertical scanlines
 // Assert that pixels was drawn at the good place
 TEST(ImageDrawing, Scanlines) {
@@ -109,6 +107,4 @@ TEST(ImageDrawing, Circle) {
       // Due to discretisation we cannot expect better precision
     }
   }
-}
-
 }
