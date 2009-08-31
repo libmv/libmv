@@ -142,7 +142,7 @@ void TvrMainWindow::CreateMenus() {
 void TvrMainWindow::OpenImages() {
   QStringList filenames = QFileDialog::getOpenFileNames(this,
       "Select Two Images", "",
-      "Image Files (*.png *.jpg *.bmp *.ppm *.pgm *.xpm)");
+      "Image Files (*.png *.jpg *.bmp *.ppm *.pgm *.xpm *.tif)");
 
   if (filenames.size() == 2) {
     for (int i = 0; i < 2; ++i) {
