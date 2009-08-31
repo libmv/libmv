@@ -30,41 +30,29 @@
 
 namespace libmv {
 
+static bool CmpFormatExt(const char *a, const char *b) {
+  int len_a = strlen(a);
+  int len_b = strlen(b);
+  if (len_a != len_b) return false;
+  for (int i = 0; i < len_a; ++i)
+    if (tolower(a[i]) != tolower(b[i]))
+      return false;
+  return true;
+}
+
 Format GetFormat(const char *c) {
   const char *p = strrchr (c, '.');
 
   if (p == NULL)
     return Unknown;
 
-  int len = strlen(p);
-
-  switch (len) {
-    case 4:
-      if (tolower(p[1]) == 'p' && tolower(p[2]) == 'n' && tolower(p[3]) == 'g')
-        return Png;
-
-      if (tolower(p[1]) == 'p' && tolower(p[2]) == 'p' && tolower(p[3]) == 'm')
-        return Pnm;
-
-      if (tolower(p[1]) == 'p' && tolower(p[2]) == 'g' && tolower(p[3]) == 'm')
-        return Pnm;
-
-      if (tolower(p[1]) == 'p' && tolower(p[2]) == 'b' && tolower(p[3]) == 'm')
-        return Pnm;
-
-      if (tolower(p[1]) == 'p' && tolower(p[2]) == 'n' && tolower(p[3]) == 'm')
-        return Pnm;
-
-      if (tolower(p[1]) == 'j' && tolower(p[2]) == 'p' && tolower(p[3]) == 'g')
-        return Jpg;
-      
-      break;
-    case 5:
-      if (tolower(p[1]) == 'j' && tolower(p[2]) == 'p' && tolower(p[3]) == 'e'
-        && tolower(p[4]) == 'g')
-        return Jpg;
-      break;
-  }  
+  if (CmpFormatExt(p, ".png")) return Png;
+  if (CmpFormatExt(p, ".ppm")) return Pnm;
+  if (CmpFormatExt(p, ".pgm")) return Pnm;
+  if (CmpFormatExt(p, ".pbm")) return Pnm;
+  if (CmpFormatExt(p, ".pnm")) return Pnm;
+  if (CmpFormatExt(p, ".jpg")) return Jpg;
+  if (CmpFormatExt(p, ".jpeg")) return Jpg;
   
   LOG(ERROR) << "Error: Couldn't open " << c << " Unknown file format";
   return Unknown;
