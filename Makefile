@@ -18,6 +18,8 @@ test : debug
 test-release : release
 	cd bin-opt && ctest
 
+documentation :
+	doxygen Doxyfile
 
 kdevelop :
 	mkdir -p kdevelop-pro
