@@ -58,6 +58,13 @@ class vector {
     return *this;
   }
 
+  /// Swaps the contents of two vectors in constant time.
+  void swap(vector<T, Allocator> &other) {
+    std::swap(allocator_, other.allocator_);
+    std::swap(size_, other.size_);
+    std::swap(capacity_, other.capacity_);
+    std::swap(data_, other.data_);
+  }
 
   int      size()            const { return size_;            }
   int      capacity()        const { return capacity_;        }

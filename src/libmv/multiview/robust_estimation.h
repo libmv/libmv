@@ -118,7 +118,7 @@ typename Kernel::Model Estimate(const Kernel &kernel,
         best_num_inliers = inliers.size();
         best_model = models[i];
         if (best_inliers) {
-          *best_inliers = inliers;
+          best_inliers->swap(inliers);
         }
         VLOG(2) << "New best cost: " << best_cost << " with "
                 << best_num_inliers << " inlying of "

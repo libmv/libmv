@@ -207,4 +207,17 @@ TEST_F(VectorTest, STLFind) {
   EXPECT_EQ( std::find( a.begin(), a.end(), 52 ) == a.end(), true);
 }
 
+TEST(Vector, swap) {
+  vector<int> a, b;
+  a.push_back(1);
+  a.push_back(2);
+  b.push_back(3);
+  a.swap(b);
+  EXPECT_EQ(1, a.size());
+  EXPECT_EQ(3, a[0]);
+  EXPECT_EQ(2, b.size());
+  EXPECT_EQ(1, b[0]);
+  EXPECT_EQ(2, b[1]);
+}
+
 }  // namespace
