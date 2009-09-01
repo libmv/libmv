@@ -253,7 +253,11 @@ void TvrMainWindow::ComputeFeatures(int image_index) {
   libmv::SurfFeatures(image, 3, 4, &fs.features);
 
   // Build the kd-tree.
-  fs.tree.Build(&fs.features[0], fs.features.size(), 64, 10);
+  fs.tree.SetDimensions(64);
+  for (int i = 0; i < fs.features.size(); ++i) {
+    fs.tree.AddPoint(&fs.features[i].descriptor[0], i);
+  }
+  fs.tree.Build(10);
 
   UpdateViewers();
 }

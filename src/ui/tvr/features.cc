@@ -31,12 +31,13 @@ void FindCandidateMatches(const SurfFeatureSet &left,
                           libmv::Matches *matches) {
   int max_track_number = 0;
   for (size_t i = 0; i < left.features.size(); ++i) {
-    size_t j, k;
+    int j, k;
     float distance; 
-    right.tree.ApproximateNearestNeighborBestBinFirst(left.features[i],
-                                                      100, &j, &distance);
-    left.tree.ApproximateNearestNeighborBestBinFirst(right.features[j],
-                                                     100, &k, &distance);
+    right.tree.ApproximateNearestNeighborBestBinFirst(
+        left.features[i].descriptor.data(), 300, &j, &distance);
+    left.tree.ApproximateNearestNeighborBestBinFirst(
+        right.features[j].descriptor.data(), 300, &k, &distance);
+    
     // Left image is image 0, right is 1 for now.
     if (i == k) {
       // Both kdtrees matched the same feature, so it is probably a match.

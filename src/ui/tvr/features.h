@@ -30,7 +30,7 @@
 
 struct SurfFeatureSet {
   libmv::vector<libmv::SurfFeature> features;
-  libmv::KdTree<libmv::SurfFeature, float> tree;
+  libmv::KdTree<float> tree;
 };
 
 // Compute candidate matches between 2 sets of features.  Two features a and b
