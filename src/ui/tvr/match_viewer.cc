@@ -42,10 +42,10 @@ MatchViewer::MatchViewer(QGLWidget *share, GLTexture *textures, QWidget *parent)
   ty = 0;
   zoom = 1;
   InitTextures();
-  
+
   connect(parent, SIGNAL(GLUpdateNeeded()), this, SLOT(GLUpdate()));
   connect(parent, SIGNAL(TextureChanged()), this, SLOT(TextureChange()));
-  
+
   setWindowTitle("2D View");
 }
 
@@ -103,7 +103,7 @@ void MatchViewer::SetUpGlCamera() {
 void MatchViewer::DrawImage(int i) {
   assert(document_);
   assert(!document_->images[i].isNull());
-  
+
   if (textures_[i].textureID) {
     OnScreenImage &si = screen_images_[i];
 
@@ -130,7 +130,7 @@ void MatchViewer::DrawImage(int i) {
 void MatchViewer::DrawFeatures(int image_index) {
   //libmv::vector<libmv::SurfFeature> &features =
   //    document_->feature_sets[image_index].features;
-  
+
   for (Matches::Points r =
       document_->matches.InImage<PointFeature>(image_index); r; ++r) {
     glPushMatrix();
@@ -155,7 +155,7 @@ void MatchViewer::DrawFeatures(int image_index) {
 void MatchViewer::DrawCandidateMatches() {
   float xoff[2] = { screen_images_[0].posx, screen_images_[1].posx};
   float yoff[2] = { screen_images_[0].posy, screen_images_[1].posy};
-  
+
   glBegin(GL_LINES);  // TODO(keir): Note that this will break with > 2 images.
   for (Matches::Points r =
       document_->matches.AllReversed<PointFeature>(); r; ++r) {
@@ -176,7 +176,8 @@ void MatchViewer::paintGL() {
 }
 
 bool MatchViewer::TexturesInited() {
-  return textures_[0].textureID && textures_[1].textureID;
+  return textures_[0].textureID && textures_[1].textureID
+    && glIsTexture(textures_[0].textureID) && glIsTexture(textures_[1].textureID);
 }
 
 void MatchViewer::InitTextures() {
@@ -188,7 +189,7 @@ void MatchViewer::InitTextures() {
 
 void MatchViewer::InitTexture(int index) {
   OnScreenImage &oi = screen_images_[index];
-  
+
   if (index == 0) {
     oi.posx = 0;
     oi.posy = 0;
@@ -212,12 +213,12 @@ int MatchViewer::ImageUnderPointer(QMouseEvent *event) {
       return i;
     }
   }
-  return -1; 
+  return -1;
 }
 
 void MatchViewer::mousePressEvent(QMouseEvent *event) {
   lastPos = event->pos();
-  
+
   // Set mouse drag behavior.
   mouse_drag_behavior_ = NONE;
   if (event->modifiers() & Qt::ShiftModifier) {
@@ -244,7 +245,7 @@ void MatchViewer::mouseMoveEvent(QMouseEvent *event) {
       updateGL();
     } else if (mouse_drag_behavior_ == MOVE_VIEW) {
       // Move view.
-      SetTransformation(tx + x0 - x1, ty + y0 - y1, zoom); 
+      SetTransformation(tx + x0 - x1, ty + y0 - y1, zoom);
     }
   }
   lastPos = event->pos();
