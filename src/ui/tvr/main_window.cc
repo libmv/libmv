@@ -40,7 +40,7 @@ using libmv::vector;
 
 TvrMainWindow::TvrMainWindow(QWidget *parent)
   : QMainWindow(parent) {
-  
+
   CreateActions();
   CreateMenus();
 
@@ -50,8 +50,19 @@ TvrMainWindow::TvrMainWindow(QWidget *parent)
   setCentralWidget(viewers_area_);
   Show2DView();
   viewers_area_->currentSubWindow()->showMaximized();
-  
+
   setWindowTitle("TVR");
+
+  // Be sure that opengl Is valid on the machine.
+  if( !context_.isValid() )
+    QMessageBox::information(this, tr("TVR"), tr("QGL not valid"));
+
+  if(!QGLFormat::hasOpenGL())
+    QMessageBox::information(this, tr("TVR"),
+      tr("This system has no OpenGL support."));
+
+  QMainWindow::statusBar()->showMessage(
+    "Ready, welcome in TVR. First open images and use the menus");
 }
 
 TvrMainWindow::~TvrMainWindow() {
@@ -81,19 +92,19 @@ void TvrMainWindow::CreateActions() {
   save_blender_action_->setStatusTip(tr("Save Scene as a Blender Script"));
   connect(save_blender_action_, SIGNAL(triggered()),
           this, SLOT(SaveBlender()));
-  
+
   compute_features_action_ = new QAction(tr("&Compute Features"), this);
   compute_features_action_->setStatusTip(tr("Compute Surf Features"));
   connect(compute_features_action_, SIGNAL(triggered()),
           this, SLOT(ComputeFeatures()));
-  
+
   compute_candidate_matches_action_ =
       new QAction(tr("&Compute Candidate Matches"), this);
   compute_candidate_matches_action_->setStatusTip(
       tr("Compute Candidate Matches"));
   connect(compute_candidate_matches_action_, SIGNAL(triggered()),
           this, SLOT(ComputeCandidateMatches()));
-  
+
   compute_robust_matches_action_ = new QAction(tr("&Compute Robust Matches"),
                                                this);
   compute_robust_matches_action_->setStatusTip(tr("Compute Robust Matches"));
@@ -142,7 +153,7 @@ void TvrMainWindow::CreateMenus() {
 void TvrMainWindow::OpenImages() {
   QStringList filenames = QFileDialog::getOpenFileNames(this,
       "Select Two Images", "",
-      "Image Files (*.png *.jpg *.bmp *.ppm *.pgm *.xpm *.tif)");
+      "Image Files (*.png *.jpg *.jpeg *.bmp *.ppm *.pgm *.xpm *.tif *.tiff)");
 
   if (filenames.size() == 2) {
     for (int i = 0; i < 2; ++i) {
@@ -166,6 +177,10 @@ void TvrMainWindow::SaveBlender() {
   if(filename.isNull())
     return;
   document_.SaveAsBlender(filename.toAscii().data());
+
+  // Display information to the user.
+  QMainWindow::statusBar()->showMessage(
+    "Scenes correctly exported as Blender script file : " + filename);
 }
 
 void TvrMainWindow::Show2DView() {
@@ -192,6 +207,11 @@ void TvrMainWindow::InitTextures() {
     InitTexture(i);
   }
   emit TextureChanged();
+  if( glIsTexture(textures_[0].textureID)
+      && glIsTexture(textures_[1].textureID) )
+    // Display information to the user.
+    QMainWindow::statusBar()->showMessage(
+      "Texture images were created succefully.");
 }
 
 void TvrMainWindow::InitTexture(int index) {
@@ -200,7 +220,7 @@ void TvrMainWindow::InitTexture(int index) {
   if (im.isNull()) return;
 
   glGenTextures(1, &textures_[index].textureID);
-  
+
   textures_[index].width = im.width();
   textures_[index].height = im.height();
 
@@ -220,19 +240,34 @@ void TvrMainWindow::InitTexture(int index) {
   // build our texture mipmaps
   gluBuild2DMipmaps(GL_TEXTURE_2D, GL_RGBA, textures_[index].width,
       textures_[index].height, GL_RGBA, GL_UNSIGNED_BYTE, im.bits());
+
+  if( !glIsTexture(textures_[index].textureID) )
+    QMessageBox::information(this, tr("TVR"), tr("Failed to create the texture"));
 }
 
 void TvrMainWindow::ComputeFeatures() {
   for (int i = 0; i < 2; ++i) {
     ComputeFeatures(i);
   }
+
+  // Display information to the user.
+  QMainWindow::statusBar()->showMessage(QString(" Number of features found : ")
+    + "Image 0 : "
+    + QString::number(document_.feature_sets[0].features.size())
+    + " , Image 1 : "
+    + QString::number(document_.feature_sets[1].features.size()));
 }
-  
+
 void TvrMainWindow::ComputeFeatures(int image_index) {
+
+  // Display information to the user.
+  QMainWindow::statusBar()->showMessage("Start : ComputeFeatures for image : "
+    + QString::number(image_index) );
+
   QImage &qimage = document_.images[image_index];
   int width = qimage.width(), height = qimage.height();
   SurfFeatureSet &fs = document_.feature_sets[image_index];
-      
+
   // Convert to gray-scale.
   // TODO(keir): Make a libmv image <-> QImage interop library inside libmv for
   // easy bidirectional exchange of images between Qt and libmv.
@@ -242,7 +277,7 @@ void TvrMainWindow::ComputeFeatures(int image_index) {
       // TODO(pau): there are better ways to compute intensity.
       //            Implement one and put it on libmv/image.
       int depth = qimage.depth() / 8;
-      int bands = depth == 4 ? 3 : depth;  // Skip alpha channel for RGBA.
+      int bands = (depth == 4) ? 3 : depth;  // Skip alpha channel for RGBA.
       int sum = 0;
       for (int c = 0; c < bands; ++c) {
         sum += qimage.bits()[depth*(y * width + x) + c];
@@ -252,6 +287,10 @@ void TvrMainWindow::ComputeFeatures(int image_index) {
   }
   libmv::SurfFeatures(image, 3, 4, &fs.features);
 
+  // Display information to the user.
+  QMainWindow::statusBar()->showMessage("Start : Build kd-Tree for image : "
+   + QString::number(image_index) );
+
   // Build the kd-tree.
   fs.tree.SetDimensions(64);
   for (int i = 0; i < fs.features.size(); ++i) {
@@ -260,30 +299,52 @@ void TvrMainWindow::ComputeFeatures(int image_index) {
   fs.tree.Build(10);
 
   UpdateViewers();
+
+  // Display information to the user.
+  QMainWindow::statusBar()->showMessage("End : ComputeFeatures for image : "
+   + QString::number(image_index) );
 }
 
 void TvrMainWindow::ComputeCandidateMatches() {
+  // Display information to the user.
+  QMainWindow::statusBar()->showMessage("Start : ComputeCandidateMatches");
+
   FindCandidateMatches(document_.feature_sets[0],
                        document_.feature_sets[1],
                        &document_.matches);
   UpdateViewers();
+
+  // Display information to the user.
+  QMainWindow::statusBar()->showMessage("End : ComputeCandidateMatches found : "
+        + QString::number(document_.matches.NumTracks()) + " matches");
 }
 
 void TvrMainWindow::ComputeRobustMatches() {
+  // Display information to the user.
+  QMainWindow::statusBar()->showMessage("Start : ComputeRobustMatches");
+
   libmv::Matches new_matches;
 
   ComputeFundamental(document_.matches,
                      &document_.F, &new_matches);
-  
+  const int nbPointsBefore = document_.matches.NumTracks();
+  const int nbPointsAfter = new_matches.NumTracks();
   // TODO(pau) Make sure this is not copying too many things.  We could
   //           implement an efficient swap for the biparted graph (just swaping
   //           the maps), or remove outlier tracks from the candidate matches
   //           instead of constructing a new correspondance set.
   std::swap(document_.matches, new_matches);
   UpdateViewers();
+
+
+  QMainWindow::statusBar()->showMessage("End : ComputeRobustMatches : "
+    + QString::number(nbPointsAfter) + " inliers "
+    + QString::number(nbPointsBefore-nbPointsAfter) + " outliers found ");
 }
 
 void TvrMainWindow::FocalFromFundamental() {
+  QMainWindow::statusBar()->showMessage("Start : FocalFromFundamental");
+
   vector<Mat> xs;
   TwoViewPointMatchMatrices(document_.matches, 0, 1, &xs);
   Mat &x1 = xs[0];
@@ -293,7 +354,7 @@ void TvrMainWindow::FocalFromFundamental() {
                  (document_.images[0].height() - 1) / 2.);
   libmv::Vec2 p1((document_.images[1].width() - 1) / 2.,
                  (document_.images[1].height() - 1) / 2.);
-  
+
   bool use_hartleys_method = false;
   if (use_hartleys_method) {
     libmv::FocalFromFundamental(document_.F, p0, p1,
@@ -312,17 +373,23 @@ void TvrMainWindow::FocalFromFundamental() {
                                           100,
                                           &document_.focal_distance[0]);
     document_.focal_distance[1] = document_.focal_distance[0];
-    
+
     LOG(INFO) << "focal: " << document_.focal_distance[0]
               << "pix    35mm equiv: " << document_.focal_distance[0]
                                           * sensor_width_mm / width_pix
               << "\n";
   }
-  
+
   UpdateViewers();
+
+  QMainWindow::statusBar()->showMessage(QString("End : FocalFromFundamental. ")
+    + "Focal (pix) estimated to : " + QString::number(document_.focal_distance[0])
+    + "for Image 0 and to : " + QString::number(document_.focal_distance[1])
+    + "for Image 1." );
 }
 
 void TvrMainWindow::MetricReconstruction() {
+  QMainWindow::statusBar()->showMessage("Start : MetricReconstruction");
   using namespace libmv;
 
   Vec2 p0((document_.images[0].width() - 1) / 2.,
@@ -338,7 +405,7 @@ void TvrMainWindow::MetricReconstruction() {
   K1 << f1,  0, p1(0),
          0, f1, p1(1),
          0,  0,     1;
-  
+
   // Compute essential matrix
   Mat3 E;
   EssentialFromFundamental(document_.F, K0, K1, &E);
@@ -348,7 +415,7 @@ void TvrMainWindow::MetricReconstruction() {
   TwoViewPointMatchMatrices(document_.matches, 0, 1, &xs);
   Mat &x0 = xs[0];
   Mat &x1 = xs[1];
-    
+
   // Recover R, t from E and K
   Mat3 R;
   Vec3 t;
@@ -367,7 +434,7 @@ void TvrMainWindow::MetricReconstruction() {
   vector<Mat34> Ps(2);
   P_From_KRt(document_.K[0], document_.R[0], document_.t[0], &Ps[0]);
   P_From_KRt(document_.K[1], document_.R[1], document_.t[1], &Ps[1]);
-  
+
   int n = x0.cols();
   document_.X.resize(n);
   document_.X_colors.resize(n);
@@ -378,18 +445,20 @@ void TvrMainWindow::MetricReconstruction() {
     Vec4 X;
     NViewTriangulate(x, Ps, &X);
     document_.X[i] = libmv::HomogeneousToEuclidean(X);
-    
+
     // Get 3D point color from first image.
     QRgb rgb = document_.images[0].pixel(int(round(x0(0,i))),
                                          int(round(x0(1,i))));
     document_.X_colors[i] << qBlue(rgb), qGreen(rgb), qRed(rgb);
     document_.X_colors[i] /= 255;
   }
+  QMainWindow::statusBar()->showMessage("End : MetricReconstruction");
 }
 
 void TvrMainWindow::MetricBundle() {
+  QMainWindow::statusBar()->showMessage("Start : MetricBundle");
   using namespace libmv;
-  
+
   std::vector<Mat3> K(2);
   std::vector<Mat3> R(2);
   std::vector<Vec3> t(2);
@@ -404,24 +473,26 @@ void TvrMainWindow::MetricBundle() {
   for (int i = 0; i < 2; ++i) {
     x[i] = xs[i];
   }
-  
+
   Mat3X X(3, document_.X.size());
   for (int i = 0; i < X.cols(); ++i) {
     X.col(i) = document_.X[i];
   }
   assert(x[0].cols() == X.cols());
   assert(x[1].cols() == X.cols());
-  
+
   EuclideanBAFull(x, &K, &R, &t, &X);                 // Run BA.
-  
+
   for (int i = 0; i < 2; ++i) {
     document_.K[i] = K[i];
     document_.R[i] = R[i];
     document_.t[i] = t[i];
   }
   for (int i = 0; i < X.cols(); ++i) {
-    document_.X[i] = X.col(i); 
+    document_.X[i] = X.col(i);
   }
+  //TODO(pmoulon) : Display residuals before and after bundle adjustment)
+  QMainWindow::statusBar()->showMessage("End : MetricBundle");
 }
 
 void TvrMainWindow::UpdateViewers() {
