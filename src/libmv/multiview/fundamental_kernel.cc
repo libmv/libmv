@@ -39,7 +39,7 @@ void SevenPointSolver::Solve(const Mat &x1, const Mat &x2, vector<Mat3> *F) {
   assert(x1.cols() == x2.cols());
  
   // Set up the homogeneous system Af = 0 from the equations x'T*F*x = 0.
-  Matrix<double, 7, 9> A;
+  MatX9 A(x1.cols(), 9);
   EncodeEpipolarEquation(x1, x2, &A);
  
   // Find the two F matrices in the nullspace of A.
