@@ -34,7 +34,7 @@ namespace kernel {
 
 void SevenPointSolver::Solve(const Mat &x1, const Mat &x2, vector<Mat3> *F) {
   assert(2 == x1.rows());
-  assert(7 == x1.cols());
+  assert(7 <= x1.cols());
   assert(x1.rows() == x2.rows());
   assert(x1.cols() == x2.cols());
  
