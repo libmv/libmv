@@ -84,4 +84,35 @@ TYPED_TEST(HomographyKernelTest, Fitting) {
   }
 }
 
+#if 0
+// Test that make SVD fall into an infinite loop.
+// This test is here to be make a test case for the Eigen team.
+// This test must not be active until SVD code is fixed.
+TYPED_TEST(HomographyKernelTest, Fitting2) {
+
+  Mat x(2, 4);
+  x <<  54, 203, 69, 137,
+        89, 60, 71, 104;
+
+  Mat y(2, 4);
+  x <<  54, 201,  69, 136,
+        87, 60,   70, 105;
+
+  vector<int> samples;
+  samples.push_back(0);
+  samples.push_back(1);
+  samples.push_back(2);
+  samples.push_back(3);
+
+  TypeParam kernel(x, y);
+
+  vector<Mat3> Hs;
+  kernel.Fit(samples, &Hs);
+
+  Mat res = Hs[0] * Vec3(54,89,1);
+  std::cout << std::endl << "Fitting2" << std::endl << res/res(2);
+}
+#endif
+
+
 }  // namespace
