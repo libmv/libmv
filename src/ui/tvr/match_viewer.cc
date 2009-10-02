@@ -195,7 +195,7 @@ void MatchViewer::InitTexture(int index) {
     oi.posy = 0;
   } else {
     OnScreenImage &prev = screen_images_[index - 1];
-    oi.posx = prev.posx + textures_[index].width + 10;
+    oi.posx = prev.posx + textures_[index-1].width + 10;
     oi.posy = prev.posy;
   }
 }
