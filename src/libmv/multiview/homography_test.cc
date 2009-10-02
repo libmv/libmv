@@ -56,7 +56,7 @@ TEST(Homography, HomographyFromCorrespondencesLinearRobust) {
     Mat y;
     HomogeneousToEuclidean(yh, &y);
 
-    // Inroduce outliers.
+    // Introduce outliers.
     for (int j = 0; j < 8; j++) {
       x(0,j) = x(0,j) + j * 5.5;
       x(1,j) = x(1,j) + 7.8;
