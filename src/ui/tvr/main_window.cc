@@ -54,10 +54,10 @@ TvrMainWindow::TvrMainWindow(QWidget *parent)
   setWindowTitle("TVR");
 
   // Be sure that opengl Is valid on the machine.
-  if( !context_.isValid() )
+  if (!context_.isValid())
     QMessageBox::information(this, tr("TVR"), tr("QGL not valid"));
 
-  if(!QGLFormat::hasOpenGL())
+  if (!QGLFormat::hasOpenGL())
     QMessageBox::information(this, tr("TVR"),
       tr("This system has no OpenGL support."));
 
@@ -174,7 +174,7 @@ void TvrMainWindow::OpenImages() {
 void TvrMainWindow::SaveBlender() {
   QString filename = QFileDialog::getSaveFileName(this,
       "Save as Blender Script", "", "Blender Python Script (*.py)");
-  if(filename.isNull())
+  if (filename.isNull())
     return;
   document_.SaveAsBlender(filename.toAscii().data());
 
@@ -207,7 +207,7 @@ void TvrMainWindow::InitTextures() {
     InitTexture(i);
   }
   emit TextureChanged();
-  if( glIsTexture(textures_[0].textureID)
+  if (glIsTexture(textures_[0].textureID)
       && glIsTexture(textures_[1].textureID) )
     // Display information to the user.
     QMainWindow::statusBar()->showMessage(
@@ -241,11 +241,18 @@ void TvrMainWindow::InitTexture(int index) {
   gluBuild2DMipmaps(GL_TEXTURE_2D, GL_RGBA, textures_[index].width,
       textures_[index].height, GL_RGBA, GL_UNSIGNED_BYTE, im.bits());
 
-  if( !glIsTexture(textures_[index].textureID) )
+  if (!glIsTexture(textures_[index].textureID))
     QMessageBox::information(this, tr("TVR"), tr("Failed to create the texture"));
 }
 
 void TvrMainWindow::ComputeFeatures() {
+
+  if (textures_[0].textureID==0 || textures_[1].textureID==0) {
+      QMessageBox::information(this, tr("TVR"),
+      tr("No images were loaded."));
+    return;
+  }
+
   for (int i = 0; i < 2; ++i) {
     ComputeFeatures(i);
   }
@@ -320,6 +327,13 @@ void TvrMainWindow::ComputeCandidateMatches() {
 }
 
 void TvrMainWindow::ComputeRobustMatches() {
+
+  if (document_.matches.NumTracks() == 0)  {
+    QMessageBox::information(this, tr("TVR"),
+      tr("Cannot compute Robust Matches.\nNo putative matches for robust test."));
+    return;
+  }
+
   // Display information to the user.
   QMainWindow::statusBar()->showMessage("Start : ComputeRobustMatches");
 
@@ -343,6 +357,13 @@ void TvrMainWindow::ComputeRobustMatches() {
 }
 
 void TvrMainWindow::FocalFromFundamental() {
+
+  if (document_.matches.NumTracks() == 0)  {
+    QMessageBox::information(this, tr("TVR"),
+      tr("Cannot compute Focal from Fundamental.\nFundamental was not computed."));
+    return;
+  }
+
   QMainWindow::statusBar()->showMessage("Start : FocalFromFundamental");
 
   vector<Mat> xs;
@@ -389,6 +410,14 @@ void TvrMainWindow::FocalFromFundamental() {
 }
 
 void TvrMainWindow::MetricReconstruction() {
+
+  if (document_.matches.NumTracks() == 0)  {
+    QMessageBox::information(this, tr("TVR"),
+      tr("Cannot compute Metric reconstruction."\
+      "\nGeometric correspondence list is empty."));
+    return;
+  }
+
   QMainWindow::statusBar()->showMessage("Start : MetricReconstruction");
   using namespace libmv;
 
@@ -456,6 +485,14 @@ void TvrMainWindow::MetricReconstruction() {
 }
 
 void TvrMainWindow::MetricBundle() {
+
+  if (document_.matches.NumTracks() == 0)  {
+    QMessageBox::information(this, tr("TVR"),
+      tr("Cannot compute Metric bundle adjustement."\
+      "\nGeometric correspondence list is empty."));
+    return;
+  }
+
   QMainWindow::statusBar()->showMessage("Start : MetricBundle");
   using namespace libmv;
 
