@@ -170,7 +170,7 @@ class KdTree {
     nodes_.resize((1 << num_levels_) - 1);
     
     // Recursively create the nodes.
-    CreateNode(0, &points_[0], &points_[points_.size()]);
+    CreateNode(0, &points_[0], &points_[0]+points_.size());
   }
 
   int NumNodes() const { return nodes_.size(); }
