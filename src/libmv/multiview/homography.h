@@ -26,8 +26,8 @@
 
 namespace libmv {
   
-/** 
- * \brief Computes the homography that transforms x to y using RANSAC.
+/**
+ * Computes the homography that transforms x to y using RANSAC.
  * 
  * \param[in]  x  A 2xN matrix of column vectors.
  * \param[in]  y  A 2xN matrix of column vectors.
@@ -49,7 +49,7 @@ void HomographyFromCorrespondencesLinearRobust(const Mat &x,
                                                vector<int> *inliers);
 
 /**
- * \brief Squared Euclidean distance between y and H x.
+ * Squared Euclidean distance between y and H x.
  * 
  * \param[in] H  An homography matrix.
  * \param[in] x  A point in Euclidean coordinates.

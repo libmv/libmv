@@ -25,7 +25,9 @@
 
 namespace libmv {
 
-// Abstract base classs for features.
+/**
+ * Abstract base class for features.
+ */
 class Feature {
  public:
   virtual ~Feature();
