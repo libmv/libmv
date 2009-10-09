@@ -147,8 +147,10 @@ class KdTree {
   
   /**
    * Add a point to the tree with a given id.
+   * 
    *  \param data A pointer to the raw point data.
    *  \param id   The id of the point.  Used to identify the search results.
+   * 
    * Points can not be added once the tree is built.
    */
   void AddPoint(const Scalar *data, Id id) {
@@ -170,7 +172,7 @@ class KdTree {
     nodes_.resize((1 << num_levels_) - 1);
     
     // Recursively create the nodes.
-    CreateNode(0, &points_[0], &points_[0]+points_.size());
+    CreateNode(0, &points_.front(), &points_.back() + 1);
   }
 
   int NumNodes() const { return nodes_.size(); }
@@ -184,9 +186,11 @@ class KdTree {
     }
   }
 
-  // Finds the nearest neighbors of query using the best bin first strategy.
-  // It stops searching when it's found, or when it has explored max_leafs
-  // leafs.  Returns the number of explored leafs.
+  /**
+   * Finds the nearest neighbors of query using the best bin first strategy.
+   * It stops searching when it's found, or when it has explored max_leafs
+   * leafs.  Returns the number of explored leafs.
+   */
   int ApproximateNearestNeighborBestBinFirst(const Scalar *query,
                                              int max_leafs,
                                              Id *nearest_neigbor_id,
@@ -198,10 +202,11 @@ class KdTree {
     return leafs;
   }
 
-  // Finds the k nearest neighbors of query using the best bin first strategy.
-  // It stops searching when the knn are found, or when it has explored
-  // max_leafs leafs.  Returns the number of explored leafs.
-  //
+  /**
+   * Finds the k nearest neighbors of query using the best bin first strategy.
+   * It stops searching when the knn are found, or when it has explored
+   * max_leafs leafs.  Returns the number of explored leafs.
+   */
   // TODO(pau): put a reference to Mount's paper.
   int ApproximateKnnBestBinFirst(const Scalar *query,
                                  int max_leafs,
