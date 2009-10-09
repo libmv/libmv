@@ -1,0 +1,10 @@
+Project: Daisy
+URL: http://cvlab.epfl.ch/~tola/daisy.html
+License: BSD
+Upstream version: 1.8.0, released 18-August-2009
+
+Local modifications:
+* Remove native makefile original build system.
+* Remove Doxyfile file.
+% Remove change.log => http://cvlab.epfl.ch/~tola/research/08/daisy/change.log
+
