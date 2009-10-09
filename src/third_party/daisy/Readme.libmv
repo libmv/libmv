@@ -6,5 +6,10 @@ Upstream version: 1.8.0, released 18-August-2009
 Local modifications:
 * Remove native makefile original build system.
 * Remove Doxyfile file.
-% Remove change.log => http://cvlab.epfl.ch/~tola/research/08/daisy/change.log
+* Remove change.log => http://cvlab.epfl.ch/~tola/research/08/daisy/change.log
+
+* Code changes :
+* include/kutility/math.h => unused fonction parameter fix.
+* src/daisy.cpp => error compilation fix display function usage with a 2D array.
+* src/image_manipulation.cpp => Add preprocessor to avoid omp compilation directive to be in all compilation mode.
 

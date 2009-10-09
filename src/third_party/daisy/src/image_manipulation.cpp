@@ -67,8 +67,9 @@ namespace kutility
 
       int y, x, ynw;
       double ny, nx;
-
+#ifdef USE_OPENMP
       #pragma omp parallel for private( y, x, ny, nx, ynw )
+#endif
       for( y=0; y<nh; y++ )
       {
          ny = y * ratioy;

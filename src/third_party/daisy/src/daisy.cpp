@@ -194,7 +194,7 @@ void daisy::compute_grid_points()
    if( m_verbosity > 2 )
    {
       cout<<"[daisy] grid points:";
-      display( m_grid_points, m_grid_point_number, 2 );
+      display( &m_grid_points[0][0], m_grid_point_number, 2 );
    }
    compute_oriented_grid_points();
 }
