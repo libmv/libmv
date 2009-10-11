@@ -83,21 +83,35 @@ typedef Structure;
 //     Need fast "Image has Camera?" query.
 //   
 
-class Reconstruction {
-  typedef BipartiteGraph<const Camera *, const Feature *, const Structure *>
-          Graph;
+// Possible signatures:
+//
+//   ReconstructFromTwoViews(Matches, ID, ID, Matches *, Reconstruction *);
+//   ReconstructFromThreeViews(Matches, ID, ID, ID, Matches *, Reconstruction *);
+//   CameraResection(Matches, ID, Matches *, Reconstruction *);
+//   MergeReconstructions(Matches, Reconstruction &, Reconstruction &, Matches *, Reconstruction *);
+//   BundleAdjust(Matches, Reconstruction *);
 
+// The reconstruction takes ownership of camera and structure.
+class Reconstruction {
  public:
-  void Insert(const Camera *camera,
-              const Structure *structure,
-              const Feature *feature) {
-    graph_.Insert(image, feature, track);
+  void Insert(FrameID id, const Camera *camera) {
+    map<FrameID, Camera *>::iterator it = cameras.find(id);
+    if (it != cameras.end()) {
+      delete it->second;
+    }
+    it->second = camera;
+  }
+  void Insert(TrackID id, const Structure *structure) {
+    map<FrameID, Structure *>::iterator it = structure.find(id);
+    if (it != structure.end()) {
+      delete it->second;
+    }
+    it->second = structure;
   }
 
-  // Finish me!
-
  private:
-  Graph graph_;
+  map<FrameID, Camera *> cameras;
+  map<TrackID, Structure *> structure;
 };
 
 }  // namespace libmv
