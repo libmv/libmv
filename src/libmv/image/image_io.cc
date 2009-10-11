@@ -22,8 +22,10 @@
 
 #include <iostream>
 
+extern "C" {
 #include "jpeglib.h"
 #include "png.h"
+}
 
 #include "libmv/image/image_io.h"
 #include "libmv/logging/logging.h"

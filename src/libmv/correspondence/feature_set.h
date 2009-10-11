@@ -143,7 +143,7 @@ class FeatureSet {
 
  private: 
   FeatureMap features_;   // This map owns the features.
-  IdGenerator id_generator_;
+  IdGenerator<FeatureID> id_generator_;
 };
 
 }  // namespace libmv
