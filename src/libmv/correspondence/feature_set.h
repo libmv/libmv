@@ -54,7 +54,7 @@ class FeatureSet {
   template<typename FeatureT = Feature>
   class Iterator {
    public:
-    const FeatureID id() const { return r_->first; }
+    FeatureID id() const { return r_->first; }
     FeatureT &feature() {
       return *static_cast<FeatureT *>(r_->second);
     }

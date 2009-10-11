@@ -19,6 +19,7 @@
 // IN THE SOFTWARE.
 
 #include <cstdio>
+#include <algorithm>
 
 #include "libmv/correspondence/feature_set.h"
 #include "libmv/logging/logging.h"
