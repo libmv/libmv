@@ -18,6 +18,9 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
+#ifndef LIBMV_DETECTOR_DETECTOR_H
+#define LIBMV_DETECTOR_DETECTOR_H
+
 #include "libmv/base/vector.h"
 
 namespace libmv {
@@ -69,3 +72,5 @@ class Detector {
 
 }  // namespace detector
 }  // namespace libmv
+
+#endif  // LIBMV_DETECTOR_DETECTOR_H

@@ -1,4 +1,4 @@
-// Copyright (c) 2007, 2008 libmv authors.
+// Copyright (c) 2009 libmv authors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
@@ -18,48 +18,16 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
-#ifndef LIBMV_CORRESPONDENCE_FEATURE_H_
-#define LIBMV_CORRESPONDENCE_FEATURE_H_
-
-#include "libmv/numeric/numeric.h"
+#include "libmv/detector/fast_detector.h"
+#include "libmv/image/image.h"
+#include "testing/testing.h"
 
 namespace libmv {
+namespace {
 
-/**
- * Abstract base class for features.
- */
-class Feature {
- public:
-  virtual ~Feature();
-};
+TEST(FastDetector, DetectsFeatures) {
+  // Does it blend? Stay tuned to find out!
+}
 
-class PointFeature : public Feature {
- public:
-  virtual ~PointFeature();
-
-  PointFeature() {}
-  PointFeature(float xx, float yy) {
-    coords[0] = xx;
-    coords[1] = yy;
-    scale = 0.0;
-    orientation = 0.0;
-  }
-
-  float x() const { return coords(0); }
-  float y() const { return coords(1); }
-
-  Vec2f coords;       // (x, y), i.e. (column, row).
-  float scale;        // In pixels.
-  float orientation;  // In radians.
-};
-
-class LineFeature : public Feature {
- public:
-  virtual ~LineFeature();
-  virtual const Vec2f &Point1() = 0;
-  virtual const Vec2f &Point2() = 0;
-};
-
+}  // namespace
 }  // namespace libmv
-
-#endif  // LIBMV_CORRESPONDENCE_FEATURE_H_

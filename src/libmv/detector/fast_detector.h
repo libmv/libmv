@@ -1,4 +1,4 @@
-// Copyright (c) 2007, 2008 libmv authors.
+// Copyright (c) 2009 libmv authors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
@@ -18,48 +18,25 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
-#ifndef LIBMV_CORRESPONDENCE_FEATURE_H_
-#define LIBMV_CORRESPONDENCE_FEATURE_H_
-
-#include "libmv/numeric/numeric.h"
+#ifndef LIBMV_DETECTOR_FAST_DETECTOR_H
+#define LIBMV_DETECTOR_FAST_DETECTOR_H
 
 namespace libmv {
+namespace detector {
+
+class Detector;
 
 /**
- * Abstract base class for features.
+ * Creates a detector that uses the FAST detection algorithm. The
+ * implementation never returns detection data.
+ *
+ * \param size      The size of features to detect in pixels.
+ * \param threshold Threshold for detecting features. See the FAST paper for
+ *                  details.
  */
-class Feature {
- public:
-  virtual ~Feature();
-};
+Detector *CreateFastDetector(int size, int threshold);
 
-class PointFeature : public Feature {
- public:
-  virtual ~PointFeature();
-
-  PointFeature() {}
-  PointFeature(float xx, float yy) {
-    coords[0] = xx;
-    coords[1] = yy;
-    scale = 0.0;
-    orientation = 0.0;
-  }
-
-  float x() const { return coords(0); }
-  float y() const { return coords(1); }
-
-  Vec2f coords;       // (x, y), i.e. (column, row).
-  float scale;        // In pixels.
-  float orientation;  // In radians.
-};
-
-class LineFeature : public Feature {
- public:
-  virtual ~LineFeature();
-  virtual const Vec2f &Point1() = 0;
-  virtual const Vec2f &Point2() = 0;
-};
-
+}  // namespace detector
 }  // namespace libmv
 
-#endif  // LIBMV_CORRESPONDENCE_FEATURE_H_
+#endif  // LIBMV_DETECTOR_FAST_DETECTOR_H

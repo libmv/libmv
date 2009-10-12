@@ -70,14 +70,14 @@ class Image {
     }
   }
 
-  Array3Du *AsArray3Du() {
+  Array3Du *AsArray3Du() const {
     if (array_type_ == BYTE) {
       return reinterpret_cast<Array3Du *>(array_);
     }
     return NULL;
   }
 
-  Array3Df *AsArray3Df() {
+  Array3Df *AsArray3Df() const {
     if (array_type_ == FLOAT) {
       return reinterpret_cast<Array3Df *>(array_);
     }
