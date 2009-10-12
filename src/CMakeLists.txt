@@ -57,6 +57,7 @@ MARK_AS_ADVANCED(LIBMV_CMAKE_MODULE_PATH_OK)
 
 INCLUDE_DIRECTORIES(
   .
+  third_party/daisy/include
   third_party/gtest
   third_party/gtest/include
   third_party/eigen

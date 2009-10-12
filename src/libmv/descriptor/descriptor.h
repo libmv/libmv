@@ -26,9 +26,12 @@
 namespace libmv {
 
 class Feature;
+class Image;
 
 namespace detector {
+
 class DetectorData;
+
 }  // namespace detector
 
 namespace descriptor {
@@ -62,7 +65,7 @@ class Describer {
    */
   virtual void Describe(const vector<Feature *> &features,
                         const Image &image,
-                        const DetectorData *detector_data,
+                        const detector::DetectorData *detector_data,
                         vector<Descriptor *> *descriptors) = 0;
 };
 

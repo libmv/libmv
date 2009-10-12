@@ -18,23 +18,16 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
-#ifndef LIBMV_DESCRIPTOR_VECTOR_DESCRIPTOR_H
-#define LIBMV_DESCRIPTOR_VECTOR_DESCRIPTOR_H
-
-#include "libmv/numeric/numeric.h"
+#include "libmv/descriptor/daisy_descriptor.h"
+#include "libmv/image/image.h"
+#include "testing/testing.h"
 
 namespace libmv {
-namespace descriptor {
+namespace {
 
-struct VecfDescriptor : public Descriptor {
-  virtual ~VecfDescriptor() {}
-  VecfDescriptor(Vecf coords) : coords(coords) {}
-  VecfDescriptor(int n) : coords(n) {}
+TEST(DaisyDescriptor, DescribesStuff) {
+  // Does it blend? Stay tuned to find out!
+}
 
-  Vecf coords;
-};
-
-}  // namespace descriptor
+}  // namespace
 }  // namespace libmv
-
-#endif  // LIBMV_DESCRIPTOR_VECTOR_DESCRIPTOR_H

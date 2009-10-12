@@ -20,51 +20,59 @@
 
 #include "libmv/logging/logging.h"
 #include "libmv/descriptor/descriptor.h"
+#include "libmv/descriptor/vector_descriptor.h"
 #include "libmv/correspondence/feature.h"
 #include "libmv/image/image.h"
 #include "third_party/daisy/include/daisy/daisy.h"
 
 namespace libmv {
-namespace detector {
+namespace descriptor {
 
+// TODO(keir): This is utterly untested!
 class DaisyDescriber : public Describer {
  public:
   virtual void Describe(const vector<Feature *> &features,
                         const Image &image,
-                        const DetectorData *detector_data,
+                        const detector::DetectorData *detector_data,
                         vector<Descriptor *> *descriptors) {
     (void) detector_data;  // There is no matching detector for DAISY.
 
-    scoped_ptr<daisy> desc(new daisy());
+    daisy desc;
 
     // TODO(keir): DAISY has extensive configuration options; consider exposing
     // them via some sort of config system.
 
     // Defaults from README.
-    desc->set_parameters(15, 3, 8, 8);
+    desc.set_parameters(15, 3, 8, 8);
 
     // Only use sparse descriptors; the default is dense.
-    desc->initialize_single_descriptor_mode();
+    desc.initialize_single_descriptor_mode();
 
     // Push the image into daisy. This will make a copy and convert to float.
     ByteImage *byte_image = image.AsArray3Du();
-    desc->set_image(byte_image->Data(),
-                    byte_image->Height(),
-                    byte_image->Width);
+    desc.set_image(byte_image->Data(),
+                   byte_image->Height(),
+                   byte_image->Width());
 
+    descriptors->resize(features.size());
     for (int i = 0; i < features.size(); ++i) {
-      // XXX FINISH ME
-      //float* thor = new thor[desc->descriptor_size()];
-      //descriptors->push_back(new 
+      PointFeature *point = dynamic_cast<PointFeature *>(features[i]);
+      VecfDescriptor *descriptor = NULL;
+      if (point) {
+        descriptor = new VecfDescriptor(desc.descriptor_size());
+        desc.get_descriptor(point->y(),
+                            point->x(),
+                            point->orientation,
+                            descriptor->coords.data());
+      }
+      (*descriptors)[i] = descriptor;
     }
   }
-
- private:
 };
 
-Detector *CreateDaisyDescriber() {
-  // XXX FINISH ME
+Describer *CreateDaisyDescriber() {
+  return new DaisyDescriber;
 }
 
-}  // namespace detector
+}  // namespace descriptor
 }  // namespace libmv
