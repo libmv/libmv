@@ -18,18 +18,17 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
-#ifndef LIBMV_IMAGE_SURF_DESCRIPTOR_H
-#define LIBMV_IMAGE_SURF_DESCRIPTOR_H
-
-#include <cmath>
-
-#include "libmv/numeric/numeric.h"
 #include "libmv/correspondence/feature.h"
-#include "libmv/image/integral_image.h"
+#include "libmv/descriptor/descriptor.h"
+#include "libmv/descriptor/vector_descriptor.h"
 #include "libmv/image/convolve.h"
+#include "libmv/image/image.h"
+#include "libmv/image/integral_image.h"
 #include "libmv/logging/logging.h"
+#include "libmv/numeric/numeric.h"
 
 namespace libmv {
+namespace descriptor {
 
 template<typename TImage>
 float HarrX(const TImage &integral_image, int row, int col, int scale) {
@@ -49,6 +48,8 @@ float HarrY(const TImage &integral_image, int row, int col, int scale) {
        - float(BoxIntegral(integral_image, row - HW, col - HW,  W, HW));
 }
 
+// TODO(keir): Concievably, these template parameters could be exposed to
+// experiment with SURF parameters. Try that!
 template<int blocks, int samples_per_block,
          typename TImage, typename TPointFeature>
 void USURFDescriptor(const TImage &integral_image,
@@ -99,6 +100,36 @@ void USURFDescriptor(const TImage &integral_image,
   descriptor->normalize();
 }
 
-}  // namespace libmv
+// TODO(keir): This is unfinished and probably doesn't compile!
+class SurfDescriber : public Describer {
+ public:
+  virtual void Describe(const vector<Feature *> &features,
+                        const Image &image,
+                        const detector::DetectorData *detector_data,
+                        vector<Descriptor *> *descriptors) {
+    // TODO(keir): Make the descriptor data the SURF detector integral image.
+    (void) detector_data;
 
-#endif  // LIBMV_IMAGE_SURF_DESCRIPTOR_H
+    Matu integral_image;
+    IntegralImage(image, &integral_image);
+
+    descriptors->resize(features.size());
+    for (int i = 0; i < features.size(); ++i) {
+      PointFeature *point = dynamic_cast<PointFeature *>(features[i]);
+      VecfDescriptor *descriptor = NULL;
+      if (point) {
+        descriptor = new VecfDescriptor(128);
+        Matrix<float, 128> coordinates;
+        USURFDescriptor<4, 5>(integral_image, *point, &coordinates);
+      }
+      (*descriptors)[i] = descriptor;
+    }
+  }
+};
+
+Describer *CreateSurfDescriber() {
+  return new SurfDescriber;
+}
+
+}  // namespace descriptor
+}  // namespace libmv
