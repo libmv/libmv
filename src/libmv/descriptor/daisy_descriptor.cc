@@ -18,55 +18,53 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
-#ifndef LIBMV_DESCRIPTOR_DESCRIPTOR_H
-#define LIBMV_DESCRIPTOR_DESCRIPTOR_H
-
-#include "libmv/base/vector.h"
+#include "libmv/logging/logging.h"
+#include "libmv/descriptor/descriptor.h"
+#include "libmv/correspondence/feature.h"
+#include "libmv/image/image.h"
+#include "third_party/daisy/include/daisy/daisy.h"
 
 namespace libmv {
-
-class Feature;
-
 namespace detector {
-class DetectorData;
-}  // namespace detector
 
-namespace descriptor {
-
-class Descriptor {
-
-};
-
-/**
- * Interface for computing descriptors of features in images.
- */
-class Describer {
+class DaisyDescriber : public Describer {
  public:
-  /**
-   * Describes features in an image, in preparation for matching.
-   *
-   * \param[in]  features      The features to find descriptions for.
-   * \param[in]  image         The image to compute descriptions from.
-   * \param[in]  detector_data Data from the detector or NULL.
-   * \param[out] descriptors   The computed descriptors, in the same order as
-   *                           the features vector. A NULL entry indicates that
-   *                           the description couldn't be computed for that
-   *                           feature.
-   *
-   * This computes descriptions for localized features in an image.
-   * Examples include the SURF descriptor based on box filters or KLT
-   * features which are image patches. 
-   *
-   * Some implementations can reuse data from the detector; see the detector
-   * description.
-   */
   virtual void Describe(const vector<Feature *> &features,
                         const Image &image,
                         const DetectorData *detector_data,
-                        vector<Descriptor *> *descriptors) = 0;
+                        vector<Descriptor *> *descriptors) {
+    (void) detector_data;  // There is no matching detector for DAISY.
+
+    scoped_ptr<daisy> desc(new daisy());
+
+    // TODO(keir): DAISY has extensive configuration options; consider exposing
+    // them via some sort of config system.
+
+    // Defaults from README.
+    desc->set_parameters(15, 3, 8, 8);
+
+    // Only use sparse descriptors; the default is dense.
+    desc->initialize_single_descriptor_mode();
+
+    // Push the image into daisy. This will make a copy and convert to float.
+    ByteImage *byte_image = image.AsArray3Du();
+    desc->set_image(byte_image->Data(),
+                    byte_image->Height(),
+                    byte_image->Width);
+
+    for (int i = 0; i < features.size(); ++i) {
+      // XXX FINISH ME
+      //float* thor = new thor[desc->descriptor_size()];
+      //descriptors->push_back(new 
+    }
+  }
+
+ private:
 };
 
-}  // namespace descriptor
-}  // namespace libmv
+Detector *CreateDaisyDescriber() {
+  // XXX FINISH ME
+}
 
-#endif  // LIBMV_DESCRIPTOR_DESCRIPTOR_H
+}  // namespace detector
+}  // namespace libmv
