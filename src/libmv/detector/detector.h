@@ -36,7 +36,7 @@ namespace detector {
  */
 class DetectorData {
  public:
-  virtual ~DetectorData();
+  virtual ~DetectorData() {};
 };
 
 /**
@@ -44,13 +44,13 @@ class DetectorData {
  */
 class Detector {
  public:
-  virtual ~Detector();
+  virtual ~Detector() {};
   /**
    * Detects features in an image.
    *
    * \param[in]  image     The image to detect features in.
    * \param[out] features  The detected features. Caller owns contents.
-   * \param[out] data      Extra data from a particular detector 
+   * \param[out] data      Extra data from a particular detector
    *                       implementation. If NULL, ignored. If a particular
    *                       implementation doesn't create detector data, NULL is
    *                       assigned to *data. If *data is non-null, then the
