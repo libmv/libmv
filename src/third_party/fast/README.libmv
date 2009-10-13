@@ -4,4 +4,5 @@ License: BSD
 Upstream version: 2.1, released 12-Jan-2009
 
 Local modifications:
-- Created CMakeLists.txt for CMake build. 
+- Created CMakeLists.txt for CMake build.
+- Update CMakeLists to be sure that the library is a compatible with C++ linkage.

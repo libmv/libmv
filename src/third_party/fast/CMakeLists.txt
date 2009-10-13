@@ -1,2 +1,4 @@
 PROJECT(fast)
-ADD_LIBRARY(fast fast.h fast.c fast_9.c fast_10.c fast_11.c fast_12.c nonmax.c)
+file(GLOB_RECURSE C_FILES ${CMAKE_CURRENT_SOURCE_DIR} *.c)
+set_source_files_properties(${C_FILES} PROPERTIES LANGUAGE CXX)
+ADD_LIBRARY(fast fast.h ${C_FILES})
