@@ -30,6 +30,7 @@
 #include "libmv/image/image_drawing.h"
 
 #include "libmv/detector/fast_detector.h"
+#include "libmv/detector/surf_detector.h"
 #include "libmv/detector/detector.h"
 #include "libmv/correspondence/feature.h"
 
@@ -76,6 +77,7 @@ int main(int argc, char **argv) {
   }
 
   scoped_ptr<detector::Detector> detector(detector::CreateFastDetector(9, 30));
+  //scoped_ptr<detector::Detector> detector(detector::CreateSURFDetector(4,4));
 
   libmv::vector<libmv::Feature *> features;
   Image im( new Array3Du(imageIn) );

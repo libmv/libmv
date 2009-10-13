@@ -1,2 +1,2 @@
-ADD_LIBRARY(detector fast_detector.cc)
+ADD_LIBRARY(detector fast_detector.cc surf_detector.cc)
 LIBMV_TEST(fast_detector "detector;image;correspondence;fast")
