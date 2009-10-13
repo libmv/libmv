@@ -12,4 +12,5 @@ Local modifications:
 * include/kutility/math.h => unused fonction parameter fix.
 * src/daisy.cpp => error compilation fix display function usage with a 2D array.
 * src/image_manipulation.cpp => Add preprocessor to avoid omp compilation directive to be in all compilation mode.
+* kutility/kutility.def => fix isnan() on windows platform and OPENMP 'omp' include.
 
