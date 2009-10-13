@@ -11,6 +11,8 @@ TARGET_LINK_LIBRARIES(interest_points
                       pthread
                       gflags
                       glog
+                      detector
+                      fast
                       )
 
 ADD_EXECUTABLE(experimental experimental.cc)
@@ -21,4 +23,14 @@ TARGET_LINK_LIBRARIES(experimental
                       pthread
                       gflags
                       glog
+                      )
+
+ADD_EXECUTABLE(points_detector points_detector.cc)
+TARGET_LINK_LIBRARIES(points_detector
+                      correspondence
+                      image
+                      gflags
+                      glog
+                      detector
+                      fast
                       )
