@@ -36,7 +36,6 @@ class SurfDetector : public Detector {
   virtual void Detect(const Image &image,
                       vector<Feature *> *features,
                       DetectorData **data) {
-    int num_corners = 0;
     ByteImage *byte_image = image.AsArray3Du();
     //TODO(pmoulon) Assert that byte_image is valid.
 
@@ -45,15 +44,15 @@ class SurfDetector : public Detector {
 
     libmv::vector<PointFeature> detections;
     MultiscaleDetectFeatures(integral_image, num_octaves_, num_intervals_,
-                           &detections);    
+                           &detections);
 
     for (int i = 0; i < detections.size(); ++i) {
       PointFeature *f = new PointFeature(detections[i].x(), detections[i].y());
       f->scale = detections[i].scale;
       f->orientation = detections[i].orientation;
       features->push_back(f);
-    }   
-    
+    }
+
     //data can contain the integral image that can be use for descriptor computation
     if (data) {
       *data = NULL;
