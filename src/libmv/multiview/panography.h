@@ -69,8 +69,9 @@ static void F_FromCorrespondance_2points(const Vec2 &u11, const Vec2 &u12,
   //   f^6 * p + f^4 * q + f^2* r + s = 0;
   //
   // Coefficients in ascending powers of alpha, i.e. P[N]*x^N.
+  // Run panography_coeffs.py to get the below coefficients.
   double P[4] = {
-     b1*b2*a12*a12-a1*a2*b12*b12,
+     a1*a2*b12*b12-b1*b2*a12*a12,
      -2*a1*a2*b12+2*a12*b1*b2+b1*a12*a12+b2*a12*a12-a1*b12*b12-a2*b12*b12,
      b1*b2-a1*a2-2*a1*b12-2*a2*b12+2*a12*b1+2*a12*b2+a12*a12-b12*b12,
      b1+b2-a1-a2-2*b12+2*a12
@@ -100,12 +101,12 @@ static void F_FromCorrespondance_2points(const Vec2 &u11, const Vec2 &u12,
 // corresponding image rays.
 //
 //   R = min || X2 - R * x1 ||.
-// 
+//
 // In case of panography, which is for acamera that shares the same camera
 // center,
 //
 //   H = K2 * R * K1.inverse();
-// 
+//
 // For the full explanation, see Section 8, Solving for Rotation from [1].
 //
 // Parameters:
