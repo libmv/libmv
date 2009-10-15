@@ -19,43 +19,32 @@
 // IN THE SOFTWARE.
 
 #include "libmv/logging/logging.h"
-#include "libmv/multiview/minimalPanoramic_kernel.h" 
-#include "libmv/multiview/minimalPanoramic.h"
+#include "libmv/multiview/panography_kernel.h" 
+#include "libmv/multiview/panography.h"
 
 namespace libmv {
 namespace panography {
 namespace kernel {
   
 void TwoPointSolver::Solve(const Mat &x1, const Mat &x2, vector<Mat3> *Hs) {
-  assert(2 == x1.rows());
-  assert(2 <= x1.cols());
-  assert(x1.rows() == x2.rows());
-  assert(x1.cols() == x2.cols());
+  // Solve for the focal lengths.
+  vector<double> fs;
+  F_FromCorrespondance_2points(x1.col(0), x1.col(1), x2.col(0), x2.col(1), &fs);
 
-  // Algorithm :
-  // .Solve for focals.
-  // .For each focal :
-  //  - estimate the RotationMatrix.
-
-  vector<double> v_focals;
-  F_FromCorrespondance_2points( x1.col(0) , x1.col(1), x2.col(0), x2.col(1),
-    &v_focals);
-
-  Mat x1H, x2H;
-  EuclideanToHomogeneous(x1,&x1H);
-  EuclideanToHomogeneous(x2,&x2H);
-
-  for(int i =0; i< v_focals.size(); ++i)  {
-    Mat3 K1 = Mat3::Identity() * v_focals[i];
-    K1(2,2) = 1;
+  // Then solve for the rotation and homographies.
+  Mat x1h, x2h;
+  EuclideanToHomogeneous(x1, &x1h);
+  EuclideanToHomogeneous(x2, &x2h);
+  for (int i = 0; i < fs.size(); ++i)  {
+    Mat3 K1 = Mat3::Identity() * fs[i];
+    K1(2, 2) = 1;
     Mat3 K2 = K1;
 
     Mat3 R;
-    GetR_FixedCameraCenter( x1H, x2H, K1, K2, &R);
+    GetR_FixedCameraCenter( x1h, x2h, K1, K2, &R);
 
     (*Hs).push_back( K2 * R * K1.inverse() );
   }
-
 }
 
 }  // namespace kernel
