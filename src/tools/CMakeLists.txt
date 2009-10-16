@@ -33,4 +33,5 @@ TARGET_LINK_LIBRARIES(points_detector
                       glog
                       detector
                       fast
+                      descriptor
                       )

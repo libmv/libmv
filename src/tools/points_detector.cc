@@ -34,6 +34,10 @@
 #include "libmv/detector/detector.h"
 #include "libmv/correspondence/feature.h"
 
+#include "libmv/descriptor/descriptor.h"
+#include "libmv/descriptor/simpliest_descriptor.h"
+#include "libmv/descriptor/vector_descriptor.h"
+
 using namespace libmv;
 using namespace std;
 
@@ -44,6 +48,7 @@ void usage() {
     << " INFO : work with pgm image only." << std::endl;
 }
 
+/// Destroy dynamic content of an array.
 template <class Array>
 void DestroyDynamicDataArray(Array & ar)  {
   for(int i=0; i < ar.size(); ++i)  {
@@ -51,8 +56,12 @@ void DestroyDynamicDataArray(Array & ar)  {
   }
 }
 
+/// Draw feature position, scale and orientation over a given image.
 template <typename Image>
 void DrawFeatures( Image & im, const libmv::vector<libmv::Feature *> & feat);
+
+/// Export descriptor data as image.
+void SaveDescriptorAsPatches( const libmv::vector<descriptor::Descriptor *> & desc);
 
 
 int main(int argc, char **argv) {
@@ -83,6 +92,17 @@ int main(int argc, char **argv) {
   Image im( new Array3Du(imageIn) );
   detector->Detect( im, &features, NULL);
 
+  bool bExportDescToDisk = false;
+  if( bExportDescToDisk )
+  {
+    libmv::vector<descriptor::Descriptor *> descriptors;
+    scoped_ptr<descriptor::Describer> descriptorInterface(descriptor::CreateSimpliestDescriber());
+    descriptorInterface->Describe(features, im, NULL, &descriptors);
+
+    SaveDescriptorAsPatches(descriptors);
+  }
+
+
   DrawFeatures( imageIn, features);
   if (!WritePnm(imageIn, sImageOut.c_str())) {
     LOG(FATAL) << "Failed saving output image: " << sImageOut;
@@ -104,7 +124,6 @@ void DrawFeatures( Image & im, const libmv::vector<libmv::Feature *> & feat)
     const int x = feature->x();
     const int y = feature->y();
     const float scale = 2*feature->scale;
-    //std::cout << i << " " << x << " " << y << " " << feature.getScale() <<std::endl;
 
     DrawCircle(x, y, scale, (unsigned char)255, &im);
     const float angle = feature->orientation;
@@ -112,4 +131,26 @@ void DrawFeatures( Image & im, const libmv::vector<libmv::Feature *> & feat)
              (unsigned char) 255, &im);
   }
 }
+
+void SaveDescriptorAsPatches( const libmv::vector<descriptor::Descriptor *> & desc)
+{
+  for (int i = 0; i < desc.size(); ++i) {
+    const descriptor::VecfDescriptor * array = dynamic_cast<descriptor::VecfDescriptor *>( desc[i] );
+    if(array) {
+      const int size = sqrt(array->coords.size());
+      Array3Df ima(size,size);
+      for(int j=0; j< size; ++j)
+      for(int i=0; i< size; ++i)
+      {
+        ima(j, i) = array->coords(j*size + i);
+      }
+      //-- Save the patch as a image
+      ostringstream os;
+      os << "./Patch_000" << i << ".jpg";
+      WriteJpg(ima, os.str().c_str(), 100);
+    }
+  }
+}
+
+
 
