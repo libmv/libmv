@@ -19,7 +19,11 @@
 // IN THE SOFTWARE.
 
 #include "libmv/detector/fast_detector.h"
+#include "libmv/detector/detector.h"
+#include "libmv/base/scoped_ptr.h"
 #include "libmv/image/image.h"
+#include "libmv/base/vector.h"
+#include "libmv/correspondence/feature.h"
 #include "testing/testing.h"
 
 namespace libmv {
@@ -27,6 +31,25 @@ namespace {
 
 TEST(FastDetector, DetectsFeatures) {
   // Does it blend? Stay tuned to find out!
+}
+
+TEST(FastDetector, Localisation) {
+  Array3Du image(20,20);
+  image.fill(0);
+
+  // Draw a white corner inside it :
+
+  for(int j=5; j <=15; ++j) {
+    for(int i=5; i <=15; ++i) {
+      image(j,i) = 255;
+    }
+  }
+  scoped_ptr<detector::Detector> detector(detector::CreateFastDetector(9, 20));
+
+  vector<Feature *> features;
+  Image im( new Array3Du(image) );
+  detector->Detect( im, &features, NULL);
+
 }
 
 }  // namespace
