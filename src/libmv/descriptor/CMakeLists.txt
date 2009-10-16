@@ -1,2 +1,2 @@
-ADD_LIBRARY(descriptor daisy_descriptor.cc)
+ADD_LIBRARY(descriptor daisy_descriptor.cc simpliest_descriptor.cc)
 LIBMV_TEST(daisy_descriptor "descriptor;image;daisy")
