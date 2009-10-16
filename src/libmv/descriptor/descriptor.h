@@ -37,7 +37,8 @@ class DetectorData;
 namespace descriptor {
 
 class Descriptor {
-
+public:
+  virtual ~Descriptor() {};
 };
 
 /**
@@ -45,6 +46,7 @@ class Descriptor {
  */
 class Describer {
  public:
+  virtual ~Describer() {};
   /**
    * Describes features in an image, in preparation for matching.
    *
@@ -58,7 +60,7 @@ class Describer {
    *
    * This computes descriptions for localized features in an image.
    * Examples include the SURF descriptor based on box filters or KLT
-   * features which are image patches. 
+   * features which are image patches.
    *
    * Some implementations can reuse data from the detector; see the detector
    * description.
