@@ -55,7 +55,7 @@ void normalize(T * fsrc, T * fdst, int size, T &mean, T &stddev)  {
 // Angle is in radian.
 // data the output array (must be allocated to 8*8).
 template <typename TImage,typename T>
-void PickPatch(const TImage & image, float x, float y, int scale, int angle,
+void PickPatch(const TImage & image, float x, float y, int scale, double angle,
                 T * data) {
 
   const int WINDOW_SIZE = 8;
