@@ -30,7 +30,7 @@
 
 #include <Eigen/Core>
 
-#include "libmv/logging/logging.h"
+//#include "libmv/logging/logging.h"
 
 namespace libmv {
 
