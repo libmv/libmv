@@ -62,6 +62,7 @@ bool Affine2D_FromCorrespondencesLinear(const Mat &x1, const Mat &x2,
   (*M)(1,0) = -res(0,0);  (*M)(1,1) = res(1,0);// sin cos
   (*M)(0,2) = res(2,0);// tx
   (*M)(1,2) = res(3,0);// ty
+  (*M)(2,0) = (*M)(2,1) = 0.0;
   // Force homogeneous coord
   (*M)(2,2) = 1.0;
   return true;
