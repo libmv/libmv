@@ -28,8 +28,9 @@ namespace descriptor {
 
 struct VecfDescriptor : public Descriptor {
   virtual ~VecfDescriptor() {}
-  VecfDescriptor(Vecf coords) : coords(coords) {}
+  VecfDescriptor(const Vecf & coords) : coords(coords) {}
   VecfDescriptor(int n) : coords(n) {}
+  VecfDescriptor() {};
 
   Vecf coords;
 };

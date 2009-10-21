@@ -37,8 +37,7 @@ class PointFeature : public Feature {
  public:
   virtual ~PointFeature();
 
-  PointFeature() {}
-  PointFeature(float xx, float yy) {
+  PointFeature(float xx=0.0f, float yy=0.0f) {
     coords[0] = xx;
     coords[1] = yy;
     scale = 0.0;
