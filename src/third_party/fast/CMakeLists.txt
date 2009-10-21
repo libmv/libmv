@@ -1,4 +1,4 @@
 PROJECT(fast)
 file(GLOB_RECURSE C_FILES ${CMAKE_CURRENT_SOURCE_DIR} *.c)
 set_source_files_properties(${C_FILES} PROPERTIES LANGUAGE CXX)
-ADD_LIBRARY(fast fast.h ${C_FILES})
+ADD_LIBRARY(fast ${C_FILES})
