@@ -22,6 +22,17 @@
 #include <iostream>
 namespace libmv {
 
+// Parametrisation
+// cos -sin tx
+// sin  cos ty
+// 0    0   1
+
+// It give the following system A x = B :
+// | Xa -Ya 0 1 | | sin |   | Xb |
+// | Xa  Ya 1 0 | | cos |   | Yb |
+//                | tx  | =
+//                | ty  |
+// Scale can be estimated if the angle is known. Because x(0) = s * sin(angle).
 bool Affine2D_FromCorrespondencesLinear(const Mat &x1, const Mat &x2,
                                             Mat3 *M)  {
 
@@ -30,38 +41,33 @@ bool Affine2D_FromCorrespondencesLinear(const Mat &x1, const Mat &x2,
   assert(x1.rows() == x2.rows());
   assert(x1.cols() == x2.cols());
 
-  int n = x1.cols();
-  Mat A(4, 4);
-  A.setZero();
-  Mat B(4, 1);
-  B.setZero();
+  const int n = x1.cols();
+  Mat A = Mat::Zero(2*n, 4);
+  Mat B = Mat::Zero(2*n, 1);
   for (int i = 0; i < n; ++i) {
-    int j=(i%2)*2;
-    A(j,0) += -x1(1,i);
-    A(j,1) +=  x1(0,i);
-    A(j,2) +=  1.0;
+    const int j=i*2;
+    A(j,0) = -x1(1,i);
+    A(j,1) =  x1(0,i);
+    A(j,2) =  1.0;
     A(j,3) =  0.0;
 
-    A(j+1,0) += x1(0,i);
-    A(j+1,1) += x1(1,i);
+    A(j+1,0) = x1(0,i);
+    A(j+1,1) = x1(1,i);
     A(j+1,2) = 0.0;
-    A(j+1,3) += 1.0;
+    A(j+1,3) = 1.0;
 
-    // x'
-    B(j,0)   += x2(0,i);
-    B(j+1,0) += x2(1,i);
+    B(j,0)   = x2(0,i);
+    B(j+1,0) = x2(1,i);
   }
-  // Does A is invertible ?
-  if( fabs(A.determinant()) < 1e-1) {
-     return false;
-  }
-  Mat res = A.inverse() * B;
+  // Solve Ax=B
+  Vec x;
+  A.lu().solve(B, &x);
 
   // Configure output matrix :
-  (*M)(0,0) = res(1,0);   (*M)(0,1) = res(0,0);// cos sin
-  (*M)(1,0) = -res(0,0);  (*M)(1,1) = res(1,0);// sin cos
-  (*M)(0,2) = res(2,0);// tx
-  (*M)(1,2) = res(3,0);// ty
+  (*M)(0,0) = x(1);   (*M)(0,1) = x(0);// cos sin
+  (*M)(1,0) = -x(0);  (*M)(1,1) = x(1);// sin cos
+  (*M)(0,2) = x(2);// tx
+  (*M)(1,2) = x(3);// ty
   (*M)(2,0) = (*M)(2,1) = 0.0;
   // Force homogeneous coord
   (*M)(2,2) = 1.0;
