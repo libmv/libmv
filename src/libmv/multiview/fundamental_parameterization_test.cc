@@ -53,7 +53,7 @@ TEST(FundamentalParameterization, Roundtripping) {
   LG << "f_roundtrip\n" << f_roundtrip;
 
   // Check that going from F to p and back to F goes in a circle.
-  EXPECT_MATRIX_PROP(f, f_roundtrip, 1e-9);
+  EXPECT_MATRIX_PROP(f, f_roundtrip, 1.5e-8);
 }
 
 } // namespace
