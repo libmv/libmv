@@ -18,11 +18,11 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
-#include "libmv/multiview/2DAffine.h"
+#include "libmv/multiview/affine_2d.h"
 #include <iostream>
 namespace libmv {
 
-// Parametrisation
+// Parametrization
 // cos -sin tx
 // sin  cos ty
 // 0    0   1
@@ -43,9 +43,9 @@ bool Affine2D_FromCorrespondencesLinear(const Mat &x1, const Mat &x2,
 
   const int n = x1.cols();
   Mat A = Mat::Zero(2*n, 4);
-  Mat B = Mat::Zero(2*n, 1);
+  Mat b = Mat::Zero(2*n, 1);
   for (int i = 0; i < n; ++i) {
-    const int j=i*2;
+    const int j= i * 2;
     A(j,0) = -x1(1,i);
     A(j,1) =  x1(0,i);
     A(j,2) =  1.0;
@@ -56,21 +56,17 @@ bool Affine2D_FromCorrespondencesLinear(const Mat &x1, const Mat &x2,
     A(j+1,2) = 0.0;
     A(j+1,3) = 1.0;
 
-    B(j,0)   = x2(0,i);
-    B(j+1,0) = x2(1,i);
+    b(j,0)   = x2(0,i);
+    b(j+1,0) = x2(1,i);
   }
   // Solve Ax=B
   Vec x;
-  A.lu().solve(B, &x);
+  A.lu().solve(b, &x);
 
   // Configure output matrix :
-  (*M)(0,0) = x(1);   (*M)(0,1) = x(0);// cos sin
-  (*M)(1,0) = -x(0);  (*M)(1,1) = x(1);// sin cos
-  (*M)(0,2) = x(2);// tx
-  (*M)(1,2) = x(3);// ty
-  (*M)(2,0) = (*M)(2,1) = 0.0;
-  // Force homogeneous coord
-  (*M)(2,2) = 1.0;
+  (*M)<<x(1),x(0),x(2), // cos sin tx
+      -x(0), x(1),x(3),// sin cos ty
+      0.0,   0.0, 1.0;
   return true;
 }
 

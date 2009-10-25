@@ -18,15 +18,13 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
-#include "libmv/multiview/2DAffine.h"
 #include "testing/testing.h"
 #include "libmv/logging/logging.h"
-#include <iostream>
+#include "libmv/multiview/affine_2d.h"
 namespace {
 using namespace libmv;
 
 TEST(Affine2DTest, TranslationX) {
-
   Mat x1(2, 3);
   x1 <<  0, 1, 2,
          0, 1, 1;
@@ -36,17 +34,16 @@ TEST(Affine2DTest, TranslationX) {
          0, 1, 1;
 
   Mat3 AffineMat;
-  EXPECT_TRUE(Affine2D_FromCorrespondencesLinear( x1, x2, &AffineMat));
-  std::cout << "Mat Affine2D "<< std::endl <<AffineMat;
-  Mat3 GroundTruth;
-  GroundTruth << 1,0,1,
+  EXPECT_TRUE(Affine2D_FromCorrespondencesLinear(x1, x2, &AffineMat));
+  VLOG(1) << "Mat Affine2D "<< std::endl <<AffineMat;
+  Mat3 ground_truth;
+  ground_truth << 1,0,1,
                  0,1,0,
                  0,0,1;
-  EXPECT_MATRIX_NEAR(AffineMat, GroundTruth,1e-8);
+  EXPECT_MATRIX_NEAR(AffineMat, ground_truth,1e-8);
 }
 
 TEST(Affine2DTest, TranslationXY) {
-
   Mat x1(2, 3);
   x1 <<  0, 1, 2,
          0, 1, 1;
@@ -55,18 +52,17 @@ TEST(Affine2DTest, TranslationXY) {
   x2 <<  1, 2, 3,
          1, 2, 2;
 
-  Mat3 AffineMat;
-  EXPECT_TRUE(Affine2D_FromCorrespondencesLinear( x1, x2, &AffineMat));
-  std::cout << "Mat Affine2D "<< std::endl << AffineMat;
-  Mat3 GroundTruth;
-  GroundTruth << 1,0,1,
+  Mat3 affine_mat;
+  EXPECT_TRUE(Affine2D_FromCorrespondencesLinear(x1, x2, &affine_mat));
+  VLOG(1) << "Mat Affine2D "<< std::endl << affine_mat;
+  Mat3 ground_truth;
+  ground_truth << 1,0,1,
                  0,1,1,
                  0,0,1;
-  EXPECT_MATRIX_NEAR(AffineMat, GroundTruth,1e-8);
+  EXPECT_MATRIX_NEAR(affine_mat, ground_truth,1e-8);
 }
 
 TEST(Affine2DTest, Rotation45) {
-
   Mat x1(2, 4);
   x1 <<  0, 1, 2, 5,
          0, 1, 2, 3;
@@ -79,19 +75,17 @@ TEST(Affine2DTest, Rotation45) {
 
   Mat x2 = x1;
   // Transform point from ground truth rotation matrix
-  for(int i=0; i < x2.cols(); ++i)
-  {
+  for(int i = 0; i < x2.cols(); ++i)  {
     x2.block<2,1>(0,i) = x1.col(i).transpose() * rot.block<2,2>(0,0);
   }
 
-  Mat3 AffineMat;
-  EXPECT_TRUE(Affine2D_FromCorrespondencesLinear( x1, x2, &AffineMat));
-  std::cout << "Mat Affine2D "<< std::endl << AffineMat;
-  EXPECT_MATRIX_NEAR(AffineMat, rot, 1e-8);
+  Mat3 affine_mat;
+  EXPECT_TRUE(Affine2D_FromCorrespondencesLinear(x1, x2, &affine_mat));
+  VLOG(1) << "Mat Affine2D "<< std::endl << affine_mat;
+  EXPECT_MATRIX_NEAR(affine_mat, rot, 1e-8);
 }
 
 TEST(Affine2DTest, Rotation45AndTranslationXY) {
-
   Mat x1(2, 4);
   x1 <<  0, 1, 2, 5,
          0, 1, 2, 3;
@@ -104,16 +98,15 @@ TEST(Affine2DTest, Rotation45AndTranslationXY) {
 
   Mat x2 = x1;
   // Transform point from ground truth rotation matrix
-  for(int i=0; i < x2.cols(); ++i)
-  {
+  for(int i = 0; i < x2.cols(); ++i)  {
     x2.block<2,1>(0,i) = x1.col(i).transpose() * rot.block<2,2>(0,0);// rot
     x2.block<2,1>(0,i) += rot.block<2,1>(0,2); // translation
   }
 
-  Mat3 AffineMat;
-  EXPECT_TRUE(Affine2D_FromCorrespondencesLinear( x1, x2, &AffineMat));
-  std::cout << "Mat Affine2D "<< std::endl << AffineMat;
-  EXPECT_MATRIX_NEAR(AffineMat, rot, 1e-8);
+  Mat3 affine_mat;
+  EXPECT_TRUE(Affine2D_FromCorrespondencesLinear(x1, x2, &affine_mat));
+  VLOG(1) << "Mat Affine2D "<< std::endl << affine_mat;
+  EXPECT_MATRIX_NEAR(affine_mat, rot, 1e-8);
 }
 
 }
