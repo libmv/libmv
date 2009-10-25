@@ -13,7 +13,7 @@ ADD_LIBRARY(multiview
             bundle.cc
             autocalibration.cc
             five_point.cc
-            2DAffine.cc)
+            affine_2d.cc)
 
 TARGET_LINK_LIBRARIES(multiview numeric V3D colamd ldl)
 
@@ -42,7 +42,7 @@ MULTIVIEW_TEST(sixpointnview)
 MULTIVIEW_TEST(bundle)
 MULTIVIEW_TEST(autocalibration)
 MULTIVIEW_TEST(five_point)
-MULTIVIEW_TEST(2DAffine)
+MULTIVIEW_TEST(affine_2d)
 
 # TODO(keir): Make tests that depend on generated.cc to use generated sources.
 #ADD_GENERATED_SOURCE(generated.cc generator.py)
