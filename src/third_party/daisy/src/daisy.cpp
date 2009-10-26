@@ -849,6 +849,7 @@ void daisy::compute_orientations()
 
 void daisy::set_descriptor_memory( float* descriptor, long int d_size )
 {
+   (void) d_size;
    assert( m_descriptor_memory == false );
    assert( m_h*m_w != 0 );
    assert( d_size >= compute_descriptor_memory() );
@@ -858,6 +859,7 @@ void daisy::set_descriptor_memory( float* descriptor, long int d_size )
 }
 void daisy::set_workspace_memory( float* workspace, long int w_size )
 {
+   (void) w_size;
    assert( m_workspace_memory == false );
    assert( m_h*m_w != 0 );
    assert( w_size >= compute_workspace_memory() );
