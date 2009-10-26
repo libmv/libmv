@@ -30,6 +30,8 @@
 #include "libmv/image/surf_descriptor.h"
 #include "libmv/tools/tool.h"
 
+DEFINE_string(detector, "fast", "Detector type.");
+
 using namespace libmv;
 using namespace std;
 
@@ -53,6 +55,7 @@ int main(int argc, char **argv) {
   // Parse input parameter
   const string sImageIn = argv[1];
   const string sImageOut = argv[2];
+
 
   Array3Du imageIn;
   if (!ReadPnm(sImageIn.c_str(), &imageIn)) {
