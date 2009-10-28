@@ -13,7 +13,8 @@ ADD_LIBRARY(multiview
             bundle.cc
             autocalibration.cc
             five_point.cc
-            affine_2d.cc)
+            affine_2d.cc
+            robust_homography.cc)
 
 TARGET_LINK_LIBRARIES(multiview numeric V3D colamd ldl)
 
