@@ -85,6 +85,8 @@ void MatchViewer::ScreenFromPlane(float xi, float yi, float *xw, float *yw) {
 void MatchViewer::initializeGL() {
   glClearColor(0, 0, 0, 1);
   glShadeModel(GL_FLAT);
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  glLoadIdentity();
 }
 
 // Sets up GL_PROJECTION so that we can start drawing in plane coordinates.
@@ -136,7 +138,7 @@ void MatchViewer::DrawFeatures(int image_index) {
     glPushMatrix();
     glTranslatef(r.feature()->x(), r.feature()->y(), 0);
     // Convert from gaussian scale to pixel scale (see surf.h).
-    float scale = r.feature()->scale * 9.0 / 1.2 / 2.0;
+    float scale = r.feature()->scale;
     glScalef(scale, scale, scale);
     // TODO(pau) when surf orientation will be detected, ensure that this is
     //           turning in the right sense and the right units (deg vs rad).

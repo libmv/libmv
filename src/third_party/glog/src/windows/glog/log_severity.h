@@ -48,6 +48,9 @@
 // you ever need to change their values or add a new severity.
 typedef int LogSeverity;
 
+#ifdef ERROR
+#undef ERROR
+#endif
 const int INFO = 0, WARNING = 1, ERROR = 2, FATAL = 3, NUM_SEVERITIES = 4;
 
 // DFATAL is FATAL in debug mode, ERROR in normal mode

@@ -26,17 +26,17 @@
 
 using libmv::Matches;
 
-void FindCandidateMatches(const SurfFeatureSet &left,
-                          const SurfFeatureSet &right,
+void FindCandidateMatches(const LibmvFeatureSet &left,
+                          const LibmvFeatureSet &right,
                           libmv::Matches *matches) {
   int max_track_number = 0;
   for (size_t i = 0; i < left.features.size(); ++i) {
     int j, k;
     float distance; 
     right.tree.ApproximateNearestNeighborBestBinFirst(
-        left.features[i].descriptor.data(), 300, &j, &distance);
+      left.features[i].descriptor.coords.data(), 300, &j, &distance);
     left.tree.ApproximateNearestNeighborBestBinFirst(
-        right.features[j].descriptor.data(), 300, &k, &distance);
+      right.features[j].descriptor.coords.data(), 300, &k, &distance);
     
     // Left image is image 0, right is 1 for now.
     if (i == k) {
@@ -67,7 +67,7 @@ void ComputeFundamental(libmv::Matches &all_matches,
   // Compute Fundamental matrix and inliers.
   vector<int> inliers;
   // TODO(pau) Expose the threshold.
-  FundamentalFromCorrespondences8PointRobust(x[0], x[1], 1, F, &inliers);
+  FundamentalFromCorrespondences7PointRobust(x[0], x[1], 1, F, &inliers);
   VLOG(1) << inliers.size() << " inliers\n";
   if (inliers.size() < 8) {
     return;

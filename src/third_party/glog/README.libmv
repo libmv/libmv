@@ -15,6 +15,8 @@ Local modifications:
 * Don't redefine _XOPEN_SOURCE.
 * Added "google::" to GetReferenceableValue in CHECK_OP_LOG.
 * Add virtual destructor to Thread in googletest.h.
+* Update windows/glog/log_severity to build with QT library that include WinGDI
+  (It cause a double definition of ERROR variable).
 
 Old changes which got obsoleted (maybe?) by 0.2.1 merge:
 * Added #ifndef / def REG_EIP; not sure what that is.

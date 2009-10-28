@@ -27,17 +27,25 @@
 #include "libmv/correspondence/feature.h"
 #include "libmv/correspondence/matches.h"
 #include "libmv/image/surf.h"
+#include "libmv/descriptor/descriptor.h"
+#include "libmv/descriptor/vector_descriptor.h"
 
-struct SurfFeatureSet {
-  libmv::vector<libmv::SurfFeature> features;
+struct libmvFeature : public libmv::PointFeature {
+  libmv::descriptor::VecfDescriptor descriptor;
+  // Match kdtree traits: with this, the libmvFeature can act as a kdtree point.
+  float operator[](int i) const { return descriptor.coords(i); }
+};
+
+struct LibmvFeatureSet {
+  libmv::vector<libmvFeature> features;
   libmv::KdTree<float> tree;
 };
 
 // Compute candidate matches between 2 sets of features.  Two features a and b
 // are a candidate match if a is the nearest neighbor of b and b is the nearest
 // neighbor of a.
-void FindCandidateMatches(const SurfFeatureSet &left,
-                          const SurfFeatureSet &right,
+void FindCandidateMatches(const LibmvFeatureSet &left,
+                          const LibmvFeatureSet &right,
                           libmv::Matches *matches);
 
 // Computes the fundamental matrix given a set of candidate correspondences.

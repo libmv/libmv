@@ -11,6 +11,9 @@ TARGET_LINK_LIBRARIES(tvr
                       multiview
                       glog
                       gflags
+			    fast
+			    detector
+			    descriptor
                       ${QT_QTCORE_LIBRARY}
                       ${QT_QTGUI_LIBRARY}
                       ${QT_QTOPENGL_LIBRARY}
