@@ -18,10 +18,9 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
-#include <iostream>
-
+#include "libmv/base/vector.h"
 #include "libmv/logging/logging.h"
-#include "libmv/multiview/homography.h"
+#include "libmv/multiview/robust_homography.h"
 #include "libmv/multiview/test_data_sets.h"
 #include "libmv/numeric/numeric.h"
 #include "testing/testing.h"
@@ -30,7 +29,7 @@ namespace {
 
 using namespace libmv;
 
-TEST(Homography, HomographyFromCorrespondencesLinearRobust) {
+TEST(Homography, HomographyFromCorrespondences4PointRobust) {
   // Define a few homographies.
   const int num_h = 3;
   Mat3 H_gt[num_h];
@@ -64,7 +63,7 @@ TEST(Homography, HomographyFromCorrespondencesLinearRobust) {
 
     // Estimate homography from points.
     vector<int> inliers;
-    HomographyFromCorrespondencesLinearRobust(x, y, 0.1, &H[i], &inliers);
+    HomographyFromCorrespondences4PointRobust(x, y, 0.1, &H[i], &inliers);
     H[i] /= H[i](2,2);
   }
 
@@ -73,4 +72,6 @@ TEST(Homography, HomographyFromCorrespondencesLinearRobust) {
   EXPECT_MATRIX_NEAR(H_gt[2], H[2], 1e-8);
 }
 
+// TODO(pmoulon).
+//TEST(Homography, HomographyFromCorrespondences2PointRobust)
 }  // namespace

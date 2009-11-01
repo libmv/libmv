@@ -18,15 +18,13 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
-#include <cstdio>
-#include <vector>
-
+#include "libmv/numeric/numeric.h"
+#include "libmv/logging/logging.h"
 #include "libmv/multiview/robust_homography.h"
 #include "libmv/multiview/homography_kernel.h"
 #include "libmv/multiview/panography_kernel.h"
 #include "libmv/multiview/robust_estimation.h"
-#include "libmv/numeric/numeric.h"
-#include "libmv/logging/logging.h"
+
 
 namespace libmv {
 
@@ -36,7 +34,6 @@ double HomographyFromCorrespondences4PointRobust(const Mat &x1,
                                                  Mat3 *H,
                                                  vector<int> *inliers) {
   // The threshold is on the sum of the squared errors in the two images.
-  // Actually, Sampson's approximation of this error.
   double threshold = 2 * Square(max_error);
   typedef homography::kernel::Kernel KernelH;
   KernelH kernel(x1, x2);
