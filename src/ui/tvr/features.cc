@@ -24,35 +24,11 @@
 #include "libmv/multiview/robust_fundamental.h"
 #include "ui/tvr/features.h"
 
-using libmv::Matches;
-
-void FindCandidateMatches(const LibmvFeatureSet &left,
-                          const LibmvFeatureSet &right,
-                          libmv::Matches *matches) {
-  int max_track_number = 0;
-  for (size_t i = 0; i < left.features.size(); ++i) {
-    int j, k;
-    float distance; 
-    right.tree.ApproximateNearestNeighborBestBinFirst(
-      left.features[i].descriptor.coords.data(), 300, &j, &distance);
-    left.tree.ApproximateNearestNeighborBestBinFirst(
-      right.features[j].descriptor.coords.data(), 300, &k, &distance);
-    
-    // Left image is image 0, right is 1 for now.
-    if (i == k) {
-      // Both kdtrees matched the same feature, so it is probably a match.
-      matches->Insert(0, max_track_number, &left.features[i]);
-      matches->Insert(1, max_track_number, &right.features[j]);
-      max_track_number++;
-    }
-  }
-}
-
 //TODO(pau) Once stable, this has to move to libmv.
 //TODO(pau) candidate should be const; we need const_iterator in Correspondence.
-void ComputeFundamental(libmv::Matches &all_matches,
-                        libmv::Mat3 *F,
-                        libmv::Matches *consistent_matches) {
+void ComputeFundamental(Matches &all_matches,
+                        Mat3 *F,
+                        Matches *consistent_matches) {
   using namespace libmv;
 
   // Construct matrices containing the matches.

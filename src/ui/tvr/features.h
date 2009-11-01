@@ -22,36 +22,15 @@
 #ifndef UI_TVR_FEATURES_H_
 #define UI_TVR_FEATURES_H_
 
-#include "libmv/base/vector.h"
-#include "libmv/correspondence/kdtree.h"
-#include "libmv/correspondence/feature.h"
+#include "libmv/numeric/numeric.h"
 #include "libmv/correspondence/matches.h"
-#include "libmv/image/surf.h"
-#include "libmv/descriptor/descriptor.h"
-#include "libmv/descriptor/vector_descriptor.h"
 
-struct libmvFeature : public libmv::PointFeature {
-  libmv::descriptor::VecfDescriptor descriptor;
-  // Match kdtree traits: with this, the libmvFeature can act as a kdtree point.
-  float operator[](int i) const { return descriptor.coords(i); }
-};
-
-struct LibmvFeatureSet {
-  libmv::vector<libmvFeature> features;
-  libmv::KdTree<float> tree;
-};
-
-// Compute candidate matches between 2 sets of features.  Two features a and b
-// are a candidate match if a is the nearest neighbor of b and b is the nearest
-// neighbor of a.
-void FindCandidateMatches(const LibmvFeatureSet &left,
-                          const LibmvFeatureSet &right,
-                          libmv::Matches *matches);
+using namespace libmv;
 
 // Computes the fundamental matrix given a set of candidate correspondences.
 // Outputs the fundamental matrix and the set of inlier correspondences.
-void ComputeFundamental(libmv::Matches &candidate,
-                        libmv::Mat3 *F,
-                        libmv::Matches *robust);
+void ComputeFundamental(Matches &candidate,
+                        Mat3 *F,
+                        Matches *robust);
 
 #endif //UI_TVR_FEATURES_H_

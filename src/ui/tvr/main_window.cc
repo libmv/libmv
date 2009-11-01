@@ -22,29 +22,25 @@
 #include <QFileDialog>
 #include <QtGui>
 
+#include "libmv/base/scoped_ptr.h"
 #include "libmv/base/vector.h"
+#include "libmv/base/vector_utils.h"
+#include "libmv/correspondence/feature_matching.h"
+#include "libmv/detector/fast_detector.h"
+#include "libmv/detector/detector.h"
+#include "libmv/descriptor/descriptor.h"
+#include "libmv/descriptor/simpliest_descriptor.h"
 #include "libmv/image/array_nd.h"
-#include "libmv/image/surf.h"
-#include "libmv/image/surf_descriptor.h"
 #include "libmv/image/image.h"
+#include "libmv/logging/logging.h"
 #include "libmv/multiview/projection.h"
 #include "libmv/multiview/fundamental.h"
 #include "libmv/multiview/focal_from_fundamental.h"
 #include "libmv/multiview/nviewtriangulation.h"
 #include "libmv/multiview/bundle.h"
-#include "libmv/logging/logging.h"
+
 #include "ui/tvr/main_window.h"
 
-#include "libmv/base/scoped_ptr.h"
-
-#include "libmv/detector/fast_detector.h"
-#include "libmv/detector/detector.h"
-#include "libmv/descriptor/descriptor.h"
-#include "libmv/descriptor/simpliest_descriptor.h"
-
-
-using libmv::Mat;
-using libmv::vector;
 using namespace libmv;
 
 TvrMainWindow::TvrMainWindow(QWidget *parent)
@@ -171,7 +167,7 @@ void TvrMainWindow::OpenImages() {
       document_.images[i] = q.rgbSwapped();
     }
     InitTextures();
-   if (!viewers_area_->currentSubWindow())
+    if (!viewers_area_->currentSubWindow())
       Show2DView();
     UpdateViewers();
   } else if (filenames.size() != 0) {
@@ -274,15 +270,6 @@ void TvrMainWindow::ComputeFeatures() {
     + QString::number(document_.feature_sets[1].features.size()));
 }
 
-/// Destroy dynamic content of an array.
-// TODO(pmoulon) must be moved into utils something
-template <class Array>
-void DestroyDynamicDataArray(Array & ar)  {
-  for(int i=0; i < ar.size(); ++i)  {
-    delete ar[i];
-  }
-}
-
 void TvrMainWindow::ComputeFeatures(int image_index) {
 
   // Display information to the user.
@@ -291,12 +278,12 @@ void TvrMainWindow::ComputeFeatures(int image_index) {
 
   QImage &qimage = document_.images[image_index];
   int width = qimage.width(), height = qimage.height();
-  LibmvFeatureSet &fs = document_.feature_sets[image_index];
+  FeatureSet &fs = document_.feature_sets[image_index];
 
   // Convert to gray-scale.
   // TODO(keir): Make a libmv image <-> QImage interop library inside libmv for
   // easy bidirectional exchange of images between Qt and libmv.
-  libmv::Array3Du image(height, width);
+  Array3Du image(height, width);
   for (int y = 0; y < height; ++y) {
     for (int x = 0; x < width; ++x) {
       // TODO(pau): there are better ways to compute intensity.
@@ -313,21 +300,21 @@ void TvrMainWindow::ComputeFeatures(int image_index) {
 
   scoped_ptr<detector::Detector> detector(detector::CreateFastDetector(9, 30));
 
-  libmv::vector<libmv::Feature *> features;
-  Image im( new Array3Du(image) );
-  detector->Detect( im, &features, NULL);
+  vector<Feature *> features;
+  Image im(new Array3Du(image));
+  detector->Detect(im, &features, NULL);
 
-  libmv::vector<descriptor::Descriptor *> descriptors;
+  vector<descriptor::Descriptor *> descriptors;
   scoped_ptr<descriptor::Describer> describer(descriptor::CreateSimpliestDescriber());
   describer->Describe(features, im, NULL, &descriptors);
 
   // Copy data.
   fs.features.resize(descriptors.size());
-  for(int i=0;i<descriptors.size();++i)
+  for(int i = 0;i < descriptors.size(); ++i)
   {
-    libmvFeature & feat = fs.features[i];
-    feat.descriptor = *(libmv::descriptor::VecfDescriptor*)descriptors[i];
-    *(libmv::PointFeature*)(&feat) = *(libmv::PointFeature*)features[i];
+    KeypointFeature & feat = fs.features[i];
+    feat.descriptor = *(descriptor::VecfDescriptor*)descriptors[i];
+    *(PointFeature*)(&feat) = *(PointFeature*)features[i];
   }
 
   DestroyDynamicDataArray(descriptors);
@@ -336,8 +323,7 @@ void TvrMainWindow::ComputeFeatures(int image_index) {
   QMainWindow::statusBar()->showMessage("Start : Build kd-Tree for image : "
    + QString::number(image_index) );
 
-  if(fs.features.size()>0)
-  {
+  if(fs.features.size() > 0)  {
     // Build the kd-tree.
     fs.tree.SetDimensions(fs.features[0].descriptor.coords.size());
     for (int i = 0; i < fs.features.size(); ++i) {

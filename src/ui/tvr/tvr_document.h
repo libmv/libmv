@@ -22,23 +22,21 @@
 #ifndef UI_TVR_TVR_DATA_H_
 #define UI_TVR_TVR_DATA_H_
 
-#include <vector>
-
-#include <QVector>
-
-#include "ui/tvr/features.h"
+#include "libmv/base/vector.h"
+#include "libmv/correspondence/feature_matching.h"
+using libmv::vector;
 
 struct TvrDocument {
   QImage images[2];
-  LibmvFeatureSet feature_sets[2];
+  FeatureSet feature_sets[2];
   libmv::Matches matches;
   libmv::Mat3 F;
   double focal_distance[2];
   libmv::Mat3 K[2];
   libmv::Mat3 R[2];
   libmv::Vec3 t[2];
-  std::vector<libmv::Vec3> X;
-  std::vector<libmv::Vec3f> X_colors;
+  vector<libmv::Vec3> X;
+  vector<libmv::Vec3f> X_colors;
 
   void SaveAsBlender(const char *filename) {
     FILE* fid = fopen(filename, "wb");
