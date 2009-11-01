@@ -41,7 +41,7 @@ typedef int FeatureID;
  * the feature can be retrived later.
  *
  * Internally the class is a thin layer over std::map to be able to deal with
- * differnt features types in the same bag.
+ * different features types in the same bag.
  */
 class FeatureSet {
   typedef std::map<FeatureID, Feature *> FeatureMap;
