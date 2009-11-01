@@ -22,21 +22,19 @@
 #include <string>
 
 #include "libmv/base/vector.h"
+#include "libmv/base/vector_utils.h"
 #include "libmv/base/scoped_ptr.h"
-#include "libmv/tools/tool.h"
-
-#include "libmv/image/image.h"
-#include "libmv/image/image_io.h"
-#include "libmv/image/image_drawing.h"
-
+#include "libmv/correspondence/feature.h"
 #include "libmv/detector/fast_detector.h"
 #include "libmv/detector/surf_detector.h"
 #include "libmv/detector/detector.h"
-#include "libmv/correspondence/feature.h"
-
 #include "libmv/descriptor/descriptor.h"
 #include "libmv/descriptor/simpliest_descriptor.h"
 #include "libmv/descriptor/vector_descriptor.h"
+#include "libmv/image/image.h"
+#include "libmv/image/image_io.h"
+#include "libmv/image/image_drawing.h"
+#include "libmv/tools/tool.h"
 
 using namespace libmv;
 using namespace std;
@@ -46,14 +44,6 @@ void usage() {
     << " ImageNameIn.pgm  : the input image on which surf features will be extrated, " << std::endl
     << " ImageNameOut.pgm : the localized keypoints will be displayed on it. " << std::endl
     << " INFO : work with pgm image only." << std::endl;
-}
-
-/// Destroy dynamic content of an array.
-template <class Array>
-void DestroyDynamicDataArray(Array & ar)  {
-  for(int i=0; i < ar.size(); ++i)  {
-    delete ar[i];
-  }
 }
 
 /// Draw feature position, scale and orientation over a given image.

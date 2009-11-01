@@ -35,3 +35,16 @@ TARGET_LINK_LIBRARIES(points_detector
                       fast
                       descriptor
                       )
+
+ADD_EXECUTABLE(homography_warping homography_warping.cc)
+TARGET_LINK_LIBRARIES(homography_warping
+                      correspondence
+                      image
+                      gflags
+                      glog
+                      detector
+                      fast
+                      descriptor
+                      multiview
+                      )
+					  
