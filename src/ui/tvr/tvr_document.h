@@ -22,8 +22,11 @@
 #ifndef UI_TVR_TVR_DATA_H_
 #define UI_TVR_TVR_DATA_H_
 
+
+#include <stdio.h>
 #include "libmv/base/vector.h"
 #include "libmv/correspondence/feature_matching.h"
+
 using libmv::vector;
 
 struct TvrDocument {
@@ -63,7 +66,7 @@ struct TvrDocument {
       double width = images[0].width();
       // WARNING: MAGIC CONSTANT from blender source
       // Look for 32.0 in 'source/blender/render/intern/source/initrender.c'
-      double lens = f / width * 32.0; 
+      double lens = f / width * 32.0;
       fprintf(fid, "c%04d.lens = %g\n", i, lens);
       fprintf(fid, "c%04d.setDrawSize(0.05)\n", i);
       fprintf(fid, "o%04d = Object.New('Camera')\n", i);
