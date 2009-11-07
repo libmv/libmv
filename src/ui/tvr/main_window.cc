@@ -317,8 +317,8 @@ void TvrMainWindow::ComputeFeatures(int image_index) {
     *(PointFeature*)(&feat) = *(PointFeature*)features[i];
   }
 
-  DestroyDynamicDataArray(descriptors);
-  DestroyDynamicDataArray(features);
+  DeleteElements(&descriptors);
+  DeleteElements(&features);
   // Display information to the user.
   QMainWindow::statusBar()->showMessage("Start : Build kd-Tree for image : "
    + QString::number(image_index) );

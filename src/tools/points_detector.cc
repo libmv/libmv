@@ -98,7 +98,7 @@ int main(int argc, char **argv) {
     LOG(FATAL) << "Failed saving output image: " << sImageOut;
   }
 
-  DestroyDynamicDataArray( features );
+  DeleteElements(&features);
 
   return 0;
 }

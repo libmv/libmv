@@ -108,8 +108,8 @@ int main(int argc, char **argv) {
       *(PointFeature*)(&feat) = *(PointFeature*)features[i];
     }
 
-    DestroyDynamicDataArray( features );
-    DestroyDynamicDataArray( descriptors );
+    DeleteElements(&features);
+    DeleteElements(&descriptors);
 
   }
 
@@ -133,9 +133,8 @@ int main(int argc, char **argv) {
       *(PointFeature*)(&feat) = *(PointFeature*)features[i];
     }
 
-    DestroyDynamicDataArray( features );
-    DestroyDynamicDataArray( descriptors );
-
+    DeleteElements(&features);
+    DeleteElements(&descriptors);
   }
 
   if(KeypointImgA.features.size() > 0)  {

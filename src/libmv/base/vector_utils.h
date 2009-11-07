@@ -22,13 +22,13 @@
 #ifndef LIBMV_BASE_VECTOR_UTILS_H_
 #define LIBMV_BASE_VECTOR_UTILS_H_
 
-/// Destroy dynamic content of an array.
-// TODO(pmoulon) must be moved into utils something
+/// Delete the contents of a container.
 template <class Array>
-void DestroyDynamicDataArray(Array & ar)  {
-  for(int i=0; i < ar.size(); ++i)  {
-    delete ar[i];
+void DeleteElements(Array *array)  {
+  for (int i = 0; i < array->size(); ++i)  {
+    delete (*array)[i];
   }
+  array->clear();
 }
 
 #endif // LIBMV_BASE_VECTOR_UTILS_H_
