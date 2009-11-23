@@ -87,7 +87,7 @@ Configures where the log output should go
 Params:
     destination = destination file, NULL for console
 */
-LIBSPEC void flann_log_destination(char* destination);
+LIBSPEC void flann_log_destination(const char* destination);
 
 
 

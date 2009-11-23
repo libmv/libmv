@@ -35,7 +35,7 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "common.h"
 
 #include <algorithm>
-#include <math.h>
+#include <cmath>
 
 
 

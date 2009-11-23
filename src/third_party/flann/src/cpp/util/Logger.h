@@ -48,7 +48,7 @@ class Logger
 
 public:
 
-    Logger() : stream(stdout), logLevel(LOG_WARN) {};
+    Logger() : logLevel(LOG_WARN),stream(stdout) {};
 
     ~Logger()
     {

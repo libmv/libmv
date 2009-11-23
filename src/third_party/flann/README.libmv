@@ -5,9 +5,8 @@ Upstream version: 1.2 released February 2009
 Doc : http://people.cs.ubc.ca/~mariusm/uploads/FLANN/manual.pdf
 
 Local modifications:
-* remove test directory
-* remove CMake Native build system
-* remove matlab and python support
+* Remove matlab and python from CMAKE native build system.
 
 * Code changes :
-* none
+* Add CMake Build system
+* Fix warnings and errors at compilation time

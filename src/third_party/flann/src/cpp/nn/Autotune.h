@@ -377,7 +377,6 @@ public:
         t.start();
         compute_ground_truth(*sampledDataset, *testDataset, *gt_matches, 0);
         t.stop();
-        float linearTime = t.value;
 
         // Start parameter autotune process
         logger.info("Autotuning parameters...\n");

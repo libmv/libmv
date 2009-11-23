@@ -188,6 +188,7 @@ struct ZeroIterator {
 	}
 
 	T operator[](int index) {
+	  (void)index;
 		return 0;
 	}
 

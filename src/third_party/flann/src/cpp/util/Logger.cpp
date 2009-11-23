@@ -57,6 +57,7 @@ void log_params(int level, Params p)
 
 int Logger::log(int level, const char* fmt, ...)
 {
+  (void) level;
     if (level > logLevel ) return -1;
 
     int ret;
@@ -70,6 +71,7 @@ int Logger::log(int level, const char* fmt, ...)
 
 int Logger::log(int level, const char* fmt, va_list arglist)
 {
+  (void)level;
     if (level > logLevel ) return -1;
 
     int ret;

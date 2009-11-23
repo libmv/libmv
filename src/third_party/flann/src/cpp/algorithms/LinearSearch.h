@@ -40,6 +40,7 @@ public:
 
 	LinearSearch(Dataset<float>& inputData, Params params) : dataset(inputData)
 	{
+	  (void)params;
 	}
 
     flann_algorithm_t getType() const
@@ -71,6 +72,8 @@ public:
 
 	void findNeighbors(ResultSet& resultSet, float* vec, Params searchParams)
 	{
+	  (void)vec;
+	  (void)searchParams;
 		for (int i=0;i<dataset.rows;++i) {
 			resultSet.addPoint(dataset[i],i);
 		}
@@ -78,8 +81,10 @@ public:
 
     Params estimateSearchParams(float precision, Dataset<float>* testset = NULL)
     {
-        Params params;
-        return params;
+      (void)precision;
+      (void)testset;
+      Params params;
+      return params;
     }
 
 };

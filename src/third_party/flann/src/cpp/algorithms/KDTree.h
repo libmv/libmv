@@ -273,7 +273,6 @@ public:
 
 	void continueSearch(ResultSet& result, float* vec, int maxCheck)
 	{
-		int i;
 		BranchSt branch;
 
 		int checkCount = 0;
@@ -290,7 +289,8 @@ public:
     Params estimateSearchParams(float precision, Dataset<float>* testset = NULL)
     {
         Params params;
-
+        (void)precision;
+        (void)testset;
         return params;
     }
 

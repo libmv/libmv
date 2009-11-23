@@ -97,7 +97,8 @@ public:
     Params estimateSearchParams(float precision, Dataset<float>* testset = NULL)
     {
         Params params;
-
+        (void)precision;
+        (void)testset;
         return params;
     }
 

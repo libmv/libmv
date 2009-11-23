@@ -127,7 +127,7 @@ EXPORTED void flann_log_verbosity(int level)
     }
 }
 
-EXPORTED void flann_log_destination(char* destination)
+EXPORTED void flann_log_destination(const char* destination)
 {
     logger.setDestination(destination);
 }
@@ -195,10 +195,10 @@ EXPORTED int flann_find_nearest_neighbors(float* dataset,  int rows, int cols, f
 	try {
 		init_flann_parameters(flann_params);
 
-        DatasetPtr inputData = new Dataset<float>(rows,cols,dataset);
+    DatasetPtr inputData = new Dataset<float>(rows,cols,dataset);
 		float target_precision = flann_params->target_precision;
 
-        StartStopTimer t;
+    StartStopTimer t;
 		NNIndexPtr index;
 		if (target_precision < 0) {
 			Params params = parametersToParams(*flann_params);
@@ -279,6 +279,7 @@ EXPORTED int flann_radius_search(FLANN_INDEX index_ptr,
 										int checks,
 										FLANNParameters* flann_params)
 {
+  (void) max_nn;
 	try {
 		init_flann_parameters(flann_params);
 
@@ -287,7 +288,6 @@ EXPORTED int flann_radius_search(FLANN_INDEX index_ptr,
         }
         NNIndexPtr index = NNIndexPtr(index_ptr);
 
-        int length = index->veclen();
         Params searchParams;
         searchParams["checks"] = checks;
         RadiusResultSet resultSet(radius);

@@ -573,7 +573,8 @@ public:
     Params estimateSearchParams(float precision, Dataset<float>* testset = NULL)
     {
         Params params;
-
+        (void)precision;
+        (void)testset;
         return params;
     }
 
@@ -894,7 +895,6 @@ private:
 			}
 		}
 
-		float* best_center = node->childs[best_index]->pivot;
 		for (int i=0;i<branching;++i) {
 			if (i != best_index) {
 				domain_distances[i] -= cb_index*node->childs[i]->variance;
