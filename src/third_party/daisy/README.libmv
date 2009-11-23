@@ -14,3 +14,6 @@ Local modifications:
 * src/image_manipulation.cpp => Add preprocessor to avoid omp compilation directive to be in all compilation mode.
 * kutility/kutility.def => fix isnan() on windows platform and OPENMP 'omp' include.
 * Change to add use of unused parameter.
+* make convolution code better : convolution.h use template<class T> inline void convolve_sym
+* fix layer issue un daisy.cpp (memory error in valgrind)
+

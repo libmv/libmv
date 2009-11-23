@@ -251,7 +251,7 @@ void daisy::smooth_layers( float* layers, int h, int w, int layer_number, float 
    for( i=0; i<layer_number; i++ )
    {
       layer = layers + i*h*w;
-      convolve_sym( layer, h, w, filter, fsz, layer );
+      convolve_sym( layer, h, w, filter, fsz );
    }
    deallocate(filter);
 }
