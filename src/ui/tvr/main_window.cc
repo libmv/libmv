@@ -26,6 +26,7 @@
 #include "libmv/base/vector.h"
 #include "libmv/base/vector_utils.h"
 #include "libmv/correspondence/feature_matching.h"
+#include "libmv/correspondence/feature_matching_FLANN.h"
 #include "libmv/detector/fast_detector.h"
 #include "libmv/detector/detector.h"
 #include "libmv/descriptor/descriptor.h"
@@ -99,7 +100,7 @@ void TvrMainWindow::CreateActions() {
           this, SLOT(SaveBlender()));
 
   compute_features_action_ = new QAction(tr("&Compute Features"), this);
-  compute_features_action_->setStatusTip(tr("Compute Surf Features"));
+  compute_features_action_->setStatusTip(tr("Compute Features"));
   connect(compute_features_action_, SIGNAL(triggered()),
           this, SLOT(ComputeFeatures()));
 
@@ -343,9 +344,17 @@ void TvrMainWindow::ComputeCandidateMatches() {
   // Display information to the user.
   QMainWindow::statusBar()->showMessage("Start : ComputeCandidateMatches");
 
-  FindCandidateMatches(document_.feature_sets[0],
-                       document_.feature_sets[1],
-                       &document_.matches);
+  /*FindSymmetricCandidateMatches_FLANN(document_.feature_sets[0],
+                                      document_.feature_sets[1],
+                                      &document_.matches);*/
+
+  /*FindCandidateMatchesDistanceRatio_FLANN(document_.feature_sets[0],
+                                    document_.feature_sets[1],
+                                    &document_.matches,
+                                    0.8f);*/
+  FindCandidateMatches( document_.feature_sets[0],
+                        document_.feature_sets[1],
+                        &document_.matches);
   UpdateViewers();
 
   // Display information to the user.

@@ -9,6 +9,7 @@ TARGET_LINK_LIBRARIES(tvr
                       correspondence
                       numeric
                       multiview
+                      flann
                       glog
                       gflags
                       detector
