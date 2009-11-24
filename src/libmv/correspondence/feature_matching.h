@@ -53,10 +53,5 @@ void FindCandidateMatches(const FeatureSet &left,
                           const FeatureSet &right,
                           Matches *matches);
 
-// Computes the fundamental matrix given a set of candidate correspondences.
-// Outputs the fundamental matrix and the set of inlier correspondences.
-//void ComputeConstrainedMatches(Matches &candidate,
-//                        Mat3 *F,
-//                        Matches *robust);
 
-#endif //UI_TVR_FEATURES_H_
+#endif //LIBMV_CORRESPONDENCE_FEATURE_MATCHING_H_
