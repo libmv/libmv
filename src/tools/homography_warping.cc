@@ -46,7 +46,7 @@ using namespace std;
 
 void usage() {
   LOG(ERROR) << " points_detector ImageNameA.pgm ImageNameB.pgm ImageNameOut.pgm"
-    <<std::endl
+    << std::endl
     << " ImageNameA.pgm  : the input image that you want stitch to B,"
     << std::endl
     << " ImageNameB.pgm  : the input image that you want stitch to A,"
@@ -55,6 +55,8 @@ void usage() {
     << " INFO : work with pgm image only." << std::endl;
 }
 
+void Overlap_ComputeBoundingBox(int w1, int h1, int w2, int h2, const Mat3 & Homography,
+                                int & tx, int & ty, int & wOut, int & hOut);
 
 int main(int argc, char **argv) {
 
@@ -83,7 +85,7 @@ int main(int argc, char **argv) {
     return 0;
   }
 
-  scoped_ptr<detector::Detector> detector(detector::CreateFastDetector(9, 30));
+  scoped_ptr<detector::Detector> detector(detector::CreateFastDetector(9, 20));
   //scoped_ptr<detector::Detector> detector(detector::CreateSURFDetector(4,4));
 
   FeatureSet KeypointImgA;
@@ -188,7 +190,7 @@ int main(int argc, char **argv) {
     }
   }
   
-  // Compute Fundamental matrix using all inliers.
+  // Compute Homography matrix using all inliers.
   TwoViewPointMatchMatrices(consistent_matches, 0, 1, &x);
   libmv::vector<Mat3> Hs;
   homography::kernel::FourPointSolver::Solve(x[0], x[1], &Hs);
@@ -197,8 +199,7 @@ int main(int argc, char **argv) {
 
   //warp imageB on ImageA.
 
-  Mat3 Hinv = H.inverse();
-  for(int j=0; j < imageA.Height(); ++j)
+  /*for(int j=0; j < imageA.Height(); ++j)
     for(int i=0; i < imageA.Width(); ++i)
     {
       Vec3 Pos;
@@ -213,7 +214,109 @@ int main(int argc, char **argv) {
       }
     }
 
-  WriteJpg(imageA, string(sImageOut).c_str(), 100);
+  WriteJpg(imageA, string(sImageOut).c_str(), 100);*/
+
+  int tx=0, ty=0, wOut=0, hOut=0;
+  Overlap_ComputeBoundingBox(imageA.Width(), imageA.Height(),
+                                imageB.Width(), imageB.Height(),
+                                H, tx, ty, wOut, hOut);
+
+  Array3Du warpingImage(hOut, wOut,3);
+  warpingImage.Fill(0);
+
+  //-- Fill destination image
+  //-- (Backward mapping. For the destination pixel search which pixel contribute ?).
+  for(int j=0; j < hOut; ++j)
+  for(int i=0; i < wOut; ++i)
+  {
+    //- Algo :
+    // For the destination pixel (i,j) search which pixel from ImageA and ImageB contribute.
+    // Perform a mean blending in the overlap zone, transfert original value in the other part.
+
+    Vec3 Pos;
+    Pos << i-tx,j-ty,1.0;
+    const int xPos = Pos(0), yPos = Pos(1);
+    
+    bool bAContrib = false, bBContrib=false;
+    if( imageA.Contains( yPos, xPos ) )
+      bAContrib = true;
+
+    Vec3 imagePosB = H*Pos;
+    imagePosB/=imagePosB(2);
+    if( imageB.Contains( imagePosB(1), imagePosB(0) ) )
+      bBContrib = true;
+
+    if(bAContrib && bBContrib)  //mean blending between ImageA and ImageB
+    {
+      warpingImage(j,i,0) = (imageA(yPos,xPos,0) + SampleLinear( imageB, imagePosB(1),imagePosB(0),0))/2;
+      warpingImage(j,i,1) = (imageA(yPos,xPos,1) + SampleLinear( imageB, imagePosB(1),imagePosB(0),1))/2;
+      warpingImage(j,i,2) = (imageA(yPos,xPos,2) + SampleLinear( imageB, imagePosB(1),imagePosB(0),2))/2;
+      continue;
+    }
+    if(bAContrib && !bBContrib) //only ImageA contrib
+    {
+      warpingImage(j,i,0) = imageA(yPos,xPos,0);
+      warpingImage(j,i,1) = imageA(yPos,xPos,1);
+      warpingImage(j,i,2) = imageA(yPos,xPos,2);
+      continue;
+    }
+    if(!bAContrib && bBContrib) //only ImageB contrib
+    {
+      warpingImage(j,i,0) = SampleLinear( imageB, imagePosB(1),imagePosB(0),0);
+      warpingImage(j,i,1) = SampleLinear( imageB, imagePosB(1),imagePosB(0),1);
+      warpingImage(j,i,2) = SampleLinear( imageB, imagePosB(1),imagePosB(0),2);
+      continue;
+    }
+
+  }
+  WriteJpg(warpingImage, string(sImageOut).c_str(), 100);
 
   return 0;
+}
+
+/**
+ * Compute the dimension of the image that can contain image1 (width1,height1)
+ *  and the projection of image2 : (width2,height2).
+ */
+void Overlap_ComputeBoundingBox(int w1, int h1, int w2, int h2, const Mat3 & Homography,
+                                int & tx, int & ty, int & wOut, int & hOut)
+{
+  //-- Initialized with the dimension of Image 1
+  int minx=0, miny=0, maxx=w1, maxy=h1;
+
+  //-- compute where the second images boxes is projected onto image1 coords:
+  int xCoord[4] = {0, w2, w2, 0 };
+  int yCoord[4] = {0, 0,  h2, h2};
+
+  Mat3 Hinv(3,3);
+  Hinv = Homography.inverse();
+  for(int i=0; i<4; ++i)
+  {
+    Vec3 Pos;
+    Pos << xCoord[i],yCoord[i],1.0;
+
+    Vec3 Pos2 = Hinv * Pos;
+    Vec3 posImage = Pos2/Pos2(2);
+
+    double xT = posImage(0), yT = posImage(1);
+
+    // xCase
+    if( xT < minx)
+      minx=floor(xT);
+    else if( xT > maxx)
+      maxx=ceil(xT);
+    //yCase
+    if( yT < miny)
+      miny=floor(yT);
+    else if( yT > maxy)
+      maxy=ceil(yT);
+  }
+  //use floor and ceil to be sure that we will not miss '1/2' pixel reprojection.
+
+  //-- Compute the translation vector that we need to fit the two image into a big one
+  tx = - minx;
+  ty = - miny;
+  //-- Compute the image dimension that can contain the two overlapped images
+  wOut = maxx - minx;
+  hOut = maxy - miny;
 }

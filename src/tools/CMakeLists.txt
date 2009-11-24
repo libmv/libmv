@@ -44,6 +44,7 @@ TARGET_LINK_LIBRARIES(homography_warping
                       glog
                       detector
                       fast
+                      flann
                       descriptor
                       multiview
                       )
