@@ -82,7 +82,7 @@ class ArrayND : public BaseArray {
 
   /// Create an array of shape s.
   void Resize(const Index &new_shape) {
-    if (data_ != NULL && shape_ == new_shape) { 
+    if (data_ != NULL && shape_ == new_shape) {
       // Don't bother realloacting if the shapes match.
       return;
     }
@@ -274,7 +274,7 @@ class ArrayND : public BaseArray {
         return false;
     return true;
   }
-  
+
   /// 1D sepecialization.
   bool Contains(int i0) const {
     return 0 <= i0 && i0 < Shape(0);
@@ -292,7 +292,7 @@ class ArrayND : public BaseArray {
         && 0 <= i1 && i1 < Shape(1)
         && 0 <= i2 && i2 < Shape(2);
   }
-  
+
   bool operator==(const ArrayND<T, N> &other) const {
     if (shape_ != other.shape_) return false;
     if (strides_ != other.strides_) return false;
@@ -374,27 +374,26 @@ class Array3D : public ArrayND<T, 3> {
 };
 
 typedef Array3D<unsigned char> Array3Du;
-//typedef Array3D<float> Array3Df;
+typedef Array3D<unsigned int> Array3Dui;
+typedef Array3D<float> Array3Df;
 
-class Array3Df : public Array3D<float> {
- public:
-  Array3Df()
-      : Array3D<float>() {}
-  Array3Df(int height, int width, int depth=1)
-      : Array3D<float>(height, width, depth) {}
-
-  // Copy constructor copies pixel data.
-  Array3Df(const Array3Df &b) : Array3D<float>(b) {
-  }
-};
-
-void SplitChannels(const Array3Df input,
+void SplitChannels(const Array3Df &input,
                    Array3Df *channel0,
                    Array3Df *channel1,
                    Array3Df *channel2);
 
+void PrintArray(const Array3Df &array);
+
+// Convert a float array into a byte array by scaling values by 255* (max-min).
+void FloatArrayToScaledByteArray(const Array3Df &float_array,
+                                 Array3Du *byte_array);
+
+// Convert a byte array into a float array by dividing values by 255.
+void ByteArrayToScaledFloatArray(const Array3Du &byte_array,
+                                 Array3Df *float_array);
+
 template <typename AArrayType, typename BArrayType, typename CArrayType>
-void MultiplyElements( const AArrayType &a, 
+void MultiplyElements( const AArrayType &a,
            const BArrayType &b,
            CArrayType *c ) {
   // This function does an element-wise multiply between
@@ -408,7 +407,7 @@ void MultiplyElements( const AArrayType &a,
   typename CArrayType::Index index;
 
   // The index starts at the maximum value for each dimension
-  const typename CArrayType::Index& cShape = c->Shape(); 
+  const typename CArrayType::Index& cShape = c->Shape();
   for ( int i = 0; i < CArrayType::Index::SIZE; ++i )
     index(i) = cShape(i) - 1;
 
@@ -421,7 +420,7 @@ void MultiplyElements( const AArrayType &a,
     (*c)(index) = a(index) * b(index);
 
     int dimension = CArrayType::Index::SIZE - 1;
-    index(dimension) = index(dimension) - 1; 
+    index(dimension) = index(dimension) - 1;
     while ( dimension > 0 && index(dimension) < 0 ) {
       index(dimension) = cShape(dimension) - 1;
       index(dimension - 1) = index(dimension - 1) - 1;
@@ -448,38 +447,6 @@ void MultiplyElements(const ArrayND<TA, 3> &a,
   }
 }
 
-
-
-inline void PrintArray(const Array3Df &array) {
-  using namespace std;
-
-  printf("[\n");
-  for (int r = 0; r < array.Height(); ++r) {
-    printf("[");
-    for (int c = 0; c < array.Width(); ++c) {
-      if (array.Depth() == 1) {
-        printf("%11f, ", array(r, c));
-      } else {
-        printf("[");
-        for (int k = 0; k < array.Depth(); ++k) {
-          printf("%11f, ", array(r, c, k));
-        }
-        printf("],");
-      }
-    }
-    printf("],\n");
-  }
-  printf("]\n");
-}
-
-
-// Convert a float array into a byte array by scaling values by 255* (max-min).
-void FloatArrayToScaledByteArray(const Array3Df &float_array,
-                                 Array3Du *byte_array);
-
-// Convert a byte array into a float array by dividing values by 255.
-void ByteArrayToScaledFloatArray(const Array3Du &byte_array,
-                                 Array3Df *float_array);
 
 }  // namespace libmv
 

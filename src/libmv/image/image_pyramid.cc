@@ -46,7 +46,7 @@ class ConcreteImagePyramid : public ImagePyramid {
 
     BlurredImageAndDerivativesChannels(image, sigma, &levels_[0]);
 
-    vector<Array3Df> downsamples(num_levels);
+    vector<FloatImage> downsamples(num_levels);
     downsamples[0] = image;
 
     for (int i = 1; i < NumLevels(); ++i) {
@@ -55,7 +55,7 @@ class ConcreteImagePyramid : public ImagePyramid {
     }
   }
 
-  virtual const Array3Df &Level(int i) {
+  virtual const FloatImage &Level(int i) {
     assert(0 <= i && i < NumLevels());
     return levels_[i];
   }
@@ -73,10 +73,10 @@ class ConcreteImagePyramid : public ImagePyramid {
   }
 
  private:
-  vector<Array3Df> levels_;
+  vector<FloatImage> levels_;
 };
 
-ImagePyramid *MakeImagePyramid(const Array3Df &image,
+ImagePyramid *MakeImagePyramid(const FloatImage &image,
                                int num_levels,
                                double sigma) {
   return new ConcreteImagePyramid(image, num_levels, sigma);

@@ -50,7 +50,7 @@ class ImageSequenceBackedImagePyramid : public ImagePyramid {
     }
   }
 
-  virtual const Array3Df &Level(int i) {
+  virtual const FloatImage &Level(int i) {
     pinned_levels_[i] = 1;
     return *levels_[i]->GetFloatImage(frame_);
   }

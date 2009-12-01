@@ -23,7 +23,6 @@
 
 namespace libmv {
 
-class Array3Df;
 class Image;
 class ImageCache;
 
@@ -36,7 +35,7 @@ class ImageSequence {
   // Retreive an image from the sequence. The image sequence retains ownership
   // of the image. Callers must Unpin() the image after they are done with it.
   virtual Image *GetImage(int i) = 0;
-  virtual Array3Df *GetFloatImage(int i);
+  virtual FloatImage *GetFloatImage(int i);
 
   // Call this after an image is no longer in use, with an index matching that
   // which was retrieved with GetImage() or GetFloatImage().
