@@ -130,19 +130,18 @@ void MatchViewer::DrawImage(int i) {
 }
 
 void MatchViewer::DrawFeatures(int image_index) {
-  //libmv::vector<libmv::SurfFeature> &features =
-  //    document_->feature_sets[image_index].features;
 
   for (Matches::Points r =
       document_->matches.InImage<PointFeature>(image_index); r; ++r) {
+
     glPushMatrix();
-    glTranslatef(r.feature()->x(), r.feature()->y(), 0);
+    glTranslatef(r.feature()->x(), r.feature()->y(), 0.0f);
     // Convert from gaussian scale to pixel scale (see surf.h).
     float scale = r.feature()->scale;
     glScalef(scale, scale, scale);
-    // TODO(pau) when surf orientation will be detected, ensure that this is
+    // TODO(pau) when orientation will be detected, ensure that this is
     //           turning in the right sense and the right units (deg vs rad).
-    //glRotatef(features[i].orientation, 0, 0, 1);
+    glRotatef(r.feature()->orientation, 0.0f, 0.0f, 1.0f);
     glBegin(GL_LINES);
     glVertex2f(-1, -1); glVertex2f( 1, -1); // Square Box.
     glVertex2f( 1, -1); glVertex2f( 1,  1);
@@ -158,17 +157,28 @@ void MatchViewer::DrawCandidateMatches() {
   float xoff[2] = { screen_images_[0].posx, screen_images_[1].posx};
   float yoff[2] = { screen_images_[0].posy, screen_images_[1].posy};
 
+  int nb = 0;
   glBegin(GL_LINES);  // TODO(keir): Note that this will break with > 2 images.
   for (Matches::Points r =
-      document_->matches.AllReversed<PointFeature>(); r; ++r) {
+      document_->matches.AllReversed<PointFeature>(); r; ++r, ++nb) {
+
+    //Compute a color that is dependent of the point position
+    float colorFactor = sqrt( nb + abs(r.feature()->x()) + abs(r.feature()->y()) );
+    float red = 1000.f * colorFactor,
+          g = 10000.f * colorFactor,
+          b = 100000.f * colorFactor;
+    glColor3f( red -= (int)red, g -= (int)g, b -= (int)b);
+
     glVertex2f(xoff[r.image()] +  r.feature()->x(),
                yoff[r.image()] +  r.feature()->y());
   }
   glEnd();
+  //Restore white color as default color
+  glColor3f( 1.0f, 1.0f, 1.0f);
 }
 
 void MatchViewer::paintGL() {
-  if(TexturesInited()) {
+  if (TexturesInited()) {
     SetUpGlCamera();
     for (int i = 0; i < 2; ++i) {
       DrawImage(i);
@@ -183,8 +193,7 @@ bool MatchViewer::TexturesInited() {
 }
 
 void MatchViewer::InitTextures() {
-  int i;
-  for (i=0; i<2; ++i) {
+  for (int i=0; i<2; ++i) {
     InitTexture(i);
   }
 }
