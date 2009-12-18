@@ -29,7 +29,10 @@ namespace libmv {
 
 typedef Array3Du ByteImage;  // For backwards compatibility.
 typedef Array3Df FloatImage;
-typedef Array3Dui UIntImage;
+
+// Type added only to manage special 2D array for feature detection
+typedef Array3Di IntImage;
+typedef Array3Ds ShortImage;
 
 // An image class that is a thin wrapper around Array3D's of various types.
 // TODO(keir): Decide if we should add reference counting semantics... Maybe it

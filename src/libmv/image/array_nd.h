@@ -375,7 +375,9 @@ class Array3D : public ArrayND<T, 3> {
 
 typedef Array3D<unsigned char> Array3Du;
 typedef Array3D<unsigned int> Array3Dui;
+typedef Array3D<int> Array3Di;
 typedef Array3D<float> Array3Df;
+typedef Array3D<short> Array3Ds;
 
 void SplitChannels(const Array3Df &input,
                    Array3Df *channel0,
