@@ -20,17 +20,19 @@
 
 #include <algorithm>
 #include <string>
+#include <time.h>
 
 #include "libmv/base/vector.h"
 #include "libmv/base/vector_utils.h"
 #include "libmv/base/scoped_ptr.h"
 #include "libmv/correspondence/feature.h"
-#include "libmv/detector/fast_detector.h"
-#include "libmv/detector/surf_detector.h"
-#include "libmv/detector/detector.h"
 #include "libmv/descriptor/descriptor.h"
 #include "libmv/descriptor/simpliest_descriptor.h"
 #include "libmv/descriptor/vector_descriptor.h"
+#include "libmv/detector/detector.h"
+#include "libmv/detector/fast_detector.h"
+#include "libmv/detector/star_detector.h"
+#include "libmv/detector/surf_detector.h"
 #include "libmv/image/image.h"
 #include "libmv/image/image_io.h"
 #include "libmv/image/image_drawing.h"
@@ -76,11 +78,18 @@ int main(int argc, char **argv) {
   }
 
   scoped_ptr<detector::Detector> detector(detector::CreateFastDetector(9, 30));
+  //scoped_ptr<detector::Detector> detector(detector::CreateStarDetector());
   //scoped_ptr<detector::Detector> detector(detector::CreateSURFDetector(4,4));
 
   libmv::vector<libmv::Feature *> features;
   Image im( new Array3Du(imageIn) );
+
+  clock_t startTime = clock();
+
   detector->Detect( im, &features, NULL);
+
+  std::cout << " Keypoint localization time : " << clock() - startTime << " clocks " << endl;
+  std::cout << " Keypoint localization time : " << (float)(clock() - startTime) / CLOCKS_PER_SEC << "s"<< endl;
 
   bool bExportDescToDisk = false;
   if( bExportDescToDisk )
@@ -113,11 +122,11 @@ void DrawFeatures( Image & im, const libmv::vector<libmv::Feature *> & feat)
     const libmv::PointFeature * feature = dynamic_cast<libmv::PointFeature *>( feat[i] );
     const int x = feature->x();
     const int y = feature->y();
-    const float scale = 2*feature->scale;
+    const float scale = feature->scale;
 
     DrawCircle(x, y, scale, (unsigned char)255, &im);
     const float angle = feature->orientation;
-    DrawLine(x, y, x + scale * cos(angle), y + scale*sin(angle),
+    DrawLine(x, y, x + scale * cos(angle), y + scale *sin(angle),
              (unsigned char) 255, &im);
   }
 }
