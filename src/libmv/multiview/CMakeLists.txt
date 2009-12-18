@@ -13,7 +13,9 @@ ADD_LIBRARY(multiview
             autocalibration.cc
             five_point.cc
             affine_2d.cc
-            robust_homography.cc)
+            robust_homography.cc
+            euclidean_resection.cc
+            )
 
 TARGET_LINK_LIBRARIES(multiview numeric V3D colamd ldl)
 
@@ -43,6 +45,7 @@ MULTIVIEW_TEST(bundle)
 MULTIVIEW_TEST(autocalibration)
 MULTIVIEW_TEST(five_point)
 MULTIVIEW_TEST(affine_2d)
+MULTIVIEW_TEST(euclidean_resection)
 
 # TODO(keir): Make tests that depend on generated.cc to use generated sources.
 #ADD_GENERATED_SOURCE(generated.cc generator.py)
