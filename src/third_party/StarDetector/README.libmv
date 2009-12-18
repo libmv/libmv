@@ -1,0 +1,11 @@
+Project: StarDetector
+URL: http://sourceforge.net/projects/opencvlibrary/
+License: BSD
+Upstream version: 2.0, released 2009-10-01
+
+Local modifications:
+* change name from cvstardetector.cpp to cvStarDetector.h
+
+* Code changes :
+
+
