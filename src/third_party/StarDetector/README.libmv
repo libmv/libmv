@@ -7,5 +7,10 @@ Local modifications:
 * change name from cvstardetector.cpp to cvStarDetector.h
 
 * Code changes :
+* Remove dependancies over Opencv
+* Change to fit the libmv bases classes
+* Make function template and use default parameter
+* Minor memory optimization
+
 
 
