@@ -53,7 +53,7 @@ void CreateCameraSystem(const Mat3& KK,
     X_camera.col(ii) = X_distances(ii) * x_unit_cam.col(ii);
   }
 
-  //Apply the transfomration to the camera 3D points
+  //Apply the transformation to the camera 3D points
   Mat translation_matrix(3, num_points);
   translation_matrix.row(0).setConstant(T_input(0));
   translation_matrix.row(1).setConstant(T_input(1));
@@ -121,7 +121,7 @@ TEST(EuclideanResection, Points4KnownImagePointsRandomTranslationRotation) {
   Mat2X x_cam;
   Vec X_distances(num_points); // a vector of the 4 distances to the 3D points
   X_distances << 100 * Vec::Random(num_points).cwise().abs();
-  //Transformation variables
+  // Transformation variables
   Mat3 R_input;
   R_input = Eigen::AngleAxisd(rand(), Eigen::Vector3d::UnitZ())
           * Eigen::AngleAxisd(rand(), Eigen::Vector3d::UnitY())
@@ -140,7 +140,7 @@ TEST(EuclideanResection, Points4KnownImagePointsRandomTranslationRotation) {
   Vec3 T_output;
   EuclideanResection(x_cam, X_world, &R_output, &T_output);
 
-  EXPECT_MATRIX_NEAR(T_output, T_expected, 1e-6);
+  EXPECT_MATRIX_NEAR(T_output, T_expected, 1e-5);
   EXPECT_MATRIX_NEAR(R_output, R_expected, 1e-7);
 }
 
