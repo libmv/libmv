@@ -76,6 +76,8 @@ class vector {
         T& operator[](int n)       { return data_[n];         }
   const T * begin()          const { return data_;            }
   const T * end()            const { return data_+size_;      }
+        T * begin()                { return data_;            }
+        T * end()                  { return data_+size_;      }
 
   void resize(int size) {
     reserve(size);
