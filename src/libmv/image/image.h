@@ -73,6 +73,21 @@ class Image {
       delete reinterpret_cast<Array3Df *>(array_);
     }
   }
+  
+  Image& Image::operator= (const Image& f)
+  {
+    if (this != &f) {
+      array_type_ = f.array_type_;
+      if (array_type_ == BYTE) {
+        delete reinterpret_cast<Array3Du *>(array_);
+        array_ = new Array3Du( *(Array3Du *)f.array_);
+      } else if (array_type_ == FLOAT) {
+        delete reinterpret_cast<Array3Df *>(array_);
+        array_ = new Array3Df( *(Array3Df *)f.array_);
+      }
+    }
+    return *this;
+  }
 
   Array3Du *AsArray3Du() const {
     if (array_type_ == BYTE) {

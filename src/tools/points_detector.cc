@@ -34,18 +34,21 @@
 #include "libmv/detector/star_detector.h"
 #include "libmv/detector/surf_detector.h"
 #include "libmv/image/image.h"
-#include "libmv/image/image_io.h"
+#include "libmv/image/image_converter.h"
 #include "libmv/image/image_drawing.h"
+#include "libmv/image/image_io.h"
 #include "libmv/tools/tool.h"
 
 using namespace libmv;
 using namespace std;
 
 void usage() {
-  LOG(ERROR) << " points_detector ImageNameIn.pgm ImageNameOut.pgm " <<std::endl
-    << " ImageNameIn.pgm  : the input image on which surf features will be extrated, " << std::endl
-    << " ImageNameOut.pgm : the localized keypoints will be displayed on it. " << std::endl
-    << " INFO : work with pgm image only." << std::endl;
+  LOG(ERROR)<< " points_detector ImageNameIn.pgm ImageNameOut.pgm " <<std::endl
+    << " ImageNameIn : the input image on which features will be \
+       extrated (jpg,png,pnm), " << std::endl
+    << " ImageNameOut.png : the localized keypoints will be displayed on it."
+    << std::endl
+    << " INFO : output png image only." << std::endl;
 }
 
 /// Draw feature position, scale and orientation over a given image.
@@ -53,14 +56,14 @@ template <typename Image>
 void DrawFeatures( Image & im, const libmv::vector<libmv::Feature *> & feat);
 
 /// Export descriptor data as image.
-void SaveDescriptorAsPatches( const libmv::vector<descriptor::Descriptor *> & desc);
+void SaveDescriptorAsPatches(const libmv::vector<descriptor::Descriptor*>&desc);
 
 
 int main(int argc, char **argv) {
 
   libmv::Init("Extract points feature from an image", &argc, &argv);
 
-  if (argc != 3 || !(GetFormat(argv[1])==Pnm && GetFormat(argv[2])==Pnm)) {
+  if (argc != 3 ) {
     usage();
     LOG(ERROR) << "Missing parameters or errors in the command line.";
     return 1;
@@ -71,10 +74,18 @@ int main(int argc, char **argv) {
   const string sImageOut = argv[2];
   //TODO(pmoulon) Add FAST/SURF points localisation method as a parameter
 
-  Array3Du imageIn;
-  if (!ReadPnm(sImageIn.c_str(), &imageIn)) {
-    LOG(FATAL) << "Failed loading image: " << sImageIn;
-    return 0;
+  ByteImage byteImage;
+  if ( 0 == ReadImage( sImageIn.c_str(), &byteImage) )  {
+    LOG(ERROR) << "Failed loading image: " << sImageIn;
+    return 1;
+  }
+  Image imageReference(new ByteImage(byteImage));
+  if( byteImage.Depth() == 3)
+  {
+    // Convert Image to desirable format => uchar 1 gray channel
+    ByteImage byteImageGray;
+    Rgb2Gray(byteImage, &byteImageGray);
+    imageReference=Image(new ByteImage(byteImageGray));
   }
 
   scoped_ptr<detector::Detector> detector(detector::CreateFastDetector(9, 30));
@@ -82,28 +93,28 @@ int main(int argc, char **argv) {
   //scoped_ptr<detector::Detector> detector(detector::CreateSURFDetector(4,4));
 
   libmv::vector<libmv::Feature *> features;
-  Image im( new Array3Du(imageIn) );
 
   clock_t startTime = clock();
 
-  detector->Detect( im, &features, NULL);
+  detector->Detect( imageReference, &features, NULL);
 
-  std::cout << " Keypoint localization time : " << clock() - startTime << " clocks " << endl;
-  std::cout << " Keypoint localization time : " << (float)(clock() - startTime) / CLOCKS_PER_SEC << "s"<< endl;
+  std::cout << " Keypoint localization time : " 
+            << (float)(clock() - startTime) / CLOCKS_PER_SEC << "s"<< endl;
 
   bool bExportDescToDisk = false;
   if( bExportDescToDisk )
   {
     libmv::vector<descriptor::Descriptor *> descriptors;
-    scoped_ptr<descriptor::Describer> descriptorInterface(descriptor::CreateSimpliestDescriber());
-    descriptorInterface->Describe(features, im, NULL, &descriptors);
+    scoped_ptr<descriptor::Describer> 
+      descriptorInterface(descriptor::CreateSimpliestDescriber());
+    descriptorInterface->Describe(features, imageReference, NULL, &descriptors);
 
     SaveDescriptorAsPatches(descriptors);
   }
 
 
-  DrawFeatures( imageIn, features);
-  if (!WritePnm(imageIn, sImageOut.c_str())) {
+  DrawFeatures(*imageReference.AsArray3Du(), features);
+  if (!WritePng(*imageReference.AsArray3Du(), sImageOut.c_str())) {
     LOG(FATAL) << "Failed saving output image: " << sImageOut;
   }
 
@@ -119,7 +130,8 @@ void DrawFeatures( Image & im, const libmv::vector<libmv::Feature *> & feat)
   std::cout << feat.size() << " Detected points " <<std::endl;
   for (int i = 0; i < feat.size(); ++i)
   {
-    const libmv::PointFeature * feature = dynamic_cast<libmv::PointFeature *>( feat[i] );
+    const libmv::PointFeature * feature =
+      dynamic_cast<libmv::PointFeature *>( feat[i] );
     const int x = feature->x();
     const int y = feature->y();
     const float scale = feature->scale;
@@ -134,7 +146,8 @@ void DrawFeatures( Image & im, const libmv::vector<libmv::Feature *> & feat)
 void SaveDescriptorAsPatches( const libmv::vector<descriptor::Descriptor *> & desc)
 {
   for (int i = 0; i < desc.size(); ++i) {
-    const descriptor::VecfDescriptor * array = dynamic_cast<descriptor::VecfDescriptor *>( desc[i] );
+    const descriptor::VecfDescriptor * array =
+      dynamic_cast<descriptor::VecfDescriptor *>( desc[i] );
     if(array) {
       const int size = sqrt((double)(array->coords.size()));
       Array3Df ima(size,size);
@@ -143,13 +156,10 @@ void SaveDescriptorAsPatches( const libmv::vector<descriptor::Descriptor *> & de
       {
         ima(j, i) = array->coords(j*size + i);
       }
-      //-- Save the patch as a image
+      //-- Save the patch as an image
       ostringstream os;
-      os << "./Patch_000" << i << ".jpg";
-      WriteJpg(ima, os.str().c_str(), 100);
+      os << "./Patch_000" << i << ".png";
+      WritePng(ima, os.str().c_str());
     }
   }
 }
-
-
-
