@@ -73,9 +73,8 @@ class Image {
       delete reinterpret_cast<Array3Df *>(array_);
     }
   }
-  
-  Image& Image::operator= (const Image& f)
-  {
+
+  Image& operator= (const Image& f)  {
     if (this != &f) {
       array_type_ = f.array_type_;
       if (array_type_ == BYTE) {
