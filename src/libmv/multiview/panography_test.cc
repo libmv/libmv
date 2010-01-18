@@ -29,17 +29,27 @@ namespace libmv {
 namespace {
 
 TEST(Panography, PrintSomeSharedFocalEstimationValues) {
-  Vec2 u11, u12, u21, u22;
 
-  u11 << 2, 2;
-  u12 << 3, 3;
-  u21 << 2, 3;
-  u22 << 3, 4;
+  Mat x1(2,2), x2(2,2);
+  x1<< 158, 78,
+       124, 113;
+  x2<< 300, 214,
+       125, 114;
+
+  // Normalize data (set principal point 0,0 and image border to 1.0).
+  x1.block<1,2>(0,0)/=320;
+  x1.block<1,2>(1,0)/=240;
+  x2.block<1,2>(0,0)/=320;
+  x2.block<1,2>(1,0)/=240;
+  x1+=Mat2::Constant(0.5);
+  x2+=Mat2::Constant(0.5);
 
   vector<double> fs;
-  F_FromCorrespondance_2points( u11, u12, u21, u22, &fs);
+  F_FromCorrespondance_2points( x1, x2, &fs);
 
-  // TODO(pmoulon): Fix this test!
+  // Assert we found a valid solution.
+  EXPECT_EQ(1, fs.size());
+  EXPECT_NEAR(1.01667, fs[1], 1e-3);
 }
 
 TEST(Panography, GetR_FixedCameraCenterWithIdentity) {
@@ -48,11 +58,8 @@ TEST(Panography, GetR_FixedCameraCenterWithIdentity) {
           0.5,  0.5,  0.4,
          10.0, 10.0, 10.0;
 
-  Mat3 K1 = Mat3::Identity();
-  Mat3 K2 = K1;
-
   Mat3 R;
-  GetR_FixedCameraCenter(x1, x1, K1, K2, &R);
+  GetR_FixedCameraCenter(x1, x1, 1.0, &R);
   R /= R(2,2);
   EXPECT_MATRIX_NEAR( Mat3::Identity(), R, 1e-8);
   LOG(INFO) << "R \n" << R;
@@ -77,11 +84,8 @@ TEST(Panography, Homography_GetR_Test_PitchY30) {
     x2.block<3,1>(0, i) = rotY * x1.col(i);
   }
 
-  Mat3 K1 = Mat3::Identity();
-  Mat3 K2 = K1;
-
   Mat3 R;
-  GetR_FixedCameraCenter(x1, x2, K1, K2, &R);
+  GetR_FixedCameraCenter(x1, x2, 1.0, &R);
 
   // Assert that residuals are small enough
   for (int i = 0; i < n; ++i) {
@@ -97,27 +101,34 @@ TEST(Panography, Homography_GetR_Test_PitchY30) {
 
 TEST(MinimalPanoramic, Real_Case_Kernel)
 {
-  int n = 2;
+  const int n = 2;
   Mat x1(2,n);  // From image 0.jpg
-  x1<< 164, 215,
-       120, 107;
+  x1<< 158, 78,
+       124, 113;
 
-  Mat x2(2,n);  // From image 1.jpg
-  x2<<  213, 264,
-        120, 107;
+  Mat x2(2,n);  // From image 3.jpg
+  x2<<  300, 214,
+        125, 114;
+
+  Mat3 Ground_TruthHomography;
+  Ground_TruthHomography<< 1,     0.02,   129.83,
+                          -0.02,  1.012,  0.07823,
+                          0,      0,      1;
 
   vector<Mat3> Hs;
-  
+
   libmv::panography::kernel::TwoPointSolver::Solve(x1, x2, &Hs);
 
   LOG(INFO) << "Got " << Hs.size() << " solutions.";
   for (int j = 0; j < Hs.size(); ++j) {
     Mat3 H = Hs[j];
-    
+
+    EXPECT_MATRIX_NEAR( H, Ground_TruthHomography, 1e-1);
+
     Mat x1h, x2h;
     EuclideanToHomogeneous(x1,&x1h);
     EuclideanToHomogeneous(x2,&x2h);
-    
+
     // Assert that residuals are small enough
     for (int i = 0; i < n; ++i) {
       Vec x1p = H * x1h.col(i);

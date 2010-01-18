@@ -28,6 +28,45 @@
 
 namespace libmv {
 
+static bool Build_Minimal2Point_PolynomialFactor(
+                                          const Mat & x1, const Mat & x2,
+                                          double * P) //P must be a double[4]
+{
+  assert(2 == x1.rows());
+  assert(2 == x1.cols());
+  assert(x1.rows() == x2.rows());
+  assert(x1.cols() == x2.cols());
+
+  // Setup the variable of the input problem:
+  Vec xx1 = (x1.col(0)).transpose();
+  Vec yx1 = (x1.col(1)).transpose();
+
+  double a12 = xx1.dot(yx1);
+  Vec xx2 = (x2.col(0)).transpose();
+  Vec yx2 = (x2.col(1)).transpose();
+  double b12 = xx2.dot(yx2);
+
+  double a1  = xx1.squaredNorm();
+  double a2  = yx1.squaredNorm();
+
+  double b1  = xx2.squaredNorm();
+  double b2  = yx2.squaredNorm();
+
+  // Build the 3rd degre polynomial in F^2.
+  //
+  //   f^6 * p + f^4 * q + f^2* r + s = 0;
+  //
+  // Coefficients in ascending powers of alpha, i.e. P[N]*x^N.
+  // Run panography_coeffs.py to get the below coefficients.
+  P[0] = b1*b2*a12*a12-a1*a2*b12*b12;
+  P[1] = -2*a1*a2*b12+2*a12*b1*b2+b1*a12*a12+b2*a12*a12-a1*b12*b12-a2*b12*b12;
+  P[2] = b1*b2-a1*a2-2*a1*b12-2*a2*b12+2*a12*b1+2*a12*b2+a12*a12-b12*b12;
+  P[3] = b1+b2-2*b12-a1-a2+2*a12;
+
+  // If P[3] equal to 0 we get ill conditionned data
+  return (P[3] != 0.0);
+}
+
 // This implements a minimal solution (2 points) for panoramic stitching:
 //
 //   http://www.cs.ubc.ca/~mbrown/minimal/minimal.html
@@ -53,29 +92,12 @@ namespace libmv {
 //   K = [0 f 0]
 //       [0 0 1]
 //
-static void F_FromCorrespondance_2points(const Vec2 &u11, const Vec2 &u12,
-                                         const Vec2 &u21, const Vec2 &u22,
+static void F_FromCorrespondance_2points(const Mat &x1, const Mat &x2,
                                          vector<double> *fs) {
-  // Setup the variable of the input problem:
-  double a12 = u11.dot(u12);
-  double b12 = u21.dot(u22);
-  double a1  = u11.norm() * u11.norm();
-  double a2  = u12.norm() * u12.norm();
-  double b1  = u21.norm() * u21.norm();
-  double b2  = u22.norm() * u22.norm();
 
-  // Build the 3rd degre polynomial in F^2.
-  //
-  //   f^6 * p + f^4 * q + f^2* r + s = 0;
-  //
-  // Coefficients in ascending powers of alpha, i.e. P[N]*x^N.
-  // Run panography_coeffs.py to get the below coefficients.
-  double P[4] = {
-     a1*a2*b12*b12-b1*b2*a12*a12,
-     -2*a1*a2*b12+2*a12*b1*b2+b1*a12*a12+b2*a12*a12-a1*b12*b12-a2*b12*b12,
-     b1*b2-a1*a2-2*a1*b12-2*a2*b12+2*a12*b1+2*a12*b2+a12*a12-b12*b12,
-     b1+b2-a1-a2-2*b12+2*a12
-  };
+  // Build Polynomial factor to get squared focal value.
+  double P[4];
+  Build_Minimal2Point_PolynomialFactor(x1, x2, &P[0]);
 
   // Solve it by using F = f^2 and a Cubic polynomial solver
   //
@@ -84,7 +106,7 @@ static void F_FromCorrespondance_2points(const Vec2 &u11, const Vec2 &u12,
   double roots[3];
   int num_roots = SolveCubicPolynomial(P, roots);
   for (int i = 0; i < num_roots; ++i)  {
-    if (roots[i] > 0)  {
+    if (roots[i] > 0.0)  {
       fs->push_back(sqrt(roots[i]));
     }
   }
@@ -102,7 +124,7 @@ static void F_FromCorrespondance_2points(const Vec2 &u11, const Vec2 &u12,
 //
 //   R = min || X2 - R * x1 ||.
 //
-// In case of panography, which is for acamera that shares the same camera
+// In case of panography, which is for a camera that shares the same camera
 // center,
 //
 //   H = K2 * R * K1.inverse();
@@ -125,26 +147,29 @@ static void F_FromCorrespondance_2points(const Vec2 &u11, const Vec2 &u12,
 //   R = arg min || X2 - R * x1 ||
 //
 static void GetR_FixedCameraCenter(const Mat &x1, const Mat &x2,
-                                   const Mat3 &K1, const Mat3 &K2,
+                                   const double focal,
                                    Mat3 *R)  {
-  // TODO(keir): Don't take K matrices; take the f value instead.
   assert(3 == x1.rows());
   assert(2 <= x1.cols());
   assert(x1.rows() == x2.rows());
   assert(x1.cols() == x2.cols());
 
+  // Build simplified K matrix
+  Mat3 K( Mat3::Identity() * 1.0/focal );
+  K(2,2)= 1.0;
+
   // Build the correlation matrix; equation (22) in [1].
   Mat3 C = Mat3::Zero();
   for(int i = 0; i < x1.cols(); ++i) {
-    Mat r1i = (K1.inverse() * x1.col(i)).normalized();
-    Mat r2i = (K2.inverse() * x2.col(i)).normalized();
+    Mat r1i = (K * x1.col(i)).normalized();
+    Mat r2i = (K * x2.col(i)).normalized();
     C += r2i * r1i.transpose();
   }
 
   // Solve for rotation. Equations (24) and (25) in [1].
   Eigen::SVD<Mat> svd(C);
   Mat3 scale = Mat3::Identity();
-  scale(2,2) = ((svd.matrixU() * svd.matrixV().transpose()).determinant() > 0)
+  scale(2,2) = ((svd.matrixU() * svd.matrixV().transpose()).determinant() > 0.0)
              ?  1.0
              : -1.0;
 
