@@ -48,4 +48,16 @@ TARGET_LINK_LIBRARIES(homography_warping
                       descriptor
                       multiview
                       )
-					  
+
+ADD_EXECUTABLE(detector_repeatability detector_repeatability.cc)
+TARGET_LINK_LIBRARIES(detector_repeatability
+                      numeric
+                      correspondence
+                      image
+                      pthread
+                      gflags
+                      glog
+                      detector
+                      fast
+                      )
+
