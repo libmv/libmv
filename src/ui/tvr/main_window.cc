@@ -222,6 +222,8 @@ void TvrMainWindow::InitTextures() {
 
 void TvrMainWindow::InitTexture(int index) {
   QImage &im = document_.images[index];
+  // Be sure that the temporary image used for texture is a RGB image
+  QImage imTemp = im.convertToFormat(QImage::Format_RGB32);
 
   if (im.isNull()) return;
 
@@ -245,7 +247,7 @@ void TvrMainWindow::InitTexture(int index) {
 
   // build our texture mipmaps
   gluBuild2DMipmaps(GL_TEXTURE_2D, GL_RGBA, textures_[index].width,
-      textures_[index].height, GL_RGBA, GL_UNSIGNED_BYTE, im.bits());
+      textures_[index].height, GL_RGBA, GL_UNSIGNED_BYTE, imTemp.bits());
 
   if (!glIsTexture(textures_[index].textureID))
     QMessageBox::information(this, tr("TVR"), tr("Failed to create the texture"));
@@ -352,6 +354,7 @@ void TvrMainWindow::ComputeCandidateMatches() {
                                     document_.feature_sets[1],
                                     &document_.matches,
                                     0.8f);*/
+
   FindCandidateMatches( document_.feature_sets[0],
                         document_.feature_sets[1],
                         &document_.matches);
@@ -475,7 +478,7 @@ void TvrMainWindow::MetricReconstruction() {
   Mat3 E;
   EssentialFromFundamental(document_.F, K0, K1, &E);
 
-  // Get matches from the corresponcence structure.
+  // Get matches from the correspondence structure.
   vector<Mat> xs(2);
   TwoViewPointMatchMatrices(document_.matches, 0, 1, &xs);
   Mat &x0 = xs[0];
