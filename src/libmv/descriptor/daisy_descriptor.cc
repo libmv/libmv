@@ -45,14 +45,14 @@ class DaisyDescriber : public Describer {
     // Defaults from README.
     desc.set_parameters(15, 3, 8, 8);
 
-    // Only use sparse descriptors; the default is dense.
-    desc.initialize_single_descriptor_mode();
-
     // Push the image into daisy. This will make a copy and convert to float.
     ByteImage *byte_image = image.AsArray3Du();
     desc.set_image(byte_image->Data(),
                    byte_image->Height(),
                    byte_image->Width());
+
+    // Only use sparse descriptors; the default is dense.
+    desc.initialize_single_descriptor_mode();
 
     descriptors->resize(features.size());
     for (int i = 0; i < features.size(); ++i) {
