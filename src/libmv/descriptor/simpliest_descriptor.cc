@@ -35,7 +35,7 @@ template < class T>
 void normalize(T * fsrc, T * fdst, int size, T &mean, T &stddev)  {
 	mean = stddev = 0;
 	// Compute mean and standard deviation.
-	for(int i=0; i<size; ++i)	{
+	for (int i=0; i<size; ++i)	{
 		const T & val = fsrc[i];
 		mean += val;
 		stddev += val*val;
@@ -43,7 +43,7 @@ void normalize(T * fsrc, T * fdst, int size, T &mean, T &stddev)  {
 	mean /= size;
 	stddev = sqrt((stddev - (mean*mean) )/(size-1));
 	// Normalize input data.
-	for(int i=0; i<size; ++i)
+	for (int i=0; i<size; ++i)
 		fdst[i] = (fsrc[i]-mean) / stddev;
 }
 
@@ -55,11 +55,11 @@ void normalize(T * fsrc, T * fdst, int size, T &mean, T &stddev)  {
 // Angle is in radian.
 // data the output array (must be allocated to 8*8).
 template <typename TImage,typename T>
-void PickPatch(const TImage & image, float x, float y, int scale, double angle,
+void PickPatch(const TImage & image, float x, float y, float scale, double angle,
                 T * data) {
 
   const int WINDOW_SIZE = 8;
-  const int STEP = scale;
+  const float STEP = scale;
 
 	// Inverse rotation (for each output point search into the input image
   // where points we must take into account).
@@ -69,15 +69,14 @@ void PickPatch(const TImage & image, float x, float y, int scale, double angle,
   // Rotation matrix.
   libmv::vector<double> matXY(4);
   // Clockwise rotation matrix.
-  matXY[0]=	cos(angle);	matXY[1]=sin(angle);
-  matXY[2]=	-sin(angle);	matXY[3]=cos(angle);
+  matXY[0]=	cos(angle);	matXY[1]=-sin(angle);
+  matXY[2]=	sin(angle);	matXY[3]=cos(angle);
 
-  for(int i=0; i < WINDOW_SIZE; ++i)
-  {
-    for(int j=0; j < WINDOW_SIZE; ++j)
-    {
-      float ox = (float)(i*STEP -WINDOW_SIZE/2);
-      float oy = (float)(j*STEP -WINDOW_SIZE/2);
+  for (int i=0; i < WINDOW_SIZE; ++i)  {
+    for (int j=0; j < WINDOW_SIZE; ++j) {
+
+      float ox = (float)(i*STEP - WINDOW_SIZE/2.0f);
+      float oy = (float)(j*STEP - WINDOW_SIZE/2.0f);
 
       float rotX = (matXY[0]*ox+matXY[1]*oy);
       float rotY = (matXY[2]*ox+matXY[3]*oy);
@@ -87,8 +86,7 @@ void PickPatch(const TImage & image, float x, float y, int scale, double angle,
 
       float s1 = 0.0f;
       // Test if the transformed point can be taken in the input image.
-      if(xx>=0 && yy>=0 && xx+1< image.Width() && yy+1<image.Height() )
-      {
+      if (image.Contains(yy,xx) ) {
         // Bilinear interpolation
         s1 = SampleLinear(image, (rotY)+cy, (rotX)+cx );
       }
