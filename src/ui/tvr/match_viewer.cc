@@ -141,7 +141,7 @@ void MatchViewer::DrawFeatures(int image_index) {
     glScalef(scale, scale, scale);
     // TODO(pau) when orientation will be detected, ensure that this is
     //           turning in the right sense and the right units (deg vs rad).
-    glRotatef(r.feature()->orientation, 0.0f, 0.0f, 1.0f);
+    glRotatef(r.feature()->orientation*180.0f/3.14159f, 0.0f, 0.0f, 1.0f);
     glBegin(GL_LINES);
     glVertex2f(-1, -1); glVertex2f( 1, -1); // Square Box.
     glVertex2f( 1, -1); glVertex2f( 1,  1);
