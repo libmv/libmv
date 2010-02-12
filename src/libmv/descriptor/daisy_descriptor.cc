@@ -62,7 +62,7 @@ class DaisyDescriber : public Describer {
         descriptor = new VecfDescriptor(desc.descriptor_size());
         desc.get_descriptor(point->y(),
                             point->x(),
-                            point->orientation,
+                            point->orientation * 180.0 / 3.14159f,
                             descriptor->coords.data());
       }
       (*descriptors)[i] = descriptor;

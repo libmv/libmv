@@ -33,8 +33,11 @@ class Detector;
  * \param size      The size of features to detect in pixels.
  * \param threshold Threshold for detecting features. See the FAST paper for
  *                  details.
+ * \param bRotationInvariant Tell if orientation of detected features must
+ *                            be estimated.
  */
-Detector *CreateFastDetector(int size, int threshold);
+Detector *CreateFastDetector(int size, int threshold,
+                              bool bRotationInvariant = false);
 
 }  // namespace detector
 }  // namespace libmv

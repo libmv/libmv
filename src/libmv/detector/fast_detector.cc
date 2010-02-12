@@ -18,11 +18,13 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
-#include "libmv/logging/logging.h"
-#include "libmv/detector/detector.h"
-//#include "libmv/detector/fast_detector.h"
+
 #include "libmv/correspondence/feature.h"
+#include "libmv/detector/detector.h"
+#include "libmv/detector/fast_detector.h"
+#include "libmv/detector/orientation_detector.h"
 #include "libmv/image/image.h"
+#include "libmv/logging/logging.h"
 #include "third_party/fast/fast.h"
 
 namespace libmv {
@@ -34,26 +36,38 @@ typedef xy* (*FastDetectorCall)(
 class FastDetector : public Detector {
  public:
   virtual ~FastDetector() {}
-  FastDetector(FastDetectorCall detector, int threshold, int size)
-    : threshold_(threshold), size_(size), detector_(detector) {}
+  FastDetector(FastDetectorCall detector, int threshold, int size,
+              bool bRotationInvariant)
+    : threshold_(threshold), size_(size), detector_(detector),
+    bRotationInvariant_(bRotationInvariant) {}
 
   virtual void Detect(const Image &image,
                       vector<Feature *> *features,
                       DetectorData **data) {
     int num_corners = 0;
     ByteImage *byte_image = image.AsArray3Du();
-    //TODO(pmoulon) Assert that byte_image is valid.
-    xy* detections = detector_(byte_image->Data(),
-        byte_image->Width(), byte_image->Height(), byte_image->Width(),
-        threshold_, &num_corners);
+    if (byte_image) {
+      xy* detections = detector_(byte_image->Data(),
+          byte_image->Width(), byte_image->Height(), byte_image->Width(),
+          threshold_, &num_corners);
 
-    for (int i = 0; i < num_corners; ++i) {
-      PointFeature *f = new PointFeature(detections[i].x, detections[i].y);
-      f->scale = 1.0;
-      f->orientation = 0.0;
-      features->push_back(f);
+      for (int i = 0; i < num_corners; ++i) {
+        PointFeature *f = new PointFeature(detections[i].x, detections[i].y);
+        f->scale = 1.0;
+        f->orientation = 0.0;
+        features->push_back(f);
+      }
+      free( detections );
+
+      if (bRotationInvariant_) {
+        fastRotationEstimation(*byte_image,*features);
+        //gradientBoxesRotationEstimation(*byte_image,*features);
+      }
     }
-    free( detections );
+    else  {
+      LOG(ERROR) << "Invalid input image type for FAST detector";
+    }
+
     // FAST doesn't have a corresponding descriptor, so there's no extra data
     // to export.
     if (data) {
@@ -65,9 +79,11 @@ class FastDetector : public Detector {
   int threshold_;
   int size_;  // In pixels.
   FastDetectorCall detector_;
+  bool bRotationInvariant_;
 };
 
-Detector *CreateFastDetector(int size, int threshold) {
+Detector *CreateFastDetector(int size, int threshold,
+                              bool bRotationInvariant) {
   FastDetectorCall detector = NULL;
   if (size ==  9) detector =  fast9_detect_nonmax;
   if (size == 10) detector = fast10_detect_nonmax;
@@ -76,7 +92,7 @@ Detector *CreateFastDetector(int size, int threshold) {
   if (!detector) {
     LOG(FATAL) << "Invalid size for FAST detector: " << size;
   }
-  return new FastDetector(detector, threshold, size);
+  return new FastDetector(detector, threshold, size, bRotationInvariant);
 }
 
 }  // namespace detector

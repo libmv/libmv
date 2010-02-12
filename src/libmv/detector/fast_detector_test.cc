@@ -91,14 +91,12 @@ TEST(FastDetector, Localisation2) {
 
   ASSERT_EQ(x2, ((PointFeature*)(features[2]))->x());
   ASSERT_EQ(y1, ((PointFeature*)(features[2]))->y());
-  
+
   ASSERT_EQ(x1, ((PointFeature*)(features[3]))->x());
   ASSERT_EQ(y1, ((PointFeature*)(features[3]))->y());
 
   DeleteElements(&features);
 }
-
-// TODO(pmoulon): implement and test FAST rotation invariance.
 
 }  // namespace
 }  // namespace detector
