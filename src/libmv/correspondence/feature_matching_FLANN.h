@@ -32,9 +32,9 @@
 using namespace libmv;
 
 
-// Compute candidate matches between 2 sets of features.  Two features a and b
-// are a candidate match if a is the nearest neighbor of b and b is the nearest
-// neighbor of a.
+// Compute candidate matches between 2 sets of features.  Two features A and B
+// are a candidate match if A is the nearest neighbor of B and B is the nearest
+// neighbor of A.
 void FindSymmetricCandidateMatches_FLANN( const FeatureSet &left,
                                           const FeatureSet &right,
                                           Matches *matches);

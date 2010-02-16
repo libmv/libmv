@@ -38,9 +38,9 @@ bool FLANN_Wrapper(const FLANN_Data & testSet,const FLANN_Data & dataSet,
   resultIndices->resize(testSet.rows * NumberOfNeighbours);
   resultDistances->resize(testSet.rows * NumberOfNeighbours);
 
-  flann_log_destination( "flannOUt.txt" );
-  flann_log_verbosity( LOG_INFO );
   FLANNParameters p;  // index parameters are stored here
+  p.log_destination = NULL;
+  p.log_level = LOG_INFO;
   // want 90% target precision
   // the rest of the parameters are automatically computed
   p.target_precision = 0.9f;
@@ -81,7 +81,7 @@ void FindSymmetricCandidateMatches_FLANN(const FeatureSet &left,
   }
 
   FLANN_Data dataA={arrayA,left.features.size(),descriptorSize};
-  FLANN_Data dataB={arrayB,right.features.size(),descriptorSize};//listB
+  FLANN_Data dataB={arrayB,right.features.size(),descriptorSize};
 
   // Perform ANN search from A to B. And B to A.
   // Use returned indices to keep only symetric matches
@@ -137,11 +137,11 @@ void FindCandidateMatchesDistanceRatio_FLANN( const FeatureSet &left,
   }
 
   FLANN_Data dataA={arrayA,left.features.size(),descriptorSize};
-  FLANN_Data dataB={arrayB,right.features.size(),descriptorSize};//listB
+  FLANN_Data dataB={arrayB,right.features.size(),descriptorSize};
 
   libmv::vector<int> indices;
   libmv::vector<float> distances;
-  int NN = 2;
+  const int NN = 2;
   bool breturn = FLANN_Wrapper(dataA,dataB, &indices, &distances, NN);
 
   delete [] arrayA;
@@ -153,12 +153,12 @@ void FindCandidateMatchesDistanceRatio_FLANN( const FeatureSet &left,
     int max_track_number = 0;
     for (size_t i = 0; i < left.features.size(); ++i) {
       // Test distance ratio :
-      float distance0 = distances[i*2];
-      float distance1 = distances[i*2+1];
+      float distance0 = distances[i*NN];
+      float distance1 = distances[i*NN+NN-1];
       if (distance0 < fRatio * distance1)
       {
         matches->Insert(0, max_track_number, &left.features[i]);
-        matches->Insert(1, max_track_number, &right.features[indices[i*2]]);
+        matches->Insert(1, max_track_number, &right.features[indices[i*NN]]);
         max_track_number++;
       }
     }

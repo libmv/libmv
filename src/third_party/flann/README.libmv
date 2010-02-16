@@ -10,3 +10,4 @@ Local modifications:
 * Code changes :
 * Add CMake Build system
 * Fix warnings and errors at compilation time
+* Change FLANNParameters::char* log_destination to FLANNParameters::const char* log_destination

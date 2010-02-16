@@ -49,7 +49,7 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 struct FLANNParameters {
 	flann_algorithm_t algorithm; // the algorithm to use (see constants.h)
 	int checks;                // how many leafs (features) to check in one search
-    float cb_index;            // cluster boundary index. Used when searching the kmeans tree
+  float cb_index;            // cluster boundary index. Used when searching the kmeans tree
 	int trees;                 // number of randomized trees to use (for kdtree)
 	int branching;             // branching factor (for kmeans tree)
 	int iterations;            // max iterations to perform in one kmeans cluetering (kmeans tree)
@@ -57,10 +57,10 @@ struct FLANNParameters {
 	float target_precision;    // precision desired (used for autotuning, -1 otherwise)
 	float build_weight;        // build tree time weighting factor
 	float memory_weight;       // index memory weigthing factor
-    float sample_fraction;     // what fraction of the dataset to use for autotuning
+  float sample_fraction;     // what fraction of the dataset to use for autotuning
 
-    flann_log_level_t log_level;             // determines the verbosity of each flann function
-	char* log_destination;     // file where the output should go, NULL for the console
+  flann_log_level_t log_level;             // determines the verbosity of each flann function
+	const char* log_destination;     // file where the output should go, NULL for the console
 	long random_seed;          // random seed to use
 };
 
