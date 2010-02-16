@@ -128,7 +128,10 @@
 #define PACKAGE_VERSION "0.2.1"
 
 /* How to access the PC from a struct ucontext */
-#define PC_FROM_UCONTEXT uc_mcontext.gregs[REG_EIP]
+//#ifndef REG_EIP
+//#define REG_EIP 0x00a01004L
+//#endif
+//#define PC_FROM_UCONTEXT uc_mcontext.gregs[REG_EIP]
 
 /* Define to necessary symbol if this constant uses a non-standard name on
    your system. */
