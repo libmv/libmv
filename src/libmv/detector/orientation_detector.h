@@ -49,7 +49,7 @@ inline float getCoterminalAngle(float angle)
 template<class Image>
 void fastRotationEstimation(const Image & ima, vector<Feature *> & features)
 {
-  //-- Build fast ring index and orientation
+  // Build fast ring orientation and index.
   const double fast_ring_x[16] = {0, 1/sqrt(10.), 1/sqrt(2.), 3/sqrt(10.), 1,
     3/sqrt(10.), 1/sqrt(2.), 1/sqrt(10.), 0, -1/sqrt(10.), -1/sqrt(2.),
     -3/sqrt(10.), -1, -3/sqrt(10.), -1/sqrt(2.), -1/sqrt(10.)};
@@ -60,22 +60,23 @@ void fastRotationEstimation(const Image & ima, vector<Feature *> & features)
   const int indX[16] = {3,3,2,1,0,-1,-2,-3,-3,-3,-2,-1,0,1,2,3};
   const int indY[16] = {0,1,2,3,3,3,2,1,0,-1,-2,-3,-3,-3,-2,-1};
 
-  for(int j=0; j < features.size(); ++j) {
+  // For each feature estimate the rotation angle.
+  for (int j=0; j < features.size(); ++j) {
     double dx = 0.0;
     double dy = 0.0;
 
     const int xPos = ((PointFeature*)features[j])->x(),
               yPos = ((PointFeature*)features[j])->y();
     double centrepx = ima( yPos, xPos);
-
-    for(int px = 0; px < 16; ++px)  {
+    // For the fast ring add weighted gradient.
+    for (int px = 0; px < 16; ++px)  {
      double diff = ima( yPos + indY[px], xPos + indX[px]) - centrepx;
      dx += diff * fast_ring_x[px];
      dy += diff * fast_ring_y[px];
     }
 
     double fastrot = 0.0;
-    if( std::max(abs(dy), abs(dx)) > 0) {
+    if ( std::max(abs(dy), abs(dx)) > 0) {
      fastrot = atan2(dy, dx);
     }
     ((PointFeature*)features[j])->orientation = getCoterminalAngle(fastrot);
@@ -89,19 +90,20 @@ void gradientBoxesRotationEstimation(const Image & ima, vector<Feature *> & feat
   vector<float> histogram(36);
 
   // Sum up direction weighted (gradient value).
-  for(int j=0; j < features.size(); ++j) {
+  for (int j=0; j < features.size(); ++j) {
     const int x = ((PointFeature*)features[j])->x(),
               y = ((PointFeature*)features[j])->y();
-    const int offset = 6;
+    const int offset = 6; // Todo(pmoulon) Make it related to scale
     const int offsetDiv2 = offset/2;
     std::fill(histogram.begin(),histogram.end(),0.0f);
     for (int r=y-offset; r<=y+offset; ++r){
       for (int c=x-offset; c<=x+offset; ++c){
-        if( (c>0) && (r>0) && (c<ima.Width()-1) && (r<ima.Height()-1))  {
+        // Todo(pmoulon) Compute it only in a circular area to be more robust to rotation.
+        if ((c>0) && (r>0) && (c<ima.Width()-1) && (r<ima.Height()-1))  {
 
           double offsetX = c - x;
           double offsetY = r - y;
-          double circularWeight = sqrt( (offsetX*offsetX + offsetY*offsetY) / (offsetDiv2*offsetDiv2) );
+          double circularWeight = sqrt( (offsetX*offsetX + offsetY*offsetY) / offset );
 
           if (circularWeight<=1.0)  {
 
@@ -120,13 +122,14 @@ void gradientBoxesRotationEstimation(const Image & ima, vector<Feature *> & feat
         }
       }
     }
-    // Peak identification.
+    // Locate peak in angle histogram.
     int index = 0;
-    for(int k=1; k<36; ++k) {
+    for (int k=1; k<36; ++k) {
       if(histogram[index]<histogram[k])
       index = k;
     }
     // Todo(pmoulon) subpixel angle according histogram value.
+    // http://people.equars.com/~marco/poli/phd/node47.html
     ((PointFeature*)features[j])->orientation = getCoterminalAngle(index*10.0 * 3.14159 / 180.0);
   }
 }
