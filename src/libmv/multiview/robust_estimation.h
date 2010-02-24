@@ -54,7 +54,7 @@ class MLEScorer {
   double threshold_;
 };
 
-uint IterationsRequired(int min_samples,
+static uint IterationsRequired(int min_samples,
                         double desired_certainty,
                         double inlier_ratio) {
   return static_cast<uint>(
