@@ -52,8 +52,8 @@ struct FLANNParameters {
   float cb_index;            // cluster boundary index. Used when searching the kmeans tree
 	int trees;                 // number of randomized trees to use (for kdtree)
 	int branching;             // branching factor (for kmeans tree)
-	int iterations;            // max iterations to perform in one kmeans cluetering (kmeans tree)
-	flann_centers_init_t centers_init;          // algorithm used for picking the initial cluetr centers for kmeans tree
+	int iterations;            // max iterations to perform in one kmeans clustering (kmeans tree)
+	flann_centers_init_t centers_init;          // algorithm used for picking the initial cluster centers for kmeans tree
 	float target_precision;    // precision desired (used for autotuning, -1 otherwise)
 	float build_weight;        // build tree time weighting factor
 	float memory_weight;       // index memory weigthing factor
