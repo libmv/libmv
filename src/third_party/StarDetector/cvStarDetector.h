@@ -53,12 +53,13 @@
 namespace libmv {
 namespace detector {
 
+// Image with one channel with type : uchar, int, int , int
 template<class Image, class Image1>
-static void             // uchar, int, int , int
-icvComputeIntegralImages( const Image & _I, //uchar 1 channel
-                          Image1 & _S, // int
-                          Image1 & _T, // int
-                          Image1 & _FT)// int
+static void
+icvComputeIntegralImages( const Image & _I, // Input image.
+                          Image1 & _S,      // Slanted integral image.
+                          Image1 & _T,      // Integral image.
+                          Image1 & _FT)     // .
 {
     int x, y, rows = _I.rows(), cols = _I.cols();
     const unsigned char * I = &_I(0,0);
@@ -113,10 +114,10 @@ struct CvStarFeature
 
 template<class Image, class Image1, class Image2>
 static int
-icvStarDetectorComputeResponses( const Image & img, // uchar image type
+icvStarDetectorComputeResponses( const Image & img,   // uchar image type
                                   Image1 * responses, // float image type
-                                  Image2* sizes, // short image type
-                                 int maxSize ) //maximum scale explored
+                                  Image2* sizes,      // short image type
+                                 int maxSize ) //maximum scale explored (in pixel)
 {
     const int MAX_PATTERN = 17;
     static const int sizes0[] = {1, 2, 3, 4, 6, 8, 11, 12, 16, 22, 23, 32, 45, 46, 64, 90, 128, -1};
@@ -130,10 +131,15 @@ icvStarDetectorComputeResponses( const Image & img, // uchar image type
     int y=0, i=0, rows = img.Height(), cols = img.Width();
     int border, npatterns=0, maxIdx=0;
 
-    for(; pairs[i][0] >= 0; ++i ) {
-        if( sizes0[pairs[i][0]] >= maxSize )
-            break;
+    // Ensure that the given filtering size could be computed according the image size.
+    do
+    {
+      ++i;
     }
+    while( (pairs[i][0] >= 0) &&
+          (!( sizes0[pairs[i][0]] >= maxSize )
+           || sizes0[pairs[i][0]] + sizes0[pairs[i][0]]/2 >= std::min(rows, cols)) );
+
     npatterns = i;
     npatterns += (pairs[npatterns-1][0] >= 0);
     maxIdx = pairs[npatterns-1][0];
@@ -197,8 +203,8 @@ icvStarDetectorComputeResponses( const Image & img, // uchar image type
         memset( r_ptr, 0, border * sizeof(float));
         memset( s_ptr, 0, cols * sizeof(short));
 
-        memset( &r_ptr[cols - 1 - border], 0, border * sizeof(float));
-        memset( &s_ptr[cols - 1 - border], 0, border * sizeof(short));
+        memset( &r_ptr[cols - border], 0, border * sizeof(float));
+        memset( &s_ptr[cols - border], 0, border * sizeof(short));
 
         for( ; x < cols - border; ++x ) {
             int ofs = y*step + x;
@@ -280,7 +286,7 @@ icvStarDetectorSuppressLines( const Image & responses, // image in float
 struct CvPoint
 {
   int x,y;
-  CvPoint(int _x,int _y)  {
+  CvPoint(int _x=0,int _y=0)  {
     x= _x; y = _y;
   }
 };
@@ -290,7 +296,7 @@ static void
 icvStarDetectorSuppressNonmax( const Image& responses, // image in float
                                const Image1& sizes,    // image in short
                                vector<Feature *> *keypoints, // detected feature
-                               int iBorder, // max number of scale expored
+                               int iBorder, // max number of scale explored
                                int iSuppressNonMaxSize = 5, // x*y*z non max suppression
                                float fResponseThreshold = 30.0f, // blob response filtering
                                // threshold factors

@@ -11,6 +11,5 @@ Local modifications:
 * Change to fit the libmv bases classes
 * Make function template and use default parameter
 * Minor memory optimization
-
-
+* Fix crash issue with very small image
 
