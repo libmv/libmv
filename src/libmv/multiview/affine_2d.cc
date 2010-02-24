@@ -19,7 +19,7 @@
 // IN THE SOFTWARE.
 
 #include "libmv/multiview/affine_2d.h"
-#include <iostream>
+
 namespace libmv {
 
 // Parametrization
@@ -61,13 +61,16 @@ bool Affine2D_FromCorrespondencesLinear(const Mat &x1, const Mat &x2,
   }
   // Solve Ax=B
   Vec x;
-  A.lu().solve(b, &x);
-
-  // Configure output matrix :
-  (*M)<<x(1), x(0), x(2), // cos sin tx
-       -x(0), x(1), x(3), // sin cos ty
-         0.0,  0.0, 1.0;
-  return true;
+  if (A.lu().solve(b, &x))  {
+    // Configure output matrix :
+    (*M)<<x(1), x(0), x(2), // cos sin tx
+         -x(0), x(1), x(3), // sin cos ty
+           0.0,  0.0, 1.0;
+    return true;
+  }
+  else  {
+    return false;
+  }
 }
 
 }
