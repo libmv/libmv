@@ -46,4 +46,4 @@ double HomographyFromCorrespondences2PointRobust(const Mat &x1,
 
 } // namespace libmv
 
-#endif  // LIBMV_MULTIVIEW_ROBUST_FUNDAMENTAL_H_
+#endif  // LIBMV_MULTIVIEW_ROBUST_HOMOGRAPHY_H_

@@ -19,7 +19,6 @@
 // IN THE SOFTWARE.
 
 #include "libmv/numeric/numeric.h"
-#include "libmv/logging/logging.h"
 #include "libmv/multiview/robust_homography.h"
 #include "libmv/multiview/homography_kernel.h"
 #include "libmv/multiview/panography_kernel.h"
