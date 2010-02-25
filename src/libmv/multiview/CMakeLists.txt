@@ -13,6 +13,8 @@ ADD_LIBRARY(multiview
             autocalibration.cc
             five_point.cc
             affine_2d.cc
+            affine_2d_kernel.cc
+            robust_affine_2d.cc
             robust_homography.cc
             euclidean_resection.cc
             )
