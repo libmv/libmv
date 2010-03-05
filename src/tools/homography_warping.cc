@@ -157,26 +157,6 @@ int main(int argc, char **argv) {
     DeleteElements(&descriptors);
   }
 
-  if(KeypointImgA.features.size() > 0)  {
-    // Build the kd-tree.
-    FeatureSet & kp = KeypointImgA;
-    kp.tree.SetDimensions(kp.features[0].descriptor.coords.size());
-    for (int i = 0; i < kp.features.size(); ++i) {
-      kp.tree.AddPoint(kp.features[i].descriptor.coords.data(), i);
-    }
-    kp.tree.Build(10);
-  }
-
-  if(KeypointImgB.features.size() > 0)  {
-    // Build the kd-tree.
-    FeatureSet & kp = KeypointImgB;
-    kp.tree.SetDimensions(kp.features[0].descriptor.coords.size());
-    for (int i = 0; i < kp.features.size(); ++i) {
-      kp.tree.AddPoint(kp.features[i].descriptor.coords.data(), i);
-    }
-    kp.tree.Build(10);
-  }
-
   Matches matches;
   FindCandidateMatches(KeypointImgA,
                        KeypointImgB,

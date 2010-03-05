@@ -27,9 +27,11 @@
 #include "libmv/base/vector_utils.h"
 #include "libmv/correspondence/feature_matching.h"
 #include "libmv/correspondence/feature_matching_FLANN.h"
-#include "libmv/detector/fast_detector.h"
 #include "libmv/detector/detector.h"
+#include "libmv/detector/fast_detector.h"
+#include "libmv/detector/star_detector.h"
 #include "libmv/descriptor/descriptor.h"
+#include "libmv/descriptor/daisy_descriptor.h"
 #include "libmv/descriptor/simpliest_descriptor.h"
 #include "libmv/image/array_nd.h"
 #include "libmv/image/image.h"
@@ -159,7 +161,7 @@ void TvrMainWindow::CreateMenus() {
 void TvrMainWindow::OpenImages() {
   QStringList filenames = QFileDialog::getOpenFileNames(this,
       "Select Two Images", "",
-      "Image Files (*.png *.jpg *.jpeg *.bmp *.ppm *.pgm *.xpm *.tif *.tiff)");
+      "Image Files (*.png *.jpg *.jpeg *.bmp *.ppm *.pgm *.xpm *.tif *.tiff *.tga)");
 
   if (filenames.size() == 2) {
     for (int i = 0; i < 2; ++i) {
@@ -301,7 +303,8 @@ void TvrMainWindow::ComputeFeatures(int image_index) {
     }
   }
 
-  scoped_ptr<detector::Detector> detector(detector::CreateFastDetector(9, 30));
+  scoped_ptr<detector::Detector> detector(detector::CreateFastDetector(9, 30, true));
+  //scoped_ptr<detector::Detector> detector(detector::CreateStarDetector());
 
   vector<Feature *> features;
   Image im(new Array3Du(image));
@@ -309,6 +312,7 @@ void TvrMainWindow::ComputeFeatures(int image_index) {
 
   vector<descriptor::Descriptor *> descriptors;
   scoped_ptr<descriptor::Describer> describer(descriptor::CreateSimpliestDescriber());
+  //scoped_ptr<descriptor::Describer> describer(descriptor::CreateDaisyDescriber());
   describer->Describe(features, im, NULL, &descriptors);
 
   // Copy data.
@@ -322,8 +326,8 @@ void TvrMainWindow::ComputeFeatures(int image_index) {
 
   DeleteElements(&descriptors);
   DeleteElements(&features);
-  // Display information to the user.
-  QMainWindow::statusBar()->showMessage("Start : Build kd-Tree for image : "
+  /*// Display information to the user.
+  QMainWindow::statusBar()->showMessage("End : Build kd-Tree for image : "
    + QString::number(image_index) );
 
   if(fs.features.size() > 0)  {
@@ -333,7 +337,7 @@ void TvrMainWindow::ComputeFeatures(int image_index) {
       fs.tree.AddPoint(fs.features[i].descriptor.coords.data(), i);
     }
     fs.tree.Build(10);
-  }
+  }*/
 
   UpdateViewers();
 
@@ -346,6 +350,7 @@ void TvrMainWindow::ComputeCandidateMatches() {
   // Display information to the user.
   QMainWindow::statusBar()->showMessage("Start : ComputeCandidateMatches");
 
+  clock_t startTime = clock();
   /*FindSymmetricCandidateMatches_FLANN(document_.feature_sets[0],
                                       document_.feature_sets[1],
                                       &document_.matches);*/
@@ -358,11 +363,15 @@ void TvrMainWindow::ComputeCandidateMatches() {
   FindCandidateMatches( document_.feature_sets[0],
                         document_.feature_sets[1],
                         &document_.matches);
+
+  clock_t stopTime = clock();
+  double millisecond =  ((double)stopTime - startTime) / CLOCKS_PER_SEC;;
   UpdateViewers();
 
   // Display information to the user.
   QMainWindow::statusBar()->showMessage("End : ComputeCandidateMatches found : "
-        + QString::number(document_.matches.NumTracks()) + " matches");
+        + QString::number(document_.matches.NumTracks()) + " matches in : "
+        + QString::number(millisecond) + " ms");
 }
 
 void TvrMainWindow::ComputeRobustMatches() {

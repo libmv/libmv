@@ -44,6 +44,7 @@ class DaisyDescriber : public Describer {
 
     // Defaults from README.
     desc.set_parameters(15, 3, 8, 8);
+    //desc.scale_invariant(true);
 
     // Push the image into daisy. This will make a copy and convert to float.
     ByteImage *byte_image = image.AsArray3Du();

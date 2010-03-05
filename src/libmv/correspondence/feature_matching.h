@@ -40,10 +40,9 @@ struct KeypointFeature : public ::PointFeature {
   float operator[](int i) const { return descriptor.coords(i); }
 };
 
-/// FeatureSet : Store an array of KeypointFeature and a Kdtree of the descriptor.
+/// FeatureSet : Store an array of KeypointFeature ( Keypoint and descriptor).
 struct FeatureSet {
   vector<KeypointFeature> features;
-  KdTree<float> tree;
 
   /// return a float * containing the descriptor data.
   /// Must be deleted with []
