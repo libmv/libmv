@@ -355,7 +355,7 @@ public:
         int sampleSize = int(samplePercentage*inputDataset.rows);
         int testSampleSize = min(sampleSize/10, 1000);
 
-        logger.info("Enterng autotuning, dataset size: %d, sampleSize: %d, testSampleSize: %d\n",inputDataset.rows, sampleSize, testSampleSize);
+        logger.info("Entering autotuning, dataset size: %d, sampleSize: %d, testSampleSize: %d\n",inputDataset.rows, sampleSize, testSampleSize);
 
         // For a very small dataset, it makes no sense to build any fancy index, just
         // use linear search
