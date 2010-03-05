@@ -33,7 +33,7 @@ using namespace libmv;
 
 /// Define the description of a feature described by :
 /// A PointFeature (x,y,scale,orientation),
-/// And a descriptor ( a vector of floats).
+/// And a descriptor (a vector of floats).
 struct KeypointFeature : public ::PointFeature {
   descriptor::VecfDescriptor descriptor;
   // Match kdtree traits: with this, the Feature can act as a kdtree point.
@@ -44,6 +44,12 @@ struct KeypointFeature : public ::PointFeature {
 struct FeatureSet {
   vector<KeypointFeature> features;
   KdTree<float> tree;
+
+  /// return a float * containing the descriptor data.
+  /// Must be deleted with []
+  static float *FeatureSetDescriptorsToContiguousArray
+    ( const FeatureSet & featureSet );
+
 };
 
 // Compute candidate matches between 2 sets of features.  Two features a and b

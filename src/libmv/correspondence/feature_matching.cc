@@ -30,12 +30,12 @@ void FindCandidateMatches(const FeatureSet &left,
   int max_track_number = 0;
   for (size_t i = 0; i < left.features.size(); ++i) {
     int j, k;
-    float distance; 
+    float distance;
     right.tree.ApproximateNearestNeighborBestBinFirst(
       left.features[i].descriptor.coords.data(), 300, &j, &distance);
     left.tree.ApproximateNearestNeighborBestBinFirst(
       right.features[j].descriptor.coords.data(), 300, &k, &distance);
-    
+
     // Left image is image 0, right is 1 for now.
     if (i == k) {
       // Both kdtrees matched the same feature, so it is probably a match.
@@ -45,3 +45,23 @@ void FindCandidateMatches(const FeatureSet &left,
     }
   }
 }
+
+float * FeatureSet::FeatureSetDescriptorsToContiguousArray
+    ( const FeatureSet & featureSet ) {
+
+    if (featureSet.features.size() == 0)  {
+      return NULL;
+    }
+    int descriptorSize = featureSet.features[0].descriptor.coords.size();
+    // Allocate and paste the necessary data.
+    // FLANN need a contiguous data array.
+    float * array = new float[featureSet.features.size()*descriptorSize];
+
+    //-- Paste data in the contiguous array :
+    for (int i = 0; i < (int)featureSet.features.size(); ++i)
+    {
+      for (int j = 0;j < descriptorSize; ++j)
+        array[descriptorSize*i + j] = (float)featureSet.features[i][j];
+    }
+    return array;
+  }

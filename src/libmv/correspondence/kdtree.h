@@ -144,13 +144,13 @@ class KdTree {
   void SetDimensions(int num_dims) {
     num_dims_ = num_dims;
   }
-  
+
   /**
    * Add a point to the tree with a given id.
-   * 
+   *
    *  \param data A pointer to the raw point data.
    *  \param id   The id of the point.  Used to identify the search results.
-   * 
+   *
    * Points can not be added once the tree is built.
    */
   void AddPoint(const Scalar *data, Id id) {
@@ -170,7 +170,7 @@ class KdTree {
 
     // Allocate room for all the nodes at once.
     nodes_.resize((1 << num_levels_) - 1);
-    
+
     // Recursively create the nodes.
     CreateNode(0, &points_.front(), &points_.back() + 1);
   }
@@ -178,6 +178,7 @@ class KdTree {
   int NumNodes() const { return nodes_.size(); }
   int NumLeafs() const { return (NumNodes() + 1) / 2; }
   int NumLevels() const { return num_levels_; }
+  int NumDimension() const { return num_dims_; }
 
   void PrintNodes() const {
     for (int i = 0; i < nodes_.size(); ++i) {
@@ -221,7 +222,7 @@ class KdTree {
       if (neighbors->Full() && old_distance >= neighbors->FarthestDistance()) {
         break;
       }
-      
+
       int i = queue.Pop();
 
       // Go down to leaf.
@@ -230,7 +231,7 @@ class KdTree {
         Scalar cut_value = nodes_[i].cut_value;
         Scalar min_value = nodes_[i].min_value;
         Scalar max_value = nodes_[i].max_value;
-        
+
         Scalar new_offset = query[axis] - cut_value;
         if (new_offset < 0) {
           Scalar old_offset = std::min(Scalar(0.0), query[axis] - min_value);
@@ -293,7 +294,7 @@ class KdTree {
       // Create sub-trees.
       CreateNode(LeftChild(i), begin, pivot);
       CreateNode(RightChild(i), pivot, end);
-    } 
+    }
   }
 
   int MoreVariantAxis(Point *begin, Point *end,
@@ -315,7 +316,7 @@ class KdTree {
         if (x > max_values[i]) max_values[i] = x;
       }
     }
-    
+
     int num_points = end - begin;
     mean /= num_points;
     mean2 /= num_points;
