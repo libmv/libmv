@@ -83,7 +83,14 @@ void fastRotationEstimation(const Image & ima, vector<Feature *> & features)
   }
 }
 
-/// Detect the orientation of a given feature
+/// Detect the orientation of a given feature.
+/// A simplified scheme as done in SIFT :
+/// Magnitude and direction of the gradient are computed for every pixel
+///   in a neighboring circular region around the keypoint.
+/// Each sample give an orientation and a weight that are added in an
+///   orientation histogram of 36 bins is formed (each bin covering 10 deg).
+/// Dominating orientation is detected as the maximum peak location.
+///
 template<class Image>
 void gradientBoxesRotationEstimation(const Image & ima, vector<Feature *> & features)
 {
@@ -93,17 +100,15 @@ void gradientBoxesRotationEstimation(const Image & ima, vector<Feature *> & feat
   for (int j=0; j < features.size(); ++j) {
     const int x = ((PointFeature*)features[j])->x(),
               y = ((PointFeature*)features[j])->y();
-    const int offset = 6; // Todo(pmoulon) Make it related to scale
-    const int offsetDiv2 = offset/2;
+    const int offset = 3*((PointFeature*)features[j])->scale;
     std::fill(histogram.begin(),histogram.end(),0.0f);
     for (int r=y-offset; r<=y+offset; ++r){
       for (int c=x-offset; c<=x+offset; ++c){
-        // Todo(pmoulon) Compute it only in a circular area to be more robust to rotation.
         if ((c>0) && (r>0) && (c<ima.Width()-1) && (r<ima.Height()-1))  {
 
           double offsetX = c - x;
           double offsetY = r - y;
-          double circularWeight = sqrt( (offsetX*offsetX + offsetY*offsetY) / offset );
+          double circularWeight = sqrt( (offsetX*offsetX + offsetY*offsetY) )/ offset;
 
           if (circularWeight<=1.0)  {
 
@@ -122,15 +127,16 @@ void gradientBoxesRotationEstimation(const Image & ima, vector<Feature *> & feat
         }
       }
     }
-    // Locate peak in angle histogram.
+    // Locate peak in the weighted angle histogram.
     int index = 0;
     for (int k=1; k<36; ++k) {
-      if(histogram[index]<histogram[k])
-      index = k;
+      if (histogram[index]<histogram[k])
+        index = k;
     }
     // Todo(pmoulon) subpixel angle according histogram value.
     // http://people.equars.com/~marco/poli/phd/node47.html
-    ((PointFeature*)features[j])->orientation = getCoterminalAngle(index*10.0 * 3.14159 / 180.0);
+    ((PointFeature*)features[j])->orientation =
+        getCoterminalAngle(index*10.0 * 3.14159 / 180.0);
   }
 }
 
