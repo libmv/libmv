@@ -36,9 +36,9 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifdef WIN32
 /* win32 dll export/import directives */
 #ifdef flann_EXPORTS
-#define LIBSPEC __declspec(dllexport)
+#define LIBSPEC //__declspec(dllexport)
 #else
-#define LIBSPEC __declspec(dllimport)
+#define LIBSPEC //__declspec(dllimport)
 #endif
 #else
 /* unix needs nothing */

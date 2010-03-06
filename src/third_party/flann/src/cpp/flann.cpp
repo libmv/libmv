@@ -45,7 +45,7 @@ using namespace std;
 #include "flann.h"
 
 #ifdef WIN32
-#define EXPORTED extern "C" __declspec(dllexport)
+#define EXPORTED extern "C" //__declspec(dllexport)
 #else
 #define EXPORTED extern "C"
 #endif

@@ -11,3 +11,4 @@ Local modifications:
 * Add CMake Build system
 * Fix warnings and errors at compilation time
 * Change FLANNParameters::char* log_destination to FLANNParameters::const char* log_destination
+* Remove the macro to export function as DLL. We use flann as a static library.
