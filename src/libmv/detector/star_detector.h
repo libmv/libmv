@@ -1,4 +1,4 @@
-// Copyright (c) 2009 libmv authors.
+// Copyright (c) 2010 libmv authors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
@@ -21,53 +21,17 @@
 #ifndef LIBMV_DETECTOR_STAR_DETECTOR_H
 #define LIBMV_DETECTOR_STAR_DETECTOR_H
 
-#include "libmv/image/image.h"
-#include "libmv/base/vector.h"
-#include <cmath>
-
-#include "third_party/StarDetector/cvStarDetector.h"
-
-//#define NORMAL
-
 namespace libmv {
 namespace detector {
 
 class Detector;
 
-class StarDetector : public Detector {
- public:
-  virtual ~StarDetector() {}
-  StarDetector() {}
+/**
+ * Creates a detector that uses the STAR detection algorithm.
+ * A SURF like blob detector.
+ */
+Detector *CreateStarDetector();
 
-  virtual void Detect(const Image &image,
-                      vector<Feature *> *features,
-                      DetectorData **data) {
-
-    ByteImage *byte_image = image.AsArray3Du();
-
-    FloatImage responses( byte_image->Height(), byte_image->Width(), 1 );
-    ShortImage sizes( byte_image->Height(), byte_image->Width(), 1 );
-
-    int iBorder = icvStarDetectorComputeResponses( *byte_image, &responses, &sizes, 45 );
-    if( iBorder >= 0 )
-        icvStarDetectorSuppressNonmax( responses, sizes, features, iBorder, 5, 25);
-
-    // STAR doesn't have a corresponding descriptor, so there's no extra data
-    // to export.
-    if (data) {
-      *data = NULL;
-    }
-  }
-
- private:
-
-};
-
-Detector *CreateStarDetector()
-{
-  return new StarDetector;
-}
-
-} //namespace detector
-} //namespace libmv
+}  // namespace detector
+}  // namespace libmv
 #endif //LIBMV_DETECTOR_STAR_DETECTOR_H
