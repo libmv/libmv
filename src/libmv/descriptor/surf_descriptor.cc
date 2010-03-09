@@ -50,11 +50,12 @@ float HarrY(const TImage &integral_image, int row, int col, int scale) {
 
 // TODO(keir): Concievably, these template parameters could be exposed to
 // experiment with SURF parameters. Try that!
+// descriptor must be sized to 4 * blocks *blocks
 template<int blocks, int samples_per_block,
          typename TImage, typename TPointFeature>
 void USURFDescriptor(const TImage &integral_image,
                      const TPointFeature &feature,
-                     Matrix<float, 4 * blocks * blocks, 1> *descriptor) {
+                     Vecf *descriptor) {
   float x = feature.x();
   float y = feature.y();
   float scale = feature.scale;
@@ -81,26 +82,16 @@ void USURFDescriptor(const TImage &integral_image,
                  HarrY(integral_image, sample_row, sample_col, int_scale);
           dxy *= weight;
           components.start<2>() += dxy;
-          components(2) += fabs(dxy(0));
-          components(3) += fabs(dxy(1));
-          // TODO(keir): There is a problem with this in the old eigen version
-          // we're using; turn this back on once I update eigen to trunk.
-          //components.end<2>() += dxy.cwise.().abs();
+          components.end<2>() += dxy.cwise().abs();
         }
       }
-      // TODO(keir): Weird that this doesn't work.
-      //descriptor->segment<4>(done_dims) = components;
-      //done_dims += 4;
-      (*descriptor)(done_dims++) = components(0);
-      (*descriptor)(done_dims++) = components(1);
-      (*descriptor)(done_dims++) = components(2);
-      (*descriptor)(done_dims++) = components(3);
+      (*descriptor).segment<4>(done_dims) = components;
+      done_dims += 4;
     }
   }
   descriptor->normalize();
 }
 
-// TODO(keir): This is unfinished and probably doesn't compile!
 class SurfDescriber : public Describer {
  public:
   virtual void Describe(const vector<Feature *> &features,
@@ -111,16 +102,15 @@ class SurfDescriber : public Describer {
     (void) detector_data;
 
     Matu integral_image;
-    IntegralImage(image, &integral_image);
+    IntegralImage(*(image.AsArray3Du()), &integral_image);
 
     descriptors->resize(features.size());
     for (int i = 0; i < features.size(); ++i) {
       PointFeature *point = dynamic_cast<PointFeature *>(features[i]);
       VecfDescriptor *descriptor = NULL;
       if (point) {
-        descriptor = new VecfDescriptor(128);
-        Matrix<float, 128> coordinates;
-        USURFDescriptor<4, 5>(integral_image, *point, &coordinates);
+        descriptor = new VecfDescriptor(64);
+        USURFDescriptor<4, 5>(integral_image, *point, &descriptor->coords);
       }
       (*descriptors)[i] = descriptor;
     }
