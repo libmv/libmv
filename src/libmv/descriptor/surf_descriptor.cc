@@ -92,6 +92,67 @@ void USURFDescriptor(const TImage &integral_image,
   descriptor->normalize();
 }
 
+// descriptor must be sized to 4 * blocks *blocks
+template<int blocks, int samples_per_block,
+         typename TImage, typename TPointFeature>
+void MSURFDescriptor(const TImage &integral_image,
+                     const TPointFeature &feature,
+                     Vecf *descriptor) {
+  float x = feature.x();
+  float y = feature.y();
+  float scale = feature.scale;
+  const int int_scale = lround(2*scale);
+  // Allow overlap between blocks
+  const int half_region = blocks* (samples_per_block-(blocks-1))/2;
+
+  // Since the Gaussian is a separable filter, precompute it.
+  Matrix<float, 2*half_region, 1> gaussian;
+  for (int i = -half_region; i < half_region; ++i) {
+    gaussian(i + half_region) = Gaussian(i, 2*scale);
+  }
+
+  float co = 1.0f, si = 0.0f; // Suppose Upright descriptor
+  bool bUpright = false; //Todo(pmoulon) set this variable as parameter
+  if (!bUpright)
+  {
+    co = cos(feature.orientation);
+    si = sin(feature.orientation);
+  }
+
+  int done_dims = 0;
+  for (int row = -half_region; row < half_region - blocks;
+        row += (samples_per_block - blocks)) {
+    for (int col = -half_region; col < half_region - blocks;
+        col += (samples_per_block - blocks)) {
+      Vec4f components(0.0f,0.0f,0.0f,0.0f);
+      for (int r = row; r < row + samples_per_block; ++r) {
+        for (int c = col; c < col + samples_per_block; ++c) {
+
+          //Get coords of sample point on the rotated axis
+          int sample_col = lround(x + (-r*scale*si + c*scale*co));
+          int sample_row = lround(y + ( r*scale*co + c*scale*si));
+
+          float weight = gaussian(r + half_region) * gaussian(c + half_region);
+          //Compute Harr response on rotated axis
+          float rrx = HarrX(integral_image, sample_row, sample_col, int_scale);
+          float rry = HarrY(integral_image, sample_row, sample_col, int_scale);
+
+          Vec2f dxy;
+          dxy << (co*rry - si*rrx),
+                 (si*rry + co*rrx);
+          dxy *= weight;
+          components.start<2>() += dxy;
+          components.end<2>() += dxy.cwise().abs();
+        }
+      }
+      float gauss_BigBox = Gaussian2D(row/half_region,col/half_region,1.0f);
+      (*descriptor).segment<4>(done_dims) = components*gauss_BigBox;
+      done_dims += 4;
+    }
+  }
+  descriptor->normalize();
+}
+
 class SurfDescriber : public Describer {
  public:
   virtual void Describe(const vector<Feature *> &features,
@@ -110,7 +171,7 @@ class SurfDescriber : public Describer {
       VecfDescriptor *descriptor = NULL;
       if (point) {
         descriptor = new VecfDescriptor(64);
-        USURFDescriptor<4, 5>(integral_image, *point, &descriptor->coords);
+        MSURFDescriptor<4, 9>(integral_image, *point, &descriptor->coords);
       }
       (*descriptors)[i] = descriptor;
     }
