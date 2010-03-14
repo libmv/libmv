@@ -32,6 +32,12 @@ namespace libmv {
 inline double Gaussian(double x, double sigma) {
   return 1/sqrt(2*M_PI*sigma*sigma) * exp(-(x*x/2/sigma/sigma));
 }
+// 2D gaussian (zero mean)
+// (9) in http://mathworld.wolfram.com/GaussianFunction.html
+inline float Gaussian2D(double x, double y, float sigma)
+{
+  return 1.0/(2.0*M_PI*sigma*sigma) * exp( -(x*x+y*y)/(2.0*sigma*sigma));
+}
 inline double GaussianDerivative(double x, double sigma) {
   return -x / sigma / sigma * Gaussian(x, sigma);
 }
