@@ -1,40 +1,40 @@
 /*
  * Copyright (c) 2000-2009, Eastman Kodak Company
  * All rights reserved.
- * 
- * Redistribution and use in source and binary forms, with or without 
+ *
+ * Redistribution and use in source and binary forms, with or without
  * modification,are permitted provided that the following conditions are met:
- * 
- *     * Redistributions of source code must retain the above copyright notice, 
+ *
+ *     * Redistributions of source code must retain the above copyright notice,
  *       this list of conditions and the following disclaimer.
  *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in the 
+ *       notice, this list of conditions and the following disclaimer in the
  *       documentation and/or other materials provided with the distribution.
- *     * Neither the name of the Eastman Kodak Company nor the names of its 
- *       contributors may be used to endorse or promote products derived from 
+ *     * Neither the name of the Eastman Kodak Company nor the names of its
+ *       contributors may be used to endorse or promote products derived from
  *       this software without specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE 
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
  * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
- * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR 
- * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF 
- * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS 
- * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
- * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  *
  * Creation Date: 07/14/2001
  *
- * Original Author: 
+ * Original Author:
  * Dan Graham dan.graham@kodak.com
  *
- * Contributor(s): 
+ * Contributor(s):
  * Ricardo Rosario ricardo.rosario@kodak.com
- */ 
+ */
 
 #if (defined _MSC_VER)
 #pragma warning( disable : 4244 )
@@ -60,7 +60,7 @@ static  OE_J_COLOR_SPACE mapIJGColorSpace(ExifColorSpace jcs);
 //
 //==============================================================================
 
-ExifJpegCompress::ExifJpegCompress() 
+ExifJpegCompress::ExifJpegCompress()
    :gJpegState(JPEG_INIT),
     gQualityFactor(90),
     gSmoothingFactor(0),
@@ -113,7 +113,7 @@ ExifJpegCompress::~ExifJpegCompress(void)
             delete gJpegTables->Q3;
             gJpegTables->Q3 = NULL;
         }
-        
+
         delete gJpegTables;
         gJpegTables = NULL;
     }
@@ -124,14 +124,14 @@ ExifJpegCompress::~ExifJpegCompress(void)
 
 }
 
-JpegStatus 
+JpegStatus
 ExifJpegCompress::setFileOutput(FILE *fp)
 {
     gCompressFile = fp;
     return JPEG_OK;
 }
 
-JpegStatus 
+JpegStatus
 ExifJpegCompress::setBufferOutput(unsigned char *buf, exif_uint32 bufSize)
 {
     gCompressBuf = buf;
@@ -140,7 +140,7 @@ ExifJpegCompress::setBufferOutput(unsigned char *buf, exif_uint32 bufSize)
 }
 
 
-JpegStatus 
+JpegStatus
 ExifJpegCompress::setImageInfo(exif_uint32 width, exif_uint32 height,
                         unsigned short numComps, ExifColorSpace cs)
 {
@@ -192,7 +192,7 @@ JpegStatus ExifJpegCompress::setJpegQuantTable(
     gUseCustomTables = true;
     return JPEG_OK;
 }
-                
+
 JpegStatus ExifJpegCompress::setJpegQuantTable(
                 ExifJpegQTable*  Q0,
                   ExifJpegQTable*  Q1,
@@ -204,6 +204,10 @@ JpegStatus ExifJpegCompress::setJpegQuantTable(
                   ExifJpegHUFFTable*   Huff_AC_Chroma,
                 ExifJpegTableOrder   tableOrder)
 {
+    (void)Huff_DC;
+    (void)Huff_DC_Chroma;
+    (void)Huff_AC;
+    (void)Huff_AC_Chroma;
 
     if(!gJpegTables) {
         gJpegTables = new JPEGTableHolder;
@@ -215,7 +219,7 @@ JpegStatus ExifJpegCompress::setJpegQuantTable(
 
     jpegTableOrder = tableOrder;
     gUseCustomTables = true;
-    
+
     if (Q0 != NULL) {
         if(gJpegTables->Q0) {
             delete gJpegTables->Q0;
@@ -227,7 +231,7 @@ JpegStatus ExifJpegCompress::setJpegQuantTable(
         }
         *(gJpegTables->Q0) = *Q0;
     }
-    
+
     if (Q1 != NULL) {
         if(gJpegTables->Q1) {
             delete gJpegTables->Q1;
@@ -239,7 +243,7 @@ JpegStatus ExifJpegCompress::setJpegQuantTable(
         }
         *(gJpegTables->Q1) = *Q1;
     }
-    
+
     if (Q2 != NULL) {
         if(gJpegTables->Q2) {
             delete gJpegTables->Q2;
@@ -251,7 +255,7 @@ JpegStatus ExifJpegCompress::setJpegQuantTable(
         }
         *(gJpegTables->Q2) = *Q2;
     }
-    
+
     if (Q3 != NULL) {
         if(gJpegTables->Q3) {
             delete gJpegTables->Q3;
@@ -263,7 +267,7 @@ JpegStatus ExifJpegCompress::setJpegQuantTable(
         }
         *(gJpegTables->Q3) = *Q3;
     }
-    
+
     return JPEG_OK;
 }
 
@@ -278,7 +282,7 @@ void ExifJpegCompress::errorExitHandler(oe_j_common_ptr cinfo)
     // at this point, we have a fatal error and must
     // longjmp our way back (ugh!!). we will get the
     // IJG message string and store it. Then the longjmp.
-   
+
     /* cinfo->err really points to a my_error_mgr struct, so coerce pointer */
     my_error_mgr * myerr = (my_error_mgr *) cinfo->err;
 
@@ -304,7 +308,7 @@ void ExifJpegCompress::emitMessageHandler(oe_j_common_ptr cinfo, int msgLevel)
     // keep going.
     if (msgLevel < 0 )
         // Bad JFIF version numbers don't concern us at the moment...
-        if ( cinfo->err->msg_code != JWRN_JFIF_MAJOR )       
+        if ( cinfo->err->msg_code != JWRN_JFIF_MAJOR )
             // for now, other warnings are as good as fatals. jump!!!
             ExifJpegCompress::errorExitHandler(cinfo);
 
@@ -316,7 +320,7 @@ ExifJpegCompress::startCompress()
 {
     JpegStatus status = JPEG_OK;
     gLastLineWritten = 0;
-    
+
 #ifndef OPENEXIF_NO_IJG
     status = setupCompress();
 
@@ -330,7 +334,7 @@ ExifJpegCompress::startCompress()
         */
         openexif_jpeg_abort_compress(gIJGCompInfo);
         return myErrorMgr.jpegStatus;
-    }  
+    }
     if(gDpiSet) {
         gIJGCompInfo->X_density = gXRes;
         gIJGCompInfo->Y_density = gYRes;
@@ -353,7 +357,7 @@ ExifJpegCompress::startCompress()
     if(gICCProfBuf) {
         status = writeICCProfile();
     }
-#endif    
+#endif
     return status;
 }
 
@@ -372,7 +376,7 @@ ExifJpegCompress::setupCompress()
          */
         openexif_jpeg_abort_compress(gIJGCompInfo);
         return myErrorMgr.jpegStatus;
-    }  
+    }
     gIJGCompInfo->err = openexif_jpeg_std_error(&(myErrorMgr.pub));
 
     // setup the IJG error handler for this object.
@@ -395,13 +399,13 @@ ExifJpegCompress::setupCompress()
     gIJGCompInfo->in_color_space = mapIJGColorSpace(gInputColorSpace);
 
     openexif_jpeg_set_defaults(gIJGCompInfo);
-    
+
     // set smoothing factor
     gIJGCompInfo->smoothing_factor = gSmoothingFactor;
-    
+
     // set coding optimization
     gIJGCompInfo->optimize_coding = gOptimizeEncoding;
-    
+
     if(gProgressive)
         openexif_jpeg_simple_progression(gIJGCompInfo);
 
@@ -432,7 +436,7 @@ ExifJpegCompress::setupCompress()
 
     // set DCT Method
     gIJGCompInfo->dct_method = gDCTMethod;
-    
+
     if(gJpegTables)
     {
         int scaleFactor;
@@ -452,9 +456,9 @@ ExifJpegCompress::setupCompress()
         exif_uint32 * newTable;
         newTable = new exif_uint32 [DCTSIZE2];
         int i;
-        if(gJpegTables->Q3) 
+        if(gJpegTables->Q3)
         {
-            for(i = 0; i < DCTSIZE2; i++) 
+            for(i = 0; i < DCTSIZE2; i++)
             {
                 newTable[i] = gJpegTables->Q3->quantizer[i];
             }
@@ -499,7 +503,7 @@ ExifJpegCompress::stopCompress()
         openexif_jpeg_abort_compress(gIJGCompInfo);
         openexif_jpeg_destroy_compress(gIJGCompInfo);
         return myErrorMgr.jpegStatus;
-    }  
+    }
     if(gJpegState != JPEG_STOPPED)
         openexif_jpeg_finish_compress(gIJGCompInfo);
 	openexif_jpeg_destroy_compress(gIJGCompInfo);
@@ -508,7 +512,7 @@ ExifJpegCompress::stopCompress()
     return JPEG_OK;
 }
 
-JpegStatus 
+JpegStatus
 ExifJpegCompress::writeScanLines(uint8 *buf, exif_uint32 bufLineStride, exif_uint32 numLines,
                              exif_uint32 *numLinesWritten, exif_uint32 *nextLine)
 {
@@ -520,7 +524,7 @@ ExifJpegCompress::writeScanLines(uint8 *buf, exif_uint32 bufLineStride, exif_uin
 
     dwRowBytes = gIJGCompInfo->image_width;
     dwRowBytes *= gIJGCompInfo->input_components;
-        
+
     row_pointers = (OE_JSAMPARRAY) new(char[numLines * sizeof(OE_JSAMPARRAY)]);
     exif_uint32 i,j;
     if(gInputColorSpace == JPEG_BGR)
@@ -545,18 +549,18 @@ ExifJpegCompress::writeScanLines(uint8 *buf, exif_uint32 bufLineStride, exif_uin
     {
         for (i=0; i<numLines; i++)
         {
-            row_pointers[i] = buf + (exif_uint32)i*bufLineStride;    
+            row_pointers[i] = buf + (exif_uint32)i*bufLineStride;
         }
     }
 
     linesCompressed = openexif_jpeg_write_scanlines(gIJGCompInfo, row_pointers, numLines);
-    
+
     if(bTmpPtr) {
         for(i=0; i< numLines; i++)
             delete [] row_pointers[i];
     }
     delete [] row_pointers;
-    
+
     *numLinesWritten = linesCompressed;
     gLastLineWritten += linesCompressed;
     *nextLine = gLastLineWritten;
@@ -565,12 +569,12 @@ ExifJpegCompress::writeScanLines(uint8 *buf, exif_uint32 bufLineStride, exif_uin
 }
 
 
-exif_uint32 
+exif_uint32
 ExifJpegCompress::getCompSize(void)
 {
 #ifndef OPENEXIF_NO_IJG
     if(gLastLineWritten >= gHeight) {
-        // flush the compressed image buffer 
+        // flush the compressed image buffer
         if (setjmp(myErrorMgr.setjmp_buffer))
         {
             /* If we get here, the JPEG code has signaled an error.
@@ -578,7 +582,7 @@ ExifJpegCompress::getCompSize(void)
             */
             openexif_jpeg_abort_compress(gIJGCompInfo);
             return 0;
-        }  
+        }
         if(gJpegState != JPEG_STOPPED) {
             openexif_jpeg_finish_compress(gIJGCompInfo);
             gJpegState = JPEG_STOPPED;
@@ -593,11 +597,11 @@ ExifJpegCompress::getCompSize(void)
 
 JpegStatus ExifJpegCompress::setICCProfile(unsigned char *iccBuf, exif_uint32 iccSize)
 {
-    // Need to populate ICC Profile App buffer, 
+    // Need to populate ICC Profile App buffer,
     gICCProfBuf = new unsigned char [iccSize];
     gICCProfSize = iccSize;
     memcpy(gICCProfBuf, iccBuf, iccSize);
-    
+
     return JPEG_OK;
 }
 
@@ -641,7 +645,7 @@ JpegStatus ExifJpegCompress::writeICCProfile(void)
 
         WriteJPEGWord(writeBuf, 0xffe2); writeBuf+=2;
         appBytesWritten += 2;
- 
+
         // App size = 16 + writeSize
         //      need to keep track of how big APP length is
         WriteJPEGWord(writeBuf, 16+writeSize);writeBuf += 2;
@@ -685,7 +689,7 @@ JpegStatus ExifJpegCompress::writeICCProfile(void)
 ExifJpegDecompress::ExifJpegDecompress() :
     gJpegState(JPEG_INIT),
     gDCTMethod(OE_JDCT_ISLOW),
-    gDecompressBuf(NULL),    
+    gDecompressBuf(NULL),
     gDecompressFile(NULL),
     gDecompressFileName(NULL),
     gJpegHeaderRead(false),
@@ -702,7 +706,7 @@ ExifJpegDecompress::ExifJpegDecompress() :
          */
         openexif_jpeg_abort_decompress(gIJGDecompInfo);
     //    return myErrorMgr.jpegStatus;
-    }  
+    }
     gIJGDecompInfo->err = openexif_jpeg_std_error(&(myErrorMgr.pub));
 
     // setup the IJG error handler for this object.
@@ -723,7 +727,7 @@ ExifJpegDecompress::~ExifJpegDecompress(void)
 #endif
 }
 
-JpegStatus 
+JpegStatus
 ExifJpegDecompress::setFileInput(FILE *fp)
 {
     gDecompressFile = fp;
@@ -732,7 +736,7 @@ ExifJpegDecompress::setFileInput(FILE *fp)
 
 #ifdef WIN32
 #ifdef INTERNET_REQUIRED
-JpegStatus 
+JpegStatus
 ExifJpegDecompress::setFileInput(HINTERNET internet)
 {
     gInternetHandle = internet;
@@ -741,7 +745,7 @@ ExifJpegDecompress::setFileInput(HINTERNET internet)
 #endif // INTERNET_REQUIRED
 #endif // WIN32
 
-JpegStatus 
+JpegStatus
 ExifJpegDecompress::setBufferInput(unsigned char *buf, exif_uint32 bufSize)
 {
     gDecompressBuf = buf;
@@ -749,17 +753,17 @@ ExifJpegDecompress::setBufferInput(unsigned char *buf, exif_uint32 bufSize)
     return JPEG_OK;
 }
 
-JpegStatus 
-ExifJpegDecompress::setScaling(ExifJpegScaleFactor scaleFactor) 
+JpegStatus
+ExifJpegDecompress::setScaling(ExifJpegScaleFactor scaleFactor)
 {
-    gScaleFactor = scaleFactor; 
+    gScaleFactor = scaleFactor;
     getJpegScaleSize(gScaleFactor, &gScaledWidth, &gScaledHeight);
 
     return JPEG_OK;
 }
 
-JpegStatus 
-ExifJpegDecompress::setScaling(unsigned short scaleFactor) 
+JpegStatus
+ExifJpegDecompress::setScaling(unsigned short scaleFactor)
 {
     switch(scaleFactor) {
         case 1:
@@ -780,7 +784,7 @@ ExifJpegDecompress::setScaling(unsigned short scaleFactor)
     return JPEG_OK;
 }
 
-JpegStatus 
+JpegStatus
 ExifJpegDecompress::getJpegScaleSize(ExifJpegScaleFactor sF,
                 exif_uint32 *width, exif_uint32* height)
 {
@@ -796,11 +800,11 @@ ExifJpegDecompress::getJpegScaleSize(ExifJpegScaleFactor sF,
         case JPEG_SCALE_QUARTER:
             *width = (int)((gWidth+3)/4);
             *height = (int)((gHeight+3)/4);
-            break;            
+            break;
         case JPEG_SCALE_EIGHTH:
             *width = (int)((gWidth+7)/8);
             *height = (int)((gHeight+7)/8);
-            break;            
+            break;
         default:
             break;
     }
@@ -817,7 +821,7 @@ void ExifJpegDecompress::errorExitHandler(oe_j_common_ptr cinfo)
     // at this point, we have a fatal error and must
     // longjmp our way back (ugh!!). we will get the
     // IJG message string and store it. Then the longjmp.
-   
+
     /* cinfo->err really points to a my_error_mgr struct, so coerce pointer */
     my_error_mgr * myerr = (my_error_mgr *) cinfo->err;
 
@@ -838,22 +842,22 @@ void ExifJpegDecompress::emitMessageHandler(oe_j_common_ptr cinfo, int msgLevel)
     // keep going.
     if (msgLevel < 0 )
         // Bad JFIF version numbers don't concern us at the moment...
-        if ( cinfo->err->msg_code != JWRN_JFIF_MAJOR )       
+        if ( cinfo->err->msg_code != JWRN_JFIF_MAJOR )
             // for now, other warnings are as good as fatals. jump!!!
             ExifJpegDecompress::errorExitHandler(cinfo);
 }
 
 #endif
 
-JpegStatus 
+JpegStatus
 ExifJpegDecompress::setOutputColorSpace(ExifColorSpace outputCS)
 
 {
-    gOutputColorSpace = outputCS; 
+    gOutputColorSpace = outputCS;
     return JPEG_OK;
 }
 
-JpegStatus 
+JpegStatus
 ExifJpegDecompress::startDecompress()
 {
     JpegStatus status = JPEG_OK;
@@ -873,7 +877,7 @@ ExifJpegDecompress::startDecompress()
         */
         openexif_jpeg_abort_decompress(gIJGDecompInfo);
         return JPEG_ERROR;
-    }  
+    }
 
     int scaleDenom = 1;
     switch(gScaleFactor) {
@@ -905,7 +909,7 @@ ExifJpegDecompress::startDecompress()
     return JPEG_OK;
 }
 
-JpegStatus 
+JpegStatus
 ExifJpegDecompress::stopDecompress()
 {
 #ifndef OPENEXIF_NO_IJG
@@ -926,22 +930,22 @@ ExifJpegDecompress::stopDecompress()
     return JPEG_OK;
 }
 
-JpegStatus 
+JpegStatus
 ExifJpegDecompress::resetDecompress()
 {
 #ifndef OPENEXIF_NO_IJG
     if (setjmp(myErrorMgr.setjmp_buffer)) {
         return myErrorMgr.jpegStatus;
-    }  
+    }
 
     openexif_jpeg_abort_decompress(gIJGDecompInfo);
 #endif
 	gJpegHeaderRead = false;
-    
+
     return JPEG_OK;
 }
 
-JpegStatus 
+JpegStatus
 ExifJpegDecompress::getImageInfo(exif_uint32 *width, exif_uint32 *height,
                         unsigned short *numComps)
 {
@@ -959,8 +963,8 @@ ExifJpegDecompress::getImageInfo(exif_uint32 *width, exif_uint32 *height,
 			*/
 			openexif_jpeg_abort_decompress(gIJGDecompInfo);
 			status = JPEG_READHEADER_ERROR;
-		}  
-	        
+		}
+
 		if ((status == JPEG_OK)&&(openexif_jpeg_read_header(gIJGDecompInfo, true) != OE_JPEG_SUSPENDED))
 		{
 			gWidth = gIJGDecompInfo->image_width;
@@ -969,9 +973,9 @@ ExifJpegDecompress::getImageInfo(exif_uint32 *width, exif_uint32 *height,
 			gPrecision = gIJGDecompInfo->data_precision;
 			gOutputColorSpace = mapColorSpace(gIJGDecompInfo->out_color_space);
 		}
-		else 
-			status = JPEG_READHEADER_ERROR;    
-	    
+		else
+			status = JPEG_READHEADER_ERROR;
+  printf("\n\n%d\n",gWidth);
 		*width = gScaledWidth = gWidth;
 		*height = gScaledHeight = gHeight;
 		*numComps = gNumComps;
@@ -995,7 +999,7 @@ ExifJpegDecompress::setupDecompress(void)
             //
             openexif_jpeg_abort_decompress(gIJGDecompInfo);
             return myErrorMgr.jpegStatus;
-        }  
+        }
         gIJGDecompInfo->err = openexif_jpeg_std_error(&(myErrorMgr.pub));
 
         // setup the IJG error handler for this object.
@@ -1022,7 +1026,7 @@ ExifJpegDecompress::setupDecompress(void)
 }
 #endif
 
-JpegStatus 
+JpegStatus
 ExifJpegDecompress::readScanLines(uint8 *readBuf, exif_uint32 numLines,
                         exif_int32 lineStride,
                         exif_uint32 *numRead, exif_uint32 *nextLine)
@@ -1036,7 +1040,7 @@ ExifJpegDecompress::readScanLines(uint8 *readBuf, exif_uint32 numLines,
 
     dwRowBytes = gIJGDecompInfo->output_width;
     dwRowBytes *= gIJGDecompInfo->out_color_components;
-   
+
     linesDecompressed = 0;
 
     row_pointer[0] = (OE_JSAMPROW) new(char[dwRowBytes]);
@@ -1048,9 +1052,9 @@ ExifJpegDecompress::readScanLines(uint8 *readBuf, exif_uint32 numLines,
         */
         openexif_jpeg_abort_decompress(gIJGDecompInfo);
         return JPEG_ERROR;
-    }  
+    }
 
-    for (i=0; i<numLines; i++) 
+    for (i=0; i<numLines; i++)
     {
         sRead = openexif_jpeg_read_scanlines(gIJGDecompInfo, row_pointer, 1);
         if (sRead != 1)
@@ -1073,7 +1077,7 @@ ExifJpegDecompress::readScanLines(uint8 *readBuf, exif_uint32 numLines,
             for (j=0; j<dwRowBytes; j++)
                 *pDest++ = *pSrc++;
         }
-    }    
+    }
 
     *numRead = linesDecompressed;
     *nextLine = gIJGDecompInfo->output_scanline;
@@ -1084,7 +1088,7 @@ ExifJpegDecompress::readScanLines(uint8 *readBuf, exif_uint32 numLines,
 }
 
 
-JpegStatus 
+JpegStatus
 ExifJpegDecompress::getJpegQuantTable(uint8 quantIndex, uint16 *table)
 {
 	JpegStatus status = JPEG_OK;
@@ -1094,7 +1098,7 @@ ExifJpegDecompress::getJpegQuantTable(uint8 quantIndex, uint16 *table)
         for( i = 0; i < DCTSIZE2; i++)
             table[i] =  gIJGDecompInfo->quant_tbl_ptrs[quantIndex]->quantval[i];
     }
-    else 
+    else
         status = JPEG_ERROR;
 #else
 	status = JPEG_ERROR;
@@ -1104,7 +1108,7 @@ ExifJpegDecompress::getJpegQuantTable(uint8 quantIndex, uint16 *table)
 
 
 #ifndef OPENEXIF_NO_IJG
-ExifColorSpace 
+ExifColorSpace
 mapColorSpace(OE_J_COLOR_SPACE jcs)
 {
     ExifColorSpace cs;
@@ -1123,7 +1127,7 @@ mapColorSpace(OE_J_COLOR_SPACE jcs)
     return cs;
 }
 
-OE_J_COLOR_SPACE 
+OE_J_COLOR_SPACE
 mapIJGColorSpace(ExifColorSpace jcs)
 {
     OE_J_COLOR_SPACE cs;
@@ -1150,7 +1154,7 @@ mapIJGColorSpace(ExifColorSpace jcs)
 uint8 ExifJpegDecompress::getHSamplingFactor(uint8 componentID)
 {
     uint8 returnValue = 0;
-    
+
 #ifndef OPENEXIF_NO_IJG
     if(gIJGDecompInfo!=NULL)
     {
@@ -1166,7 +1170,7 @@ uint8 ExifJpegDecompress::getHSamplingFactor(uint8 componentID)
             }
             i++;
         }
-    
+
     }
 #endif
 
@@ -1197,7 +1201,7 @@ void ExifJpegCompress::setHSamplingFactor(uint8 componentID, uint8 value)
 uint8 ExifJpegDecompress::getVSamplingFactor(uint8 componentID)
 {
     uint8 returnValue = 0;
-    
+
 #ifndef OPENEXIF_NO_IJG
     if(gIJGDecompInfo!=NULL)
     {
@@ -1213,7 +1217,7 @@ uint8 ExifJpegDecompress::getVSamplingFactor(uint8 componentID)
             }
             i++;
         }
-    
+
     }
 #endif
 

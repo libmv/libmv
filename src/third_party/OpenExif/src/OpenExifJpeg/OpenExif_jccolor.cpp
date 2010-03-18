@@ -340,6 +340,7 @@ null_convert (oe_j_compress_ptr cinfo,
 METHODDEF(void)
 null_method (oe_j_compress_ptr cinfo)
 {
+  (void)cinfo;
   /* no work needed */
 }
 

@@ -125,6 +125,7 @@ ExifAppSegment* ExifAppSegment::create( uint16 marker, const std::string& id,
 ExifStatus ExifAppSegment::init( ExifIO* exifio, uint16 _length,
                                 exifoff_t _exifHeaderOffset )
 {
+    (void)exifio;
     mLength = _length ;
     mExifOffset = _exifHeaderOffset ;
 

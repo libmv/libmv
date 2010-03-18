@@ -92,6 +92,7 @@ sep_upsample (oe_j_decompress_ptr cinfo,
 	      OE_JSAMPARRAY output_buf, OE_JDIMENSION *out_row_ctr,
 	      OE_JDIMENSION out_rows_avail)
 {
+  (void) in_row_groups_avail;
   my_upsample_ptr upsample = (my_upsample_ptr) cinfo->upsample;
   int ci;
   openexif_jpeg_component_info * compptr;
@@ -157,6 +158,8 @@ METHODDEF(void)
 fullsize_upsample (oe_j_decompress_ptr cinfo, openexif_jpeg_component_info * compptr,
 		   OE_JSAMPARRAY input_data, OE_JSAMPARRAY * output_data_ptr)
 {
+  (void)cinfo;
+  (void)compptr;
   *output_data_ptr = input_data;
 }
 
@@ -170,6 +173,9 @@ METHODDEF(void)
 noop_upsample (oe_j_decompress_ptr cinfo, openexif_jpeg_component_info * compptr,
 	       OE_JSAMPARRAY input_data, OE_JSAMPARRAY * output_data_ptr)
 {
+  (void)cinfo;
+  (void)compptr;
+  (void)input_data;
   *output_data_ptr = NULL;	/* safety check */
 }
 
@@ -233,6 +239,7 @@ METHODDEF(void)
 h2v1_upsample (oe_j_decompress_ptr cinfo, openexif_jpeg_component_info * compptr,
 	       OE_JSAMPARRAY input_data, OE_JSAMPARRAY * output_data_ptr)
 {
+  (void)compptr;
   OE_JSAMPARRAY output_data = *output_data_ptr;
   register OE_JSAMPROW inptr, outptr;
   register OE_JSAMPLE invalue;
@@ -261,6 +268,7 @@ METHODDEF(void)
 h2v2_upsample (oe_j_decompress_ptr cinfo, openexif_jpeg_component_info * compptr,
 	       OE_JSAMPARRAY input_data, OE_JSAMPARRAY * output_data_ptr)
 {
+  (void)compptr;
   OE_JSAMPARRAY output_data = *output_data_ptr;
   register OE_JSAMPROW inptr, outptr;
   register OE_JSAMPLE invalue;

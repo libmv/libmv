@@ -1,38 +1,38 @@
 /*
  * Copyright (c) 2000-2009, Eastman Kodak Company
  * All rights reserved.
- * 
- * Redistribution and use in source and binary forms, with or without 
+ *
+ * Redistribution and use in source and binary forms, with or without
  * modification,are permitted provided that the following conditions are met:
- * 
- *     * Redistributions of source code must retain the above copyright notice, 
+ *
+ *     * Redistributions of source code must retain the above copyright notice,
  *       this list of conditions and the following disclaimer.
  *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in the 
+ *       notice, this list of conditions and the following disclaimer in the
  *       documentation and/or other materials provided with the distribution.
- *     * Neither the name of the Eastman Kodak Company nor the names of its 
- *       contributors may be used to endorse or promote products derived from 
+ *     * Neither the name of the Eastman Kodak Company nor the names of its
+ *       contributors may be used to endorse or promote products derived from
  *       this software without specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE 
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
  * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
- * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR 
- * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF 
- * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS 
- * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
- * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  *
  * Creation Date: 07/14/2001
  *
- * Original Author: 
- * George Sotak george.sotak@kodak.com 
+ * Original Author:
+ * George Sotak george.sotak@kodak.com
  *
- * Contributor(s): 
+ * Contributor(s):
  * Ricardo Rosario ricardo.rosario@kodak.com
  */
 
@@ -87,16 +87,16 @@ ExifJpegImage::ExifJpegImage()
       mOptimization(false),
       mProgressive(false),
       mJpegReadSampleFactor(1), mJpegColorMap(NULL),
-      mUseColorMap(false), mApplyColorMap(false), 
+      mUseColorMap(false), mApplyColorMap(false),
       mCompressorStarted(false),
       mDecompressorStarted(false),
-      mJpegCompressor(NULL), 
+      mJpegCompressor(NULL),
       mJpegDecompressor(NULL),
-      mJpegTables(NULL), 
+      mJpegTables(NULL),
       mUseCustomTables(false)
 {}
 
-ExifJpegImage::ExifJpegImage(ExifStatus &status, ExifIO* exifIO) 
+ExifJpegImage::ExifJpegImage(ExifStatus &status, ExifIO* exifIO)
     : ExifOpenFile( exifIO ),
       mDctMethod(EXIF_DCT_FAST_INT),
       mJpegQuality(90),
@@ -105,8 +105,8 @@ ExifJpegImage::ExifJpegImage(ExifStatus &status, ExifIO* exifIO)
       mProgressive(false),
       mJpegReadSampleFactor(1),
       mJpegColorMap(NULL),
-      mUseColorMap(false), 
-      mApplyColorMap(false), 
+      mUseColorMap(false),
+      mApplyColorMap(false),
       mCompressorStarted(false),
       mDecompressorStarted(false),
       mJpegCompressor(NULL),
@@ -117,11 +117,11 @@ ExifJpegImage::ExifJpegImage(ExifStatus &status, ExifIO* exifIO)
     status = generalInit( ) ;
 }
 
-ExifStatus ExifJpegImage::isJpegFile(char * fileName) 
+ExifStatus ExifJpegImage::isJpegFile(char * fileName)
 {
     ExifStatus returnValue = EXIF_OK ;
     FILE *fp = NULL;
-	
+
     if( ( fp = fopen(fileName, "rb")) == NULL)
         returnValue = EXIF_FILE_OPEN_ERROR ;
 
@@ -144,7 +144,7 @@ ExifStatus ExifJpegImage::isJpegFile(ExifIO * exifio)
         returnValue = EXIF_ERROR ;
 
     // look for SOI
-    if (tbuf[0] != 0xff || tbuf[1] != 0xd8) 
+    if (tbuf[0] != 0xff || tbuf[1] != 0xd8)
         returnValue = EXIF_ERROR ;
 
     return returnValue;
@@ -156,11 +156,11 @@ ExifStatus ExifJpegImage::isJpegFile(FILE * fp)
     unsigned char tbuf[12];
 
     fseek(fp, 0, SEEK_SET);
-    if( fread(tbuf,12,1,fp)!=1 ) 
+    if( fread(tbuf,12,1,fp)!=1 )
         returnValue = EXIF_ERROR ;
 
     // look for SOI
-    if (tbuf[0] != 0xff || tbuf[1] != 0xd8) 
+    if (tbuf[0] != 0xff || tbuf[1] != 0xd8)
         returnValue = EXIF_ERROR;
 
     return returnValue ;
@@ -169,7 +169,7 @@ ExifStatus ExifJpegImage::isJpegFile(FILE * fp)
 
 ExifJpegImage::~ExifJpegImage(void)
 {
-    if(mJpegTables) 
+    if(mJpegTables)
         delete mJpegTables;
     if(mJpegColorMap)
     {
@@ -197,6 +197,7 @@ ExifStatus ExifJpegImage::close( void )
 
 ExifStatus ExifJpegImage::initAfterOpen( const char* cmode )
 {
+    (void)cmode;
     return generalInit() ;
 }
 
@@ -205,7 +206,7 @@ ExifStatus ExifJpegImage::generalInit( void )
 #ifndef OPENEXIF_NO_IJG
     JpegStatus jpegStatus;
 
-    if( (mExifio->mode() == O_RDONLY) || (mExifio->mode() & O_RDWR) ) 
+    if( (mExifio->mode() == O_RDONLY) || (mExifio->mode() & O_RDWR) )
     {
         // read JPEG header info to fill in imageInfo
 
@@ -214,7 +215,7 @@ ExifStatus ExifJpegImage::generalInit( void )
 
         mJpegDecompressor = new ExifJpegDecompress();
 
-        if(mExifio->isMapped()) 
+        if(mExifio->isMapped())
         {
             jpegStatus = mJpegDecompressor->setBufferInput(
                 mExifio->ioHandler().base(), mExifio->ioHandler().memSize());
@@ -230,27 +231,27 @@ ExifStatus ExifJpegImage::generalInit( void )
 
         // get Jpeg header info
         exif_uint32 width;
-        exif_uint32 height; 
+        exif_uint32 height;
         uint16 numComps;
         jpegStatus = mJpegDecompressor->getImageInfo(&width, &height,
             &numComps);
 
-        if(jpegStatus == JPEG_OK) 
+        if(jpegStatus == JPEG_OK)
         {
             mImgInfo.width = width;
             mImgInfo.height = height;
             mImgInfo.numChannels = numComps;
             mImgInfo.precision = mJpegDecompressor->outputPrecision();
         }
-        else 
+        else
         {
             return EXIF_ERROR ;
         }
 
         // Determine scaled width and height dimensions for sample factors
         // 1, 2, 4 and 8
-	
-        mJpegDecompressor->getJpegScaleSize(JPEG_SCALE_NONE, 
+
+        mJpegDecompressor->getJpegScaleSize(JPEG_SCALE_NONE,
             &mScaleDimensions[0].width, &mScaleDimensions[0].height);
         mJpegDecompressor->getJpegScaleSize(JPEG_SCALE_HALF,
             &mScaleDimensions[1].width, &mScaleDimensions[1].height);
@@ -266,7 +267,7 @@ ExifStatus ExifJpegImage::generalInit( void )
         if ( !mJpegCompressor )
             mJpegCompressor = new ExifJpegCompress();
 
-        if(mExifio->isMapped()) 
+        if(mExifio->isMapped())
             jpegStatus = mJpegCompressor->setBufferOutput(
                 mExifio->ioHandler().base(), mExifio->ioHandler().memSize());
         else
@@ -276,7 +277,7 @@ ExifStatus ExifJpegImage::generalInit( void )
 
        if( jpegStatus != JPEG_OK )
             return EXIF_ERROR ;
-    }    
+    }
 #endif
 
     return EXIF_OK ;
@@ -301,12 +302,12 @@ void ExifJpegImage::setSmoothingFactor(uint16 smoothFact)
 
 ExifStatus ExifJpegImage::selectJpegTable(ExifJpegTableSelection jpegTable)
 {
-    if(mJpegTables) 
+    if(mJpegTables)
     {
-        delete mJpegTables; 
+        delete mJpegTables;
         mJpegTables = NULL;
     }
-    switch(jpegTable) 
+    switch(jpegTable)
     {
         case JPEG_CUSTOM_TABLE_1:
             mJpegTableOrder = JPEG_NATURAL;
@@ -352,78 +353,78 @@ ExifStatus ExifJpegImage::setJpegTables(ExifJpegQuantTable*  Q0,
                              ExifJpegQuantTable*  Q3,
                              ExifJpegHUFFTable*   Huff_DC,
                              ExifJpegHUFFTable*   Huff_AC,
-                             ExifJpegHUFFTable*   Huff_DC_Chroma, 
+                             ExifJpegHUFFTable*   Huff_DC_Chroma,
                              ExifJpegHUFFTable*   Huff_AC_Chroma,
                              ExifJpegTableOrder   tableOrder)
 {
     // make sure we do not get mismatch of Table order
-    if(mUseCustomTables && (mJpegTableOrder != tableOrder)) 
+    if(mUseCustomTables && (mJpegTableOrder != tableOrder))
     {
         return EXIF_ERROR;
     }
 
     if(mJpegTables)
         delete mJpegTables ;
-    
+
     mJpegTables = new internalJPEGTableHolder;
 
     mJpegTableOrder = tableOrder;
     mUseCustomTables = true;
-	
-    if (Q0 != NULL) 
+
+    if (Q0 != NULL)
     {
         mJpegTables->Q[0] = new ExifJpegQuantTable;
         *(mJpegTables->Q[0]) = *Q0;
     }
-    if (Q1 != NULL) 
+    if (Q1 != NULL)
     {
         mJpegTables->Q[1] = new ExifJpegQuantTable;
         *(mJpegTables->Q[1]) = *Q1;
     }
-    if (Q2 != NULL) 
+    if (Q2 != NULL)
     {
         mJpegTables->Q[2] = new ExifJpegQuantTable;
         *(mJpegTables->Q[2]) = *Q2;
     }
-    if (Q3 != NULL) 
+    if (Q3 != NULL)
     {
         mJpegTables->Q[3] = new ExifJpegQuantTable;
         *(mJpegTables->Q[3]) = *Q3;
     }
-    if (Huff_DC != NULL) 
+    if (Huff_DC != NULL)
     {
         mJpegTables->Huff_DC[0] = new ExifJpegHUFFTable;
         *(mJpegTables->Huff_DC[0]) = *Huff_DC;
     }
-    if (Huff_AC != NULL) 
+    if (Huff_AC != NULL)
     {
         mJpegTables->Huff_AC[0] = new ExifJpegHUFFTable;
         *(mJpegTables->Huff_AC[0]) = *Huff_AC;
     }
-    if (Huff_DC_Chroma != NULL) 
+    if (Huff_DC_Chroma != NULL)
     {
         mJpegTables->Huff_DC[1] = new ExifJpegHUFFTable;
         *(mJpegTables->Huff_DC[1]) = *Huff_DC_Chroma;
     }
-    if (Huff_AC_Chroma != NULL) 
+    if (Huff_AC_Chroma != NULL)
     {
         mJpegTables->Huff_AC[1] = new ExifJpegHUFFTable;
         *(mJpegTables->Huff_AC[1]) = *Huff_AC_Chroma;
     }
 
     return EXIF_OK ;
-}	
+}
 
 // Set the quantization table specified by qIndex
-ExifStatus ExifJpegImage::setJpegQTable(  unsigned char qIndex, 
+ExifStatus ExifJpegImage::setJpegQTable(  unsigned char qIndex,
     ExifJpegQuantTable* qTable )
 {
     ExifStatus returnValue = EXIF_ERROR;
-    
+
 #ifndef OPENEXIF_NO_IJG
     if (mJpegCompressor == NULL)
         mJpegCompressor = new ExifJpegCompress();
-        
+
     if( mJpegCompressor->setJpegQuantTable(qIndex, qTable->quantizer,
         mJpegQuality) == JPEG_OK )
         returnValue = EXIF_OK;
@@ -433,11 +434,11 @@ ExifStatus ExifJpegImage::setJpegQTable(  unsigned char qIndex,
 }
 
 // Get the quantization table specified by qIndex
-ExifStatus ExifJpegImage::getJpegQTable(  unsigned char qIndex, 
+ExifStatus ExifJpegImage::getJpegQTable(  unsigned char qIndex,
     ExifJpegQuantTable* qTable )
 {
     ExifStatus returnValue = EXIF_ERROR;
-    
+
 #ifndef OPENEXIF_NO_IJG
     if (mJpegDecompressor != NULL)
     {
@@ -454,7 +455,7 @@ ExifStatus ExifJpegImage::setColorMap(ExifJpegColorMap *colorMap,
                                       bool applyToData)
 {
 
-    if(colorMap == NULL) 
+    if(colorMap == NULL)
     {
         return EXIF_ERROR;
     }
@@ -463,7 +464,7 @@ ExifStatus ExifJpegImage::setColorMap(ExifJpegColorMap *colorMap,
     {
         return EXIF_ERROR;
     }
-    if(mJpegColorMap) 
+    if(mJpegColorMap)
     {
         delete mJpegColorMap;
         mJpegColorMap = NULL;
@@ -484,7 +485,7 @@ ExifStatus ExifJpegImage::setColorMap(ExifJpegColorMap *colorMap,
     mApplyColorMap = applyToData;
 
     return EXIF_OK ;
-}	
+}
 
 // Sets sample factor. Computes new width and height with the specified
 // sample factor.
@@ -515,7 +516,7 @@ ExifStatus ExifJpegImage::getCurrentJpegInfo(ExifImageInfo &info)
 {
     int index;
 
-    switch(mJpegReadSampleFactor) 
+    switch(mJpegReadSampleFactor)
     {
         case 2:
             index = 1;
@@ -523,7 +524,7 @@ ExifStatus ExifJpegImage::getCurrentJpegInfo(ExifImageInfo &info)
         case 4:
             index = 2;
             break;
-        case 8:	
+        case 8:
             index = 3;
             break;
         case 1:
@@ -531,15 +532,15 @@ ExifStatus ExifJpegImage::getCurrentJpegInfo(ExifImageInfo &info)
             index = 0;
             break;
     }
-    info.width = mScaleDimensions[index].width; 
-    info.height = mScaleDimensions[index].height; 
+    info.width = mScaleDimensions[index].width;
+    info.height = mScaleDimensions[index].height;
     info.numChannels = mImgInfo.numChannels;
 
     return EXIF_OK;
 }
 
-ExifStatus 
-ExifJpegImage::readScanLines( ExifImageDesc &imgDesc, exif_uint32 numLines, 
+ExifStatus
+ExifJpegImage::readScanLines( ExifImageDesc &imgDesc, exif_uint32 numLines,
                               exif_uint32& nextLine, exif_uint32& linesDecompressed)
 {
 #ifndef OPENEXIF_NO_IJG
@@ -550,19 +551,19 @@ ExifJpegImage::readScanLines( ExifImageDesc &imgDesc, exif_uint32 numLines,
         linesDecompressed = 0 ;
         return EXIF_FILE_READ_ERROR ;
     }
-    
+
     unsigned char * pDest;
     JpegStatus jpegStatus;
 
 
-    if(!mDecompressorStarted) 
+    if(!mDecompressorStarted)
     {
         mJpegDecompressor->setScaling(mJpegReadSampleFactor);
 
         // initialize to default to get rid of compiler warning
         OE_J_DCT_METHOD jpegDct = OE_JDCT_IFAST ;
 
-        switch(mDctMethod) 
+        switch(mDctMethod)
         {
             case EXIF_DCT_SLOW_INT:
                 jpegDct = OE_JDCT_ISLOW;
@@ -576,7 +577,7 @@ ExifJpegImage::readScanLines( ExifImageDesc &imgDesc, exif_uint32 numLines,
         }
 
         mJpegDecompressor->setJpegDCTMethod(jpegDct);
-        
+
         ExifColorSpace jpegColor = (imgDesc.numberOfComponents == 1)?
             JPEG_GRAYSCALE : EXIF_RGB;
 
@@ -613,14 +614,14 @@ ExifJpegImage::readScanLines( ExifImageDesc &imgDesc, exif_uint32 numLines,
     jpegStatus = mJpegDecompressor->readScanLines(pDest, numLines,
         outLineStride, &linesDecompressed, &nextOutputLine);
 
-    if(jpegStatus != JPEG_OK) 
+    if(jpegStatus != JPEG_OK)
     {
         linesDecompressed = 0 ;
         return EXIF_ERROR;
     }
-	
+
     nextLine = nextOutputLine;
-    
+
     if(nextOutputLine >= outHeight)
     {
         mJpegDecompressor->stopDecompress();
@@ -632,8 +633,8 @@ ExifJpegImage::readScanLines( ExifImageDesc &imgDesc, exif_uint32 numLines,
 
 
 
-ExifStatus 
-ExifJpegImage::writeScanLines( ExifImageDesc &imgDesc, exif_uint32 numLines, 
+ExifStatus
+ExifJpegImage::writeScanLines( ExifImageDesc &imgDesc, exif_uint32 numLines,
                                exif_uint32 &nextLine, exif_uint32& linesCompressed)
 {
 #ifndef OPENEXIF_NO_IJG
@@ -643,33 +644,33 @@ ExifJpegImage::writeScanLines( ExifImageDesc &imgDesc, exif_uint32 numLines,
         linesCompressed = 0 ;
         return EXIF_FILE_WRITE_ERROR ;
     }
-    
+
     if (mJpegCompressor == NULL)
         mJpegCompressor = new ExifJpegCompress();
-        
+
     JpegStatus jpegStatus;
 
     // If not already started, then setup and start JPEG compressor
     if(mJpegCompressor->getState() != JPEG_STARTED)
     {
-		
+
         ExifColorSpace jpegColor = (imgDesc.numberOfComponents==1) ?
             JPEG_GRAYSCALE:EXIF_RGB;
-        
+
         if(imgDesc.components[0].myColorType.myColor == YCRCB_Y)
             jpegColor = EXIF_YCbCr;
-        else 
+        else
             if(imgDesc.components[0].myColorType.myColor == RGB_B)
                 jpegColor = JPEG_BGR;
 
         mJpegCompressor->setImageInfo(mImgInfo.width, mImgInfo.height,
             mImgInfo.numChannels, jpegColor);
         mJpegCompressor->setInputColorSpace(jpegColor);
-        
+
         // initialize to default to get rid of compiler warning
         OE_J_DCT_METHOD jpegDct = OE_JDCT_IFAST;
 
-        switch(mDctMethod) 
+        switch(mDctMethod)
         {
             case EXIF_DCT_SLOW_INT:
                 jpegDct = OE_JDCT_ISLOW;
@@ -711,14 +712,14 @@ ExifJpegImage::writeScanLines( ExifImageDesc &imgDesc, exif_uint32 numLines,
         }
 
         mCompressorStarted = true;
-            
+
     }
     unsigned char *srcPtr;
     unsigned int srcLineStride;
 
     srcPtr = imgDesc.components[0].theData;
     srcLineStride = imgDesc.components[0].lineStride;
-	
+
     jpegStatus = mJpegCompressor->writeScanLines(srcPtr, srcLineStride,
         numLines, &linesCompressed, &nextLine);
 
@@ -728,7 +729,7 @@ ExifJpegImage::writeScanLines( ExifImageDesc &imgDesc, exif_uint32 numLines,
         return EXIF_ERROR;
     }
 
-    if(nextLine == mImgInfo.height) 
+    if(nextLine == mImgInfo.height)
     {
         mJpegCompressor->stopCompress();
         mCompressorStarted = false ;
@@ -747,7 +748,7 @@ ExifStatus ExifJpegImage::setImageInfo(ExifImageInfo &imgInfo)
 uint8 ExifJpegImage::getHSamplingFactor(uint8 componentID)
 {
     uint8 returnValue = 0;
-    
+
 #ifndef OPENEXIF_NO_IJG
     if(mJpegDecompressor!=NULL)
         returnValue = mJpegDecompressor->getHSamplingFactor(componentID);
@@ -759,7 +760,7 @@ uint8 ExifJpegImage::getHSamplingFactor(uint8 componentID)
 uint8 ExifJpegImage::getVSamplingFactor(uint8 componentID)
 {
     uint8 returnValue = 0;
-    
+
 #ifndef OPENEXIF_NO_IJG
     if(mJpegDecompressor!=NULL)
         returnValue = mJpegDecompressor->getVSamplingFactor(componentID);
@@ -786,7 +787,7 @@ void ExifJpegImage::set422Sampling()
 {
     if (mJpegCompressor == NULL)
         mJpegCompressor = new ExifJpegCompress();
-        
+
     mJpegCompressor->set422Sampling();
 }
 
@@ -795,9 +796,9 @@ ExifStatus ExifJpegImage::setICCProfile(uint8 *iccBuf, exif_uint32 iccSize)
     ExifStatus returnValue = EXIF_OK;
     if (mJpegCompressor == NULL)
         mJpegCompressor = new ExifJpegCompress();
-        
+
     if(mJpegCompressor->setICCProfile(iccBuf,iccSize) != JPEG_OK)
         returnValue = EXIF_ERROR;
-    
+
     return returnValue;
 }

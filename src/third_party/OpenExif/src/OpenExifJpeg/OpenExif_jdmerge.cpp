@@ -148,6 +148,8 @@ merged_2v_upsample (oe_j_decompress_ptr cinfo,
 		    OE_JDIMENSION out_rows_avail)
 /* 2:1 vertical sampling case: may need a spare row. */
 {
+  (void)cinfo;
+  (void)in_row_groups_avail;
   my_upsample_ptr upsample = (my_upsample_ptr) cinfo->upsample;
   OE_JSAMPROW work_ptrs[2];
   OE_JDIMENSION num_rows;		/* number of rows returned to caller */
@@ -197,6 +199,8 @@ merged_1v_upsample (oe_j_decompress_ptr cinfo,
 		    OE_JDIMENSION out_rows_avail)
 /* 1:1 vertical sampling case: much easier, never need a spare row. */
 {
+  (void)in_row_groups_avail;
+  (void)out_rows_avail;
   my_upsample_ptr upsample = (my_upsample_ptr) cinfo->upsample;
 
   /* OE_Just do the upsampling. */

@@ -35,12 +35,15 @@ extern void free OE_JPP((void *ptr));
 GLOBAL(void *)
 openexif_jpeg_get_small (oe_j_common_ptr cinfo, size_t sizeofobject)
 {
+  (void)cinfo;
   return (void *) malloc(sizeofobject);
 }
 
 GLOBAL(void)
 openexif_jpeg_free_small (oe_j_common_ptr cinfo, void * object, size_t sizeofobject)
 {
+  (void)cinfo;
+  (void)sizeofobject;
   free(object);
 }
 
@@ -55,12 +58,15 @@ openexif_jpeg_free_small (oe_j_common_ptr cinfo, void * object, size_t sizeofobj
 GLOBAL(void *)
 openexif_jpeg_get_large (oe_j_common_ptr cinfo, size_t sizeofobject)
 {
+  (void)cinfo;
   return (void *) malloc(sizeofobject);
 }
 
 GLOBAL(void)
 openexif_jpeg_free_large (oe_j_common_ptr cinfo, void * object, size_t sizeofobject)
 {
+  (void)cinfo;
+  (void)sizeofobject;
   free(object);
 }
 
@@ -81,6 +87,9 @@ GLOBAL(long)
 openexif_jpeg_mem_available (oe_j_common_ptr cinfo, long min_bytes_needed,
 		    long max_bytes_needed, long already_allocated)
 {
+  (void)cinfo;
+  (void)min_bytes_needed;
+  (void)max_bytes_needed;
   return cinfo->mem->max_memory_to_use - already_allocated;
 }
 
@@ -122,6 +131,7 @@ write_backing_store (oe_j_common_ptr cinfo, backing_store_ptr info,
 METHODDEF(void)
 close_backing_store (oe_j_common_ptr cinfo, backing_store_ptr info)
 {
+  (void)cinfo;
   fclose(info->temp_file);
   /* Since this implementation uses tmpfile() to create the file,
    * no explicit file deletion is needed.
@@ -141,6 +151,7 @@ GLOBAL(void)
 openexif_jpeg_open_backing_store (oe_j_common_ptr cinfo, backing_store_ptr info,
 			 long total_bytes_needed)
 {
+  (void)total_bytes_needed;
   if ((info->temp_file = tmpfile()) == NULL)
     ERREXITS(cinfo, OE_JERR_TFILE_CREATE, "");
   info->read_backing_store = read_backing_store;
@@ -157,11 +168,13 @@ openexif_jpeg_open_backing_store (oe_j_common_ptr cinfo, backing_store_ptr info,
 GLOBAL(long)
 openexif_jpeg_mem_init (oe_j_common_ptr cinfo)
 {
+  (void)cinfo;
   return DEFAULT_MAX_MEM;	/* default for max_memory_to_use */
 }
 
 GLOBAL(void)
 openexif_jpeg_mem_term (oe_j_common_ptr cinfo)
 {
+  (void)cinfo;
   /* no work */
 }

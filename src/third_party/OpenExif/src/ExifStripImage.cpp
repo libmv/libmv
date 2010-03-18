@@ -384,6 +384,7 @@ int ExifStripImage::setupOffsets()
 
 ExifStatus ExifStripImage::writeCheck(int tiles)
 {
+    (void)tiles;
     if (mExifio->mode() == O_RDONLY) 
     {
         // File not open for writing
@@ -460,6 +461,7 @@ ExifStatus ExifStripImage::writeCheck(int tiles)
 
 ExifStatus ExifStripImage::checkRead(int tiles)
 {
+    (void)tiles;
     if (mExifio->mode() == O_WRONLY) 
     {
         // File not open for reading

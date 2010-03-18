@@ -7,4 +7,6 @@ Local modifications:
 * Remove makefiles build system.
 
 * Code changes :
+* Add CMake Build system
+* Fix warnings and errors at compilation time
 

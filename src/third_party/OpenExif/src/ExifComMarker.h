@@ -88,7 +88,7 @@ class ExifComMarkerList
             if (mMarkers != NULL) delete mMarkers;
         };
         
-        const unsigned int size()
+        unsigned int size()
         {
             return mCount;
         }

@@ -1,31 +1,31 @@
 /*
  * Copyright (c) 2000-2009, Eastman Kodak Company
  * All rights reserved.
- * 
- * Redistribution and use in source and binary forms, with or without 
+ *
+ * Redistribution and use in source and binary forms, with or without
  * modification,are permitted provided that the following conditions are met:
- * 
- *     * Redistributions of source code must retain the above copyright notice, 
+ *
+ *     * Redistributions of source code must retain the above copyright notice,
  *       this list of conditions and the following disclaimer.
  *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in the 
+ *       notice, this list of conditions and the following disclaimer in the
  *       documentation and/or other materials provided with the distribution.
- *     * Neither the name of the Eastman Kodak Company nor the names of its 
- *       contributors may be used to endorse or promote products derived from 
+ *     * Neither the name of the Eastman Kodak Company nor the names of its
+ *       contributors may be used to endorse or promote products derived from
  *       this software without specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE 
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
  * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
- * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR 
- * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF 
- * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS 
- * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
- * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  *
  * Portions of the Original Code are
  * Copyright (c) 1988-1996 Sam Leffler
@@ -33,13 +33,13 @@
  *
  * Creation Date: 07/14/2001
  *
- * Original Author: 
- * George Sotak george.sotak@kodak.com 
+ * Original Author:
+ * George Sotak george.sotak@kodak.com
  *
- * Contributor(s): 
+ * Contributor(s):
  * Ricardo Rosario ricardo.rosario@kodak.com
  * Sam Fryer       samuel.fryer@kodak.com
- */ 
+ */
 
 
 #ifndef _EXIF_TYPE_DEFS_H
@@ -88,7 +88,7 @@
 #endif
 
 ///////////////////////////
-// NAMESPACE 
+// NAMESPACE
 ///////////////////////////
 #ifdef __mips
 #define EXIF_USING_STD
@@ -252,7 +252,7 @@ typedef enum {
     UNDEFINED_LOCATION
 } ExifTagLocation;
 
-#if (defined _MSC_VER) && (defined WIN32) 
+#if (defined _MSC_VER) && (defined WIN32)
 #pragma pack( push,2 )
 #endif
 
@@ -266,14 +266,14 @@ typedef	struct
 } ExifDirEntry;
 
 //! Tiff header that is present at the beginning of Tiff-based application segments
-typedef	struct 
+typedef	struct
 {
 	uint16	magic;	    /*!< magic number (defines byte order) */
 	uint16	version;    /*!< Tiff version number */
 	exif_uint32	ifdoff;	    /*!< byte offset to first directory */
 } ExifTiffHeader;
 
-#if (defined _MSC_VER) && (defined WIN32) 
+#if (defined _MSC_VER) && (defined WIN32)
 #pragma pack( pop )
 #endif
 
@@ -281,11 +281,11 @@ typedef	struct
 typedef struct {
 	exif_uint32 width;
 	exif_uint32 height;
-} ExifJpegScaleDimension;	
+} ExifJpegScaleDimension;
 
 typedef enum {
 	JPEG_DEFAULT_TABLE = 0,
-	JPEG_CUSTOM_TABLE_1 
+	JPEG_CUSTOM_TABLE_1
 } ExifJpegTableSelection;
 
 typedef enum {
@@ -314,8 +314,8 @@ typedef enum
 //      (16bit lossless)
 //
 typedef struct
-{ 
-        bool           is_in_JPEG_byte_order;  /* if FALSE, assumed to be in host byte order. */ 
+{
+        bool           is_in_JPEG_byte_order;  /* if FALSE, assumed to be in host byte order. */
         uint16         quantizer[64];      /* one per DCT coef.  */
 } ExifJpegQuantTable;
 
@@ -335,12 +335,12 @@ typedef enum
 
 
 //! Used to communicate Color Map information
-typedef struct 
+typedef struct
 {
 	uint16 numColors;   /*!< Number of colors */
-	uint16 *colorMap0;  /*!< Zeroth channel of the color map */	
-	uint16 *colorMap1;  /*!< First channel of the color map */	
-	uint16 *colorMap2;  /*!< Second channel of the color map */	
+	uint16 *colorMap0;  /*!< Zeroth channel of the color map */
+	uint16 *colorMap1;  /*!< First channel of the color map */
+	uint16 *colorMap2;  /*!< Second channel of the color map */
 } ExifJpegColorMap;
 
 //! Communicates the color space of the image through ExifImageInfo
@@ -387,14 +387,14 @@ class ExifImageInfo
     public:
         exif_uint32 width;      /*!< width of image in pixels */
         exif_uint32 height;     /*!< height of image in pixels */
-        uint16 numChannels; /*!< number of color channels (default 3) */ 
-        uint16 precision;   /*!< bit depth of the pixels (default 8) */ 
+        uint16 numChannels; /*!< number of color channels (default 3) */
+        uint16 precision;   /*!< bit depth of the pixels (default 8) */
 
         ExifColorSpace colorSpace; /*!< Colorspace of image (default EXIF_RGB)*/
 
         ExifComponentInfo components[EXIF_MAX_COMPONENTS];
-        
-        ExifImageInfo(void) 
+
+        ExifImageInfo(void)
             : width(0), height(0), numChannels(3),
               precision(8), colorSpace(EXIF_RGB) {}
 };
@@ -405,13 +405,13 @@ typedef enum
     YCRCB_Y,   //!< Y component of YCrCb
     YCRCB_CB,  //!< Cb component of YCrCb
     YCRCB_CR,  //!< Cr component of YCrCb
-    
+
     RGB_R,     //!< Red component of RGB
     RGB_G,     //!< Green component of RGB
     RGB_B,     //!< Blue component of RGB
- 
+
     UNSPECIFIED_COLOR,
- 
+
     ALPHA
 } ExifComponentColor;
 

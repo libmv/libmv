@@ -240,6 +240,7 @@ skip_ref_input_data (oe_j_decompress_ptr cinfo, int num_bytes)
 METHODDEF(void)
 term_source (oe_j_decompress_ptr cinfo)
 {
+  (void)cinfo;
   /* no work necessary here */
 }
 

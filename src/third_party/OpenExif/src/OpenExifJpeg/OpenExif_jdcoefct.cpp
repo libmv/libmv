@@ -227,6 +227,7 @@ decompress_onepass (oe_j_decompress_ptr cinfo, OE_JSAMPIMAGE output_buf)
 METHODDEF(int)
 dummy_consume_data (oe_j_decompress_ptr cinfo)
 {
+  (void)cinfo;
   return OE_JPEG_SUSPENDED;	/* Always indicate nothing was done */
 }
 

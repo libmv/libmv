@@ -224,6 +224,7 @@ METHODDEF(void)
 prescan_quantize (oe_j_decompress_ptr cinfo, OE_JSAMPARRAY input_buf,
 		  OE_JSAMPARRAY output_buf, int num_rows)
 {
+  (void)output_buf;
   my_cquantize_ptr cquantize = (my_cquantize_ptr) cinfo->cquantize;
   register OE_JSAMPROW ptr;
   register histptr histp;
@@ -1155,6 +1156,7 @@ finish_pass1 (oe_j_decompress_ptr cinfo)
 METHODDEF(void)
 finish_pass2 (oe_j_decompress_ptr cinfo)
 {
+  (void)cinfo;
   /* no work */
 }
 

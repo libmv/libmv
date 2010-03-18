@@ -161,6 +161,8 @@ post_process_prepass (oe_j_decompress_ptr cinfo,
 		      OE_JSAMPARRAY output_buf, OE_JDIMENSION *out_row_ctr,
 		      OE_JDIMENSION out_rows_avail)
 {
+  (void)output_buf;
+  (void)out_rows_avail;
   my_post_ptr post = (my_post_ptr) cinfo->post;
   OE_JDIMENSION old_next_row, num_rows;
 
@@ -205,6 +207,9 @@ post_process_2pass (oe_j_decompress_ptr cinfo,
 		    OE_JSAMPARRAY output_buf, OE_JDIMENSION *out_row_ctr,
 		    OE_JDIMENSION out_rows_avail)
 {
+  (void)input_buf;
+  (void)in_row_group_ctr;
+  (void)in_row_groups_avail;
   my_post_ptr post = (my_post_ptr) cinfo->post;
   OE_JDIMENSION num_rows, max_rows;
 

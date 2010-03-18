@@ -1,41 +1,41 @@
 /*
  * Copyright (c) 2000-2009, Eastman Kodak Company
  * All rights reserved.
- * 
- * Redistribution and use in source and binary forms, with or without 
+ *
+ * Redistribution and use in source and binary forms, with or without
  * modification,are permitted provided that the following conditions are met:
- * 
- *     * Redistributions of source code must retain the above copyright notice, 
+ *
+ *     * Redistributions of source code must retain the above copyright notice,
  *       this list of conditions and the following disclaimer.
  *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in the 
+ *       notice, this list of conditions and the following disclaimer in the
  *       documentation and/or other materials provided with the distribution.
- *     * Neither the name of the Eastman Kodak Company nor the names of its 
- *       contributors may be used to endorse or promote products derived from 
+ *     * Neither the name of the Eastman Kodak Company nor the names of its
+ *       contributors may be used to endorse or promote products derived from
  *       this software without specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE 
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
  * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
- * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR 
- * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF 
- * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS 
- * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
- * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  *
  * Creation Date: 07/14/2001
  *
- * Original Author: 
- * Sam Fryer samuel.fryer@kodak.com 
+ * Original Author:
+ * Sam Fryer samuel.fryer@kodak.com
  *
- * Contributor(s): 
- * 
- */ 
- 
+ * Contributor(s):
+ *
+ */
+
  /*
  * Contains code from jdmarker.c, with the following (C) notice:
  *
@@ -66,7 +66,7 @@ ExifStatus ExifImageFile::readImage()
         {
             readCount = mExifio->read(input,4);
             currPos += readCount;
-            
+
             if ((readCount == 4) && ((input[0] == 0xFF) &&
                     ((input[1] >= M_SOF0) && (input[1] <= M_COM))))
             {
@@ -94,69 +94,69 @@ ExifStatus ExifImageFile::readImage()
 //                     case M_SOF13 : /* Differential sequential, arithmetic */
 //                     case M_SOF14 : /* Differential progressive, arithmetic */
 //                     case M_SOF15 : /* Differential lossless, arithmetic */
-//   
-                    case M_DHT   : 
+//
+                    case M_DHT   :
 //                         printf("DHT Marker!\n");
                         status = readDHT(tagSize);
                         break;
-                        
-//   
-//                     case M_DAC   : 
-//   
-//                     case M_RST0  : 
-//                     case M_RST1  : 
-//                     case M_RST2  : 
-//                     case M_RST3  : 
-//                     case M_RST4  : 
-//                     case M_RST5  : 
-//                     case M_RST6  : 
-//                     case M_RST7  : 
-//   
-//                     case M_SOI   : 
-//                     case M_EOI   : 
 
-                    case M_SOS   : 
+//
+//                     case M_DAC   :
+//
+//                     case M_RST0  :
+//                     case M_RST1  :
+//                     case M_RST2  :
+//                     case M_RST3  :
+//                     case M_RST4  :
+//                     case M_RST5  :
+//                     case M_RST6  :
+//                     case M_RST7  :
+//
+//                     case M_SOI   :
+//                     case M_EOI   :
+
+                    case M_SOS   :
 //                         printf("SOS Marker ... Stopped Parsing!\n");
                         currPos = fileSize;
                         break;
-                        
-                    case M_DQT   : 
+
+                    case M_DQT   :
 //                         printf("DQT Marker!\n");
                         status = readDQT(tagSize);
                         break;
-                        
-//                     case M_DNL   : 
-//                     case M_DRI   : 
-//                     case M_DHP   : 
-//                     case M_EXP   : 
+
+//                     case M_DNL   :
+//                     case M_DRI   :
+//                     case M_DHP   :
+//                     case M_EXP   :
 //                         break;
-  
-                    case M_APP0  : 
-                    case M_APP1  : 
-                    case M_APP2  : 
-                    case M_APP3  : 
-                    case M_APP4  : 
-                    case M_APP5  : 
-                    case M_APP6  : 
-                    case M_APP7  : 
-                    case M_APP8  : 
-                    case M_APP9  : 
-                    case M_APP10 : 
-                    case M_APP11 : 
-                    case M_APP12 : 
-                    case M_APP13 : 
-                    case M_APP14 : 
-                    case M_APP15 : 
+
+                    case M_APP0  :
+                    case M_APP1  :
+                    case M_APP2  :
+                    case M_APP3  :
+                    case M_APP4  :
+                    case M_APP5  :
+                    case M_APP6  :
+                    case M_APP7  :
+                    case M_APP8  :
+                    case M_APP9  :
+                    case M_APP10 :
+                    case M_APP11 :
+                    case M_APP12 :
+                    case M_APP13 :
+                    case M_APP14 :
+                    case M_APP15 :
 //                         printf("App Segment!\n");
                         status = readAppSeg(0xFF00 + input[1],tagSize);
                         break;
-  
-//                     case M_JPG0  : 
-//                     case M_JPG13 : 
-                    case M_COM   : 
+
+//                     case M_JPG0  :
+//                     case M_JPG13 :
+                    case M_COM   :
                         status = readCom(tagSize);
                         break;
-                    
+
                     default:
 //                         printf("Not Handled!\n");
                         break;
@@ -164,7 +164,7 @@ ExifStatus ExifImageFile::readImage()
                 currPos = mExifio->seek(currPos + tagSize - 2 ,SEEK_SET);
             }
             // Handle the case where there isn't a valid tag.
-            else if ((readCount == 4) && ((input[0] != 0xFF) || 
+            else if ((readCount == 4) && ((input[0] != 0xFF) ||
                     ((input[1] < M_SOF0) || (input[1] > M_COM))))
             {
                 //search through the file byte by byte looking for a valid tag
@@ -175,7 +175,7 @@ ExifStatus ExifImageFile::readImage()
                 while ((tagNotFound) && (currPos < fileSize))
                 {
                     p = 0;
-                    while (((input[p] != 0xFF) || 
+                    while (((input[p] != 0xFF) ||
                         ((input[p+1] < M_SOF0) || (input[p+1] > M_COM))) &&
                         (p<3))
                         p++;
@@ -201,7 +201,7 @@ ExifStatus ExifImageFile::readAppSeg(uint16 marker, tsize_t length)
 {
     ExifStatus status = EXIF_OK;
     exifoff_t offsetToThisMarker = mExifio->seek(0,SEEK_CUR) - 4;
-    
+
     // read the identifier, usually is 5 (App0-JFIF) or 6 bytes
     // but not restricted to it. They always end in at least one NULL
     // Note that we're limiting the identifier size to 127 chars.
@@ -248,20 +248,20 @@ ExifStatus ExifImageFile::readDQT(tsize_t length)
     ExifStatus status = EXIF_OK;
     uint8 n = 0;
     tsize_t readCount = 0;
-    
+
     if (mJpegTables == NULL)
         mJpegTables = new internalJPEGTableHolder();
-    
+
     exifoff_t currPos = mExifio->seek(0,SEEK_CUR);
     exifoff_t endOfDQT = currPos + length - 2;
-    
+
     while((currPos < endOfDQT) && (status == EXIF_OK))
     {
         currPos += mExifio->read(&n,1);
         unsigned int tableNum = n & 0x0F;
         if (mJpegTables->Q[tableNum] == NULL)
             mJpegTables->Q[tableNum] = new ExifJpegQuantTable();
-        
+
         // If it's double precision qtables or not
         if ( n & 0xF0 )
         {
@@ -290,10 +290,10 @@ ExifStatus ExifImageFile::readDQT(tsize_t length)
                 status = EXIF_FILE_READ_ERROR;
         }
     }
-    
+
     if (currPos > endOfDQT)
         status = EXIF_FILE_READ_ERROR;
-    
+
     return status;
 }
 
@@ -310,9 +310,10 @@ ExifStatus ExifImageFile::readDQT(tsize_t length)
 //  1       Quant designation           |
 //---------------------------------------
 //=======================================
- 
+
 ExifStatus ExifImageFile::readSOF(tsize_t length)
 {
+    (void)length;
     ExifStatus status = EXIF_OK;
     uint8 buf[8];
     if (mExifio->read(buf,6) == 6)
@@ -326,7 +327,7 @@ ExifStatus ExifImageFile::readSOF(tsize_t length)
     }
     else
         status = EXIF_FILE_READ_ERROR;
-    
+
     for (int i = 0 ; (i < mImgInfo.numChannels) && (status == EXIF_OK) ; i++)
     {
         if (mExifio->read(buf,3) == 3)
@@ -355,7 +356,7 @@ ExifStatus ExifImageFile::readSOF(tsize_t length)
 //          (N = SUM(Bits))             |
 //---------------------------------------
 //=======================================
- 
+
 ExifStatus ExifImageFile::readDHT(tsize_t length)
 {
     ExifStatus status = EXIF_OK;
@@ -364,17 +365,17 @@ ExifStatus ExifImageFile::readDHT(tsize_t length)
     ExifJpegHUFFTable * ht = NULL;
     uint8 buf[257];
     int symsum = 0;
-    
+
     if (mJpegTables == NULL)
         mJpegTables = new internalJPEGTableHolder();
-    
+
     exifoff_t currPos = mExifio->seek(0,SEEK_CUR);
     exifoff_t endOfDHT = currPos + length - 2;
-    
+
     while((currPos < endOfDHT) && (status == EXIF_OK))
     {
         currPos += mExifio->read(&n,1);
-        
+
         if (n & 0x10)
         {
             n -= 0x10;
@@ -388,7 +389,7 @@ ExifStatus ExifImageFile::readDHT(tsize_t length)
                 mJpegTables->Huff_DC[n] = new ExifJpegHUFFTable(EXIF_HUFF_DC);
             ht = mJpegTables->Huff_DC[n];
         }
-        
+
         if (mExifio->read(&buf,16) == 16)
         {
             currPos += 16;
@@ -398,7 +399,7 @@ ExifStatus ExifImageFile::readDHT(tsize_t length)
                 ht->num_symbols[i+1] = buf[i];
                 symsum += buf[i];
             }
-            
+
             if ((symsum <= 256) && (currPos+symsum <= endOfDHT))
             {
                 if (mExifio->read(&buf,symsum) == symsum)
@@ -413,27 +414,27 @@ ExifStatus ExifImageFile::readDHT(tsize_t length)
             }
             else
                 status = EXIF_INVALID_FORMAT_ERROR;
-            
+
         }
         else
             status = EXIF_FILE_READ_ERROR;
 
     }
-    
+
     if (currPos > endOfDHT)
         status = EXIF_FILE_READ_ERROR;
-    
+
     return status;
 }
 
-ExifStatus 
-ExifImageFile::readScanLines( ExifImageDesc &imgDesc, exif_uint32 numLines, 
+ExifStatus
+ExifImageFile::readScanLines( ExifImageDesc &imgDesc, exif_uint32 numLines,
                               exif_uint32& nextLine, exif_uint32& linesDecompressed)
 {
 	ExifStatus exifstatus = EXIF_OK;
 
 #ifndef OPENEXIF_NO_IJG
-    
+
     // First, check and see if we are open for reading...
     if ((mExifio->mode() == O_RDONLY) || (mExifio->mode() & O_RDWR))
     {
@@ -447,14 +448,14 @@ ExifImageFile::readScanLines( ExifImageDesc &imgDesc, exif_uint32 numLines,
             JpegStatus jpegStatus;
 
 
-            if(!mDecompressorStarted) 
+            if(!mDecompressorStarted)
             {
                 mJpegDecompressor->setScaling(mJpegReadSampleFactor);
 
                 // initialize to default to get rid of compiler warning
                 OE_J_DCT_METHOD jpegDct = OE_JDCT_IFAST ;
 
-                switch(mDctMethod) 
+                switch(mDctMethod)
                 {
                     case EXIF_DCT_SLOW_INT:
                         jpegDct = OE_JDCT_ISLOW;
@@ -497,7 +498,7 @@ ExifImageFile::readScanLines( ExifImageDesc &imgDesc, exif_uint32 numLines,
 
             outWidth = mJpegDecompressor->outputWidth();
             outHeight = mJpegDecompressor->outputHeight();
-            outLineStride = imgDesc.components[0].lineStride; 
+            outLineStride = imgDesc.components[0].lineStride;
             // outWidth * numComps;
 
             linesDecompressed = 0;
@@ -506,7 +507,7 @@ ExifImageFile::readScanLines( ExifImageDesc &imgDesc, exif_uint32 numLines,
             jpegStatus = mJpegDecompressor->readScanLines(pDest, numLines,
                 outLineStride, &linesDecompressed, &nextOutputLine);
 
-            if(jpegStatus != JPEG_OK) 
+            if(jpegStatus != JPEG_OK)
             {
                 linesDecompressed = 0 ;
                 exifstatus = EXIF_FILE_READ_ERROR;
@@ -534,7 +535,7 @@ ExifImageFile::readScanLines( ExifImageDesc &imgDesc, exif_uint32 numLines,
         linesDecompressed = 0 ;
         exifstatus = EXIF_FILE_READ_ERROR ;
     }
-    
+
 #endif
     return exifstatus;
 }
@@ -543,13 +544,13 @@ ExifImageFile::readScanLines( ExifImageDesc &imgDesc, exif_uint32 numLines,
 ExifStatus ExifImageFile::readCom(tsize_t length)
 {
     ExifStatus status = EXIF_OK;
-    
-    // length must be -2 from the reported length to take into the 2 bytes 
+
+    // length must be -2 from the reported length to take into the 2 bytes
     // for the size reported right after the COM marker!
     uint16 realLength = length - 2;
     uint8 * comData = new uint8[realLength+1];
     tsize_t readCount = mExifio->read(comData,realLength);
-    
+
     if (  readCount == realLength )
     {
         mComMarkerList.addData( comData, realLength ) ;

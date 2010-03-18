@@ -1,38 +1,38 @@
 /*
  * Copyright (c) 2000-2009, Eastman Kodak Company
  * All rights reserved.
- * 
- * Redistribution and use in source and binary forms, with or without 
+ *
+ * Redistribution and use in source and binary forms, with or without
  * modification,are permitted provided that the following conditions are met:
- * 
- *     * Redistributions of source code must retain the above copyright notice, 
+ *
+ *     * Redistributions of source code must retain the above copyright notice,
  *       this list of conditions and the following disclaimer.
  *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in the 
+ *       notice, this list of conditions and the following disclaimer in the
  *       documentation and/or other materials provided with the distribution.
- *     * Neither the name of the Eastman Kodak Company nor the names of its 
- *       contributors may be used to endorse or promote products derived from 
+ *     * Neither the name of the Eastman Kodak Company nor the names of its
+ *       contributors may be used to endorse or promote products derived from
  *       this software without specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE 
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
  * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
- * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR 
- * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF 
- * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS 
- * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
- * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  * Original Author:
  * George Sotak <george.sotak@kodak.com>
- * 
- * Contributor(s): 
- * Chris Lin <ti.lin@kodak.com> 
+ *
+ * Contributor(s):
+ * Chris Lin <ti.lin@kodak.com>
  * Ricardo Rosario ricardo.rosario@kodak.com
- */ 
+ */
 
 #ifndef _EXIF_TAGS_H_
 #define _EXIF_TAGS_H_
@@ -58,7 +58,7 @@
 #define EXIFTAG_COMPRESSION                 259         // data compression technique
 #define     EXIF_COMPRESSION_NONE       1                   //      No Comp.
 #define     EXIF_COMPRESSION_JPEG       6                   //      Only Thumbnail Image is
-                                                        //      JPEG compressed 
+                                                        //      JPEG compressed
 #define EXIFTAG_PHOTOMETRIC                 262         // photometric interpretation
 #define     PHOTOMETRIC_RGB         2                   // RGB color model
 #define     PHOTOMETRIC_YCBCR       6                   // CCIR 601
@@ -176,10 +176,12 @@
 #define EXIFTAG_SCENETYPE                   41729
 #define EXIFTAG_CFAPATTERN                  41730
 
+#define EXIFTAG_FOCALLENGTH_35MM            41989
+
 //******************* GPS INFO. Tag Definitions.*************************************
 #define EXIFTAG_GPSVERSIONID                0
 #define EXIFTAG_GPSLATITUDEREF              1
-#define EXIFTAG_GPSLATITUDE                 2               
+#define EXIFTAG_GPSLATITUDE                 2
 #define EXIFTAG_GPSLONGITUDEREF             3
 #define EXIFTAG_GPSLONGITUDE                4
 #define EXIFTAG_GPSALTITUDEREF              5

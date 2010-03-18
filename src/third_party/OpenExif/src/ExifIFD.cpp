@@ -2198,7 +2198,7 @@ void ExifIFD::getAllTags( ExifPathsTags &pathsTags, exiftag_t parentTag)
     {
         size_t i = pathsTags.size() - 1;
         ExifPathTags * pathTags = NULL;
-        for (; (i>=0) && (pathTags == NULL); i--)
+        for (; ((int)i>=0) && (pathTags == NULL); i--)
             if (pathsTags[i].first.back().first == parentTag)
                 pathTags = &(pathsTags[i]);
         if (pathTags == NULL)

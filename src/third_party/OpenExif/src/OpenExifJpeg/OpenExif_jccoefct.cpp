@@ -340,6 +340,7 @@ compress_first_pass (oe_j_compress_ptr cinfo, OE_JSAMPIMAGE input_buf)
 METHODDEF(boolean)
 compress_output (oe_j_compress_ptr cinfo, OE_JSAMPIMAGE input_buf)
 {
+  (void)input_buf;
   my_coef_ptr coef = (my_coef_ptr) cinfo->coef;
   OE_JDIMENSION MCU_col_num;	/* index of current MCU within row */
   int blkn, ci, xindex, yindex, yoffset;
