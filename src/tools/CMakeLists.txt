@@ -51,13 +51,19 @@ TARGET_LINK_LIBRARIES(homography_warping
 
 ADD_EXECUTABLE(detector_repeatability detector_repeatability.cc)
 TARGET_LINK_LIBRARIES(detector_repeatability
-                      numeric
                       correspondence
                       image
-                      pthread
                       gflags
                       glog
                       detector
                       fast
+                      flann
+                      descriptor
+                      multiview
                       )
-
+                      
+ADD_EXECUTABLE(extract_exif_data extractExifData.cc)
+TARGET_LINK_LIBRARIES(extract_exif_data
+                      OpenExif
+                      tools
+                      )

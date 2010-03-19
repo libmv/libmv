@@ -63,6 +63,8 @@ INCLUDE_DIRECTORIES(
   third_party/eigen
   third_party/ssba
   third_party/glog/src
+  third_party/OpenExif/src
+  third_party/OpenExif/src/OpenExifJpeg
 )
 
 IF (WIN32)
@@ -83,7 +85,7 @@ IF (APPLE)
 ENDIF (APPLE)
 
 IF (APPLE)
-  # Tell gtest not to use mac framworks.
+  # Tell gtest not to use mac frameworks.
   ADD_DEFINITIONS('-DGTEST_NOT_MAC_FRAMEWORK_MODE')
 ENDIF (APPLE)
 
