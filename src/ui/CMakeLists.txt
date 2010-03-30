@@ -19,3 +19,4 @@ TARGET_LINK_LIBRARIES(imageviewer image
                       ${OPENGL_glu_LIBRARY})
 
 ADD_SUBDIRECTORY(tvr)
+ADD_SUBDIRECTORY(nvr)
