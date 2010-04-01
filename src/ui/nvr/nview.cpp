@@ -49,7 +49,7 @@ void MainWindow::addImages( QStringList filenames ) {
         qDebug() << filename << QFile(filename).exists();
         if(QFile(filename).exists()) images << new nImage(filename);
     }
-    int ratio = (int)ceil(sqrt(images.count()));
+    int ratio = (int)ceil(sqrt((float)images.count()));
     for(int i=0;i<images.count();i++) {
         MatchView* view = new MatchView();
         view->setImage(images[i]);
