@@ -22,6 +22,7 @@
 #include <string>
 #include <vector>
 
+#include "libmv/base/scoped_ptr.h"
 #include "libmv/correspondence/matches.h"
 #include "libmv/correspondence/feature.h"
 #include "libmv/correspondence/klt.h"
@@ -48,9 +49,9 @@ void WriteOutputImage(const FloatImage &image,
   FloatImage output_image(image.Height(), image.Width(), 3);
   for (int i = 0; i < image.Height(); ++i) {
     for (int j = 0; j < image.Width(); ++j) {
-      output_image(i,j,0) = image(i,j);
-      output_image(i,j,1) = image(i,j);
-      output_image(i,j,2) = image(i,j);
+      output_image(i,j,0) =
+        output_image(i,j,1) =
+        output_image(i,j,2) = image(i,j);
     }
   }
 
@@ -81,16 +82,14 @@ int main(int argc, char **argv) {
   }
 
   ImageCache cache;
-  ImageSequence *source = ImageSequenceFromFiles(files, &cache);
+  scoped_ptr<ImageSequence> source(ImageSequenceFromFiles(files, &cache));
   PyramidSequence *pyramid_sequence =
-      MakePyramidSequence(source, FLAGS_pyramid_levels, FLAGS_sigma);
+      MakePyramidSequence(source.get(), FLAGS_pyramid_levels, FLAGS_sigma);
 
   KLTContext klt;
   Matches matches;
 
-  // TODO(keir): Really have to get a scoped_ptr<> implementation!
-  // Consider taking the one from boost but editing out the cruft.
-  ImagePyramid *pyramid = pyramid_sequence->Pyramid(0);
+  scoped_ptr<ImagePyramid> pyramid(pyramid_sequence->Pyramid(0));
   KLTContext::FeatureList features;
   klt.DetectGoodFeatures(pyramid->Level(0), &features);
   int i = 0;
@@ -131,6 +130,7 @@ int main(int argc, char **argv) {
   // TODO(keir): Now do something useful with 'correspondences'!
   // XXX
   //
+  printf( "\n %2d tracks found\n", matches.NumTracks());
   return 0;
 }
 
