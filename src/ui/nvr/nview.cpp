@@ -55,7 +55,7 @@ void MainWindow::addImages( QStringList filenames ) {
     qDebug() << filename << QFile(filename).exists();
     if (QFile(filename).exists()) images << new nImage(filename); // Memory Leak !
   }
-  int ratio = (int)ceil(sqrt(images.count()));
+  int ratio = (int)ceil(sqrt((float)images.count()));
   for (int i=0;i<images.count();i++) {
     MatchView* view = new MatchView();
     view->setImage(images[i]);
@@ -80,7 +80,7 @@ void MatchView::paintEvent(QPaintEvent*) {
     for (Matches::Points r = match->features(image); r; ++r ) {
       const PointFeature* f = r.feature();
       p.setPen(QColor(255,255,255));
-      p.drawEllipse(QPoint(f->x(), f->y()), r.feature()->scale,
+      p.drawEllipse(QPointF(f->x(), f->y()), r.feature()->scale,
                     r.feature()->scale );
       p.drawLine( QPoint(f->x(), f->y()),
                   QPoint(
