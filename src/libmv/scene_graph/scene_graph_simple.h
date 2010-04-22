@@ -52,7 +52,7 @@ class Node {
     }
     SetParent(NULL);
   }
-  
+
   Node() : parent_(NULL), object_(NULL) {
     transform_ = Mat4::Identity(4, 4);
   }
@@ -106,7 +106,7 @@ class Node {
       children_.erase(it);
     }
   }
-  
+
   bool HasChild(NodeT *node) {
     return GetChild(node->GetName()) == node;
   }
@@ -134,7 +134,7 @@ class Node {
       object_ = NULL;
     }
   }
-  
+
   // The transform to move from the coordinate space of parent to the
   // coordinate space of this object.
   void SetTransform(const Mat4 &transform) {
@@ -144,30 +144,18 @@ class Node {
     transform_ = transform_ * transform;
   }
 
-  class iterator {
+  class iterator : public ChildMap::iterator {
     friend class Node<Object>;
-   public:
-    NodeT &operator*() {
-      return *it_->second;
+  private:
+    iterator(const typename ChildMap::iterator &it):ChildMap::iterator(it) {   }
+  public:
+    iterator():ChildMap::iterator() {   }
+    NodeT &operator*() const{
+      return (*(ChildMap::iterator::operator*().second));
     }
     NodeT *operator->() {
-      return it_->second;
-    } 
-    bool operator!=(const iterator &other) {
-      return it_ != other.it_;
+      return (ChildMap::iterator::operator->()->second);
     }
-    bool operator==(const iterator &other) {
-      return it_ == other.it_;
-    }
-    void operator++() {
-      ++it_;
-    }
-    iterator() {}
-   private:
-    iterator(const typename ChildMap::iterator &it) {
-      it_ = it;
-    }
-    typename ChildMap::iterator it_;
   };
   // Iterate over the children of this node.
   iterator begin() {
@@ -176,14 +164,14 @@ class Node {
   iterator end() {
     return iterator(children_.end());
   }
-  
+
   iterator erase(iterator position) {
     iterator next = position;
     ++next;
-    children_.erase(position.it_);
+    children_.erase(position);
     return next;
   }
-  
+
   unsigned int NumChildren() {
     return children_.size();
   }
@@ -196,7 +184,7 @@ class Node {
     }
     return result;
   }
-  
+
   bool HasChildren() {
     return !children_.empty();
   }
