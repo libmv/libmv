@@ -26,18 +26,39 @@ namespace detector {
 
 class Detector;
 
+// Wrapper around the FAST corner detector [1].
+// [1] Machine learning for high-speed corner detection,
+//  E. Rosten and T. Drummond, ECCV 2006
+
 /**
  * Creates a detector that uses the FAST detection algorithm. The
  * implementation never returns detection data.
  *
- * \param size      The size of features to detect in pixels.
- * \param threshold Threshold for detecting features. See the FAST paper for
- *                  details.
+ * \param size      The size of features to detect in pixels {9,10,11,12}.
+ * \param threshold Threshold for detecting features (barrier). See the FAST
+ *                  paper for details [1].
  * \param bRotationInvariant Tell if orientation of detected features must
  *                            be estimated.
  */
-Detector *CreateFastDetector(int size, int threshold,
+Detector *CreateFastDetector(int size = 9, int threshold = 30,
                               bool bRotationInvariant = false);
+
+/**
+ * Creates a detector that uses the FAST detection algorithm. The
+ * implementation never returns detection data.
+ * Optimized for near real-time application. It extract FAST 9 sized keypoint
+ * and keep the N strongest one.
+ *
+ * \param threshold Threshold for detecting features (barrier). See the FAST
+ *                  paper for details [1].
+ * \param bRotationInvariant Tell if orientation of detected features must
+ *                            be estimated.
+ * \param nKeypointMax How many points could be detected.
+ *                     ( nbReturnedPoint will be <= nKeypointMax).
+ */
+Detector *CreateFastDetectorLimited(int threshold = 30,
+                              bool bRotationInvariant = false,
+                              int nKeypointMax = 256);
 
 }  // namespace detector
 }  // namespace libmv

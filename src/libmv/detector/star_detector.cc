@@ -19,8 +19,10 @@
 // IN THE SOFTWARE.
 
 
-#include "libmv/detector/detector.h"
+#include "libmv/base/vector.h"
 #include "libmv/correspondence/feature.h"
+#include "libmv/detector/detector.h"
+#include "libmv/detector/orientation_detector.h"
 #include "libmv/image/image.h"
 #include "third_party/StarDetector/cvStarDetector.h"
 
@@ -29,7 +31,7 @@ namespace detector {
 
 class StarDetector : public Detector {
  public:
-  StarDetector() {}
+  StarDetector(bool bRotationInvariant):bRotationInvariant_(bRotationInvariant) {}
   virtual ~StarDetector() {}
 
   virtual void Detect(const Image &image,
@@ -42,8 +44,15 @@ class StarDetector : public Detector {
     ShortImage sizes( byte_image->Height(), byte_image->Width(), 1 );
 
     int iBorder = icvStarDetectorComputeResponses( *byte_image, &responses, &sizes, 45 );
-    if( iBorder >= 0 )
-        icvStarDetectorSuppressNonmax( responses, sizes, features, iBorder, 5, 25);
+
+    if (iBorder >= 0)
+        icvStarDetectorSuppressNonmax( responses, sizes, features, iBorder);
+
+    if (bRotationInvariant_)
+    {
+      // rotation response is more stable on response image
+      gradientBoxesRotationEstimation(responses,*features);
+    }
 
     // STAR doesn't have a corresponding descriptor, so there's no extra data
     // to export.
@@ -52,26 +61,13 @@ class StarDetector : public Detector {
     }
   }
 
+ private:
+ bool bRotationInvariant_;
 };
 
-/*  class StarDetector : public Detector {
- public:
-  virtual ~StarDetector() {}
-  StarDetector() {}
-
-  virtual void Detect(const Image &image,
-                      vector<Feature *> *features,
-                      DetectorData **data) {
-
-  }
-
- private:
-
-};*/
-
-Detector *CreateStarDetector()
+Detector *CreateStarDetector(bool bRotationInvariant = false)
 {
-  return new StarDetector;
+  return new StarDetector(bRotationInvariant);
 }
 
 } //namespace detector

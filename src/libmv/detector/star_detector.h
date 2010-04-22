@@ -29,9 +29,12 @@ class Detector;
 /**
  * Creates a detector that uses the STAR detection algorithm.
  * A SURF like blob detector.
+ * \param bRotationInvariant Tell if orientation of detected features must
+ *                            be estimated.
  */
-Detector *CreateStarDetector();
+Detector *CreateStarDetector(bool bRotationInvariant = false);
 
-}  // namespace detector
-}  // namespace libmv
+} // namespace detector
+} // namespace libmv
+
 #endif //LIBMV_DETECTOR_STAR_DETECTOR_H
