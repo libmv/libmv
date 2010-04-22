@@ -1,4 +1,4 @@
-// Copyright (c) 2009 libmv authors.
+// Copyright (c) 2010 libmv authors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
@@ -18,41 +18,24 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
-#ifndef LIBMV_MULTIVIEW_STRUCTURE_H_
-#define LIBMV_MULTIVIEW_STRUCTURE_H_
-
-#include "libmv/logging/logging.h"
-#include "libmv/numeric/numeric.h"
+#include "libmv/multiview/structure.h"
 
 namespace libmv {
+ 
+Structure::Structure() {
+}
 
-class Structure {
- public:
-  Structure();
-  virtual ~Structure();
-};
+Structure::~Structure() {
+}
 
-// The PointStructure class represents a localized 3D point in a
-// coordinate frame
-class PointStructure : public Structure {
- public:
-  PointStructure();
-  PointStructure(const Vec4 &coords);
-  virtual ~PointStructure();
+PointStructure::PointStructure() {
+}
 
-  const Vec3 coords() const { return Vec3(coords_(0), coords_(1), coords_(2)); }
-  void set_coords(const Vec3 &coords)  { coords_ = Vec4(coords(0),
-                                                        coords(1),
-                                                        coords(2),
-                                                        1); 
-  }
-  const Vec4 &homogeneous_coords() const          { return coords_; }
-  void set_homogeneous_coords(const Vec4 &coords) { coords_ = coords; }
- private:
-  // Contains the homogeneous position of a structure point
-  Vec4 coords_;
-};
+PointStructure::PointStructure(const Vec4 &coords) : coords_(coords) {
+}
+
+PointStructure::~PointStructure() {
+}
 
 }  // namespace libmv
 
-#endif  // LIBMV_MULTIVIEW_STRUCTURE_H_

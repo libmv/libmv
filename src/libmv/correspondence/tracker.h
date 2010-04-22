@@ -21,6 +21,12 @@
 #ifndef LIBMV_CORRESPONDENCE_TRACKER_H_
 #define LIBMV_CORRESPONDENCE_TRACKER_H_
 
+#include <map>
+
+#include "libmv/correspondence/matches.h"
+
+namespace libmv {
+
 // Abstract base classs for tracking algorithms.
 // WARNING: This is at best, barely started.
 
@@ -38,20 +44,21 @@
 
 // Tracks points between images.
 class Tracker {
+ public:
   // Correspondences is the only connection to the outside world?
   Tracker(Correspondences *correspondences);
   void TrackBetween(Image *image1, Image *image2);
 };
 
-/*
-feature 
-  track to (tracker *)
-    (now have concrete class; either pontfeat or uklt feat or line feat)
-    tracker->track(*this)
+// TODO (?) This class is cleary not thought out yet!
+// feature 
+//   track to (tracker *)
+//     (now have concrete class; either pontfeat or uklt feat or line feat)
+//     tracker->track(*this)
+// 
+//     need to pass in a lazily loaded image sequence.
 
-    need to pass in a lazily loaded image sequence.
 
-    */
 
 // Anything needed to find a tracker in an image, given other stuff (other
 // trackers, image derivatives, image cutouts, motion models, kdtrees of image
@@ -62,5 +69,7 @@ class TrackManager {
   void AddImage();
   void TrackBetweenImages(image1, image2);
 }
+
+} // using namespace libmv
 
 #endif  // LIBMV_CORRESPONDENCE_TRACKER_H_

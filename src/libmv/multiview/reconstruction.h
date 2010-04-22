@@ -22,15 +22,18 @@
 #define LIBMV_MULTIVIEW_RECONSTRUCTION_H_
 
 #include <cstdio>
+#include <map>
 
-#include "libmv/correspondence/bipartite_graph_new.h"
+#include "libmv/correspondence/bipartite_graph.h"
 #include "libmv/logging/logging.h"
 #include "libmv/numeric/numeric.h"
+#include "libmv/multiview/camera.h"
+#include "libmv/multiview/structure.h"
 
 namespace libmv {
 
-typedef Camera;
-typedef Structure;
+typedef unsigned int FrameID;
+typedef unsigned int TrackID;
 
 // Use cases:
 //
@@ -94,24 +97,72 @@ typedef Structure;
 // The reconstruction takes ownership of camera and structure.
 class Reconstruction {
  public:
-  void Insert(FrameID id, const Camera *camera) {
-    map<FrameID, Camera *>::iterator it = cameras.find(id);
-    if (it != cameras.end()) {
-      delete it->second;
-    }
-    it->second = camera;
-  }
-  void Insert(TrackID id, const Structure *structure) {
-    map<FrameID, Structure *>::iterator it = structure.find(id);
-    if (it != structure.end()) {
-      delete it->second;
-    }
-    it->second = structure;
-  }
+   
+  Reconstruction() {}
+  ~Reconstruction() {}
 
+  void Insert(FrameID id, Camera *camera) {
+    std::map<FrameID, Camera *>::iterator it = cameras_.find(id);
+    if (it != cameras_.end()) {
+      delete it->second;
+      it->second = camera;
+    } else {
+      cameras_[id] = camera;
+    }
+  }
+  void Insert(TrackID id, Structure *structure) {
+    std::map<FrameID, Structure *>::iterator it = structures_.find(id);
+    if (it != structures_.end()) {
+      delete it->second;
+      it->second = structure; 
+    } else {
+      structures_[id] = structure;
+    }
+  }
+  
+  Camera * GetCamera(FrameID id) {
+    std::map<FrameID, Camera *>::iterator it = cameras_.find(id);
+    if (it != cameras_.end()) {
+      LOG(ERROR) << " No camera exists with this ID." << std::endl;
+      return NULL;
+    } else {
+      return cameras_[id];
+    }
+  }
+  Structure * GetStructure(TrackID id) {
+    std::map<TrackID, Structure *>::iterator it = structures_.find(id);
+    if (it != structures_.end()) {
+      LOG(ERROR) << " No Structure exists with this ID." << std::endl;
+      return NULL;
+    } else {
+      return structures_[id];
+    }
+  }
+  
+  void ClearCamerasMap() {
+    std::map<FrameID, Camera *>::iterator it = cameras_.begin();
+    for (; it != cameras_.end(); ++it) {
+      delete it->second;
+    }
+    cameras_.clear();
+  }
+  void ClearStructuresMap() {
+    std::map<FrameID, Structure *>::iterator it = structures_.begin();
+    for (; it != structures_.end(); ++it) {
+      delete it->second;
+    }
+    structures_.clear();
+  }
+  
+  const size_t GetNumberCameras() const    { return cameras_.size(); }
+  const size_t GetNumberStructures() const { return structures_.size(); }
+
+  std::map<FrameID, Camera *> &cameras()  { return cameras_; }
+  std::map<TrackID, Structure *> &structures() { return structures_; }
+  
  private:
-  map<FrameID, Camera *> cameras;
-  map<TrackID, Structure *> structure;
+  std::map<FrameID, Camera *> cameras_;
+  std::map<TrackID, Structure *> structures_;
 };
 
 }  // namespace libmv

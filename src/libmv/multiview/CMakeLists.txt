@@ -17,6 +17,9 @@ ADD_LIBRARY(multiview
             robust_affine_2d.cc
             robust_homography.cc
             euclidean_resection.cc
+            camera.cc
+            structure.cc
+            lens_distortion.cc
             )
 
 TARGET_LINK_LIBRARIES(multiview numeric V3D colamd ldl)
@@ -25,7 +28,7 @@ ADD_LIBRARY(multiview_test_data
             test_data_sets.cc)
 
 MACRO (MULTIVIEW_TEST NAME)
-  LIBMV_TEST(${NAME} "multiview_test_data;multiview;numeric")
+  LIBMV_TEST(${NAME} "multiview_test_data;correspondence;multiview;numeric")
 ENDMACRO (MULTIVIEW_TEST)
 
 MULTIVIEW_TEST(projection)
@@ -48,6 +51,8 @@ MULTIVIEW_TEST(autocalibration)
 MULTIVIEW_TEST(five_point)
 MULTIVIEW_TEST(affine_2d)
 MULTIVIEW_TEST(euclidean_resection)
+MULTIVIEW_TEST(camera)
+MULTIVIEW_TEST(lens_distortion)
 
 # TODO(keir): Make tests that depend on generated.cc to use generated sources.
 #ADD_GENERATED_SOURCE(generated.cc generator.py)
