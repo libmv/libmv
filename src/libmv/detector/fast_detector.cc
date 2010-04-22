@@ -76,8 +76,8 @@ class FastDetector : public Detector {
   }
 
  private:
-  int threshold_;
-  int size_;  // In pixels.
+  int threshold_; // Threshold called barrier in Fast paper (cf. [1]).
+  int size_;  // In pixels {9,10,11,12}.
   FastDetectorCall detector_;
   bool bRotationInvariant_;
 };
