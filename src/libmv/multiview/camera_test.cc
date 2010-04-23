@@ -18,6 +18,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
+#include "libmv/base/vector.h"
 #include "libmv/multiview/camera.h"
 #include "libmv/multiview/projection.h"
 #include "libmv/multiview/structure.h"
@@ -32,7 +33,7 @@ TEST(CameraModel, PinholeCameraProjection) {
   
   NViewDataSet d = NRealisticCameras(nviews, npoints);
  
-  std::vector<PinholeCamera> cameras(nviews);
+  vector<PinholeCamera> cameras(nviews);
   
   for (size_t i = 0; i < nviews; ++i) {
     if (i < nviews/3.) {
