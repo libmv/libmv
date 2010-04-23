@@ -30,19 +30,19 @@ namespace libmv {
 TEST(LensDistortion, LensDistortionDistortUndistor) {
   const size_t nviews = 5;
   const size_t npoints = 20;
-  
+
   NViewDataSet d = NRealisticCameras(nviews, npoints);
-  
+
   Vec2 size_image(d.K[0](0,2)*2., d.K[0](1,2)*2.);
   Vec radial_k,tangential_p;
-  
+
   Mat2X x_distorted_undistorted[nviews];
   Vec2 x;
-  
+
   //generate some distortion parameters
   std::vector<Vec> realistic_radial_k;
   std::vector<Vec> realistic_tangential_p;
-  
+
   realistic_radial_k.push_back(Vec4(0.441142,-0.299391,0.000664,-0.000428));
   realistic_tangential_p.push_back(Vec());
   realistic_radial_k.push_back(Vec2(0.44,-0.299));
@@ -50,39 +50,40 @@ TEST(LensDistortion, LensDistortionDistortUndistor) {
   realistic_radial_k.push_back(Vec2(0.24,-0.199));
   realistic_tangential_p.push_back(Vec3(0.11,0.01,0.001));
   // TODO(julien) use some more distinct  realistic distortion data
-   
-  LensDistortion p(Vec(0),Vec(0));
+  // TODO(pmoulon) I suggest simulate a K1 level disto, a K1-2-3, and K+Tang.
+
+  LensDistortion p;
   std::vector<PinholeCameraDistortion> cameras(nviews,&p);
   std::vector<LensDistortion> lens_distortion(nviews,p);
 
   for (size_t i = 0; i < nviews; ++i) {
     cameras[i].set_projection_matrix(d.P(i));
     cameras[i].set_image_size(size_image);
-    
+
     x_distorted_undistorted[i].resize(2, npoints);
-    
+
     radial_k = realistic_radial_k[i%realistic_radial_k.size()];
     tangential_p = realistic_tangential_p[i%realistic_tangential_p.size()];
-    
+
     lens_distortion[i].set_radial_distortion(radial_k);
     lens_distortion[i].set_tangential_distortion(tangential_p);
-        
+
     cameras[i].set_lens_distortion(&lens_distortion[i]);
-    
-    // we distort the 2D points projections 
+
+    // we distort the 2D points projections
     for (size_t j = 0; j < npoints; ++j) {
       x = d.x[i].col(j);
-      
+
       cameras[i].ComputeDistortedCoordinates(x, &x);
       cameras[i].ComputeUndistortedCoordinates(x, &x);
-      
+
       x_distorted_undistorted[i](0, j) = x(0);
       x_distorted_undistorted[i](1, j) = x(1);
     }
-    
+
     // Compare with ground truth.
     EXPECT_MATRIX_NEAR(d.x[i], x_distorted_undistorted[i], 1e-8);
-  } 
+  }
 }
 
 }  // namespace libmv
