@@ -43,7 +43,7 @@ class vector {
 
   vector()                         { init();                  }
   vector(int size)                 { init(); resize(size);    }
-  vector(int size,const T & val)   {
+  vector(int size, const T & val)  {
     init();
     resize(size);
     std::fill(data_, data_+size_, val); }
