@@ -18,6 +18,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
+#include "libmv/base/vector.h"
 #include "libmv/numeric/levenberg_marquardt.h"
 #include "libmv/multiview/camera.h"
 #include "libmv/multiview/lens_distortion.h"
@@ -40,8 +41,8 @@ TEST(LensDistortion, LensDistortionDistortUndistor) {
   Vec2 x;
 
   //generate some distortion parameters
-  std::vector<Vec> realistic_radial_k;
-  std::vector<Vec> realistic_tangential_p;
+  vector<Vec> realistic_radial_k;
+  vector<Vec> realistic_tangential_p;
 
   realistic_radial_k.push_back(Vec4(0.441142,-0.299391,0.000664,-0.000428));
   realistic_tangential_p.push_back(Vec());
@@ -53,8 +54,8 @@ TEST(LensDistortion, LensDistortionDistortUndistor) {
   // TODO(pmoulon) I suggest simulate a K1 level disto, a K1-2-3, and K+Tang.
 
   LensDistortion p;
-  std::vector<PinholeCameraDistortion> cameras(nviews,&p);
-  std::vector<LensDistortion> lens_distortion(nviews,p);
+  vector<PinholeCameraDistortion> cameras(nviews, &p);
+  vector<LensDistortion> lens_distortion(nviews, p);
 
   for (size_t i = 0; i < nviews; ++i) {
     cameras[i].set_projection_matrix(d.P(i));

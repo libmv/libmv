@@ -30,8 +30,6 @@
 
 #include <Eigen/Core>
 
-//#include "libmv/logging/logging.h"
-
 namespace libmv {
 
 // A simple container class, which guarantees 16 byte alignment needed for most
@@ -45,6 +43,10 @@ class vector {
 
   vector()                         { init();                  }
   vector(int size)                 { init(); resize(size);    }
+  vector(int size,const T & val)   {
+    init();
+    resize(size);
+    std::fill(data_, data_+size_, val); }
 
   // Copy constructor and assignment.
   vector(const vector<T, Allocator> &rhs) {
