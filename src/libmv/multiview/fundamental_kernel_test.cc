@@ -168,7 +168,7 @@ typedef Types<SampsonError,
 TYPED_TEST_CASE(FundamentalErrorTest, FundamentalErrorImplementations);
 TYPED_TEST(FundamentalErrorTest, FundamentalErrorTest2) {
   Vec3 t(1, 0, 0);
-  Mat3 F = CrossProductMatrix(t); // Fundametal matrix corresponding to pure
+  Mat3 F = CrossProductMatrix(t); // Fundamental matrix corresponding to pure
                                   // translation.
 
   Vec2 x0(0, 0), y0(  0,   0); // Good match (at infinity).
@@ -176,7 +176,7 @@ TYPED_TEST(FundamentalErrorTest, FundamentalErrorTest2) {
   Vec2 x2(0, 0), y2(0.0, 0.1); // Small error (a bit of vertical disparity).
   Vec2 x3(0, 0), y3(  0,   1); // Bigger error.
   Vec2 x4(0, 0), y4(  0,  10); // Biggest error.
-  Vec2 x5(0, 0), y5(100,  10); // Biggest error with horitzontal disparity.
+  Vec2 x5(0, 0), y5(100,  10); // Biggest error with horizontal disparity.
 
   Vec6 dists;
   dists << TypeParam::Error(F, x0, y0),
