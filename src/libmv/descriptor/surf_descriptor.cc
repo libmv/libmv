@@ -112,7 +112,7 @@ void MSURFDescriptor(const TImage &integral_image,
   }
 
   float co = 1.0f, si = 0.0f; // Suppose Upright descriptor
-  bool bUpright = false; //Todo(pmoulon) set this variable as parameter
+  bool bUpright = false; //TODO(pmoulon) set this variable as parameter
   if (!bUpright)
   {
     co = cos(feature.orientation);
