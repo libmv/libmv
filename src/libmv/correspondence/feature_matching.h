@@ -44,11 +44,17 @@ struct KeypointFeature : public ::PointFeature {
 struct FeatureSet {
   vector<KeypointFeature> features;
 
-  /// return a float * containing the descriptor data.
+  /// return a float * containing the concatenation of descriptor data.
   /// Must be deleted with []
   static float *FeatureSetDescriptorsToContiguousArray
     ( const FeatureSet & featureSet );
+};
 
+enum eLibmvMatchMethod
+{
+  eMATCH_LINEAR,
+  eMATCH_KDTREE,
+  eMATCH_KDTREE_FLANN
 };
 
 // Compute candidate matches between 2 sets of features.  Two features a and b
@@ -56,7 +62,11 @@ struct FeatureSet {
 // neighbor of a.
 void FindCandidateMatches(const FeatureSet &left,
                           const FeatureSet &right,
-                          Matches *matches);
+                          Matches *matches,
+                          eLibmvMatchMethod eMatchMethod = eMATCH_KDTREE_FLANN);
+
+// TODO(pmoulon) Add Lowe's ratio match method.
+// TODO(pmoulon) Add Lowe's ration symmetric match method.
 
 
 #endif //LIBMV_CORRESPONDENCE_FEATURE_MATCHING_H_

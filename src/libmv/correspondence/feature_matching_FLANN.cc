@@ -98,7 +98,7 @@ void FindSymmetricCandidateMatches_FLANN(const FeatureSet &left,
                           const FeatureSet &right,
                           Matches *matches) {
   // --
-  // Todo(pmoulon) template on feature type.
+  // TODO(pmoulon) template on feature type.
   // --
   if (left.features.size() == 0)  {
     return;
