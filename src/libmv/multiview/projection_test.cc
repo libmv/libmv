@@ -1,15 +1,15 @@
 // Copyright (c) 2007, 2008 libmv authors.
-// 
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
 // deal in the Software without restriction, including without limitation the
 // rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
 // sell copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -51,6 +51,35 @@ TEST(Projection, P_From_KRt) {
 
   // TODO(keir): Change the code to ensure det(R) == 1, which is not currently
   // the case. Also add a test for that here.
+}
+
+Vec4 GetRandomPoint() {
+  Vec4 X;
+  X.setRandom();
+  X(3) = 1;
+  return X;
+}
+
+TEST(Projection, isInFrontOfCamera) {
+
+  Mat34 P;
+  P << 1, 0, 0, 0,
+        0, 1, 0, 0,
+        0, 0, 1, 0;
+
+  Vec4 X_front = GetRandomPoint();
+  Vec4 X_back = GetRandomPoint();
+  X_front(2) = 10; // Any point in the positive Z direction
+                   // where Z > 1 is infront of the camera.
+  X_back(2) = -10; // Any point int he negative Z dirstaion
+                   // is behind the camera.
+
+  bool res_front = isInFrontOfCamera(P, X_front);
+  bool res_back = isInFrontOfCamera(P, X_back);
+
+  EXPECT_EQ(true, res_front);
+  EXPECT_EQ(false, res_back);
+
 }
 
 TEST(AutoCalibration, ProjectionShiftPrincipalPoint) {

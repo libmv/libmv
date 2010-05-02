@@ -17,6 +17,7 @@ ADD_LIBRARY(multiview
             robust_affine_2d.cc
             robust_homography.cc
             euclidean_resection.cc
+            twoviewtriangulation.cc
             camera.cc
             structure.cc
             lens_distortion.cc
@@ -51,6 +52,7 @@ MULTIVIEW_TEST(autocalibration)
 MULTIVIEW_TEST(five_point)
 MULTIVIEW_TEST(affine_2d)
 MULTIVIEW_TEST(euclidean_resection)
+MULTIVIEW_TEST(twoviewtriangulation)
 MULTIVIEW_TEST(camera)
 MULTIVIEW_TEST(lens_distortion)
 

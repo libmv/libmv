@@ -1,15 +1,15 @@
 // Copyright (c) 2007, 2008 libmv authors.
-// 
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
 // deal in the Software without restriction, including without limitation the
 // rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
 // sell copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -34,7 +34,7 @@ void ProjectionShiftPrincipalPoint(const Mat34 &P,
                                    const Vec2 &principal_point,
                                    const Vec2 &principal_point_new,
                                    Mat34 *P_new);
-                                    
+
 // Applies a change of basis to the image coordinates of the projection matrix
 // so that the aspect ratio becomes aspect_ratio_new.  This is done by
 // stretching the y axis.  The aspect ratio is defined as the quotient between
@@ -65,7 +65,7 @@ void EuclideanToHomogeneous(const Mat &X, Mat *H);
 void EuclideanToHomogeneous(const Vec2 &X, Vec3 *H);
 void EuclideanToHomogeneous(const Vec3 &X, Vec4 *H);
 inline Vec3 EuclideanToHomogeneous(const Vec2 &x) {
-  return Vec3(x(0), x(1), 1);  
+  return Vec3(x(0), x(1), 1);
 }
 inline Vec4 EuclideanToHomogeneous(const Vec3 &x) {
   return Vec4(x(0), x(1), x(2), 1);
@@ -103,6 +103,35 @@ inline Mat2X Project(const Mat34 &P, const Mat3X &X) {
 
 double Depth(const Mat3 &R, const Vec3 &t, const Vec3 &X);
 double Depth(const Mat3 &R, const Vec3 &t, const Vec4 &X);
+
+/**
+* Returns true if the homogenious 3D point X is in front of
+* the camera P.
+*/
+inline bool isInFrontOfCamera(const Mat34 &P, const Vec4 &X){
+  double condition_1 = P.row(2).dot(X) * X[3];
+  double condition_2 = X[2] * X[3];
+  if( condition_1 > 0 && condition_2 > 0 )
+    return true;
+  else
+    return false;
+}
+
+inline bool isInFrontOfCamera(const Mat34 &P, const Vec3 &X){
+  Vec4 X_homo;
+  X_homo.segment<3>(0) = X;
+  X_homo(3) = 1;
+  return isInFrontOfCamera( P, X_homo);
+}
+
+/**
+* Transforms a 2D point from pixel image coordinates to a 2D point in
+* normalized image coordinates.
+*/
+inline Vec2 ImageToNormImageCoordinates(Mat3 &Kinverse, Vec2 &x){
+  Vec3 x_h = Kinverse*EuclideanToHomogeneous(x);
+  return HomogeneousToEuclidean( x_h );
+}
 
 } // namespace libmv
 
