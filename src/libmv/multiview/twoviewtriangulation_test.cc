@@ -31,7 +31,7 @@ using namespace libmv;
 
 // Because the TwoViewTriangulationByPlanes works by minimizing the
 // error in the first image it is enough to test the function by moving
-// x1 in a perperdicular diraction away from the epipolar line.
+// x1 in a perpendicular direction away from the epipolar line.
 TEST(Triangulation, TriangulateByPlanes) {
   TwoViewDataSet d = TwoRealisticCameras();
 
@@ -40,7 +40,7 @@ TEST(Triangulation, TriangulateByPlanes) {
   EssentialFromFundamental(d.F, d.K1, d.K2, &E);
   Mat3 K1_inverse = d.K1.inverse();
   Mat3 K2_inverse = d.K2.inverse();
-  //Transform the system so that camera 1 is in its caninical form [I|0]
+  //Transform the system so that camera 1 is in its canonical form [I|0]
   Eigen::Transform< double, 3 > Hcanonical = Eigen::Translation3d(d.t1)*d.R1;
   Hcanonical = Hcanonical.inverse();
 
@@ -66,7 +66,7 @@ TEST(Triangulation, TriangulateByPlanes) {
     Vec3 epl1 = E.transpose()*x2_homogenious;
     epl1[2] = 0;
     Vec3 l_x1 = x1_homogenious.cross(epl1);
-    Vec2 r_l; //a vectror along the l_x1 line
+    Vec2 r_l; //a vector along the l_x1 line
     r_l[0] =  -l_x1[1];
     r_l[1] =  l_x1[0];
     r_l.normalize();
@@ -90,7 +90,7 @@ TEST(Triangulation, TwoViewTriangulationIdeal) {
   Mat3 K1_inverse = d.K1.inverse();
   Mat3 K2_inverse = d.K2.inverse();
 
-  //Transform the system so that camera 1 is in its caninical form [I|0]
+  //Transform the system so that camera 1 is in its canonical form [I|0]
   Eigen::Transform< double, 3 > Hcanonical = Eigen::Translation3d(d.t1)*d.R1;
   Hcanonical = Hcanonical.inverse();
 
