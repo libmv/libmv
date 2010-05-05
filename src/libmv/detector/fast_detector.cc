@@ -53,7 +53,7 @@ class FastDetector : public Detector {
 
       for (int i = 0; i < num_corners; ++i) {
         PointFeature *f = new PointFeature(detections[i].x, detections[i].y);
-        f->scale = 1.0;
+        f->scale = 3.0;
         f->orientation = 0.0;
         features->push_back(f);
       }

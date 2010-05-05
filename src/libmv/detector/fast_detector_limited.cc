@@ -120,7 +120,7 @@ class FastDetectorLimited : public Detector {
           ++i) {
         PointFeature *f = new PointFeature(ptScores[i].first->x,
                             ptScores[i].first->y);
-        f->scale = 1.0;
+        f->scale = 3.0;
         f->orientation = 0.0;
         features->push_back(f);
       }
