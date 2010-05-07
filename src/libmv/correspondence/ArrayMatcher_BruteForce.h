@@ -28,6 +28,8 @@ namespace libmv {
 namespace correspondence  {
 
 /// Implement ArrayMatcher as a FLANN LINEAR matcher.
+// http://www.cs.ubc.ca/~mariusm/index.php/FLANN/FLANN
+// David G. Lowe and Marius Muja
 template < typename Scalar >
 class ArrayMatcher_BruteForce : public ArrayMatcher<Scalar>
 {
@@ -59,7 +61,8 @@ class ArrayMatcher_BruteForce : public ArrayMatcher<Scalar>
 
     //-- Build FLANN index
     float fspeedUp;
-    _index_id = flann_build_index( (float*)dataset, nbRows, dimension, &fspeedUp, &_p);
+    _index_id = flann_build_index( (float*)dataset, nbRows, dimension,
+      &fspeedUp, &_p);
     return (_index_id != NULL);
   }
 
@@ -76,8 +79,8 @@ class ArrayMatcher_BruteForce : public ArrayMatcher<Scalar>
   bool searchNeighbour( const Scalar * query, int * indice, Scalar * distance)
   {
     if (_index_id != NULL) {
-      int iRet = flann_find_nearest_neighbors_index(_index_id, (Scalar*)query, 1,
-        indice, distance, 1, _p.checks, &_p);
+      int iRet = flann_find_nearest_neighbors_index(_index_id, (Scalar*)query,
+        1, indice, distance, 1, _p.checks, &_p);
         return (iRet == 0);
     }
     else  {
@@ -107,8 +110,8 @@ class ArrayMatcher_BruteForce : public ArrayMatcher<Scalar>
 
       int * indicePTR = &((*indice)[0]);
       float * distancePTR = &(*distance)[0];
-      int iRet = flann_find_nearest_neighbors_index(_index_id, (Scalar*)query, nbQuery,
-        indicePTR, distancePTR, NN, _p.checks, &_p);
+      int iRet = flann_find_nearest_neighbors_index(_index_id, (Scalar*)query,
+          nbQuery, indicePTR, distancePTR, NN, _p.checks, &_p);
         return (iRet == 0);
     }
     else  {

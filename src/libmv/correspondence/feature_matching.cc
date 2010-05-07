@@ -18,7 +18,6 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
-
 #include "libmv/correspondence/feature_matching.h"
 
 #include "libmv/correspondence/ArrayMatcher.h"
@@ -66,7 +65,7 @@ void FindCandidateMatches(const FeatureSet &left,
     break;
   };
 
-  if (pArrayMatcherA != NULL && pArrayMatcherA != NULL) {
+  if (pArrayMatcherA != NULL && pArrayMatcherB != NULL) {
 
     // Paste the necessary data in contiguous arrays.
     float * arrayA = FeatureSet::FeatureSetDescriptorsToContiguousArray(left);
@@ -77,15 +76,15 @@ void FindCandidateMatches(const FeatureSet &left,
 
     bool breturn = false;
     if (pArrayMatcherA->build(arrayA,left.features.size(),descriptorSize) &&
-        pArrayMatcherB->build(arrayB,right.features.size(),descriptorSize) )
-      {
-        const int NN = 1;
-        breturn =
-          pArrayMatcherB->searchNeighbours(arrayA,left.features.size(),
-            &indices, &distances, NN) &&
-          pArrayMatcherA->searchNeighbours(arrayB,right.features.size(),
-            &indicesReverse, &distancesReverse, NN);
-      }
+        pArrayMatcherB->build(arrayB,right.features.size(),descriptorSize) )  {
+
+      const int NN = 1;
+      breturn =
+        pArrayMatcherB->searchNeighbours(arrayA,left.features.size(),
+          &indices, &distances, NN) &&
+        pArrayMatcherA->searchNeighbours(arrayB,right.features.size(),
+          &indicesReverse, &distancesReverse, NN);
+    }
     delete pArrayMatcherA;
     delete pArrayMatcherB;
 
@@ -93,8 +92,7 @@ void FindCandidateMatches(const FeatureSet &left,
     delete [] arrayB;
 
     // From putative matches get symmetric matches.
-    if (breturn)
-    {
+    if (breturn)  {
       //TODO(pmoulon) clear previous matches.
       int max_track_number = 0;
       for (size_t i = 0; i < indices.size(); ++i) {
@@ -116,20 +114,102 @@ void FindCandidateMatches(const FeatureSet &left,
 }
 
 float * FeatureSet::FeatureSetDescriptorsToContiguousArray
-    ( const FeatureSet & featureSet ) {
+  ( const FeatureSet & featureSet ) {
 
-    if (featureSet.features.size() == 0)  {
-      return NULL;
-    }
-    int descriptorSize = featureSet.features[0].descriptor.coords.size();
-    // Allocate and paste the necessary data.
-    float * array = new float[featureSet.features.size()*descriptorSize];
-
-    //-- Paste data in the contiguous array :
-    for (int i = 0; i < (int)featureSet.features.size(); ++i)
-    {
-      for (int j = 0;j < descriptorSize; ++j)
-        array[descriptorSize*i + j] = (float)featureSet.features[i][j];
-    }
-    return array;
+  if (featureSet.features.size() == 0)  {
+    return NULL;
   }
+  int descriptorSize = featureSet.features[0].descriptor.coords.size();
+  // Allocate and paste the necessary data.
+  float * array = new float[featureSet.features.size()*descriptorSize];
+
+  //-- Paste data in the contiguous array :
+  for (int i = 0; i < (int)featureSet.features.size(); ++i) {
+    for (int j = 0;j < descriptorSize; ++j)
+      array[descriptorSize*i + j] = (float)featureSet.features[i][j];
+  }
+  return array;
+}
+
+// Compute candidate matches between 2 sets of features with a ratio.
+void FindCandidateMatches_Ratio(const FeatureSet &left,
+                          const FeatureSet &right,
+                          Matches *matches,
+                          eLibmvMatchMethod eMatchMethod,
+                          float fRatio) {
+
+  if (left.features.size() == 0 ||
+      right.features.size() == 0 )  {
+    return;
+  }
+  int descriptorSize = left.features[0].descriptor.coords.size();
+
+  correspondence::ArrayMatcher<float> * pArrayMatcherA = NULL;
+  switch (eMatchMethod)
+  {
+  case eMATCH_KDTREE:
+    {
+      // Build the arrays matcher in order to compute matches pair.
+      pArrayMatcherA = new correspondence::ArrayMatcher_Kdtree<float>;
+    }
+    break;
+    case eMATCH_KDTREE_FLANN:
+    {
+      // Build the arrays matcher in order to compute matches pair.
+      pArrayMatcherA = new correspondence::ArrayMatcher_Kdtree_Flann<float>;
+    }
+    break;
+    case eMATCH_LINEAR:
+    {
+      // Build the arrays matcher in order to compute matches pair.
+      LOG(INFO) << "Not yet implemented.";
+      return;
+    }
+    break;
+  };
+
+  const int NN = 2;
+  if (pArrayMatcherA != NULL) {
+
+    // Paste the necessary data in contiguous arrays.
+    float * arrayA = FeatureSet::FeatureSetDescriptorsToContiguousArray(left);
+    float * arrayB = FeatureSet::FeatureSetDescriptorsToContiguousArray(right);
+
+    libmv::vector<int> indices;
+    libmv::vector<float> distances;
+
+    bool breturn = false;
+    if (pArrayMatcherA->build(arrayB,right.features.size(),descriptorSize))  {
+      breturn =
+        pArrayMatcherA->searchNeighbours(arrayA,left.features.size(),
+          &indices, &distances, NN);
+    }
+    delete pArrayMatcherA;
+    delete [] arrayA;
+    delete [] arrayB;
+
+    // From putative matches get matches that fit the "Ratio" heuristic.
+    if (breturn)  {
+      //TODO(pmoulon) clear previous matches.
+      int max_track_number = 0;
+
+      for (size_t i = 0; i < left.features.size(); ++i) {
+        // Test distance ratio :
+        float distance0 = distances[i*NN];
+        float distance1 = distances[i*NN+NN-1];
+
+        if (distance0 < fRatio * distance1) {
+          matches->Insert(0, max_track_number, &left.features[i]);
+          matches->Insert(1, max_track_number, &right.features[indices[i*NN]]);
+          ++max_track_number;
+        }
+      }
+    }
+    else  {
+      LOG(INFO) << "[FindCandidateMatches_Ratio] Cannot compute matches.";
+    }
+  }
+  else  {
+    LOG(INFO) << "[FindCandidateMatches_Ratio] Unknow input match method.";
+  }
+}

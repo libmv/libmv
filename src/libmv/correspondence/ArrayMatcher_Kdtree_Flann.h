@@ -28,6 +28,9 @@ namespace libmv {
 namespace correspondence  {
 
 /// Implement ArrayMatcher as a FLANN KDtree matcher.
+// http://www.cs.ubc.ca/~mariusm/index.php/FLANN/FLANN
+// David G. Lowe and Marius Muja
+
 template < typename Scalar >
 class ArrayMatcher_Kdtree_Flann : public ArrayMatcher<Scalar>
 {

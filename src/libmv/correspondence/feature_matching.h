@@ -42,7 +42,7 @@ struct KeypointFeature : public ::PointFeature {
 
 /// FeatureSet : Store an array of KeypointFeature ( Keypoint and descriptor).
 struct FeatureSet {
-  vector<KeypointFeature> features;
+  libmv::vector<KeypointFeature> features;
 
   /// return a float * containing the concatenation of descriptor data.
   /// Must be deleted with []
@@ -65,8 +65,21 @@ void FindCandidateMatches(const FeatureSet &left,
                           Matches *matches,
                           eLibmvMatchMethod eMatchMethod = eMATCH_KDTREE_FLANN);
 
-// TODO(pmoulon) Add Lowe's ratio match method.
-// TODO(pmoulon) Add Lowe's ration symmetric match method.
+// Compute candidate matches between 2 sets of features.
+// Keep only strong and distinctive matches by using the Davide Lowe's ratio
+// method.
+// I.E:  A match is considered as strong if the following test is true :
+// I.E distance[0] < fRatio * distances[1].
+// From David Lowe “Distinctive Image Features from Scale-Invariant Keypoints”.
+// You can use David Lowe's magic ratio (0.6 or 0.8).
+// 0.8 allow to remove 90% of the false matches while discarding less than 5%
+// of the correct matches.
+void FindCandidateMatches_Ratio(const FeatureSet &left,
+                          const FeatureSet &right,
+                          Matches *matches,
+                          eLibmvMatchMethod eMatchMethod = eMATCH_KDTREE_FLANN,
+                          float fRatio = 0.8f);
+// TODO(pmoulon) Add Lowe's ratio symmetric match method.
 
 
 #endif //LIBMV_CORRESPONDENCE_FEATURE_MATCHING_H_
