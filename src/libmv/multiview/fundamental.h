@@ -54,7 +54,7 @@ double FundamentalFrom7CorrespondencesLinear(const Mat &x1,
                                              const Mat &x2,
                                              std::vector<Mat3> *F);
 
-// 8 points (points coordinates must be in image space):
+// 7 points (points coordinates must be in image space):
 double FundamentalFromCorrespondences7Point(const Mat &x1,
                                             const Mat &x2,
                                             std::vector<Mat3> *F);
