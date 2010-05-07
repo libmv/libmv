@@ -35,16 +35,16 @@ template < class T>
 void normalize(T * fsrc, T * fdst, int size, T &mean, T &stddev)  {
 	mean = stddev = 0;
 	// Compute mean and standard deviation.
-	for (int i=0; i<size; ++i)	{
+	for (int i = 0; i < size; ++i)	{
 		const T & val = fsrc[i];
 		mean += val;
-		stddev += val*val;
+		stddev += val * val;
 	}
 	mean /= size;
-	stddev = sqrt((stddev - (mean*mean) )/(size-1));
+	stddev = sqrt((stddev - (mean * mean) )/(size - 1));
 	// Normalize input data.
-	for (int i=0; i<size; ++i)
-		fdst[i] = (fsrc[i]-mean) / stddev;
+	for (int i = 0; i < size; ++i)
+		fdst[i] = (fsrc[i] - mean) / stddev;
 }
 
 /// Fill the data patch with image data around keypoint.
@@ -55,8 +55,8 @@ void normalize(T * fsrc, T * fdst, int size, T &mean, T &stddev)  {
 // Angle is in radian.
 // data the output array (must be allocated to 8*8).
 template <typename TImage,typename T>
-void PickPatch(const TImage & image, float x, float y, float scale, double angle,
-                T * data) {
+void PickPatch(const TImage & image, float x, float y, float scale,
+              double angle, T * data) {
 
   const int WINDOW_SIZE = 8;
   const float STEP = scale;
@@ -69,35 +69,35 @@ void PickPatch(const TImage & image, float x, float y, float scale, double angle
   // Rotation matrix.
   libmv::vector<double> matXY(4);
   // Clockwise rotation matrix.
-  matXY[0]=	cos(angle);	matXY[1]=-sin(angle);
-  matXY[2]=	sin(angle);	matXY[3]=cos(angle);
+  matXY[0] = cos(angle);	matXY[1] = -sin(angle);
+  matXY[2] = sin(angle);	matXY[3] = cos(angle);
 
-  for (int i=0; i < WINDOW_SIZE; ++i)  {
-    for (int j=0; j < WINDOW_SIZE; ++j) {
+  for (int i = 0; i < WINDOW_SIZE; ++i)  {
+    for (int j = 0; j < WINDOW_SIZE; ++j) {
 
-      float ox = (float)(i*STEP - WINDOW_SIZE/2.0f);
-      float oy = (float)(j*STEP - WINDOW_SIZE/2.0f);
+      float ox = (float)(i * STEP - WINDOW_SIZE / 2.0f);
+      float oy = (float)(j * STEP - WINDOW_SIZE / 2.0f);
 
-      float rotX = (matXY[0]*ox+matXY[1]*oy);
-      float rotY = (matXY[2]*ox+matXY[3]*oy);
+      float rotX = (matXY[0] * ox + matXY[1] * oy);
+      float rotY = (matXY[2] * ox + matXY[3] * oy);
       // Translate the rotated point to the local coordinate system.
-      int xx = (int)(rotX)+cx;
-      int yy = (int)(rotY)+cy;
+      int xx = (int)(rotX) + cx;
+      int yy = (int)(rotY) + cy;
 
       float s1 = 0.0f;
       // Test if the transformed point can be taken in the input image.
       if (image.Contains(yy,xx) ) {
         // Bilinear interpolation
-        s1 = SampleLinear(image, (rotY)+cy, (rotX)+cx );
+        s1 = SampleLinear(image, rotY + cy, rotX + cx );
       }
       //else (we cannot take a bilinear sampled value)
       //always return 0 (sampling point outside the image)
 
-      data[j * WINDOW_SIZE + i]=s1;
+      data[j * WINDOW_SIZE + i] = s1;
     }
   }
   // Normalize the input signal to be invariant to luminance.
-  float mean=0.0f,stddev=0.0f;
+  float mean = 0.0f,stddev = 0.0f;
   normalize(data,data,WINDOW_SIZE*WINDOW_SIZE,mean,stddev);
 }
 
