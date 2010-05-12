@@ -35,7 +35,7 @@ namespace detector {
 /// Angle value are considered in Radian.
 inline float getCoterminalAngle(float angle)
 {
-  const float f2PI = 2.f*3.14159f;
+  const float f2PI = 2.f*M_PI;
   while (angle > f2PI) {
     angle -=f2PI;
   }
