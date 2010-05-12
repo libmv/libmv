@@ -97,31 +97,28 @@ void gradientBoxesRotationEstimation(const Image & ima, vector<Feature *> & feat
   vector<float> histogram(36);
 
   // Sum up direction weighted (gradient value).
-  for (int j=0; j < features.size(); ++j) {
+  for (int j = 0; j < features.size(); ++j) {
     const int x = ((PointFeature*)features[j])->x(),
               y = ((PointFeature*)features[j])->y();
     const int offset = 3*((PointFeature*)features[j])->scale;
     std::fill(histogram.begin(),histogram.end(),0.0f);
-    for (int r=y-offset; r<=y+offset; ++r){
-      for (int c=x-offset; c<=x+offset; ++c){
-        if ((c>0) && (r>0) && (c<ima.Width()-1) && (r<ima.Height()-1))  {
+    for (int r = y-offset; r <= y+offset; ++r)  {
+      for (int c = x-offset; c <= x+offset; ++c)  {
+        if (c > 0 && r > 0 && (c<ima.Width()-1) && (r<ima.Height()-1))  {
 
           double offsetX = c - x;
           double offsetY = r - y;
-          double circularWeight = sqrt( (offsetX*offsetX + offsetY*offsetY) )/ offset;
+          double circularW = sqrt(offsetX*offsetX + offsetY*offsetY)/ offset;
 
-          if (circularWeight<=1.0)  {
+          if (circularW <= 1.0)  {
 
             double tmpX = ima(r,c+1) - ima(r,c-1);
             double tmpY = ima(r+1,c) - ima(r-1,c);
             double magnit = sqrt(tmpX*tmpX + tmpY*tmpY);
-            double orient = atan2(tmpY, tmpX);
+            double orient = getCoterminalAngle(atan2(tmpY, tmpX));
 
-            double value = magnit * circularWeight;
-            if (orient<0.0)  {
-              orient += 2.0 * 3.14159;
-            }
-            int histindex = (int)(orient* 180.f / 3.14159f)/10;
+            double value = magnit * circularW;
+            int histindex = (int)(orient* 180.0 / M_PI)/10;
             histogram[histindex] += value;
           }
         }
@@ -129,14 +126,14 @@ void gradientBoxesRotationEstimation(const Image & ima, vector<Feature *> & feat
     }
     // Locate peak in the weighted angle histogram.
     int index = 0;
-    for (int k=1; k<36; ++k) {
-      if (histogram[index]<histogram[k])
+    for (int k = 1; k < 36; ++k) {
+      if (histogram[index] < histogram[k])
         index = k;
     }
     // Todo(pmoulon) subpixel angle according histogram value.
     // http://people.equars.com/~marco/poli/phd/node47.html
     ((PointFeature*)features[j])->orientation =
-        getCoterminalAngle(index*10.0 * 3.14159 / 180.0);
+        getCoterminalAngle(index*10.0 * M_PI / 180.0);
   }
 }
 
