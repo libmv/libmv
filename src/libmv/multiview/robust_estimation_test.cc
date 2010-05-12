@@ -1,15 +1,15 @@
 // Copyright (c) 2007, 2008 libmv authors.
-// 
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
 // deal in the Software without restriction, including without limitation the
 // rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
 // sell copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -55,6 +55,7 @@ struct LineKernel {
   }
 
   void Fit(const vector<int> &samples, vector<Vec2> *lines) const {
+    assert(samples.size() >= (uint)MINIMUM_SAMPLES);
     // Standard least squares solution.
     Mat2X sampled_xs = ExtractColumns(xs_, samples);
     MatX2 X(sampled_xs.cols(), 2);
@@ -66,6 +67,7 @@ struct LineKernel {
     A.svd().solve(b, &ba);
     lines->push_back(ba);
   }
+
   double Error(int sample, const Vec2 &ba) const {
     double b = ba[0];
     double a = ba[1];
@@ -103,6 +105,20 @@ TEST(RobustLineFitter, OutlierFree) {
         3, 5, 7, 9, 11;
 
   LineKernel kernel(xy);
+  vector<int> inliers;
+  Vec2 ba = Estimate(kernel, MLEScorer<LineKernel>(4), &inliers);
+  EXPECT_NEAR(2.0, ba[1], 1e-9);
+  EXPECT_NEAR(1.0, ba[0], 1e-9);
+  ASSERT_EQ(5, inliers.size());
+}
+
+TEST(RobustLineFitter, OutlierFree_DoNotGetBackInliers) {
+  Mat2X xy(2, 5);
+  // y = 2x + 1
+  xy << 1, 2, 3, 4,  5,
+        3, 5, 7, 9, 11;
+
+  LineKernel kernel(xy);
   Vec2 ba = Estimate(kernel, MLEScorer<LineKernel>(4));
   EXPECT_NEAR(2.0, ba[1], 1e-9);
   EXPECT_NEAR(1.0, ba[0], 1e-9);
@@ -115,9 +131,25 @@ TEST(RobustLineFitter, OneOutlier) {
         3, 5, 7, 9, 11, /* outlier! */ -123;
 
   LineKernel kernel(xy);
-  Vec2 ba = Estimate(kernel, MLEScorer<LineKernel>(4));
+  vector<int> inliers;
+  Vec2 ba = Estimate(kernel, MLEScorer<LineKernel>(4), &inliers);
   EXPECT_NEAR(2.0, ba[1], 1e-9);
   EXPECT_NEAR(1.0, ba[0], 1e-9);
+  ASSERT_EQ(5, inliers.size());
+}
+
+// Test if the robust estimator do not return inlier if too few point
+// was given for an estimation.
+TEST(RobustLineFitter, TooFewPoints) {
+  Mat2X xy(2, 1);
+  // y = 2x + 1
+  xy << 1,
+        3;
+  LineKernel kernel(xy);
+  vector<int> inliers;
+  Vec2 ba = Estimate(kernel, MLEScorer<LineKernel>(4), &inliers);
+  (void) ba;
+  ASSERT_EQ(0, inliers.size());
 }
 
 }  // namespace

@@ -80,13 +80,20 @@ typename Kernel::Model Estimate(const Kernel &kernel,
   uint max_iterations = 100;
   const uint really_max_iterations = 1000;
 
-  int min_samples = Kernel::MINIMUM_SAMPLES;
-  int total_samples = kernel.NumSamples();
+  const int min_samples = Kernel::MINIMUM_SAMPLES;
+  const int total_samples = kernel.NumSamples();
 
   int best_num_inliers = 0;
   double best_cost = HUGE_VAL;
   double best_inlier_ratio = 0.0;
   typename Kernel::Model best_model;
+
+  // Test if the kernel get sufficient point in order to perform estimations.
+  if (total_samples < min_samples)  {
+    if (best_inliers)
+      best_inliers->resize(0);
+    return best_model;
+  }
 
   // In this robust estimator, the scorer always works on all the data points
   // at once. So precompute the list ahead of time.
