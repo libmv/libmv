@@ -40,7 +40,7 @@ namespace libmv {
  */
 template<typename TMatP, typename TMatA, typename TMatB>
 static void FivePointCameraPencil(const TMatP &points, TMatA *A, TMatB *B) {
-  CHECK_EQ(5, points.cols());
+  CHECK(5 == points.cols());
   Mat3 H;
   PreconditionerFromPoints(points, &H);
   Mat35 design = H * points;
