@@ -1,15 +1,15 @@
 // Copyright (c) 2009 libmv authors.
-// 
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
 // deal in the Software without restriction, including without limitation the
 // rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
 // sell copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -22,6 +22,7 @@
 #define LIBMV_MULTIVIEW_HOMOGRAPHY_KERNEL_H_
 
 #include "libmv/base/vector.h"
+#include "libmv/multiview/conditioning.h"
 #include "libmv/multiview/projection.h"
 #include "libmv/multiview/two_view_kernel.h"
 #include "libmv/numeric/numeric.h"
@@ -29,19 +30,19 @@
 namespace libmv {
 namespace homography {
 namespace kernel {
-  
+
 struct FourPointSolver {
   enum { MINIMUM_SAMPLES = 4 };
-  /** 
+  /**
    * Computes the homography that transforms x to y with the direct linear
    * transform (DLT).
-   * 
+   *
    * \param x  A 2xN matrix of column vectors.
    * \param y  A 2xN matrix of column vectors.
    * \param Hs A vector into which the computed homography is stored.
-   * 
+   *
    * The estimated homography should approximatelly hold the condition y = H x.
-   * 
+   *
    * \see HomographyFromCorrespondencesLinearRobust
    */
   // TODO(keir): Fix \see above.
@@ -61,17 +62,10 @@ struct AsymmetricError {
 struct SymmetricError {
   static double Error(const Mat &H, const Vec2 &x1, const Vec2 &x2) {
     // TODO(keir): This is awesomely inefficient because it does a 3x3
-    // inversion for each evaluation. 
+    // inversion for each evaluation.
     Mat3 Hinv = H.inverse();
     return AsymmetricError::Error(H,    x1, x2) +
            AsymmetricError::Error(Hinv, x2, x1);
-  }
-};
-
-// Denormalize the results. See HZ page 109.
-struct Unnormalizer {
-  static void Unnormalize(const Mat3 &T1, const Mat3 &T2, Mat3 *H) {
-    *H = T2.inverse() * (*H) * T1;
   }
 };
 
@@ -82,7 +76,7 @@ typedef two_view::kernel::Kernel<FourPointSolver, AsymmetricError, Mat3>
 
 // By default use the normalized version for increased robustness.
 typedef two_view::kernel::Kernel<
-    two_view::kernel::NormalizedSolver<FourPointSolver, Unnormalizer>,
+    two_view::kernel::NormalizedSolver<FourPointSolver, UnnormalizerI>,
     AsymmetricError,
     Mat3>
   Kernel;

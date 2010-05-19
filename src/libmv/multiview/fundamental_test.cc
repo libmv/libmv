@@ -21,6 +21,7 @@
 #include <iostream>
 
 #include "libmv/logging/logging.h"
+#include "libmv/multiview/conditioning.h"
 #include "libmv/multiview/fundamental.h"
 #include "libmv/multiview/projection.h"
 #include "libmv/multiview/test_data_sets.h"
@@ -101,7 +102,7 @@ TEST(Fundamental, MotionFromEssential) {
   MotionFromEssential(E, &Rs, &ts);
   bool one_solution_is_correct = false;
   for (size_t i = 0; i < Rs.size(); ++i) {
-    if(FrobeniusDistance(Rs[i], R) < 1e-8 && DistanceL2(ts[i], t) < 1e-8) {
+    if (FrobeniusDistance(Rs[i], R) < 1e-8 && DistanceL2(ts[i], t) < 1e-8) {
       one_solution_is_correct = true;
       break;
     }

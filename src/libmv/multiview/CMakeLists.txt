@@ -21,6 +21,7 @@ ADD_LIBRARY(multiview
             camera.cc
             structure.cc
             lens_distortion.cc
+            conditioning.cc
             )
 
 TARGET_LINK_LIBRARIES(multiview numeric V3D colamd ldl)

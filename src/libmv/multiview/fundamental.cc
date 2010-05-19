@@ -20,6 +20,7 @@
 
 #include "libmv/numeric/numeric.h"
 #include "libmv/numeric/poly.h"
+#include "libmv/multiview/conditioning.h"
 #include "libmv/multiview/projection.h"
 #include "libmv/multiview/triangulation.h"
 #include "libmv/multiview/fundamental.h"
@@ -59,34 +60,6 @@ void ProjectionsFromFundamental(const Mat3 &F, Mat34 *P1, Mat34 *P2) {
   Mat3 Ft = F.transpose();
   Nullspace(&Ft, &e2);
   *P2 << CrossProductMatrix(e2) * F, e2;
-}
-
-// HZ 4.4.4 pag.109
-void PreconditionerFromPoints(const Mat &points, Mat3 *T) {
-  Vec mean, variance;
-  MeanAndVarianceAlongRows(points, &mean, &variance);
-
-  double xfactor = sqrt(2 / variance(0));
-  double yfactor = sqrt(2 / variance(1));
-
-  *T << xfactor, 0,       -xfactor * mean(0),
-        0,       yfactor, -yfactor * mean(1),
-        0,       0,        1;
-}
-
-// TODO(pau) this can be done by matrix multiplication.
-void ApplyTransformationToPoints(const Mat &points,
-                                 const Mat3 &T,
-                                 Mat *transformed_points) {
-  int n = points.cols();
-  transformed_points->resize(2,n);
-  for (int i = 0; i < n; ++i) {
-    Vec3 in, out;
-    in << points(0, i), points(1, i), 1;
-    out = T * in;
-    (*transformed_points)(0, i) = out(0);
-    (*transformed_points)(1, i) = out(1);
-  }
 }
 
 // HZ 11.1 pag.279 (x1 = x, x2 = x')
@@ -153,39 +126,9 @@ double NormalizedEightPointSolver(const Mat &x1,
   return smaller_singular_value;
 }
 
-double FundamentalFromCorrespondences7Point(const Mat &x1,
-                                            const Mat &x2,
-                                            std::vector<Mat3> *F) {
-  assert(2 == x1.rows());
-  assert(7 <= x1.cols());
-  assert(x1.rows() == x2.rows());
-  assert(x1.cols() == x2.cols());
-
-  // Normalize the data.
-  Mat3 T1, T2;
-  PreconditionerFromPoints(x1, &T1);
-  PreconditionerFromPoints(x2, &T2);
-  Mat x1_normalized, x2_normalized;
-  ApplyTransformationToPoints(x1, T1, &x1_normalized);
-  ApplyTransformationToPoints(x2, T2, &x2_normalized);
-
-  // Estimate the fundamental matrix.
-  double smaller_singular_value = 0.0;
-  /*
-    FundamentalFrom7CorrespondencesLinear(x1_normalized, x2_normalized, &(*F));
-    */
-
-  for(int k=0; k < F->size(); ++k) {
-    Mat3 & Fmat = (*F)[k];
-    // Denormalize the fundamental matrix.
-    Fmat = T2.transpose() * Fmat * T1;
-  }
-  return smaller_singular_value;
-}
-
 // Seven-point algorithm.
 // http://www.cs.unc.edu/~marc/tutorial/node55.html
-double FundamentalFrom7Points(const Mat &x1,
+double FundamentalFrom7CorrespondencesLinear(const Mat &x1,
                               const Mat &x2,
                               std::vector<Mat3> *F) {
   assert(2 == x1.rows());
@@ -249,6 +192,34 @@ double FundamentalFrom7Points(const Mat &x1,
     F->push_back(F1 + roots[kk] * F2);
   }
   return s;
+}
+
+double FundamentalFromCorrespondences7Point(const Mat &x1,
+                                            const Mat &x2,
+                                            std::vector<Mat3> *F) {
+  assert(2 == x1.rows());
+  assert(7 <= x1.cols());
+  assert(x1.rows() == x2.rows());
+  assert(x1.cols() == x2.cols());
+
+  // Normalize the data.
+  Mat3 T1, T2;
+  PreconditionerFromPoints(x1, &T1);
+  PreconditionerFromPoints(x2, &T2);
+  Mat x1_normalized, x2_normalized;
+  ApplyTransformationToPoints(x1, T1, &x1_normalized);
+  ApplyTransformationToPoints(x2, T2, &x2_normalized);
+
+  // Estimate the fundamental matrix.
+  double smaller_singular_value =
+    FundamentalFrom7CorrespondencesLinear(x1_normalized, x2_normalized, &(*F));
+
+  for(int k=0; k < F->size(); ++k) {
+    Mat3 & Fmat = (*F)[k];
+    // Denormalize the fundamental matrix.
+    Fmat = T2.transpose() * Fmat * T1;
+  }
+  return smaller_singular_value;
 }
 
 void FundamentalFromCorrespondencesSampson(const Mat2X &x1,

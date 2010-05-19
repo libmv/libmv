@@ -30,14 +30,6 @@ namespace libmv {
 void FundamentalFromProjections(const Mat34 &P1, const Mat34 &P2, Mat3 *F);
 void ProjectionsFromFundamental(const Mat3 &F, Mat34 *P1, Mat34 *P2);
 
-// Point conditionning :
-// TODO(pau) These two functions should go in a more general header.
-void PreconditionerFromPoints(const Mat &points, Mat3 *T);
-
-void ApplyTransformationToPoints(const Mat &points,
-                                 const Mat3 &T,
-                                 Mat *transformed_points);
-
 // Fundamental matrix computation :
 // 8 points (points coordinates must be normalized before):
 double FundamentalFromCorrespondencesLinear(const Mat &x1,

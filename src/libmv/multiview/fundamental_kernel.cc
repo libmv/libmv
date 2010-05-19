@@ -37,17 +37,17 @@ void SevenPointSolver::Solve(const Mat &x1, const Mat &x2, vector<Mat3> *F) {
   assert(7 <= x1.cols());
   assert(x1.rows() == x2.rows());
   assert(x1.cols() == x2.cols());
- 
+
   // Set up the homogeneous system Af = 0 from the equations x'T*F*x = 0.
   MatX9 A(x1.cols(), 9);
   EncodeEpipolarEquation(x1, x2, &A);
- 
+
   // Find the two F matrices in the nullspace of A.
   Vec9 f1, f2;
   Nullspace2(&A, &f1, &f2);
   Mat3 F1 = Map<RMat3>(f1.data());
   Mat3 F2 = Map<RMat3>(f2.data());
- 
+
   // Then, use the condition det(F) = 0 to determine F. In other words, solve
   // det(F1 + a*F2) = 0 for a.
   double a = F1(0, 0), j = F2(0, 0),
@@ -59,7 +59,7 @@ void SevenPointSolver::Solve(const Mat &x1, const Mat &x2, vector<Mat3> *F) {
          g = F1(2, 0), p = F2(2, 0),
          h = F1(2, 1), q = F2(2, 1),
          i = F1(2, 2), r = F2(2, 2);
- 
+
   // Run fundamental_7point_coeffs.py to get the below coefficients.
   // The coefficients are in ascending powers of alpha, i.e. P[N]*x^N.
   double P[4] = {
@@ -70,11 +70,11 @@ void SevenPointSolver::Solve(const Mat &x1, const Mat &x2, vector<Mat3> *F) {
     a*o*q - b*m*r - c*n*p - d*k*r - e*l*p - f*j*q - g*l*n - h*j*o - i*k*m,
     j*n*r + k*o*p + l*m*q - j*o*q - k*m*r - l*n*p,
   };
- 
+
   // Solve for the roots of P[3]*x^3 + P[2]*x^2 + P[1]*x + P[0] = 0.
   double roots[3];
   int num_roots = SolveCubicPolynomial(P, roots);
- 
+
   // Build the fundamental matrix for each solution.
   for (int kk = 0; kk < num_roots; ++kk)  {
     F->push_back(F1 + roots[kk] * F2);
@@ -87,7 +87,7 @@ void EightPointSolver::Solve(const Mat &x1, const Mat &x2, vector<Mat3> *Fs) {
   assert(8 <= x1.cols());
   assert(x1.rows() == x2.rows());
   assert(x1.cols() == x2.cols());
- 
+
   MatX9 A(x1.cols(), 9);
   EncodeEpipolarEquation(x1, x2, &A);
 

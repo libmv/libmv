@@ -1,4 +1,4 @@
-// Copyright (c) 2007, 2008 libmv authors.
+// Copyright (c) 2010 libmv authors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
@@ -18,12 +18,37 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
-#include <iostream>
+#ifndef LIBMV_MULTIVIEW_CONDITIONNING_H_
+#define LIBMV_MULTIVIEW_CONDITIONNING_H_
 
-#include "libmv/image/image.h"
+#include "libmv/numeric/numeric.h"
 
 namespace libmv {
 
-// TODO(keir): put something useful here!
+// Point conditioning :
+void PreconditionerFromPoints(const Mat &points, Mat3 *T);
 
-}  // namespace libmv
+void ApplyTransformationToPoints(const Mat &points,
+                                 const Mat3 &T,
+                                 Mat *transformed_points);
+
+void NormalizePoints(const Mat &points,
+                     Mat *normalized_points,
+                     Mat3 *T);
+
+/// Use inverse for unnormalize
+struct UnnormalizerI {
+  // Denormalize the results. See HZ page 109.
+  static void Unnormalize(const Mat3 &T1, const Mat3 &T2, Mat3 *H);
+};
+
+/// Use transpose for unnormalize
+struct UnnormalizerT {
+  // Denormalize the results. See HZ page 109.
+  static void Unnormalize(const Mat3 &T1, const Mat3 &T2, Mat3 *H);
+};
+
+} //namespace libmv
+
+
+#endif // LIBMV_MULTIVIEW_CONDITIONNING_H_

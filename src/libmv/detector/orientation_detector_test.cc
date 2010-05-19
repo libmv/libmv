@@ -115,7 +115,6 @@ TEST(GradientOrientationDetector, GradientRotEstimatorUpperBlank)  {
 
   gradientBoxesRotationEstimation(test, vec_Feature);
   // Angle must be PI/2 or PI+PI/2
-  std::cout << std::endl << "Orientation : " << ptFeat.orientation << std::endl;
   EXPECT_NEAR( ptFeat.orientation, M_PI+M_PI/2, 1e-5);
 }
 
@@ -136,7 +135,6 @@ TEST(GradientOrientationDetector, GradientRotEstimatorLeftBlank)  {
 
   gradientBoxesRotationEstimation(test, vec_Feature);
   // Angle must be PI or -PI
-  std::cout << std::endl << "Orientation : " << ptFeat.orientation << std::endl;
   EXPECT_NEAR( ptFeat.orientation, M_PI, 1e-5);
 }
 
@@ -157,7 +155,6 @@ TEST(GradientOrientationDetector, GradientRotEstimatorDegree45)  {
 
   gradientBoxesRotationEstimation(test, vec_Feature);
   // Angle must be -PI/4 or 7PI/4
-  std::cout << std::endl << "Orientation : " << ptFeat.orientation << std::endl;
   EXPECT_NEAR( ptFeat.orientation, 7*M_PI/4.0, 1e-1);
 }
 

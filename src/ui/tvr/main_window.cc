@@ -365,7 +365,7 @@ void TvrMainWindow::ComputeCandidateMatches() {
                         &document_.matches);
 
   clock_t stopTime = clock();
-  double millisecond =  ((double)stopTime - startTime) / CLOCKS_PER_SEC;;
+  double millisecond =  ((double)stopTime - startTime) / CLOCKS_PER_SEC;
   UpdateViewers();
 
   // Display information to the user.

@@ -27,6 +27,7 @@
 
 #include "libmv/base/vector.h"
 #include "libmv/logging/logging.h"
+#include "libmv/multiview/conditioning.h"
 #include "libmv/multiview/fundamental.h"
 #include "libmv/multiview/sixpointnview.h"
 #include "libmv/numeric/numeric.h"

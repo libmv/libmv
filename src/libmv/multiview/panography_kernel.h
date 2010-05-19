@@ -22,6 +22,7 @@
 #define LIBMV_MULTIVIEW_PANOGRAPHY_KERNEL_H
 
 #include "libmv/base/vector.h"
+#include "libmv/multiview/conditioning.h"
 #include "libmv/multiview/projection.h"
 #include "libmv/multiview/two_view_kernel.h"
 #include "libmv/multiview/homography_kernel.h"
@@ -41,8 +42,7 @@ typedef two_view::kernel::Kernel<
   UnnormalizedKernel;
 
 typedef two_view::kernel::Kernel<
-        two_view::kernel::NormalizedSolver<TwoPointSolver,
-        homography::kernel::Unnormalizer>,
+        two_view::kernel::NormalizedSolver<TwoPointSolver, UnnormalizerI>,
         homography::kernel::AsymmetricError,
         Mat3>
   Kernel;

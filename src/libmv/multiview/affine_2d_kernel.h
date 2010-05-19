@@ -41,7 +41,7 @@ typedef two_view::kernel::Kernel<
 
 typedef two_view::kernel::Kernel<
         two_view::kernel::NormalizedSolver<affine2D::kernel::TwoPointSolver,
-        homography::kernel::Unnormalizer>,
+        UnnormalizerI>,
         homography::kernel::AsymmetricError,
         Mat3>
   Kernel;

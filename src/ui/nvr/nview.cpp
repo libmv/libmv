@@ -94,9 +94,9 @@ void MatchView::paintEvent(QPaintEvent*) {
 
 void nImage::computeFeatures() {
   Array3Du image(height(), width());
-  for (int y=0; y<height(); y++) {
+  for (int y=0; y<height(); ++y) {
     QRgb* rgb = (QRgb*)scanLine(y);
-    for (int x=0; x<width(); x++)
+    for (int x=0; x<width(); ++x)
       image(y, x) = qGray(rgb[x]);
   }
   scoped_ptr<detector::Detector> detector(
@@ -109,7 +109,8 @@ void nImage::computeFeatures() {
 
   vector<descriptor::Descriptor *> descriptors;
   scoped_ptr<descriptor::Describer> describer(
-    descriptor::CreateSimpliestDescriber());
+    //descriptor::CreateSimpliestDescriber());
+    descriptor::CreateDipoleDescriber());
   describer->Describe(features, im, NULL, &descriptors);
 
   // Copy data.
@@ -137,41 +138,63 @@ void nImage::update() {
 }
 
 nMatch::nMatch(nImage *A, nImage *B) : A(A), B(B) {
-  FindCandidateMatches( A->featureSet, B->featureSet, &mvMatch );
-  /* //WIP geometric filter
-  //----------------------------------------------
-  //-- Epipolar filter
-  libmv::Matches robustMatches;
-  // Construct matrices containing the matches.
-  vector<Mat> x;
-  vector<int> tracks;
-  vector<int> imageIndices;
-  imageIndices.push_back(0);
-  imageIndices.push_back(1);
 
-  PointMatchMatrices(this->mvMatch, imageIndices, &tracks, &x);
+  qDebug() << "nMatch::nMatch => FindCandidateMatches" << endl;
 
-  // Compute Fundamental matrix and inliers.
-  vector<int> inliers;
-  Mat3 F;
-  FundamentalFromCorrespondences7PointRobust(x[0], x[1], 1, &F, &inliers);
-  // Build new correspondence graph containing only inliers.
-  for (int j = 0; j < inliers.size(); ++j) {
-      int k = inliers[j];
-      for (int i = 0; i < 2; ++i) {
-          robustMatches.Insert(i, tracks[k], this->mvMatch.Get(i, tracks[k]));
+  FindCandidateMatches( A->featureSet, B->featureSet, &mvMatch);
+
+  qDebug() << "nMatch::nMatch => filter" << endl;
+
+  bool bFilter_Epipolar = false, bFilter_Homography = true;
+  if (bFilter_Epipolar || bFilter_Homography) {
+    libmv::Matches robustMatches;
+    // Construct matrices containing the matches.
+    vector<Mat> x;
+    vector<int> tracks;
+    vector<int> imageIndices;
+    imageIndices.push_back(0);
+    imageIndices.push_back(1);
+
+    PointMatchMatrices(this->mvMatch, imageIndices, &tracks, &x);
+
+    vector<int> inliers;
+    int thresholdCriteria = 10;
+    if (bFilter_Epipolar) {
+      Mat3 F;
+      FundamentalFromCorrespondences7PointRobust(x[0], x[1], 1, &F, &inliers);
+      thresholdCriteria = 7 + 7/2;
+    }
+    else  {
+      if (bFilter_Homography) {
+        Mat3 H;
+        HomographyFromCorrespondences4PointRobust(x[0], x[1], 1, &H, &inliers);
+        thresholdCriteria = 4 + 4/2;
       }
-  }
+    }
 
-  this->mvMatch = robustMatches;
-  //------------------------------------------
-  */
-  A->matches[B]=this;
-  B->matches[A]=this;
+    if (inliers.size() > thresholdCriteria) {
+      // Build new correspondence graph containing only inliers.
+      for (int j = 0; j < inliers.size(); ++j) {
+          int k = inliers[j];
+          for (int i = 0; i < 2; ++i) {
+              robustMatches.Insert(i, tracks[k], this->mvMatch.Get(i, tracks[k]));
+          }
+      }
+      this->mvMatch = robustMatches;
+
+      A->matches[B] = this;
+      B->matches[A] = this;
+    }
+    else  {
+      qDebug() << "No sufficient match to be robust" << endl;
+      this->mvMatch = libmv::Matches();
+    }
+  }
+  qDebug() << "nMatch::nMatch => filter END" << endl;
 }
 
 Matches::Points nMatch::features( nImage* image ) {
-  return mvMatch.InImage<PointFeature>(image==A?0:1);
+  return mvMatch.InImage<PointFeature>(image == A ? 0 : 1);
 }
 
 void MainWindow::computeMatches() {

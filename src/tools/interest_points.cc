@@ -41,7 +41,7 @@ void usage() {
     << " ImageNameOut.pgm : the surf keypoints will be displayed on it. " << std::endl
     << " INFO : work with pgm image only." << std::endl;
 }
-void DrawSurfFeatures( Array3Df & im, const libmv::vector<libmv::SurfFeature> & feat);
+void DrawSurfFeatures( FloatImage & im, const libmv::vector<libmv::SurfFeature> & feat);
 
 int main(int argc, char **argv) {
   libmv::Init("Extract surf feature from an image", &argc, &argv);
@@ -81,7 +81,7 @@ int main(int argc, char **argv) {
   return 0;
 }
 
-void DrawSurfFeatures( Array3Df & im, const libmv::vector<libmv::SurfFeature> & feat)
+void DrawSurfFeatures( FloatImage & im, const libmv::vector<libmv::SurfFeature> & feat)
 {
   std::cout << feat.size() << " Detected points " <<std::endl;
   for (int i = 0; i < feat.size(); ++i)

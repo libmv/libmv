@@ -57,11 +57,11 @@ void ComputeFundamental(Matches &all_matches,
           all_matches.Get(images[i], tracks[k]));
     }
   }
-  
+
   // Compute Fundamental matrix using all inliers.
   TwoViewPointMatchMatrices(*consistent_matches, 0, 1, &x);
   vector<Mat3> Fs;
-  fundamental::kernel::NormalizedEightPointKernel::Solve(x[0], x[1], &Fs);
+  fundamental::kernel::NormalizedSevenPointKernel::Solve(x[0], x[1], &Fs);
   *F = Fs[0];
   NormalizeFundamental(*F, F);
   LOG(INFO) << "F:\n" << *F;

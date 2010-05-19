@@ -24,6 +24,7 @@
 #define LIBMV_MULTIVIEW_FUNDAMENTAL_KERNEL_H_
 
 #include "libmv/base/vector.h"
+#include "libmv/multiview/conditioning.h"
 #include "libmv/multiview/two_view_kernel.h"
 #include "libmv/numeric/numeric.h"
 #include "libmv/logging/logging.h"
@@ -52,7 +53,7 @@ struct SymmetricEpipolarDistanceError {
     // See page 288 equation (11.10) of HZ.
     Vec3 F_x = F * x;
     Vec3 Ft_y = F.transpose() * y;
-    return Square(y.dot(F_x)) * ( 1  / F_x.start<2>().squaredNorm()
+    return Square(y.dot(F_x)) * ( 1 / F_x.start<2>().squaredNorm()
                                 + 1 / Ft_y.start<2>().squaredNorm())
       / 4.0;  // The divide by 4 is to make this match the sampson distance.
   }
@@ -78,12 +79,6 @@ struct EightPointSolver {
   static void Solve(const Mat &x1, const Mat &x2, vector<Mat3> *Fs);
 };
 
-struct Unnormalizer {
-  static void Unnormalize(const Mat3 &T1, const Mat3 &T2, Mat3 *H) {
-    *H = T2.transpose() * (*H) * T1;
-  }
-};
-
 typedef two_view::kernel::Kernel<SevenPointSolver, SampsonError, Mat3>
   SevenPointKernel;
 
@@ -91,13 +86,13 @@ typedef two_view::kernel::Kernel<EightPointSolver, SampsonError, Mat3>
   EightPointKernel;
 
 typedef two_view::kernel::Kernel<
-    two_view::kernel::NormalizedSolver<SevenPointSolver, Unnormalizer>,
+    two_view::kernel::NormalizedSolver<SevenPointSolver, UnnormalizerT>,
     SampsonError,
     Mat3>
   NormalizedSevenPointKernel;
 
 typedef two_view::kernel::Kernel<
-    two_view::kernel::NormalizedSolver<EightPointSolver, Unnormalizer>,
+    two_view::kernel::NormalizedSolver<EightPointSolver, UnnormalizerT>,
     SampsonError,
     Mat3>
   NormalizedEightPointKernel;

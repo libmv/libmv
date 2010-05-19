@@ -18,13 +18,10 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
-#include <cstdio>
-#include <vector>
-
 #include "libmv/multiview/fundamental_kernel.h"
 #include "libmv/multiview/robust_estimation.h"
+#include "libmv/multiview/robust_fundamental.h"
 #include "libmv/numeric/numeric.h"
-#include "libmv/logging/logging.h"
 
 namespace libmv {
 

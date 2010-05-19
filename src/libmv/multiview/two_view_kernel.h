@@ -22,47 +22,13 @@
 #define LIBMV_MULTIVIEW_TWO_VIEW_KERNEL_H_
 
 #include "libmv/base/vector.h"
-#include "libmv/numeric/numeric.h"
 #include "libmv/logging/logging.h"
+#include "libmv/multiview/conditioning.h"
+#include "libmv/numeric/numeric.h"
 
 namespace libmv {
 namespace two_view {
 namespace kernel {
-
-// HZ 4.4.4 pag.109
-inline void PreconditionerFromPoints(const Mat &points, Mat3 *T) {
-  Vec mean, variance;
-  MeanAndVarianceAlongRows(points, &mean, &variance);
-
-  double xfactor = sqrt(2 / variance(0));
-  double yfactor = sqrt(2 / variance(1));
-
-  *T << xfactor, 0,       -xfactor * mean(0),
-        0,       yfactor, -yfactor * mean(1),
-        0,       0,        1;
-}
-
-// TODO(pau) this can be done by matrix multiplication.
-inline void ApplyTransformationToPoints(const Mat &points,
-                                        const Mat3 &T,
-                                        Mat *transformed_points) {
-  int n = points.cols();
-  transformed_points->resize(2,n);
-  for (int i = 0; i < n; ++i) {
-    Vec3 in, out;
-    in << points(0, i), points(1, i), 1;
-    out = T * in;
-    (*transformed_points)(0, i) = out(0);
-    (*transformed_points)(1, i) = out(1);
-  }
-}
-
-inline void NormalizePoints(const Mat &points,
-                            Mat *normalized_points,
-                            Mat3 *T) {
-  PreconditionerFromPoints(points, T);
-  ApplyTransformationToPoints(points, *T, normalized_points);
-}
 
 template<typename Solver, typename Unnormalizer>
 struct NormalizedSolver {
@@ -72,22 +38,22 @@ struct NormalizedSolver {
     assert(MINIMUM_SAMPLES <= x1.cols());
     assert(x1.rows() == x2.rows());
     assert(x1.cols() == x2.cols());
-    
+
     // Normalize the data.
     Mat3 T1, T2;
     Mat x1_normalized, x2_normalized;
     NormalizePoints(x1, &x1_normalized, &T1);
     NormalizePoints(x2, &x2_normalized, &T2);
-    
+
     Solver::Solve(x1_normalized, x2_normalized, models);
-    
+
     for (int i = 0; i < models->size(); ++i) {
       Unnormalizer::Unnormalize(T1, T2, &(*models)[i]);
     }
   }
 };
 
-// This is one example (targeted at solvers that operate on correspendences
+// This is one example (targeted at solvers that operate on correspondences
 // between two views) that shows the "kernel" part of a robust fitting
 // problem:
 //

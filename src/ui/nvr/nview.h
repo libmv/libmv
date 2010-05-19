@@ -23,6 +23,7 @@
 #include "libmv/detector/fast_detector.h"
 #include "libmv/detector/star_detector.h"
 #include "libmv/descriptor/descriptor.h"
+#include "libmv/descriptor/dipole_descriptor.h"
 #include "libmv/descriptor/daisy_descriptor.h"
 #include "libmv/descriptor/simpliest_descriptor.h"
 #include "libmv/image/array_nd.h"
@@ -33,6 +34,8 @@
 #include "libmv/multiview/focal_from_fundamental.h"
 #include "libmv/multiview/nviewtriangulation.h"
 #include "libmv/multiview/bundle.h"
+#include "libmv/multiview/robust_fundamental.h"
+#include "libmv/multiview/robust_homography.h"
 
 using namespace libmv;
 
