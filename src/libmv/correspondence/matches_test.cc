@@ -63,6 +63,71 @@ TEST(Matches, Views) {
   EXPECT_EQ(2,  r.track());
 }
 
+TEST(Matches, InsertMatches) {
+  Matches matches_insert;
+  matches_insert.Insert(1, 1, new PointFeature( 1,  10));
+  matches_insert.Insert(1, 2, new PointFeature( 2,  20));
+  matches_insert.Insert(1, 3, new PointFeature( 3,  30));
+                                              
+  matches_insert.Insert(4, 1, new PointFeature( 4,  40));
+  matches_insert.Insert(4, 2, new PointFeature( 5,  50));
+  matches_insert.Insert(4, 3, new PointFeature( 6,  60));
+  matches_insert.Insert(4, 6, new PointFeature( 7,  70));
+                                              
+  matches_insert.Insert(7, 2, new PointFeature( 8,  80));
+  matches_insert.Insert(7, 3, new PointFeature( 9,  90));
+  matches_insert.Insert(7, 6, new PointFeature(10, 100));
+                                              
+  matches_insert.Insert(5, 1, new PointFeature(11, 110));
+  matches_insert.Insert(5, 3, new PointFeature(12, 120));
+  matches_insert.Insert(5, 5, new PointFeature(13, 130));
+  matches_insert.Insert(5, 6, new PointFeature(14, 140));
+    
+  ASSERT_EQ(4, matches_insert.NumImages());
+  ASSERT_EQ(5, matches_insert.NumTracks());
+  
+  Matches new_matches;
+  new_matches.Insert(1, 8, new PointFeature( 1,  10));
+  new_matches.Insert(1, 4, new PointFeature( 2,  20));
+  new_matches.Insert(2, 2, new PointFeature( 3,  30));
+ 
+  matches_insert.Insert(new_matches);
+  
+  ASSERT_EQ(6, matches_insert.NumImages());
+  ASSERT_EQ(8, matches_insert.NumTracks());
+}
+
+TEST(Matches, MergeMatches) {
+  Matches matches_merge;
+  matches_merge.Insert(1, 1, new PointFeature( 1,  10));
+  matches_merge.Insert(1, 2, new PointFeature( 2,  20));
+  matches_merge.Insert(1, 3, new PointFeature( 3,  30));
+                                              
+  matches_merge.Insert(4, 1, new PointFeature( 4,  40));
+  matches_merge.Insert(4, 2, new PointFeature( 5,  50));
+  matches_merge.Insert(4, 3, new PointFeature( 6,  60));
+  matches_merge.Insert(4, 6, new PointFeature( 7,  70));
+                                              
+  matches_merge.Insert(7, 2, new PointFeature( 8,  80));
+  matches_merge.Insert(7, 3, new PointFeature( 9,  90));
+  matches_merge.Insert(7, 6, new PointFeature(10, 100));
+                                              
+  matches_merge.Insert(5, 1, new PointFeature(11, 110));
+  matches_merge.Insert(5, 3, new PointFeature(12, 120));
+  matches_merge.Insert(5, 5, new PointFeature(13, 130));
+  matches_merge.Insert(5, 6, new PointFeature(14, 140));
+    
+  Matches new_matches;
+  new_matches.Insert(1, 8, new PointFeature( 1,  10));
+  new_matches.Insert(1, 4, new PointFeature( 2,  20));
+  new_matches.Insert(2, 2, new PointFeature( 3,  30));
+ 
+  matches_merge.Merge(new_matches);
+    
+  ASSERT_EQ(5, matches_merge.NumImages());
+  ASSERT_EQ(7, matches_merge.NumTracks());
+}
+
 TEST(Intersect, SimpleCase) {
   std::vector< std::vector<int> > sorted_items;
   sorted_items.resize(2);
@@ -127,12 +192,12 @@ TEST(TracksInAllImages, SimpleCase) {
   matches.Insert(7, 5, new PointFeature(1, 10));
   matches.Insert(7, 6, new PointFeature(1, 10));
 
-  vector<Matches::Image> images;
+  vector<Matches::ImageID> images;
   images.push_back(1);
   images.push_back(4);
   images.push_back(7);
 
-  vector<Matches::Track> tracks;
+  vector<Matches::TrackID> tracks;
   TracksInAllImages(matches, images, &tracks);
 
   ASSERT_EQ(2, tracks.size());
@@ -169,8 +234,8 @@ TEST(PointMatchMatrices, SimpleCase) {
   xse[2].resize(2, 2); xse[2] <<  8,  9,
                                  80, 90;
 
-  vector<Matches::Image> images;
-  vector<Matches::Track> tracks;
+  vector<Matches::ImageID> images;
+  vector<Matches::TrackID> tracks;
   images.push_back(1);
   images.push_back(4);
   images.push_back(7);

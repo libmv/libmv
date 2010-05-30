@@ -80,6 +80,12 @@ void FindCandidateMatches_Ratio(const FeatureSet &left,
                           eLibmvMatchMethod eMatchMethod = eMATCH_KDTREE_FLANN,
                           float fRatio = 0.8f);
 // TODO(pmoulon) Add Lowe's ratio symmetric match method.
+// Compute correspondences that match between 2 sets of features with a ratio.
 
+void FindCorrespondences(const FeatureSet &left,
+                         const FeatureSet &right,
+                         std::map<size_t, size_t> *correspondences,
+                         eLibmvMatchMethod eMatchMethod = eMATCH_KDTREE_FLANN,
+                         float fRatio = 0.8f);
 
 #endif //LIBMV_CORRESPONDENCE_FEATURE_MATCHING_H_

@@ -38,8 +38,8 @@ class LineFeature;
 
 class Matches {
  public:
-  typedef int Image;
-  typedef int Track;
+  typedef int ImageID;
+  typedef int TrackID;
   typedef BipartiteGraph<int, const Feature *> Graph;
 
   ~Matches();
@@ -49,8 +49,8 @@ class Matches {
   template<typename FeatureT>
   class Features {
    public:
-    Image           image()    const { return r_.left();  }
-    Track           track()    const { return r_.right(); }
+    ImageID           image()    const { return r_.left();  }
+    TrackID           track()    const { return r_.right(); }
     const FeatureT *feature()  const {
       return static_cast<const FeatureT *>(r_.edge());
     }
@@ -74,34 +74,137 @@ class Matches {
   Features<T> AllReversed() const { return Features<T>(graph_.AllReversed()); }
 
   template<typename T>
-  Features<T> InImage(Image image) const {
+  Features<T> InImage(ImageID image) const {
     return Features<T>(graph_.ToLeft(image));
   }
 
   template<typename T>
-  Features<T> InTrack(Track track) const {
+  Features<T> InTrack(TrackID track) const {
     return Features<T>(graph_.ToLeft(track));
   }
 
   // Does not take ownership of feature.
-  void Insert(Image image, Track track, const Feature *feature) {
+  void Insert(ImageID image, TrackID track, const Feature *feature) {
     graph_.Insert(image, track, feature);
     images_.insert(image);
     tracks_.insert(track);
   }
 
-  const Feature *Get(Image image, Track track) const {
+  void Remove(ImageID image, TrackID track, const Feature *feature) {
+    graph_.Remove(image, track, feature);
+  }
+  // Insert all elements of matches (images, tracks, feature) as new data
+  void Insert(Matches &matches) {
+    size_t max_images = GetMaxImageID();
+    size_t max_tracks = GetMaxTrackID();
+    std::map<ImageID, ImageID> new_image_ids;
+    std::map<TrackID, TrackID> new_track_ids;
+    std::set<ImageID>::iterator iter_image;
+    std::set<TrackID>::iterator iter_track;
+    
+    ImageID image_id;
+    iter_image = matches.images_.begin();
+    for (; iter_image != matches.images_.end(); ++iter_image) {
+      image_id = ++max_images;
+      new_image_ids[*iter_image] = image_id;
+      images_.insert(image_id);
+    }
+    TrackID track_id;
+    iter_track = matches.tracks_.begin();
+    for (; iter_track != matches.tracks_.end(); ++iter_track) {
+      track_id = ++max_tracks;
+      new_track_ids[*iter_track] = track_id;
+      tracks_.insert(track_id);
+    }
+    iter_image = matches.images_.begin();
+    for (; iter_image != matches.images_.end(); ++iter_image) {
+      iter_track = matches.tracks_.begin();
+      for (; iter_track != matches.tracks_.end(); ++iter_track) {
+        const Feature * feature = matches.Get(*iter_image, *iter_track);
+        image_id = new_image_ids[*iter_image];
+        track_id = new_track_ids[*iter_track];
+        graph_.Insert(image_id, track_id, feature);
+      }
+    }
+  }
+  // Merge common elements add new data (image, track, feature).
+  void Merge(Matches &matches) {
+    size_t max_images = GetMaxImageID();
+    size_t max_tracks = GetMaxTrackID();
+    std::map<ImageID, ImageID> new_image_ids;
+    std::map<TrackID, TrackID> new_track_ids;
+    std::set<ImageID>::iterator iter_image;
+    std::set<TrackID>::iterator iter_track;
+    
+    //Find not common elements and add them into new_matches
+    ImageID image_id;
+    TrackID track_id;
+    std::set<ImageID>::iterator found_image;
+    std::set<TrackID>::iterator found_track;
+    iter_image = matches.images_.begin();
+    for (; iter_image != matches.images_.end(); ++iter_image) {
+      found_image = images_.find(*iter_image);
+      if (found_image == images_.end()) {
+        image_id = ++max_images;
+        new_image_ids[*iter_image] = image_id;
+        images_.insert(image_id);
+      } else {
+        image_id = *iter_image;
+      }
+      iter_track = matches.tracks_.begin();
+      for (; iter_track != matches.tracks_.end(); ++iter_track) {
+        found_track = tracks_.find(*iter_track);
+        if (found_track == tracks_.end() 
+          && new_image_ids.find(*iter_track) == new_image_ids.end()) {
+          track_id = ++max_tracks;
+          new_image_ids[*iter_track] = track_id;
+          tracks_.insert(track_id);
+        } else {
+          track_id = *iter_track; 
+        }        
+        const Feature * feature = matches.Get(*iter_image, *iter_track);
+        graph_.Insert(image_id, track_id, feature);
+      }
+    }
+  }
+  
+  const Feature *Get(ImageID image, TrackID track) const {
     const Feature *const *f = graph_.Edge(image, track);
     return f ? *f : NULL;
   }
-
-  int NumTracks() const { return tracks_.size(); }
-  int NumImages() const { return images_.size(); }
+  
+  ImageID GetMaxImageID() const {
+    ImageID max_images = 0;
+    std::set<ImageID>::iterator iter_image = images_.begin();
+    for (; iter_image != images_.end(); ++iter_image) {
+      max_images = std::max(max_images, (ImageID)*iter_image);
+    }
+    return max_images;
+  }
+  
+  TrackID GetMaxTrackID() const {
+    TrackID max_tracks = 0;
+    std::set<TrackID>::iterator iter_track = tracks_.begin();
+    for (; iter_track != tracks_.end(); ++iter_track) {
+      max_tracks = std::max(max_tracks, (TrackID)*iter_track);
+    }
+    return max_tracks;
+  }
+  
+  const std::set<ImageID> &get_images() const {
+    return images_;
+  }
+  const std::set<TrackID> &get_tracks() const {
+    return tracks_;
+  }
+    
+  size_t NumTracks() const { return tracks_.size(); }
+  size_t NumImages() const { return images_.size(); }
 
  private:
   Graph graph_;
-  std::set<Image> images_;
-  std::set<Track> tracks_;
+  std::set<ImageID> images_;
+  std::set<TrackID> tracks_;
 };
 
 
@@ -136,12 +239,12 @@ void Intersect(std::vector< std::vector<T> > *sorted_items) {
  *                match the ordering of images.
  */
 inline void TracksInAllImages(const Matches &matches,
-                              const vector<Matches::Image> &images,
-                              vector<Matches::Track> *tracks) {
+                              const vector<Matches::ImageID> &images,
+                              vector<Matches::TrackID> *tracks) {
   if (!images.size()) {
     return;
   }
-  std::vector<std::vector<Matches::Track> > all_tracks;
+  std::vector<std::vector<Matches::TrackID> > all_tracks;
   all_tracks.resize(images.size());
   for (int i = 0; i < images.size(); ++i) {
     for (Matches::Points r = matches.InImage<PointFeature>(images[i]); r; ++r) {
@@ -167,8 +270,8 @@ inline void TracksInAllImages(const Matches &matches,
  *                match the ordering of images.
  */
 inline void PointMatchMatrices(const Matches &matches,
-                               const vector<Matches::Image> &images,
-                               vector<Matches::Track> *tracks,
+                               const vector<Matches::ImageID> &images,
+                               vector<Matches::TrackID> *tracks,
                                vector<Mat> *xs) {
   TracksInAllImages(matches, images, tracks);
 
@@ -185,12 +288,13 @@ inline void PointMatchMatrices(const Matches &matches,
 }
 
 inline void TwoViewPointMatchMatrices(const Matches &matches,
-                                      int image1, int image2,
+                                      Matches::ImageID image_id1, 
+                                      Matches::ImageID image_id2,
                                       vector<Mat> *xs) {
-  vector<int> tracks;
-  vector<int> images;
-  images.push_back(image1);
-  images.push_back(image2);
+  vector<Matches::TrackID> tracks;
+  vector<Matches::ImageID> images;
+  images.push_back(image_id1);
+  images.push_back(image_id2);
   PointMatchMatrices(matches, images, &tracks, xs);
 }
 

@@ -1,4 +1,4 @@
-// Copyright (c) 2007, 2008 libmv authors.
+// Copyright (c) 2010 libmv authors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
@@ -23,10 +23,16 @@
 
 #include <map>
 
+#include "libmv/base/scoped_ptr.h"
+#include "libmv/base/vector.h"
+#include "libmv/correspondence/ArrayMatcher.h"
 #include "libmv/correspondence/matches.h"
+#include "libmv/descriptor/descriptor.h"
+#include "libmv/detector/detector.h"
 
 namespace libmv {
-
+namespace tracker {
+  
 // Abstract base classs for tracking algorithms.
 // WARNING: This is at best, barely started.
 
@@ -36,40 +42,42 @@ namespace libmv {
 // tracker. Of note: The previous tracker has to be a point tracker, but that's
 // all that's required. Other trackers (UKLT) will require a specific type of
 // tracker as the previous position.
-//
-// TODO(keir): This class is cleary not thought out yet!
-//
-// Note: A tracker has no notion of correspondence; it is up to the calling
-// code to handle such details.
 
-// Tracks points between images.
 class Tracker {
  public:
-  // Correspondences is the only connection to the outside world?
-  Tracker(Correspondences *correspondences);
-  void TrackBetween(Image *image1, Image *image2);
+  Tracker(detector::Detector *detector, 
+          descriptor::Describer *describer,
+          correspondence::ArrayMatcher<float> *matcher) : 
+           detector_(detector),
+           describer_(describer),
+           matcher_(matcher) {};
+            
+  virtual ~Tracker() {}
+   
+  // Tracks new features between two images.
+  template <typename TImage>
+  bool Track(const TImage &image1, 
+             const TImage &image2, 
+             Matches *new_matches,
+             bool keep_single_feature = true);
+                     
+  // Tracks all features in an image.
+  template <typename TImage>
+  bool Track(const TImage &image, 
+             const Matches &known_matches, 
+             Matches *new_matches,
+             Matches::ImageID *image_id,
+             bool keep_single_feature = true); 
+
+ protected:
+   scoped_ptr<detector::Detector> detector_;
+   scoped_ptr<descriptor::Describer> describer_;
+   scoped_ptr<correspondence::ArrayMatcher<float> > matcher_;
 };
 
-// TODO (?) This class is cleary not thought out yet!
-// feature 
-//   track to (tracker *)
-//     (now have concrete class; either pontfeat or uklt feat or line feat)
-//     tracker->track(*this)
-// 
-//     need to pass in a lazily loaded image sequence.
-
-
-
-// Anything needed to find a tracker in an image, given other stuff (other
-// trackers, image derivatives, image cutouts, motion models, kdtrees of image
-// feature vectors, etc).
-class TrackManager {
-  void SetDetector(Detector *detector);
-  void SetTracker(Tracker *Tracker);
-  void AddImage();
-  void TrackBetweenImages(image1, image2);
-}
-
+} // using namespace tracker
 } // using namespace libmv
+
+#include "tracker-inl.h"
 
 #endif  // LIBMV_CORRESPONDENCE_TRACKER_H_

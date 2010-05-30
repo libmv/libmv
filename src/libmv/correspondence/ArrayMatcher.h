@@ -26,6 +26,7 @@
 namespace libmv {
 namespace correspondence  {
 
+// TODO(julien) ArrayMatcher should inherit the Matcher class. 
 template < typename Scalar = float >
 class ArrayMatcher
 {

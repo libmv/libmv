@@ -213,3 +213,81 @@ void FindCandidateMatches_Ratio(const FeatureSet &left,
     LOG(INFO) << "[FindCandidateMatches_Ratio] Unknow input match method.";
   }
 }
+
+
+// Compute correspondences that match between 2 sets of features with a ratio.
+void FindCorrespondences(const FeatureSet &left,
+                         const FeatureSet &right,
+                         std::map<size_t, size_t> *correspondences,
+                         eLibmvMatchMethod eMatchMethod,
+                         float fRatio) {
+  if (left.features.size() == 0 ||
+      right.features.size() == 0 )  {
+    return;
+  }
+  int descriptorSize = left.features[0].descriptor.coords.size();
+
+  correspondence::ArrayMatcher<float> * pArrayMatcherA = NULL;
+  switch (eMatchMethod)
+  {
+  case eMATCH_KDTREE:
+    {
+      // Build the arrays matcher in order to compute matches pair.
+      pArrayMatcherA = new correspondence::ArrayMatcher_Kdtree<float>;
+    }
+    break;
+    case eMATCH_KDTREE_FLANN:
+    {
+      // Build the arrays matcher in order to compute matches pair.
+      pArrayMatcherA = new correspondence::ArrayMatcher_Kdtree_Flann<float>;
+    }
+    break;
+    case eMATCH_LINEAR:
+    {
+      // Build the arrays matcher in order to compute matches pair.
+      LOG(INFO) << "Not yet implemented.";
+      return;
+    }
+    break;
+  };
+
+  const int NN = 2;
+  if (pArrayMatcherA != NULL) {
+
+    // Paste the necessary data in contiguous arrays.
+    float * arrayA = FeatureSet::FeatureSetDescriptorsToContiguousArray(left);
+    float * arrayB = FeatureSet::FeatureSetDescriptorsToContiguousArray(right);
+
+    libmv::vector<int> indices;
+    libmv::vector<float> distances;
+
+    bool breturn = false;
+    if (pArrayMatcherA->build(arrayB,right.features.size(),descriptorSize))  {
+      breturn =
+        pArrayMatcherA->searchNeighbours(arrayA,left.features.size(),
+          &indices, &distances, NN);
+    }
+    delete pArrayMatcherA;
+    delete [] arrayA;
+    delete [] arrayB;
+
+    // From putative matches get matches that fit the "Ratio" heuristic.
+    if (breturn)  {
+      for (size_t i = 0; i < left.features.size(); ++i) {
+        // Test distance ratio :
+        float distance0 = distances[i*NN];
+        float distance1 = distances[i*NN+NN-1];
+
+        if (distance0 < fRatio * distance1) {
+          (*correspondences)[i] = indices[i*NN];
+        }
+      }
+    }
+    else  {
+      LOG(INFO) << "[FindCandidateMatches_Ratio] Cannot compute matches.";
+    }
+  }
+  else  {
+    LOG(INFO) << "[FindCandidateMatches_Ratio] Unknow input match method.";
+  }
+}
