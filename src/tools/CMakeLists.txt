@@ -67,3 +67,18 @@ TARGET_LINK_LIBRARIES(extract_exif_data
                       OpenExif
                       tools
                       )
+
+ADD_EXECUTABLE(tracker tracker.cc)
+TARGET_LINK_LIBRARIES(tracker
+                      image
+                      correspondence
+                      numeric
+                      multiview
+                      flann
+                      glog
+                      gflags
+                      detector
+                      descriptor
+                      fast
+                      daisy
+                      )
