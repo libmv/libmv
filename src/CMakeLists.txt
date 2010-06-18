@@ -84,6 +84,12 @@ IF (APPLE)
   )
 ENDIF (APPLE)
 
+IF (UNIX)
+  INCLUDE_DIRECTORIES(
+    third_party/png
+    third_party/zlib)
+ENDIF (UNIX)
+
 IF (APPLE)
   # Tell gtest not to use mac frameworks.
   ADD_DEFINITIONS('-DGTEST_NOT_MAC_FRAMEWORK_MODE')
