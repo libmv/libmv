@@ -175,7 +175,7 @@ class Matches {
   
   ImageID GetMaxImageID() const {
     ImageID max_images = 0;
-    std::set<ImageID>::iterator iter_image = images_.begin();
+    std::set<ImageID>::const_iterator iter_image = images_.begin();
     for (; iter_image != images_.end(); ++iter_image) {
       max_images = std::max(max_images, (ImageID)*iter_image);
     }
@@ -184,7 +184,7 @@ class Matches {
   
   TrackID GetMaxTrackID() const {
     TrackID max_tracks = 0;
-    std::set<TrackID>::iterator iter_track = tracks_.begin();
+    std::set<TrackID>::const_iterator iter_track = tracks_.begin();
     for (; iter_track != tracks_.end(); ++iter_track) {
       max_tracks = std::max(max_tracks, (TrackID)*iter_track);
     }
