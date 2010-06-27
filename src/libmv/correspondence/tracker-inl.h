@@ -46,7 +46,8 @@ bool Tracker::Track(const TImage &image1,
   vector<descriptor::Descriptor *> descriptors2;
   describer_->Describe(features2, image2, detector_data, &descriptors2);
   
-  // Copy data form generic feature to Keypoints
+  // Copy data form generic feature to Keypoints since the matcher is
+  // a point matcher
   FeatureSet *feature_set1 = new FeatureSet();
   feature_set1->features.resize(descriptors1.size());
   for (size_t i = 0; i < descriptors1.size(); i++) {
@@ -134,7 +135,8 @@ bool Tracker::Track(const TImage &image,
   vector<descriptor::Descriptor *> descriptors;
   describer_->Describe(features, image, detector_data, &descriptors);
   
-  // Copy data form generic feature to Keypoints
+  // Copy data form generic feature to Keypoints since the matcher is
+  // a point matcher
   FeatureSet *feature_set = new FeatureSet();
   feature_set->features.resize(descriptors.size());
   for (size_t i = 0; i < descriptors.size(); i++) {

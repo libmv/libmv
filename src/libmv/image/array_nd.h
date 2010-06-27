@@ -275,18 +275,18 @@ class ArrayND : public BaseArray {
     return true;
   }
 
-  /// 1D sepecialization.
+  /// 1D specialization.
   bool Contains(int i0) const {
     return 0 <= i0 && i0 < Shape(0);
   }
 
-  /// 2D sepecialization.
+  /// 2D specialization.
   bool Contains(int i0, int i1) const {
     return 0 <= i0 && i0 < Shape(0)
         && 0 <= i1 && i1 < Shape(1);
   }
 
-  /// 3D sepecialization.
+  /// 3D specialization.
   bool Contains(int i0, int i1, int i2) const {
     return 0 <= i0 && i0 < Shape(0)
         && 0 <= i1 && i1 < Shape(1)

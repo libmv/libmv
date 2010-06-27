@@ -29,6 +29,7 @@
 #include "libmv/correspondence/feature_matching.h"
 #include "libmv/correspondence/feature_matching_FLANN.h"
 #include "libmv/correspondence/tracker.h"
+#include "libmv/correspondence/robust_tracker.h"
 #include "libmv/detector/detector.h"
 #include "libmv/detector/fast_detector.h"
 #include "libmv/detector/star_detector.h"
@@ -71,8 +72,9 @@ void WriteFeaturesImage(Array3Du &imageArrayBytes,
   
   std::string s = out_file_path;
   s.erase(s.end()-4,s.end());
-  s.append("-features.pnm");
-  WritePnm (imageArrayBytes, s.c_str());
+  s.append("-features.png");
+  std::cout << "Writing file ["<<s<<"]"<<std::endl;
+  WriteImage (imageArrayBytes, s.c_str());
 }
 
 void DisplayMatches(Matches::Matches &matches)
@@ -97,6 +99,7 @@ void DisplayMatches(Matches::Matches &matches)
         std::cout << "X ";
       else
         std::cout << "  ";
+      if (j < 10) std::cout << " ";
     }
     std::cout <<std::endl;
   }
@@ -104,11 +107,10 @@ void DisplayMatches(Matches::Matches &matches)
 
 bool IsArgImage(std::string & arg) {
   std::string arg_lower = arg;
-  //std::transform(arg.begin(), arg.end(), arg_lower.begin(), std::tolower);
   if (arg_lower.find_last_of (".png") == arg_lower.size() - 1  ||
-               arg_lower.find_last_of (".jpg") == arg_lower.size() - 1  ||
-               arg_lower.find_last_of (".jpeg") == arg_lower.size() - 1 ||
-               arg_lower.find_last_of (".pnm") == arg_lower.size() - 1 ) {
+      arg_lower.find_last_of (".jpg") == arg_lower.size() - 1  ||
+      arg_lower.find_last_of (".jpeg") == arg_lower.size() - 1 ||
+      arg_lower.find_last_of (".pnm") == arg_lower.size() - 1 ) {
     return true;
   }
   return false;
@@ -123,14 +125,13 @@ int main (int argc, char *argv[]) {
   for (int i = 1;i < argc;++i) {
     std::string arg (argv[i]);
     if (IsArgImage(arg)) {
-      LOG(INFO) << "New image." << std::endl;
       image_list.push_back(arg);
     }
   }
   
   // Create the tracker
   detector::Detector * detector                 = NULL;
-  descriptor::Describer *describer              =  NULL;
+  descriptor::Describer *describer              = NULL;
   correspondence::ArrayMatcher<float> *matcher  = NULL;
   
   if (FLAGS_detector == "FAST") {
@@ -155,9 +156,10 @@ int main (int argc, char *argv[]) {
   }
   
   matcher = new correspondence::ArrayMatcher_Kdtree<float>();
-    
-  tracker::Tracker points_tracker(detector,describer,matcher);
   libmv::Matches all_matches;
+    
+  //tracker::Tracker points_tracker(detector,describer,matcher);
+  tracker::RobustTracker points_tracker(detector,describer,matcher);
   
   // Track the sequence of images  
   size_t image_index = 1;
@@ -168,34 +170,41 @@ int main (int argc, char *argv[]) {
          image_list.end(); ++image_list_iterator) {
     std::string image_path = (*image_list_iterator);
     if (image_index == 1) {
+      LOG(INFO) << "Tracking image '"<< first_image_path << "'" << std::endl;
       Array3Du imageArrayBytes1;
       ReadImage (first_image_path.c_str(), &imageArrayBytes1);
       Image image1 (new Array3Du (imageArrayBytes1));
       
+      LOG(INFO) << "Tracking image '"<< image_path << "'" << std::endl;
       Array3Du imageArrayBytes2;
       ReadImage (image_path.c_str(), &imageArrayBytes2);
       Image image2 (new Array3Du (imageArrayBytes2));
 
+      //TODO(julien) convert RGA images to gray
+      
       points_tracker.Track<Image>(image1, image2, &all_matches);
       
-      LOG(INFO) << "NumTracks "<< all_matches.NumTracks() << std::endl;
-      LOG(INFO) << "NumImages "<< all_matches.NumImages() << std::endl;
-              
-      Matches::Features<PointFeature> features_set =
-        all_matches.All<PointFeature>();
-      
+      LOG(INFO) << "#Tracks "<< all_matches.NumTracks() << std::endl;
+      LOG(INFO) << "#Images "<< all_matches.NumImages() << std::endl;
+             
       if (FLAGS_save_features) {
+        Matches::Features<PointFeature> features_set =
+         all_matches.InImage<PointFeature>(0);
         WriteFeaturesImage(imageArrayBytes1, 
                           first_image_path,
                           features_set);
+        features_set = all_matches.InImage<PointFeature>(1);
         WriteFeaturesImage(imageArrayBytes2, 
                           image_path,
                           features_set);
       }
     } else { 
+      LOG(INFO) << "Tracking image '"<< image_path << "'" << std::endl;
       Array3Du imageArrayBytes;
       ReadImage (image_path.c_str(), &imageArrayBytes);
       Image image (new Array3Du (imageArrayBytes));
+      
+      //TODO(julien) convert RGA images to gray
           
       libmv::Matches new_matches;  
       libmv::Matches::ImageID new_image_id;
@@ -204,22 +213,24 @@ int main (int argc, char *argv[]) {
                                   &new_matches,
                                   &new_image_id);
       
-      LOG(INFO) << "NumTracks "<< new_matches.NumTracks() << std::endl;
-      LOG(INFO) << "NumImages "<< new_matches.NumImages() << std::endl;
+      LOG(INFO) << "#NewTracks "<< new_matches.NumTracks() << std::endl;
               
-      Matches::Features<PointFeature> features_set =
-        new_matches.All<PointFeature>();
-      
       if (FLAGS_save_features) {
+        Matches::Features<PointFeature> features_set =
+         new_matches.InImage<PointFeature>(new_image_id);
         WriteFeaturesImage(imageArrayBytes, 
-                          image_path,
-                          features_set);
+                           image_path,
+                           features_set);
       }
       all_matches.Merge(new_matches);
+      LOG(INFO) << "#Tracks "<< all_matches.NumTracks() << std::endl;
+      LOG(INFO) << "#Images "<< all_matches.NumImages() << std::endl;
     }
     image_index++;
   }
 
   DisplayMatches(all_matches);
+  
+  //TODO(jmichot) Clean the variables detector, describer, matcher
   return 0;
 }

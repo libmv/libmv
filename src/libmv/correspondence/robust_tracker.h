@@ -18,44 +18,25 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
-#ifndef LIBMV_CORRESPONDENCE_TRACKER_H_
-#define LIBMV_CORRESPONDENCE_TRACKER_H_
+#ifndef LIBMV_CORRESPONDENCE_ROBUST_TRACKER_H_
+#define LIBMV_CORRESPONDENCE_ROBUST_TRACKER_H_
 
-#include <map>
-
-#include "libmv/base/scoped_ptr.h"
-#include "libmv/base/vector.h"
-#include "libmv/correspondence/ArrayMatcher.h"
-#include "libmv/correspondence/matches.h"
-#include "libmv/descriptor/descriptor.h"
-#include "libmv/detector/detector.h"
+#include "libmv/correspondence/tracker.h"
 
 namespace libmv {
 namespace tracker {
-  
-// Abstract base classs for tracking algorithms.
-// WARNING: This is at best, barely started.
 
-// A tracker is the output of a tracking algorithm, which converts a track into
-// another track when run in some context.  For example, a KLT tracking context
-// is a source frame, a target frame, a window size, and a previous (point)
-// tracker. Of note: The previous tracker has to be a point tracker, but that's
-// all that's required. Other trackers (UKLT) will require a specific type of
-// tracker as the previous position.
-
-class Tracker {
+class RobustTracker : public Tracker {
  public:
-  Tracker(detector::Detector *detector, 
-          descriptor::Describer *describer,
-          correspondence::ArrayMatcher<float> *matcher) : 
-           detector_(detector),
-           describer_(describer),
-           matcher_(matcher) {
-    //TODO(jmichot) Do a copy of the classes so that the Tracker class will have
-    // its own Detector, Describer & Matcher.
-  };
-            
-  virtual ~Tracker() {}
+  RobustTracker(detector::Detector *detector, 
+                descriptor::Describer *describer,
+                correspondence::ArrayMatcher<float> *matcher) : 
+                 Tracker(detector, describer, matcher) {
+    minimum_number_inliers_ = 10;
+    rms_threshold_inlier_   =  1.5;
+  }
+                  
+  virtual ~RobustTracker() {}
    
   // Tracks new features between two images.
   template <typename TImage>
@@ -71,16 +52,15 @@ class Tracker {
              Matches *new_matches,
              Matches::ImageID *image_id,
              bool keep_single_feature = true); 
-
  protected:
-   scoped_ptr<detector::Detector> detector_;
-   scoped_ptr<descriptor::Describer> describer_;
-   scoped_ptr<correspondence::ArrayMatcher<float> > matcher_;
+  size_t  minimum_number_inliers_;
+  // Maxmimum distance with the epipolar line (px) to be an inlier
+  double  rms_threshold_inlier_;
 };
 
 } // using namespace tracker
 } // using namespace libmv
 
-#include "tracker-inl.h"
+#include "robust_tracker-inl.h"
 
-#endif  // LIBMV_CORRESPONDENCE_TRACKER_H_
+#endif  // LIBMV_CORRESPONDENCE_ROBUST_TRACKER_H_
