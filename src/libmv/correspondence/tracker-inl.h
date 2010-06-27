@@ -25,10 +25,9 @@
 namespace libmv {
 namespace tracker {
  
-template <typename TImage>
-bool Tracker::Track(const TImage &image1,
-                    const TImage &image2, 
-                    Matches *new_matches,
+bool Tracker::Track(const Image &image1,
+                    const Image &image2, 
+                    FeaturesGraph *new_features_graph,
                     bool keep_single_feature) {
   // we detect good features to track
   detector::DetectorData **data = NULL;
@@ -48,7 +47,7 @@ bool Tracker::Track(const TImage &image1,
   
   // Copy data form generic feature to Keypoints since the matcher is
   // a point matcher
-  FeatureSet *feature_set1 = new FeatureSet();
+  FeatureSet *feature_set1 = new_features_graph->CreateNewFeatureSet();
   feature_set1->features.resize(descriptors1.size());
   for (size_t i = 0; i < descriptors1.size(); i++) {
     KeypointFeature& feature = feature_set1->features[i];
@@ -56,7 +55,7 @@ bool Tracker::Track(const TImage &image1,
     *(PointFeature*)(&feature) = *(PointFeature*)features1[i];
   }
   
-  FeatureSet *feature_set2 = new FeatureSet();
+  FeatureSet *feature_set2 = new_features_graph->CreateNewFeatureSet();
   feature_set2->features.resize(descriptors2.size());
   for (size_t i = 0; i < descriptors2.size(); i++) {
     KeypointFeature& feature = feature_set2->features[i];
@@ -76,10 +75,10 @@ bool Tracker::Track(const TImage &image1,
    correspondences.begin();
   for (; correspondences_iter != correspondences.end();
    correspondences_iter++) {
-    new_matches->Insert(0, 
+    new_features_graph->matches_.Insert(0, 
                         max_num_track,
                         &feature_set1->features[correspondences_iter->first]);
-    new_matches->Insert(1, 
+    new_features_graph->matches_.Insert(1, 
                         max_num_track,
                         &feature_set2->features[correspondences_iter->second]);
     reverse_correspondences[correspondences_iter->second] =
@@ -92,9 +91,9 @@ bool Tracker::Track(const TImage &image1,
     {
       correspondences_iter = correspondences.find(i);
       if (correspondences_iter == correspondences.end()) {
-        new_matches->Insert(0, 
-                            max_num_track,
-                            &feature_set1->features[i]);
+        new_features_graph->matches_.Insert(0, 
+                                            max_num_track,
+                                            &feature_set1->features[i]);
         max_num_track++;
       }
     }
@@ -102,9 +101,9 @@ bool Tracker::Track(const TImage &image1,
     {
       correspondences_iter = reverse_correspondences.find(i);
       if (correspondences_iter == reverse_correspondences.end()) {
-        new_matches->Insert(1, 
-                            max_num_track,
-                            &feature_set2->features[i]);
+        new_features_graph->matches_.Insert(1, 
+                                            max_num_track,
+                                            &feature_set2->features[i]);
         max_num_track++;
       }
     }
@@ -118,11 +117,9 @@ bool Tracker::Track(const TImage &image1,
   return true;
 }
 
-//TODO (jmichot)The function needs a rewrite to handle the generic Matcher class
-template <typename TImage>
-bool Tracker::Track(const TImage &image, 
-                    const Matches &known_matches, 
-                    Matches *new_matches,
+bool Tracker::Track(const Image &image, 
+                    const FeaturesGraph &known_features_graph, 
+                    FeaturesGraph *new_features_graph,
                     Matches::ImageID *image_id,
                     bool keep_single_feature) {
   // we detect good features to track
@@ -137,7 +134,7 @@ bool Tracker::Track(const TImage &image,
   
   // Copy data form generic feature to Keypoints since the matcher is
   // a point matcher
-  FeatureSet *feature_set = new FeatureSet();
+  FeatureSet *feature_set = new_features_graph->CreateNewFeatureSet();
   feature_set->features.resize(descriptors.size());
   for (size_t i = 0; i < descriptors.size(); i++) {
     KeypointFeature& feature = feature_set->features[i];
@@ -145,7 +142,7 @@ bool Tracker::Track(const TImage &image,
     *(PointFeature*)(&feature) = *(PointFeature*)features[i];
   }
    
-  *image_id = known_matches.GetMaxImageID()+1;
+  *image_id = known_features_graph.matches_.GetMaxImageID()+1;
   
   //TODO (jmichot) Use the matcher_ to match and not the generic function
   // FindCorrespondences(*feature_set1, *feature_set2, correspondences);
@@ -153,11 +150,11 @@ bool Tracker::Track(const TImage &image,
   // (in the first image for instance) for every track
   std::map<size_t, size_t> reverse_correspondences_all;
   std::set<Matches::ImageID>::iterator iter_image =
-   known_matches.get_images().begin();
-  for (; iter_image != known_matches.get_images().end() 
+   known_features_graph.matches_.get_images().begin();
+  for (; iter_image != known_features_graph.matches_.get_images().end() 
       && *iter_image != *image_id; ++iter_image) {
     Matches::Features<KeypointFeature> known_features =
-     known_matches.InImage<KeypointFeature>(*iter_image);
+     known_features_graph.matches_.InImage<KeypointFeature>(*iter_image);
     FeatureSet feature_set_known;
     while(known_features) {
       feature_set_known.features.push_back(*known_features.feature());
@@ -171,15 +168,16 @@ bool Tracker::Track(const TImage &image,
      correspondences.begin();
     for (; correspondences_iter != correspondences.end();
       correspondences_iter++) {
-      known_features = known_matches.InImage<KeypointFeature>(*iter_image);
+      known_features =
+       known_features_graph.matches_.InImage<KeypointFeature>(*iter_image);
       size_t i = 0;
       while(known_features) {
         if ( i == correspondences_iter->first) {
           KeypointFeature * new_feature = &feature_set->features[
            correspondences_iter->second];
-          new_matches->Insert(*image_id, 
-                              known_features.track(),
-                              new_feature);
+          new_features_graph->matches_.Insert(*image_id, 
+                                              known_features.track(),
+                                              new_feature);
           reverse_correspondences_all[correspondences_iter->second] =
            correspondences_iter->first;
         }
@@ -189,16 +187,16 @@ bool Tracker::Track(const TImage &image,
     }
   }
   
-  size_t max_num_track = known_matches.GetMaxTrackID()+1;
+  size_t max_num_track = known_features_graph.matches_.GetMaxTrackID()+1;
   std::map<size_t, size_t>::iterator correspondences_iter;
   if (keep_single_feature) {
     for (size_t i = 0; i < feature_set->features.size(); ++i)
     {
       correspondences_iter = reverse_correspondences_all.find(i);
       if (correspondences_iter == reverse_correspondences_all.end()) {
-        new_matches->Insert(*image_id, 
-                            max_num_track,
-                            &feature_set->features[i]);
+        new_features_graph->matches_.Insert(*image_id, 
+                                            max_num_track,
+                                            &feature_set->features[i]);
         max_num_track++;
       }
     }

@@ -39,17 +39,15 @@ class RobustTracker : public Tracker {
   virtual ~RobustTracker() {}
    
   // Tracks new features between two images.
-  template <typename TImage>
-  bool Track(const TImage &image1, 
-             const TImage &image2, 
-             Matches *new_matches,
+  bool Track(const Image &image1, 
+             const Image &image2, 
+             FeaturesGraph *new_features_graph,
              bool keep_single_feature = true);
                      
   // Tracks all features in an image.
-  template <typename TImage>
-  bool Track(const TImage &image, 
-             const Matches &known_matches, 
-             Matches *new_matches,
+  bool Track(const Image &image, 
+             const FeaturesGraph &known_features_graph, 
+             FeaturesGraph *new_features_graph,
              Matches::ImageID *image_id,
              bool keep_single_feature = true); 
  protected:

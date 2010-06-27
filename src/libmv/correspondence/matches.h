@@ -94,13 +94,13 @@ class Matches {
     graph_.Remove(image, track, feature);
   }
   // Insert all elements of matches (images, tracks, feature) as new data
-  void Insert(Matches &matches) {
+  void Insert(const Matches &matches) {
     size_t max_images = GetMaxImageID();
     size_t max_tracks = GetMaxTrackID();
     std::map<ImageID, ImageID> new_image_ids;
     std::map<TrackID, TrackID> new_track_ids;
-    std::set<ImageID>::iterator iter_image;
-    std::set<TrackID>::iterator iter_track;
+    std::set<ImageID>::const_iterator iter_image;
+    std::set<TrackID>::const_iterator iter_track;
     
     ImageID image_id;
     iter_image = matches.images_.begin();
@@ -128,19 +128,19 @@ class Matches {
     }
   }
   // Merge common elements add new data (image, track, feature).
-  void Merge(Matches &matches) {
+  void Merge(const Matches &matches) {
     size_t max_images = GetMaxImageID();
     size_t max_tracks = GetMaxTrackID();
     std::map<ImageID, ImageID> new_image_ids;
     std::map<TrackID, TrackID> new_track_ids;
-    std::set<ImageID>::iterator iter_image;
-    std::set<TrackID>::iterator iter_track;
+    std::set<ImageID>::const_iterator iter_image;
+    std::set<TrackID>::const_iterator iter_track;
     
     //Find not common elements and add them into new_matches
     ImageID image_id;
     TrackID track_id;
-    std::set<ImageID>::iterator found_image;
-    std::set<TrackID>::iterator found_track;
+    std::set<ImageID>::const_iterator found_image;
+    std::set<TrackID>::const_iterator found_track;
     iter_image = matches.images_.begin();
     for (; iter_image != matches.images_.end(); ++iter_image) {
       found_image = images_.find(*iter_image);

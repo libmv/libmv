@@ -23,15 +23,14 @@
 namespace libmv {
 namespace tracker {
  
-template <typename TImage>
-bool RobustTracker::Track(const TImage &image1,
-                          const TImage &image2, 
-                          Matches *new_matches,
+bool RobustTracker::Track(const Image &image1,
+                          const Image &image2, 
+                          FeaturesGraph *new_features_graph,
                           bool keep_single_feature) {
-  bool is_track_ok = Tracker::Track<TImage>(image1,
-                                            image2, 
-                                            new_matches,
-                                            keep_single_feature);
+  bool is_track_ok = Tracker::Track(image1,
+                                    image2, 
+                                    new_features_graph,
+                                    keep_single_feature);
   if (!is_track_ok)
     return is_track_ok;
   
@@ -42,7 +41,10 @@ bool RobustTracker::Track(const TImage &image1,
   image_indices.push_back(0);
   image_indices.push_back(1);
 
-  PointMatchMatrices(*new_matches, image_indices, &tracks, &x);
+  PointMatchMatrices(new_features_graph->matches_, 
+                     image_indices, 
+                     &tracks,
+                     &x);
   
   vector<int> inliers;
   Mat3 F;
@@ -53,7 +55,7 @@ bool RobustTracker::Track(const TImage &image1,
                                              &inliers);
 
   // We remove correspondences that are not inliers
-  size_t max_num_track = new_matches->GetMaxTrackID()+1;
+  size_t max_num_track = new_features_graph->matches_.GetMaxTrackID()+1;
   for (size_t i = 0; i < tracks.size(); ++i) {
     bool is_inlier = false;
     if (inliers.size() > minimum_number_inliers_) {
@@ -65,10 +67,13 @@ bool RobustTracker::Track(const TImage &image1,
       }
     }
     if (!is_inlier) {
-      const Feature * feature_to_remove = new_matches->Get(1, tracks[i]);
-      new_matches->Remove(1, tracks[i], feature_to_remove);
+      const Feature * feature_to_remove =
+       new_features_graph->matches_.Get(1, tracks[i]);
+      new_features_graph->matches_.Remove(1, tracks[i], feature_to_remove);
       if (keep_single_feature) {
-        new_matches->Insert(1, max_num_track, feature_to_remove);
+        new_features_graph->matches_.Insert(1, 
+                                            max_num_track,
+                                            feature_to_remove);
         max_num_track++;
       }
     }
@@ -76,27 +81,28 @@ bool RobustTracker::Track(const TImage &image1,
   return is_track_ok;
 }
 
-template <typename TImage>
-bool RobustTracker::Track(const TImage &image, 
-                          const Matches &known_matches, 
-                          Matches *new_matches,
+bool RobustTracker::Track(const Image &image, 
+                          const FeaturesGraph &known_features_graph, 
+                          FeaturesGraph *new_features_graph,
                           Matches::ImageID *image_id,
                           bool keep_single_feature) {
  
-  bool is_track_ok = Tracker::Track<TImage>(image,
-                                            known_matches,
-                                            new_matches,
-                                            image_id,
-                                            keep_single_feature);
+  bool is_track_ok = Tracker::Track(image,
+                                    known_features_graph,
+                                    new_features_graph,
+                                    image_id,
+                                    keep_single_feature);
   if (!is_track_ok)
     return is_track_ok;
   
   // TODO(jmichot) Avoid the conversion std::set <-> vector
   // Avoid to compute the fundamental btw images that does not share tracks
   std::set<Matches::ImageID>::iterator iter_image =
-   known_matches.get_images().begin();
-  const std::set<Matches::TrackID> new_track_set = new_matches->get_tracks();
-  for (; iter_image != known_matches.get_images().end(); ++iter_image) {
+   known_features_graph.matches_.get_images().begin();
+  const std::set<Matches::TrackID> new_track_set =
+   new_features_graph->matches_.get_tracks();
+  for (; iter_image != known_features_graph.matches_.get_images().end();
+      ++iter_image) {
     if (*image_id != *iter_image) {
       // We remove wrong matches using an epipolar filtering
       vector<Mat> x(2);
@@ -106,9 +112,10 @@ bool RobustTracker::Track(const TImage &image,
        new_track_set.begin();
       for (; new_track_set_iter != new_track_set.end(); ++new_track_set_iter) {
         const PointFeature *f1 = static_cast<const PointFeature *>(
-         known_matches.Get(*iter_image, *new_track_set_iter));
+         known_features_graph.matches_.Get(*iter_image,
+                                           *new_track_set_iter));
         const PointFeature *f2 = static_cast<const PointFeature *>(
-         new_matches->Get(*image_id, *new_track_set_iter));
+         new_features_graph->matches_.Get(*image_id, *new_track_set_iter));
         if (f1 && f2) {
           tracks.push_back(*new_track_set_iter);
         }
@@ -117,9 +124,9 @@ bool RobustTracker::Track(const TImage &image,
       x[1].resize(2,tracks.size());
       for (size_t i = 0; i < tracks.size(); ++i) {
         const PointFeature *f1 = static_cast<const PointFeature *>(
-         known_matches.Get(*iter_image, tracks[i]));
+         known_features_graph.matches_.Get(*iter_image, tracks[i]));
         const PointFeature *f2 = static_cast<const PointFeature *>(
-         new_matches->Get(*image_id, tracks[i]));
+         new_features_graph->matches_.Get(*image_id, tracks[i]));
         if (f1 && f2) {
           x[0](0,i) = f1->x();
           x[0](1,i) = f1->y();          
@@ -137,8 +144,10 @@ bool RobustTracker::Track(const TImage &image,
       LOG(INFO) << "#inliers = "<< inliers.size() << std::endl;
       LOG(INFO) << "#outliers = "<< tracks.size()-inliers.size() << std::endl;
       // We remove correspondences that are not inliers
-      size_t max_num_track = 1 + std::max(new_matches->GetMaxTrackID(),
-                                          known_matches.GetMaxTrackID());
+      size_t max_num_track = 1 +
+       std::max(new_features_graph->matches_.GetMaxTrackID(),
+                known_features_graph.matches_.GetMaxTrackID());
+                
       for (size_t i = 0; i < tracks.size(); ++i) {
         bool is_inlier = false;
         if (inliers.size() > minimum_number_inliers_) {
@@ -151,10 +160,14 @@ bool RobustTracker::Track(const TImage &image,
         }
         if (!is_inlier) {
           const Feature * feature_to_remove =
-          new_matches->Get(*image_id, tracks[i]);
-          new_matches->Remove(*image_id, tracks[i], feature_to_remove);
+          new_features_graph->matches_.Get(*image_id, tracks[i]);
+          new_features_graph->matches_.Remove(*image_id, 
+                                              tracks[i],
+                                              feature_to_remove);
           if (keep_single_feature) {
-            new_matches->Insert(*image_id, max_num_track, feature_to_remove);
+            new_features_graph->matches_.Insert(*image_id, 
+                                                max_num_track,
+                                                feature_to_remove);
             max_num_track++;
           }
         }

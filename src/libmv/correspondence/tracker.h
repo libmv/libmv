@@ -22,6 +22,7 @@
 #define LIBMV_CORRESPONDENCE_TRACKER_H_
 
 #include <map>
+#include <list>
 
 #include "libmv/base/scoped_ptr.h"
 #include "libmv/base/vector.h"
@@ -33,8 +34,34 @@
 namespace libmv {
 namespace tracker {
   
-// Abstract base classs for tracking algorithms.
-// WARNING: This is at best, barely started.
+// FeaturesGraph : Store a list of featureSet and its matches.
+struct FeaturesGraph {
+ public:
+  FeatureSet * CreateNewFeatureSet() {
+    features_sets_.push_back(new FeatureSet());
+    return features_sets_.back();
+  }
+  
+  void Merge(const FeaturesGraph &feature_graph) {
+    matches_.Merge(feature_graph.matches_);
+    std::list<FeatureSet *>::const_iterator iter =
+     feature_graph.features_sets_.begin();
+    for (; iter != feature_graph.features_sets_.end(); ++iter) {
+      features_sets_.push_back(*iter);
+    }
+  }
+  
+  void Clear() {
+    std::list<FeatureSet *>::iterator iter = features_sets_.begin();
+    for (; iter != features_sets_.end(); ++iter) {
+      delete *iter;
+    }
+    features_sets_.clear();
+  }
+  
+  Matches matches_;
+  std::list<FeatureSet *> features_sets_;
+};
 
 // A tracker is the output of a tracking algorithm, which converts a track into
 // another track when run in some context.  For example, a KLT tracking context
@@ -42,7 +69,6 @@ namespace tracker {
 // tracker. Of note: The previous tracker has to be a point tracker, but that's
 // all that's required. Other trackers (UKLT) will require a specific type of
 // tracker as the previous position.
-
 class Tracker {
  public:
   Tracker(detector::Detector *detector, 
@@ -58,19 +84,17 @@ class Tracker {
   virtual ~Tracker() {}
    
   // Tracks new features between two images.
-  template <typename TImage>
-  bool Track(const TImage &image1, 
-             const TImage &image2, 
-             Matches *new_matches,
-             bool keep_single_feature = true);
+  virtual bool Track(const Image &image1, 
+                     const Image &image2, 
+                     FeaturesGraph *new_features_graph,
+                     bool keep_single_feature = true);
                      
   // Tracks all features in an image.
-  template <typename TImage>
-  bool Track(const TImage &image, 
-             const Matches &known_matches, 
-             Matches *new_matches,
-             Matches::ImageID *image_id,
-             bool keep_single_feature = true); 
+  virtual bool Track(const Image &image, 
+                     const FeaturesGraph &known_features_graph, 
+                     FeaturesGraph *new_features_graph,
+                     Matches::ImageID *image_id,
+                     bool keep_single_feature = true); 
 
  protected:
    scoped_ptr<detector::Detector> detector_;
