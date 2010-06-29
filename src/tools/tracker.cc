@@ -86,19 +86,14 @@ void WriteFeaturesImage(Array3Du &imageArrayBytes,
 
 void DisplayMatches(Matches::Matches &matches)
 { 
-  std::cout << "Matches :"<<std::endl;
-  std::cout << "    ";
+  std::cout << "Matches : \t\t"<<std::endl << "\t";
   for (size_t j = 0; j < matches.NumImages(); j++) {
-    if (j < 10) std::cout << " ";
     std::cout << j << " ";
   }
   std::cout << std::endl;
   
   for (size_t i = 0; i < matches.NumTracks(); i++) {
-    if(i < 10)   std::cout << " ";
-    if(i < 100)  std::cout << " ";
-    if(i < 1000) std::cout << " ";
-    std::cout << i <<" ";
+    std::cout << i <<"\t";
     
     for (size_t j = 0; j < matches.NumImages(); j++) {
       const Feature * f = matches.Get(j,i);
@@ -106,21 +101,16 @@ void DisplayMatches(Matches::Matches &matches)
         std::cout << "X ";
       else
         std::cout << "  ";
-      if (j < 10) std::cout << " ";
     }
     std::cout <<std::endl;
   }
 }
 
-bool IsArgImage(std::string & arg) {
-  std::string arg_lower = arg;
-  if (arg_lower.find_last_of (".png") == arg_lower.size() - 1 ||
-      arg_lower.find_last_of (".jpg") == arg_lower.size() - 1 ||
-      arg_lower.find_last_of (".jpeg") == arg_lower.size()- 1 ||
-      arg_lower.find_last_of (".pnm") == arg_lower.size() - 1 ) {
-    return true;
-  }
-  return false;
+bool IsArgImage(const std::string & arg) {
+  return (arg.find_last_of (".png") == arg.size() - 1 ||
+          arg.find_last_of (".jpg") == arg.size() - 1 ||
+          arg.find_last_of (".jpeg") == arg.size()- 1 ||
+          arg.find_last_of (".pnm") == arg.size() - 1 );
 }
 
 int main (int argc, char *argv[]) {    
