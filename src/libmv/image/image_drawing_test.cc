@@ -108,3 +108,52 @@ TEST(ImageDrawing, Circle) {
     }
   }
 }
+
+// Draw an ellipse with the two radius equal each other...
+// in an image and assert that all the points are
+// at a distance equal to the radius.
+TEST(ImageDrawing, Ellipse) {
+
+  Array3Du image(10,10);
+  image.Fill(0);
+
+  const int radius = 3, angle = 0;
+  const int x = 5, y = 5;
+
+  DrawEllipse(x, y, radius, radius, (unsigned char)255, &image, (double)angle);
+
+  // Distance checking :
+  for ( int j = 0; j < image.Height(); ++j)
+  for ( int i = 0; i < image.Width(); ++i) {
+    if (image(j, i) == 255)  {
+      const float distance =  sqrt((float)((j-y)*(j-y) + (i-x)*(i-x)));
+      EXPECT_NEAR(radius, distance, 1.0f);
+      // Due to discretisation we cannot expect better precision
+    }
+  }
+}
+
+// Draw an ellipse with the two radius and rotated ...
+// in an image and assert that all the points are
+// within the given radius.
+TEST(ImageDrawing, RotatedEllipse) {
+
+  Array3Du image(30,30);
+  image.Fill(0);
+
+  const int radius = 6;
+  const int x = 10, y = 10;
+
+  DrawEllipse(x, y, radius, radius/2.0, (unsigned char)255, &image, M_PI/4.0);
+
+  // Distance checking :
+  for ( int j = 0; j < image.Height(); ++j)
+  for ( int i = 0; i < image.Width(); ++i) {
+    if (image(j, i) == 255)  {
+      const float distance =  sqrt((float)((j-y)*(j-y) + (i-x)*(i-x)));
+      EXPECT_EQ( radius+1 >= distance && radius/2.0-1 <= distance, true);
+      // Due to discretisation we cannot expect better precision
+      // Use +-1 to avoid rasterization error.
+    }
+  }
+}

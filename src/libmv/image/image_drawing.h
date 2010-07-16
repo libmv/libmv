@@ -26,6 +26,101 @@
 
 namespace libmv {
 
+// Bresenham approach to draw ellipse.
+// http://raphaello.univ-fcomte.fr/ig/algorithme/ExemplesGLUt/BresenhamEllipse.htm
+// Add the rotation of the ellipse.
+// As the algo. use symmetry we must use 4 rotations.
+template <class Image, class Color>
+void DrawEllipse(int xc, int yc, int radiusA, int radiusB,
+                 const Color &col, Image *pim, double angle = 0.0)
+{
+  int a = radiusA;
+  int b = radiusB;
+  Image &im = *pim;
+
+  // Counter Clockwise rotation matrix.
+  double matXY[4] = { cos(angle), sin(angle), 
+                     -sin(angle), cos(angle)};
+  int x,y;
+  double d1,d2;
+  x = 0;
+  y = b;
+  d1 = b*b - a*a*b + a*a/4;
+  
+  float rotX = (matXY[0] * x + matXY[1] * y);
+  float rotY = (matXY[2] * x + matXY[3] * y);
+  if (im.Contains( yc + rotY,  xc + rotX))
+    im( yc + rotY,  xc + rotX) = col;
+  rotX = (matXY[0] * x - matXY[1] * y);
+  rotY = (matXY[2] * x - matXY[3] * y);
+  if (im.Contains( yc + rotY,  xc + rotX))
+    im( yc + rotY,  xc + rotX) = col;
+  rotX = (-matXY[0] * x - matXY[1] * y);
+  rotY = (-matXY[2] * x - matXY[3] * y);
+  if (im.Contains( yc + rotY,  xc + rotX))
+    im( yc + rotY,  xc + rotX) = col;
+  rotX = (-matXY[0] * x + matXY[1] * y);
+  rotY = (-matXY[2] * x + matXY[3] * y);
+  if (im.Contains( yc + rotY,  xc + rotX))
+    im( yc + rotY,  xc + rotX) = col;
+  while ( a*a*(y-.5) > b*b*(x+1) ) {
+    if ( d1 < 0 ) {
+      d1 += b*b*(2*x+3);
+      ++x;
+    }
+    else
+    {
+      d1 += b*b*(2*x+3) + a*a*(-2*y+2);
+      ++x;
+      --y;
+    }
+    rotX = (matXY[0] * x + matXY[1] * y);
+    rotY = (matXY[2] * x + matXY[3] * y);
+    if (im.Contains( yc + rotY,  xc + rotX))
+      im( yc + rotY,  xc + rotX) = col;
+    rotX = (matXY[0] * x - matXY[1] * y);
+    rotY = (matXY[2] * x - matXY[3] * y);
+    if (im.Contains( yc + rotY,  xc + rotX))
+        im( yc + rotY,  xc + rotX) = col;
+    rotX = (-matXY[0] * x - matXY[1] * y);
+    rotY = (-matXY[2] * x - matXY[3] * y);
+    if (im.Contains( yc + rotY,  xc + rotX))
+       im( yc + rotY,  xc + rotX) = col;
+    rotX = (-matXY[0] * x + matXY[1] * y);
+    rotY = (-matXY[2] * x + matXY[3] * y);
+    if (im.Contains( yc + rotY,  xc + rotX))
+      im( yc + rotY,  xc + rotX) = col;
+  }
+  d2 = b*b*(x+.5)*(x+.5) + a*a*(y-1)*(y-1) - a*a*b*b;
+  while ( y > 0 ) {
+    if ( d2 < 0 ) {
+      d2 += b*b*(2*x+2) + a*a*(-2*y+3);
+      --y;
+      ++x;
+    }
+    else {
+      d2 += a*a*(-2*y+3);
+      --y;
+    }
+    rotX = (matXY[0] * x + matXY[1] * y);
+    rotY = (matXY[2] * x + matXY[3] * y);
+    if (im.Contains( yc + rotY,  xc + rotX))
+      im( yc + rotY,  xc + rotX) = col;
+    rotX = (matXY[0] * x - matXY[1] * y);
+    rotY = (matXY[2] * x - matXY[3] * y);
+    if (im.Contains( yc + rotY,  xc + rotX))
+      im( yc + rotY,  xc + rotX) = col;
+    rotX = (-matXY[0] * x - matXY[1] * y);
+    rotY = (-matXY[2] * x - matXY[3] * y);
+    if (im.Contains( yc + rotY,  xc + rotX))
+      im( yc + rotY,  xc + rotX) = col;
+    rotX = (-matXY[0] * x + matXY[1] * y);
+    rotY = (-matXY[2] * x + matXY[3] * y);
+    if (im.Contains( yc + rotY,  xc + rotX))
+      im( yc + rotY,  xc + rotX) = col;
+  }
+}
+
 // Bresenham approach do not allow to draw concentric circle without holes.
 // So it's better the use the Andres method.
 // http://fr.wikipedia.org/wiki/Algorithme_de_tracé_de_cercle_d'Andres.
