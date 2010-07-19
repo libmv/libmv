@@ -165,10 +165,18 @@ void DrawCircle(int x, int y, int radius, const Color &col, Image *pim) {
 template <class Image, class Color>
 void DrawLine(int xa, int ya, int xb, int yb, const Color &col, Image *pim) {
   Image &im = *pim;
-  // TODO(pau): Deal with start and end points outside the image.
   if (!im.Contains(ya, xa) && !im.Contains(yb, xb))
     return;
-
+  // TODO(julien) Replace the outside point by the intersection of the line and
+  // the limit (either x=width or y=height), and not by the max/min like here
+  if (!im.Contains(ya, xa)) {
+    ya = std::min( std::max(ya, 0), pim->Height());
+    xa = std::min( std::max(xa, 0), pim->Width());
+  }
+  if (!im.Contains(yb, xb)) {
+    yb = std::min( std::max(yb, 0), pim->Height());
+    xb = std::min( std::max(xb, 0), pim->Width());
+  }
   int xbas, xhaut, ybas, yhaut;
   // Check the condition ybas < yhaut.
   if (ya <= yb) {

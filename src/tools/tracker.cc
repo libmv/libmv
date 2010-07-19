@@ -43,49 +43,133 @@
 #include "libmv/image/image.h"
 #include "libmv/image/image_io.h"
 #include "libmv/image/image_converter.h"
+#include "libmv/image/image_drawing.h"
+#include "libmv/image/image_pyramid.h"
 #include "libmv/logging/logging.h"
-#include "libmv/multiview/projection.h"
+#include "libmv/multiview/bundle.h"
 #include "libmv/multiview/fundamental.h"
 #include "libmv/multiview/focal_from_fundamental.h"
 #include "libmv/multiview/nviewtriangulation.h"
-#include "libmv/multiview/bundle.h"
+#include "libmv/multiview/projection.h"
+#include "libmv/multiview/robust_fundamental.h"
 #include "libmv/numeric/numeric.h"
 #include "libmv/tools/tool.h"
+#include <zconf.h>
 
 using namespace libmv;
 
 DEFINE_string(detector, "FAST", "select the detector (FAST,STAR,SURF)");
-DEFINE_string(describer, "SIMPLIEST", 
+DEFINE_string(describer, "DAISY", 
               "select the detector (SIMPLIEST,SURF,DIPOLE,DAISY)");
-DEFINE_bool(save_features, false, 
-            "save images with detected and matched features");
-DEFINE_bool(robust_tracker, true, 
-            "perform a robust tracking (with epipolar filtering)");
+DEFINE_bool  (save_features, false, 
+              "save images with detected and matched features");
+DEFINE_bool  (save_matches, false, 
+              "save images with matches");
+DEFINE_bool  (robust_tracker, false, 
+              "perform a robust tracking (with epipolar filtering)");
+DEFINE_double(robust_tracker_threshold, 1.0, 
+              "Epipolar filtering threshold (in pixels)");
 DEFINE_double(focal, 50, 
-            " focale length for all the cameras");
-DEFINE_bool(pose_estimation, false, 
-            "perform a pose estimation");
+              "focale length for all the cameras");
+DEFINE_bool  (pose_estimation, false, 
+              "perform a pose estimation");
+DEFINE_string(patch, "", "only track this image/patch");
 
-void WriteFeaturesImage(Array3Du &imageArrayBytes,
-                        std::string out_file_path,
-                        Matches::Features<PointFeature> &features)
-{  
+void DrawFeatures(ByteImage &imageArrayBytes,
+                  Matches::Features<PointFeature> &features,
+                  bool is_draw_orientation) {  
   while(features) {
-
-    imageArrayBytes(features.feature()->y(),
-                    features.feature()->x()) = 255;
+    Byte color = 255;
+    float scale = features.feature()->scale;
+    float angle = features.feature()->orientation;
+    DrawCircle<ByteImage, Byte>(features.feature()->x(), 
+                                features.feature()->y(), 
+                                scale, 
+                                color, 
+                                &imageArrayBytes);
+    if (is_draw_orientation) {
+      DrawLine(features.feature()->x(),
+               features.feature()->y(),
+               features.feature()->x() + scale * cos(angle),
+               features.feature()->y() + scale * sin(angle),
+               color,
+               &imageArrayBytes);
+    }
     features.operator++();
   }
-  
+}
+
+void DrawMatches(ByteImage &imageArrayBytes,
+                 const Matches::ImageID id_image,
+                 tracker::FeaturesGraph all_features_graph) {
+  Matches::Features<KeypointFeature> features = 
+   all_features_graph.matches_.InImage<KeypointFeature>(id_image);
+  Byte color = 255;
+  size_t NumImages = all_features_graph.matches_.NumImages();
+  while(features) {
+    Matches::TrackID id_track = features.track();
+    const Feature * ref = features.feature();
+    for (size_t j = 0; j < NumImages; j++) {
+      const Feature * f = all_features_graph.matches_.Get(j, id_track);
+      if (f && ref && j != id_track) {
+	      color = 255 * (NumImages-1 - j)/((float)NumImages);
+        //Draw a line between the two points :
+        KeypointFeature * pt0 = ((KeypointFeature*)ref);
+        KeypointFeature * pt1 = ((KeypointFeature*)f);
+        DrawLine(pt0->x(), pt0->y(), 
+                 pt1->x(), pt1->y(), 
+                 color, 
+                 &imageArrayBytes);
+      }
+    }
+    features.operator++();
+  }
+}
+
+void SaveImage(const ByteImage &imageArrayBytes,
+               const std::string out_file_path,
+               const std::string file_suffix) {
   std::string s = out_file_path;
-  s.erase(s.end()-4,s.end());
-  s.append("-features.png");
-  std::cout << "Writing file ["<<s<<"]"<<std::endl;
+  size_t index_dot = s.find_last_of(".");
+  std::string ext = s.substr(index_dot, s.size());
+  s.erase(index_dot,s.size());
+  s.append(file_suffix);
+  s.append(ext);
   WriteImage (imageArrayBytes, s.c_str());
 }
 
-void DisplayMatches(Matches::Matches &matches)
-{ 
+void BlendImages(const ByteImage &imageArrayBytesA,
+                 const ByteImage &imageArrayBytesB,
+                 ByteImage &imageArrayBytesOut,
+                 float alpha = 0.2) {
+  unsigned int h = std::max(imageArrayBytesA.Height(),
+                            imageArrayBytesB.Height());
+  unsigned int w = std::max(imageArrayBytesA.Width(),
+                            imageArrayBytesB.Width());
+  unsigned int d = std::max(imageArrayBytesA.Depth(),
+                            imageArrayBytesB.Depth());
+  imageArrayBytesOut.Resize(h, w, d);
+  imageArrayBytesOut.Fill(0);
+  
+  size_t dA=0,dB=0;
+  if (imageArrayBytesA.Depth() == 3) dA = 1;
+  if (imageArrayBytesB.Depth() == 3) dB = 1;
+  
+  for(size_t j=0; j < h; ++j)
+    for(size_t i=0; i < w; ++i) {
+      imageArrayBytesOut(j,i,0) = (1 - alpha) * imageArrayBytesA(j,i,0) 
+       + alpha * imageArrayBytesB(j,i,0);
+      if (d == 3) {
+        imageArrayBytesOut(j,i,1) = (1 - alpha) * imageArrayBytesA(j,i,dA) 
+         + alpha * imageArrayBytesB(j,i,dB);
+        
+        imageArrayBytesOut(j,i,2) = (1 - alpha) * imageArrayBytesA(j,i,2*dA) 
+         + alpha * imageArrayBytesB(j,i,2*dB);
+      }
+    }
+}
+
+void DisplayMatches(Matches::Matches &matches) { 
   std::cout << "Matches : \t\t"<<std::endl << "\t";
   for (size_t j = 0; j < matches.NumImages(); j++) {
     std::cout << j << " ";
@@ -104,6 +188,19 @@ void DisplayMatches(Matches::Matches &matches)
     }
     std::cout <<std::endl;
   }
+}
+
+ByteImage * ConvertToGrayscale(const ByteImage &imageArrayBytes) {  
+  ByteImage *arrayGrayBytes = NULL;
+  // Grayscale image convertion
+  if (imageArrayBytes.Depth() == 3) {
+    arrayGrayBytes = new ByteImage ();
+    Rgb2Gray<ByteImage, ByteImage>(imageArrayBytes, arrayGrayBytes);
+  } else {
+    //TODO(julien) Useless: don't copy an already grayscale image
+    arrayGrayBytes = new ByteImage (imageArrayBytes);
+  }
+  return arrayGrayBytes;
 }
 
 bool IsArgImage(const std::string & arg) {
@@ -125,6 +222,16 @@ int main (int argc, char *argv[]) {
     if (IsArgImage(arg)) {
       image_list.push_back(arg);
     }
+  }
+  
+  bool is_keep_new_detected_features = true;
+  bool is_patch_tracking_mode = false;
+  
+  //track patch mode
+  if (!FLAGS_patch.empty()) {
+    is_keep_new_detected_features = false;
+    is_patch_tracking_mode = true;
+    LOG(INFO) << "Patch traking mode activated. "<<std::endl;
   }
   
   size_t number_of_images = image_list.size();
@@ -154,117 +261,92 @@ int main (int argc, char *argv[]) {
   } else {
     LOG(FATAL) << "ERROR : undefined Describer !";
   }
-  
   matcher = new correspondence::ArrayMatcher_Kdtree<float>();
   
   libmv::tracker::FeaturesGraph all_features_graph;
    
   tracker::Tracker *points_tracker = NULL;
-  if (!FLAGS_robust_tracker)
+  if (!FLAGS_robust_tracker) {
     points_tracker = new tracker::Tracker(detector,describer,matcher);
-  else
-    points_tracker = new tracker::RobustTracker(detector,describer,matcher);
+  } else {
+    tracker::RobustTracker * r_tracker = 
+     new tracker::RobustTracker(detector,describer,matcher);
+    r_tracker->set_rms_threshold_inlier(FLAGS_robust_tracker_threshold);
+    points_tracker = r_tracker;
+  }
   
+  if (is_patch_tracking_mode) {
+    std::string image_path = FLAGS_patch;
+    LOG(INFO) << "Tracking patch '"<< image_path << "'" << std::endl;
+    ByteImage imageArrayBytes;
+    ReadImage (image_path.c_str(), &imageArrayBytes);
+    ByteImage *arrayGrayBytes = ConvertToGrayscale(imageArrayBytes);
+    Image image(arrayGrayBytes);
+    
+    image_sizes.push_back(std::pair<size_t,size_t>(
+     arrayGrayBytes->Height(), arrayGrayBytes->Width()));
+        
+    libmv::tracker::FeaturesGraph new_features_graph;  
+    libmv::Matches::ImageID new_image_id = 0;
+    points_tracker->Track(image, 
+                          all_features_graph, 
+                          &new_features_graph,
+                          &new_image_id,
+                          true);
+    LOG(INFO) << "#Patch Tracks "<< new_features_graph.matches_.NumTracks()
+      << std::endl;
+            
+    all_features_graph.Merge(new_features_graph);
+  }
   // Track the sequence of images  
-  size_t image_index = 1;
+  size_t image_index = 0;
   std::list<std::string>::iterator image_list_iterator = image_list.begin();
-  std::string first_image_path = *image_list_iterator; 
-  image_list_iterator++;
   for (; image_list_iterator != image_list.end(); ++image_list_iterator) {
     std::string image_path = (*image_list_iterator);
-    if (image_index == 1) {
-      LOG(INFO) << "Tracking image '"<< first_image_path << "'" << std::endl;
-      Array3Du imageArrayBytes1;
-      ReadImage (first_image_path.c_str(), &imageArrayBytes1);
+  
+    LOG(INFO) << "Tracking image '"<< image_path << "'" << std::endl;
+    ByteImage imageArrayBytes;
+    ReadImage (image_path.c_str(), &imageArrayBytes);
+    ByteImage *arrayGrayBytes = ConvertToGrayscale(imageArrayBytes);
+    
+    Image image(arrayGrayBytes);
+    
+    image_sizes.push_back(std::pair<size_t,size_t>(
+      arrayGrayBytes->Height(), arrayGrayBytes->Width()));
+        
+    libmv::tracker::FeaturesGraph new_features_graph;  
+    libmv::Matches::ImageID new_image_id = 0;
+    points_tracker->Track(image, 
+                          all_features_graph, 
+                          &new_features_graph,
+                          &new_image_id,
+                          is_keep_new_detected_features);
+    LOG(INFO) << "#New Tracks "<< new_features_graph.matches_.NumTracks()
+      << std::endl;
       
-      // Grayscale image convertion
-      Array3Du *arrayGrayBytes = NULL;
-      if (imageArrayBytes1.Depth() == 3) {
-        arrayGrayBytes = new Array3Du ();
-        Rgb2Gray<Array3Du, Array3Du>(imageArrayBytes1, arrayGrayBytes);
-      } else {
-        arrayGrayBytes = new Array3Du (imageArrayBytes1);
-      }
-      Image image1 (arrayGrayBytes);
-      
-      image_sizes.push_back(std::pair<size_t,size_t>(
-       arrayGrayBytes->Height(), arrayGrayBytes->Width()));
-      
-      LOG(INFO) << "Tracking image '"<< image_path << "'" << std::endl;
-      Array3Du imageArrayBytes2;
-      ReadImage (image_path.c_str(), &imageArrayBytes2);
-      
-      // Grayscale image convertion
-      arrayGrayBytes = NULL;
-      if (imageArrayBytes2.Depth() == 3) {
-        arrayGrayBytes = new Array3Du ();
-        Rgb2Gray<Array3Du, Array3Du>(imageArrayBytes2, arrayGrayBytes);
-      } else {
-        arrayGrayBytes = new Array3Du (imageArrayBytes2);
-      }
-      Image image2(arrayGrayBytes);
-      
-      image_sizes.push_back(std::pair<size_t,size_t>(
-       arrayGrayBytes->Height(), arrayGrayBytes->Width()));
-       
-      points_tracker->Track(image1, image2, &all_features_graph);
-      
-      LOG(INFO) << "#Tracks "<< all_features_graph.matches_.NumTracks()
-       << std::endl;
-      LOG(INFO) << "#Images "<< all_features_graph.matches_.NumImages() 
-       << std::endl;
-             
-      if (FLAGS_save_features) {
-        Matches::Features<PointFeature> features_set =
-         all_features_graph.matches_.InImage<PointFeature>(0);
-        WriteFeaturesImage(imageArrayBytes1, 
-                          first_image_path,
-                          features_set);
-        features_set = all_features_graph.matches_.InImage<PointFeature>(1);
-        WriteFeaturesImage(imageArrayBytes2, 
-                          image_path,
-                          features_set);
-      }
-    } else { 
-      LOG(INFO) << "Tracking image '"<< image_path << "'" << std::endl;
-      Array3Du imageArrayBytes;
-      ReadImage (image_path.c_str(), &imageArrayBytes);
-      Array3Du *arrayGrayBytes = NULL;
-      // Grayscale image convertion
-      if (imageArrayBytes.Depth() == 3) {
-        arrayGrayBytes = new Array3Du ();
-        Rgb2Gray<Array3Du, Array3Du>(imageArrayBytes, arrayGrayBytes);
-      } else {
-        arrayGrayBytes = new Array3Du (imageArrayBytes);
-      }
-      Image image(arrayGrayBytes);
-      
-      image_sizes.push_back(std::pair<size_t,size_t>(
-       arrayGrayBytes->Height(), arrayGrayBytes->Width()));
-          
-      libmv::tracker::FeaturesGraph new_features_graph;  
-      libmv::Matches::ImageID new_image_id;
-      points_tracker->Track(image, 
-                            all_features_graph, 
-                            &new_features_graph,
-                            &new_image_id);
-      
-      LOG(INFO) << "#NewTracks "<< new_features_graph.matches_.NumTracks()
-       << std::endl;
-              
-      if (FLAGS_save_features) {
-        Matches::Features<PointFeature> features_set =
-         new_features_graph.matches_.InImage<PointFeature>(new_image_id);
-        WriteFeaturesImage(imageArrayBytes, 
-                           image_path,
-                           features_set);
-      }
+    if (!is_patch_tracking_mode)
       all_features_graph.Merge(new_features_graph);
-      LOG(INFO) << "#Tracks "<< all_features_graph.matches_.NumTracks() 
-       << std::endl;
-      LOG(INFO) << "#Images "<< all_features_graph.matches_.NumImages() 
-       << std::endl;
+    
+    if (FLAGS_save_features || FLAGS_save_matches) {
+      Matches::Features<PointFeature> features_set =
+        new_features_graph.matches_.InImage<PointFeature>(new_image_id);
+        
+      if (FLAGS_save_features)
+        DrawFeatures(imageArrayBytes, features_set, false);
+      if (FLAGS_save_matches)
+        DrawMatches(imageArrayBytes, new_image_id, all_features_graph);
+      
+      SaveImage(imageArrayBytes, image_path, "-features");
     }
+    
+    if (!is_keep_new_detected_features) {
+      new_features_graph.Clear();
+    }
+    
+    LOG(INFO) << "#All Tracks "<< all_features_graph.matches_.NumTracks() 
+      << std::endl;
+    LOG(INFO) << "#All Images "<< all_features_graph.matches_.NumImages() 
+      << std::endl;
     image_index++;
   }
 
@@ -273,7 +355,6 @@ int main (int argc, char *argv[]) {
   //TODO (julien) Move this part into another tool (here it's a 2D tracker only)
   // Pose estimation
   if (FLAGS_pose_estimation)  {
-    
     vector<Mat3> Ks(number_of_images);
     
     vector<Mat3> Rs(number_of_images);
@@ -313,7 +394,7 @@ int main (int argc, char *argv[]) {
       // Compute fundamental matrix 
       FundamentalFromCorrespondences7PointRobust(x0, 
                                                  x1, 
-                                                 1, 
+                                                 0.5, 
                                                  &Fs[index_image],
                                                  NULL);
                                          
@@ -349,6 +430,6 @@ int main (int argc, char *argv[]) {
   // Delete the features graph
   all_features_graph.Clear();
   
-  //TODO(jmichot) Clean the variables detector, describer, matcher
+  //TODO(julien) Clean the variables detector, describer, matcher
   return 0;
 }

@@ -32,8 +32,8 @@ class RobustTracker : public Tracker {
                 descriptor::Describer *describer,
                 correspondence::ArrayMatcher<float> *matcher) : 
                  Tracker(detector, describer, matcher) {
-    minimum_number_inliers_ = 10;
-    rms_threshold_inlier_   =  1.5;
+    minimum_number_inliers_ = 8; // from the 8 point algorithm
+    rms_threshold_inlier_   = 0.3;
   }
                   
   virtual ~RobustTracker() {}
@@ -50,6 +50,10 @@ class RobustTracker : public Tracker {
              FeaturesGraph *new_features_graph,
              Matches::ImageID *image_id,
              bool keep_single_feature = true); 
+             
+  double set_rms_threshold_inlier(double threshold) {
+    rms_threshold_inlier_ = threshold;
+  }
  protected:
   size_t  minimum_number_inliers_;
   // Maxmimum distance with the epipolar line (px) to be an inlier
@@ -58,7 +62,5 @@ class RobustTracker : public Tracker {
 
 } // using namespace tracker
 } // using namespace libmv
-
-#include "robust_tracker-inl.h"
 
 #endif  // LIBMV_CORRESPONDENCE_ROBUST_TRACKER_H_

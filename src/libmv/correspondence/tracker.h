@@ -27,6 +27,7 @@
 #include "libmv/base/scoped_ptr.h"
 #include "libmv/base/vector.h"
 #include "libmv/correspondence/ArrayMatcher.h"
+#include "libmv/correspondence/feature_matching.h"
 #include "libmv/correspondence/matches.h"
 #include "libmv/descriptor/descriptor.h"
 #include "libmv/detector/detector.h"
@@ -104,7 +105,5 @@ class Tracker {
 
 } // using namespace tracker
 } // using namespace libmv
-
-#include "tracker-inl.h"
 
 #endif  // LIBMV_CORRESPONDENCE_TRACKER_H_

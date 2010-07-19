@@ -155,9 +155,9 @@ class Matches {
       for (; iter_track != matches.tracks_.end(); ++iter_track) {
         found_track = tracks_.find(*iter_track);
         if (found_track == tracks_.end() 
-          && new_image_ids.find(*iter_track) == new_image_ids.end()) {
+          && new_track_ids.find(*iter_track) == new_track_ids.end()) {
           track_id = ++max_tracks;
-          new_image_ids[*iter_track] = track_id;
+          new_track_ids[*iter_track] = track_id;
           tracks_.insert(track_id);
         } else {
           track_id = *iter_track; 
@@ -174,7 +174,7 @@ class Matches {
   }
   
   ImageID GetMaxImageID() const {
-    ImageID max_images = 0;
+    ImageID max_images = -1;
     std::set<ImageID>::const_iterator iter_image =
      std::max_element (images_.begin(), images_.end());
     if (iter_image != images_.end()) {
@@ -184,7 +184,7 @@ class Matches {
   }
   
   TrackID GetMaxTrackID() const {
-    TrackID max_tracks = 0;
+    TrackID max_tracks = -1;
     std::set<TrackID>::const_iterator iter_track =
      std::max_element (tracks_.begin(), tracks_.end());
     if (iter_track != tracks_.end()) {
