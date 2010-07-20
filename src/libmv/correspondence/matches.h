@@ -90,8 +90,8 @@ class Matches {
     tracks_.insert(track);
   }
 
-  void Remove(ImageID image, TrackID track, const Feature *feature) {
-    graph_.Remove(image, track, feature);
+  void Remove(ImageID image, TrackID track) {
+    graph_.Remove(image, track);
   }
   // Insert all elements of matches (images, tracks, feature) as new data
   void Insert(const Matches &matches) {

@@ -38,7 +38,7 @@ class BipartiteGraph {
     left_to_right_[std::make_pair(left, right)] = edge;
     right_to_left_[std::make_pair(right, left)] = edge;
   }
-  void Remove(const T &left, const T &right, const EdgeT &edge) {
+  void Remove(const T &left, const T &right) {
     typename EdgeMap::iterator iter =
      left_to_right_.find(std::make_pair(left, right));
     if (iter != left_to_right_.end())

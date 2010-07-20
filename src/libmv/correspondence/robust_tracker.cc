@@ -18,10 +18,11 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
+#include "robust_tracker.h"
 #include "libmv/multiview/robust_fundamental.h"
 
-namespace libmv {
-namespace tracker {
+using namespace libmv;
+using namespace tracker;
  
 bool RobustTracker::Track(const Image &image1,
                           const Image &image2, 
@@ -69,7 +70,7 @@ bool RobustTracker::Track(const Image &image1,
     if (!is_inlier) {
       const Feature * feature_to_remove =
        new_features_graph->matches_.Get(1, tracks[i]);
-      new_features_graph->matches_.Remove(1, tracks[i], feature_to_remove);
+      new_features_graph->matches_.Remove(1, tracks[i]);
       if (keep_single_feature) {
         new_features_graph->matches_.Insert(1, 
                                             max_num_track,
@@ -161,9 +162,7 @@ bool RobustTracker::Track(const Image &image,
         if (!is_inlier) {
           const Feature * feature_to_remove =
           new_features_graph->matches_.Get(*image_id, tracks[i]);
-          new_features_graph->matches_.Remove(*image_id, 
-                                              tracks[i],
-                                              feature_to_remove);
+          new_features_graph->matches_.Remove(*image_id, tracks[i]);
           if (keep_single_feature) {
             new_features_graph->matches_.Insert(*image_id, 
                                                 max_num_track,
@@ -176,6 +175,3 @@ bool RobustTracker::Track(const Image &image,
   }
   return is_track_ok;
 }
-
-} // end namespace tracker
-} // end namespace libmv

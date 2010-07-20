@@ -18,12 +18,12 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
+#include "tracker.h"
 #include "libmv/base/vector_utils.h"
 #include "libmv/correspondence/feature.h"
-#include "libmv/correspondence/feature_matching.h"
 
-namespace libmv {
-namespace tracker {
+using namespace libmv;
+using namespace tracker;
  
 bool Tracker::Track(const Image &image1,
                     const Image &image2, 
@@ -141,9 +141,11 @@ bool Tracker::Track(const Image &image,
     feature.descriptor = *(descriptor::VecfDescriptor*) descriptors[i];
     *(PointFeature*)(&feature) = *(PointFeature*)features[i];
   }
-   
-  *image_id = known_features_graph.matches_.GetMaxImageID()+1;
-  
+  if (known_features_graph.matches_.NumImages() == 0)
+    *image_id = 0;
+  else
+    *image_id = known_features_graph.matches_.GetMaxImageID()+1;
+    
   //TODO (jmichot) Use the matcher_ to match and not the generic function
   // FindCorrespondences(*feature_set1, *feature_set2, correspondences);
   //TODO (jmichot) For a rapid tracker, use only one feature 
@@ -164,6 +166,7 @@ bool Tracker::Track(const Image &image,
     std::map<size_t, size_t> correspondences;
     FindCorrespondences(feature_set_known, *feature_set, &correspondences);  
     
+    // We insert known matches (as edges) to the graph
     std::map<size_t, size_t>::iterator correspondences_iter =
      correspondences.begin();
     for (; correspondences_iter != correspondences.end();
@@ -186,9 +189,12 @@ bool Tracker::Track(const Image &image,
       }                          
     }
   }
-  
   size_t max_num_track = known_features_graph.matches_.GetMaxTrackID()+1;
+  if (known_features_graph.matches_.NumTracks() == 0)
+    max_num_track = 0;
   std::map<size_t, size_t>::iterator correspondences_iter;
+  
+  // We insert known matches (as edges) to the graph
   if (keep_single_feature) {
     for (size_t i = 0; i < feature_set->features.size(); ++i)
     {
@@ -207,6 +213,3 @@ bool Tracker::Track(const Image &image,
   
   return true;
 }
-
-} // end namespace tracker
-} // end namespace libmv

@@ -51,7 +51,7 @@ class RobustTracker : public Tracker {
              Matches::ImageID *image_id,
              bool keep_single_feature = true); 
              
-  double set_rms_threshold_inlier(double threshold) {
+  void set_rms_threshold_inlier(double threshold) {
     rms_threshold_inlier_ = threshold;
   }
  protected:
