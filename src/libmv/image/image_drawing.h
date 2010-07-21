@@ -24,6 +24,9 @@
 // ::Contains(int y, int x) <= Tell if a point is inside or not the image
 // ::operator(int y,int x)  <= Modification accessor over the pixel (y,x)
 
+#ifndef LIBMV_IMAGE_IMAGE_DRAWING_H
+#define LIBMV_IMAGE_IMAGE_DRAWING_H
+
 namespace libmv {
 
 // Bresenham approach to draw ellipse.
@@ -39,14 +42,14 @@ void DrawEllipse(int xc, int yc, int radiusA, int radiusB,
   Image &im = *pim;
 
   // Counter Clockwise rotation matrix.
-  double matXY[4] = { cos(angle), sin(angle), 
+  double matXY[4] = { cos(angle), sin(angle),
                      -sin(angle), cos(angle)};
   int x,y;
   double d1,d2;
   x = 0;
   y = b;
   d1 = b*b - a*a*b + a*a/4;
-  
+
   float rotX = (matXY[0] * x + matXY[1] * y);
   float rotY = (matXY[2] * x + matXY[3] * y);
   if (im.Contains( yc + rotY,  xc + rotX))
@@ -243,3 +246,5 @@ void DrawLine(int xa, int ya, int xb, int yb, const Color &col, Image *pim) {
 }
 
 } //namespace libmv
+
+#endif  // LIBMV_IMAGE_IMAGE_DRAWING_H
