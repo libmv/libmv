@@ -20,6 +20,7 @@
 
 #include "libmv/image/image.h"
 #include "libmv/image/image_drawing.h"
+#include "libmv/image/image_io.h"
 #include "libmv/logging/logging.h"
 #include "testing/testing.h"
 
@@ -156,4 +157,49 @@ TEST(ImageDrawing, RotatedEllipse) {
       // Use +-1 to avoid rasterization error.
     }
   }
+}
+
+/// Assert that the DrawLine function do not crash
+/// when one point is outside the image
+TEST(ImageDrawing, DrawLine_PointOutsideTheImage) {
+
+  Array3Du image(30,30);
+  image.Fill(0);
+
+  const int radius = 20;
+  int x = 15, y = 15;
+
+  // Distance checking :
+  for (double i=0; i < 2.0*3.14; i+=3.14/12)
+  {
+    int x1 = cos(i) * radius;
+    int y1 = sin(i) * radius;
+    DrawLine( x, y, x+x1, y+y1, 255, &image);
+  }
+  // Translate :
+  x += 15/2.0;
+  for (double i=0; i < 2.0*3.14; i+=3.14/12)
+  {
+    int x1 = cos(i) * radius;
+    int y1 = sin(i) * radius;
+    DrawLine( x, y, x+x1, y+y1, 255, &image);
+  }
+  // Translate :
+  x += 15/2.0;
+  for (double i=0; i < 2.0*3.14; i+=3.14/12)
+  {
+    int x1 = cos(i) * radius;
+    int y1 = sin(i) * radius;
+    DrawLine( x, y, x+x1, y+y1, 255, &image);
+  }
+
+  //Point totally outside the image
+  x = y = -100;
+  for (double i=0; i < 2.0*3.14; i+=3.14/12)
+  {
+    int x1 = cos(i) * radius;
+    int y1 = sin(i) * radius;
+    DrawLine( x, y, x+x1, y+y1, 255, &image);
+  }
+  WriteImage( image, "toto.png");
 }

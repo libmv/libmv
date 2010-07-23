@@ -23,6 +23,8 @@
 //
 // ::Contains(int y, int x) <= Tell if a point is inside or not the image
 // ::operator(int y,int x)  <= Modification accessor over the pixel (y,x)
+// ::Width()
+// ::Height()
 
 #ifndef LIBMV_IMAGE_IMAGE_DRAWING_H
 #define LIBMV_IMAGE_IMAGE_DRAWING_H
@@ -168,18 +170,46 @@ void DrawCircle(int x, int y, int radius, const Color &col, Image *pim) {
 template <class Image, class Color>
 void DrawLine(int xa, int ya, int xb, int yb, const Color &col, Image *pim) {
   Image &im = *pim;
-  if (!im.Contains(ya, xa) && !im.Contains(yb, xb))
-    return;
-  // TODO(julien) Replace the outside point by the intersection of the line and
-  // the limit (either x=width or y=height), and not by the max/min like here
-  if (!im.Contains(ya, xa)) {
-    ya = std::min( std::max(ya, 0), pim->Height());
-    xa = std::min( std::max(xa, 0), pim->Width());
+
+  // If one point is outside the image
+  // Replace the outside point by the intersection of the line and
+  // the limit (either x=width or y=height).
+  if (!im.Contains(ya, xa) || !im.Contains(yb, xb))
+  {
+    int width = pim->Width();
+    int height = pim->Height();
+    const bool xdir = xa<xb, ydir = ya<yb;
+    float nx0 = xa, nx1 = xb, ny0 = ya, ny1 = yb,
+        &xleft = xdir?nx0:nx1,  &yleft = xdir?ny0:ny1,
+        &xright = xdir?nx1:nx0, &yright = xdir?ny1:ny0,
+        &xup = ydir?nx0:nx1,    &yup = ydir?ny0:ny1,
+        &xdown = ydir?nx1:nx0,  &ydown = ydir?ny1:ny0;
+
+    if (xright<0 || xleft>=width) return;
+    if (xleft<0) {
+      yleft -= xleft*(yright - yleft)/(xright - xleft);
+      xleft  = 0;
+    }
+    if (xright>=width) {
+      yright -= (xright - width)*(yright - yleft)/(xright - xleft);
+      xright  = width - 1;
+    }
+    if (ydown<0 || yup>=height) return;
+    if (yup<0) {
+      xup -= yup*(xdown - xup)/(ydown - yup);
+      yup  =  0;
+    }
+    if (ydown>=height) {
+      xdown -= (ydown - height)*(xdown - xup)/(ydown - yup);
+      ydown  =  height - 1;
+    }
+
+    xa = (int) xleft;
+    xb = (int) xright;
+    ya = (int) yleft;
+    yb = (int) yright;
   }
-  if (!im.Contains(yb, xb)) {
-    yb = std::min( std::max(yb, 0), pim->Height());
-    xb = std::min( std::max(xb, 0), pim->Width());
-  }
+
   int xbas, xhaut, ybas, yhaut;
   // Check the condition ybas < yhaut.
   if (ya <= yb) {
@@ -193,7 +223,6 @@ void DrawLine(int xa, int ya, int xb, int yb, const Color &col, Image *pim) {
     xhaut = xa;
     yhaut = ya;
   }
-
   // Initialize slope.
   int x, y, dx, dy, incrmX, incrmY, dp, N, S;
   dx = xhaut - xbas;
