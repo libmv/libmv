@@ -7,3 +7,9 @@ Local modifications:
 * change name from mser.cpp to cvMserDetector.h
 
 * Code changes :
+* Remove dependancies over Opencv
+* Change to fit the libmv bases classes
+* Make function template and use default parameter
+* Code factoring of icvMSERMergeComp
+* Add function to draw mser pixels and fitted ellipses
+* Remove code to extract color mser

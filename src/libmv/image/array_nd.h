@@ -360,6 +360,8 @@ class Array3D : public ArrayND<T, 3> {
   int cols() const { return Width(); }
   int depth() const { return Depth(); }
 
+  int Get_Step() const { return Width()*Depth(); }
+
   /// Enable accessing with 2 indices for grayscale images.
   T &operator()(int i0, int i1, int i2 = 0) {
     assert(0 <= i0 && i0 < Height());

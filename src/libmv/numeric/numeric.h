@@ -30,9 +30,10 @@
 #include <Eigen/Core>
 #include <Eigen/Geometry>
 #include <Eigen/LU>
+#include <Eigen/QR>
 #include <Eigen/SVD>
 
-#include <iostream>
+
 
 #if _WIN32 || __APPLE__
   void static sincos (double x, double *sinx, double *cosx) {
