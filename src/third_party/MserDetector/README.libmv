@@ -1,0 +1,9 @@
+Project: MserDetector
+URL: https://code.ros.org/svn/opencv/trunk/opencv/modules/features2d/
+License: BSD
+Upstream version: Revision 3399, Trunk 25 July 2010
+
+Local modifications:
+* change name from mser.cpp to cvMserDetector.h
+
+* Code changes :
