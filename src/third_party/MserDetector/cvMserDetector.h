@@ -13,6 +13,7 @@
 
 #include <cmath>
 #include <iostream>
+#include <iterator>
 
 //-------------------------------------------
 // -- MSER From OpenCV
@@ -144,7 +145,7 @@ inline static void
   if ( comp1->size < comp2->size )  {
     std::swap( comp1 , comp2);
   }
-  //-- PM : Factorize the code 
+
   {
     if ( NULL == comp1->history )
     {
@@ -280,6 +281,7 @@ icvPreprocessMSER_8UC1 ( ImageInt & img,
                          ImageUChar & src,
                          ImageUChar* mask = NULL)
 {
+  (void) mask;
   int srccpt    = src.Get_Step() - src.Width();
   int cpt_1     = img.Width() - src.Width()-1;
   int* imgptr   = &img(0,0);
@@ -593,8 +595,6 @@ void FitEllipse( const vector<CvPoint> & contour,
   }
 }
 
-#include <iterator>
-
 struct sMserProperties
 {
   sMserProperties(double x = 0.0, double y = 0.0,
@@ -618,8 +618,8 @@ void detectPoints(const ImageUChar & image, vector<sMserProperties> & detectedEl
   ImageUChar test( image );
   CvSeq mserSequence;
   icvExtractMSER_8UC1( test, mserSequence, CvMSERParams() );
-  
-  
+
+
   ImageUChar cpyIMG( image.Height(), image.Width(), 3 );
   cpyIMG.fill(0);
   bool bdisplayMserOnIndependantImage = false;
@@ -637,7 +637,7 @@ void detectPoints(const ImageUChar & image, vector<sMserProperties> & detectedEl
     unsigned char randomValueR = rand()%255;
     unsigned char randomValueG = rand()%255;
     unsigned char randomValueB = rand()%255;
-    
+
     double centerx, centery, width, height, angle;
     FitEllipse(mserSequence[i]->ptList,centerx, centery, width, height, angle);
 
