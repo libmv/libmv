@@ -59,33 +59,34 @@
 using namespace libmv;
 
 DEFINE_string(detector, "FAST", "select the detector (FAST,STAR,SURF)");
-DEFINE_string(describer, "DAISY", 
+DEFINE_string(describer, "DAISY",
               "select the detector (SIMPLIEST,SURF,DIPOLE,DAISY)");
-DEFINE_bool  (save_features, false, 
+DEFINE_bool  (save_features, false,
               "save images with detected and matched features");
-DEFINE_bool  (save_matches, false, 
+DEFINE_bool  (save_matches, false,
               "save images with matches");
-DEFINE_bool  (robust_tracker, false, 
+DEFINE_bool  (robust_tracker, false,
               "perform a robust tracking (with epipolar filtering)");
-DEFINE_double(robust_tracker_threshold, 1.0, 
+DEFINE_double(robust_tracker_threshold, 1.0,
               "Epipolar filtering threshold (in pixels)");
-DEFINE_double(focal, 50, 
+
+DEFINE_double(focal, 50,
               "focale length for all the cameras");
-DEFINE_bool  (pose_estimation, false, 
+DEFINE_bool  (pose_estimation, false,
               "perform a pose estimation");
 DEFINE_string(patch, "", "only track this image/patch");
 
 void DrawFeatures(ByteImage &imageArrayBytes,
                   Matches::Features<PointFeature> &features,
-                  bool is_draw_orientation) {  
+                  bool is_draw_orientation) {
   while(features) {
     Byte color = 255;
     float scale = features.feature()->scale;
     float angle = features.feature()->orientation;
-    DrawCircle<ByteImage, Byte>(features.feature()->x(), 
-                                features.feature()->y(), 
-                                scale, 
-                                color, 
+    DrawCircle<ByteImage, Byte>(features.feature()->x(),
+                                features.feature()->y(),
+                                scale,
+                                color,
                                 &imageArrayBytes);
     if (is_draw_orientation) {
       DrawLine(features.feature()->x(),
@@ -102,7 +103,7 @@ void DrawFeatures(ByteImage &imageArrayBytes,
 void DrawMatches(ByteImage &imageArrayBytes,
                  const Matches::ImageID id_image,
                  tracker::FeaturesGraph all_features_graph) {
-  Matches::Features<KeypointFeature> features = 
+  Matches::Features<KeypointFeature> features =
    all_features_graph.matches_.InImage<KeypointFeature>(id_image);
   Byte color = 255;
   size_t NumImages = all_features_graph.matches_.NumImages();
@@ -116,9 +117,9 @@ void DrawMatches(ByteImage &imageArrayBytes,
         //Draw a line between the two points :
         KeypointFeature * pt0 = ((KeypointFeature*)ref);
         KeypointFeature * pt1 = ((KeypointFeature*)f);
-        DrawLine(pt0->x(), pt0->y(), 
-                 pt1->x(), pt1->y(), 
-                 color, 
+        DrawLine(pt0->x(), pt0->y(),
+                 pt1->x(), pt1->y(),
+                 color,
                  &imageArrayBytes);
       }
     }
@@ -131,7 +132,7 @@ void SaveImage(const ByteImage &imageArrayBytes,
                const std::string file_suffix) {
   std::string s = out_file_path;
   size_t index_dot = s.find_last_of(".");
-  std::string ext = s.substr(index_dot, s.size());
+  std::string ext = s.substr(index_dot);
   s.erase(index_dot,s.size());
   s.append(file_suffix);
   s.append(ext);
@@ -150,35 +151,35 @@ void BlendImages(const ByteImage &imageArrayBytesA,
                             imageArrayBytesB.Depth());
   imageArrayBytesOut.Resize(h, w, d);
   imageArrayBytesOut.Fill(0);
-  
+
   size_t dA=0,dB=0;
   if (imageArrayBytesA.Depth() == 3) dA = 1;
   if (imageArrayBytesB.Depth() == 3) dB = 1;
-  
+
   for(size_t j=0; j < h; ++j)
     for(size_t i=0; i < w; ++i) {
-      imageArrayBytesOut(j,i,0) = (1 - alpha) * imageArrayBytesA(j,i,0) 
+      imageArrayBytesOut(j,i,0) = (1 - alpha) * imageArrayBytesA(j,i,0)
        + alpha * imageArrayBytesB(j,i,0);
       if (d == 3) {
-        imageArrayBytesOut(j,i,1) = (1 - alpha) * imageArrayBytesA(j,i,dA) 
+        imageArrayBytesOut(j,i,1) = (1 - alpha) * imageArrayBytesA(j,i,dA)
          + alpha * imageArrayBytesB(j,i,dB);
-        
-        imageArrayBytesOut(j,i,2) = (1 - alpha) * imageArrayBytesA(j,i,2*dA) 
+
+        imageArrayBytesOut(j,i,2) = (1 - alpha) * imageArrayBytesA(j,i,2*dA)
          + alpha * imageArrayBytesB(j,i,2*dB);
       }
     }
 }
 
-void DisplayMatches(Matches::Matches &matches) { 
+void DisplayMatches(Matches::Matches &matches) {
   std::cout << "Matches : \t\t"<<std::endl << "\t";
   for (size_t j = 0; j < matches.NumImages(); j++) {
     std::cout << j << " ";
   }
   std::cout << std::endl;
-  
+
   for (size_t i = 0; i < matches.NumTracks(); i++) {
     std::cout << i <<"\t";
-    
+
     for (size_t j = 0; j < matches.NumImages(); j++) {
       const Feature * f = matches.Get(j,i);
       if (f)
@@ -190,7 +191,7 @@ void DisplayMatches(Matches::Matches &matches) {
   }
 }
 
-ByteImage * ConvertToGrayscale(const ByteImage &imageArrayBytes) {  
+ByteImage * ConvertToGrayscale(const ByteImage &imageArrayBytes) {
   ByteImage *arrayGrayBytes = NULL;
   // Grayscale image convertion
   if (imageArrayBytes.Depth() == 3) {
@@ -204,43 +205,43 @@ ByteImage * ConvertToGrayscale(const ByteImage &imageArrayBytes) {
 }
 
 bool IsArgImage(const std::string & arg) {
-  return (arg.find_last_of (".png") == arg.size() - 1 ||
-          arg.find_last_of (".jpg") == arg.size() - 1 ||
-          arg.find_last_of (".jpeg") == arg.size()- 1 ||
-          arg.find_last_of (".pnm") == arg.size() - 1 );
+  return  (arg.rfind (".png") != std::string::npos ||
+           arg.rfind (".jpg") != std::string::npos ||
+           arg.rfind (".jpeg") != std::string::npos ||
+           arg.rfind (".pnm") != std::string::npos );
 }
 
-int main (int argc, char *argv[]) {    
+int main (int argc, char *argv[]) {
   google::SetUsageMessage("Track a sequence.");
   google::ParseCommandLineFlags(&argc, &argv, true);
-  
+
   std::list<std::string> image_list;
   std::vector<std::pair<size_t, size_t> > image_sizes;
-    
+
   for (int i = 1;i < argc;++i) {
     std::string arg (argv[i]);
     if (IsArgImage(arg)) {
       image_list.push_back(arg);
     }
   }
-  
+
   bool is_keep_new_detected_features = true;
   bool is_patch_tracking_mode = false;
-  
+
   //track patch mode
   if (!FLAGS_patch.empty()) {
     is_keep_new_detected_features = false;
     is_patch_tracking_mode = true;
     LOG(INFO) << "Patch traking mode activated. "<<std::endl;
   }
-  
+
   size_t number_of_images = image_list.size();
-  
+
   // Create the tracker
   detector::Detector * detector                 = NULL;
   descriptor::Describer *describer              = NULL;
   correspondence::ArrayMatcher<float> *matcher  = NULL;
-  
+
   if (FLAGS_detector == "FAST") {
     detector = detector::CreateFastDetector(9, 10, true);
   } else if (FLAGS_detector == "SURF") {
@@ -262,19 +263,21 @@ int main (int argc, char *argv[]) {
     LOG(FATAL) << "ERROR : undefined Describer !";
   }
   matcher = new correspondence::ArrayMatcher_Kdtree<float>();
-  
+
   libmv::tracker::FeaturesGraph all_features_graph;
-   
+
   tracker::Tracker *points_tracker = NULL;
   if (!FLAGS_robust_tracker) {
     points_tracker = new tracker::Tracker(detector,describer,matcher);
   } else {
-    tracker::RobustTracker * r_tracker = 
+    tracker::RobustTracker * r_tracker =
      new tracker::RobustTracker(detector,describer,matcher);
     r_tracker->set_rms_threshold_inlier(FLAGS_robust_tracker_threshold);
     points_tracker = r_tracker;
   }
-  
+
+  // Track the sequence of images
+
   if (is_patch_tracking_mode) {
     std::string image_path = FLAGS_patch;
     LOG(INFO) << "Tracking patch '"<< image_path << "'" << std::endl;
@@ -282,146 +285,146 @@ int main (int argc, char *argv[]) {
     ReadImage (image_path.c_str(), &imageArrayBytes);
     ByteImage *arrayGrayBytes = ConvertToGrayscale(imageArrayBytes);
     Image image(arrayGrayBytes);
-    
+
     image_sizes.push_back(std::pair<size_t,size_t>(
      arrayGrayBytes->Height(), arrayGrayBytes->Width()));
-        
-    libmv::tracker::FeaturesGraph new_features_graph;  
+
+    libmv::tracker::FeaturesGraph new_features_graph;
     libmv::Matches::ImageID new_image_id = 0;
-    points_tracker->Track(image, 
-                          all_features_graph, 
+    points_tracker->Track(image,
+                          all_features_graph,
                           &new_features_graph,
                           &new_image_id,
                           true);
     LOG(INFO) << "#Patch Tracks "<< new_features_graph.matches_.NumTracks()
       << std::endl;
-            
+
     all_features_graph.Merge(new_features_graph);
   }
-  // Track the sequence of images  
+  // Track the sequence of images
   size_t image_index = 0;
   std::list<std::string>::iterator image_list_iterator = image_list.begin();
   for (; image_list_iterator != image_list.end(); ++image_list_iterator) {
     std::string image_path = (*image_list_iterator);
-  
+
     LOG(INFO) << "Tracking image '"<< image_path << "'" << std::endl;
     ByteImage imageArrayBytes;
     ReadImage (image_path.c_str(), &imageArrayBytes);
     ByteImage *arrayGrayBytes = ConvertToGrayscale(imageArrayBytes);
-    
+
     Image image(arrayGrayBytes);
-    
+
     image_sizes.push_back(std::pair<size_t,size_t>(
       arrayGrayBytes->Height(), arrayGrayBytes->Width()));
-        
-    libmv::tracker::FeaturesGraph new_features_graph;  
+
+    libmv::tracker::FeaturesGraph new_features_graph;
     libmv::Matches::ImageID new_image_id = 0;
-    points_tracker->Track(image, 
-                          all_features_graph, 
+    points_tracker->Track(image,
+                          all_features_graph,
                           &new_features_graph,
                           &new_image_id,
                           is_keep_new_detected_features);
     LOG(INFO) << "#New Tracks "<< new_features_graph.matches_.NumTracks()
       << std::endl;
-      
+
     if (!is_patch_tracking_mode)
       all_features_graph.Merge(new_features_graph);
-    
+
     if (FLAGS_save_features || FLAGS_save_matches) {
       Matches::Features<PointFeature> features_set =
         new_features_graph.matches_.InImage<PointFeature>(new_image_id);
-        
+
       if (FLAGS_save_features)
         DrawFeatures(imageArrayBytes, features_set, false);
       if (FLAGS_save_matches)
         DrawMatches(imageArrayBytes, new_image_id, all_features_graph);
-      
+
       SaveImage(imageArrayBytes, image_path, "-features");
     }
-    
+
     if (!is_keep_new_detected_features) {
       new_features_graph.Clear();
     }
-    
-    LOG(INFO) << "#All Tracks "<< all_features_graph.matches_.NumTracks() 
+
+    LOG(INFO) << "#All Tracks "<< all_features_graph.matches_.NumTracks()
       << std::endl;
-    LOG(INFO) << "#All Images "<< all_features_graph.matches_.NumImages() 
+    LOG(INFO) << "#All Images "<< all_features_graph.matches_.NumImages()
       << std::endl;
     image_index++;
   }
 
   DisplayMatches(all_features_graph.matches_);
-  
+
   //TODO (julien) Move this part into another tool (here it's a 2D tracker only)
   // Pose estimation
   if (FLAGS_pose_estimation)  {
     vector<Mat3> Ks(number_of_images);
-    
+
     vector<Mat3> Rs(number_of_images);
     vector<Vec3> ts(number_of_images);
-    
+
     vector<Mat3> Fs(number_of_images);
     vector<Mat3> Es(number_of_images);
-    
+
     size_t index_image = 0;
     std::set<Matches::ImageID>::iterator image_iter =
       all_features_graph.matches_.get_images().begin();
-      
+
     Matches::ImageID previous_image_id = *image_iter;
-                  
+
     Ks[0] << FLAGS_focal,  0, image_sizes[index_image].second/2.0,
     0, FLAGS_focal, image_sizes[index_image].first/2.0,
     0,  0,     1;
     Rs[0].setIdentity();
     ts[0]<< 0, 0, 0;
-    
+
     image_iter++;
     index_image++;
     for (; image_iter != all_features_graph.matches_.get_images().end();
      ++image_iter, ++index_image) {
-                    
+
       Ks[index_image] << FLAGS_focal,  0, image_sizes[index_image].second/2.0,
       0, FLAGS_focal, image_sizes[index_image].first/2.0,
       0,  0,     1;
-      
+
       vector<Mat> xs(2);
-      TwoViewPointMatchMatrices(all_features_graph.matches_, 
-                                previous_image_id, 
-                                *image_iter, 
+      TwoViewPointMatchMatrices(all_features_graph.matches_,
+                                previous_image_id,
+                                *image_iter,
                                 &xs);
       Mat &x0 = xs[0];
       Mat &x1 = xs[1];
-      // Compute fundamental matrix 
-      FundamentalFromCorrespondences7PointRobust(x0, 
-                                                 x1, 
-                                                 0.5, 
+      // Compute fundamental matrix
+      FundamentalFromCorrespondences7PointRobust(x0,
+                                                 x1,
+                                                 0.5,
                                                  &Fs[index_image],
                                                  NULL);
-                                         
+
       // Compute essential matrix
-      EssentialFromFundamental(Fs[index_image], 
-                               Ks[index_image-1], 
-                               Ks[index_image], 
+      EssentialFromFundamental(Fs[index_image],
+                               Ks[index_image-1],
+                               Ks[index_image],
                                &Es[index_image]);
-            
+
       // Recover variation dR, dt from E and K
-      MotionFromEssentialAndCorrespondence(Es[index_image], 
-                                           Ks[index_image-1], x0.col(0), 
-                                           Ks[index_image], x1.col(0), 
-                                           &Rs[index_image], 
+      MotionFromEssentialAndCorrespondence(Es[index_image],
+                                           Ks[index_image-1], x0.col(0),
+                                           Ks[index_image], x1.col(0),
+                                           &Rs[index_image],
                                            &ts[index_image]);
-      
+
       // Recover the real R = Rprev * dR, t = Rprev * dt + tprev
       Rs[index_image] = Rs[index_image-1] * Rs[index_image];
       ts[index_image] = Rs[index_image-1] * ts[index_image] + ts[index_image-1];
-      
+
       LOG(INFO) << " T =  "<< ts[index_image] << std::endl;
-      
+
       //TODO (julien) Triangulation (features viewed in min N=3 views ?)
       //TODO (julien) Bundle Adjustment (projective/Euclidean BA ?)
     }
   }
-  
+
   // Delete the tracker
   if (points_tracker) {
     delete points_tracker;
@@ -429,7 +432,7 @@ int main (int argc, char *argv[]) {
   }
   // Delete the features graph
   all_features_graph.Clear();
-  
+
   //TODO(julien) Clean the variables detector, describer, matcher
   return 0;
 }
