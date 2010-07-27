@@ -31,6 +31,19 @@
 
 namespace libmv {
 
+/// Put the pixel in the image to the given color only if the point (xc,yc)
+///  is inside the image.
+/// /!\ Be careful at the order (Y,X).
+template <class Image, class Color>
+inline void safePutPixel(int yc, int xc, const Color & col, Image *pim)
+{
+  if (pim)
+  {
+    if (pim->Contains(yc, xc))
+      (*pim)(yc, xc) = col;
+  }
+}
+
 // Bresenham approach to draw ellipse.
 // http://raphaello.univ-fcomte.fr/ig/algorithme/ExemplesGLUt/BresenhamEllipse.htm
 // Add the rotation of the ellipse.
@@ -41,7 +54,6 @@ void DrawEllipse(int xc, int yc, int radiusA, int radiusB,
 {
   int a = radiusA;
   int b = radiusB;
-  Image &im = *pim;
 
   // Counter Clockwise rotation matrix.
   double matXY[4] = { cos(angle), sin(angle),
@@ -54,20 +66,17 @@ void DrawEllipse(int xc, int yc, int radiusA, int radiusB,
 
   float rotX = (matXY[0] * x + matXY[1] * y);
   float rotY = (matXY[2] * x + matXY[3] * y);
-  if (im.Contains( yc + rotY,  xc + rotX))
-    im( yc + rotY,  xc + rotX) = col;
+  safePutPixel( yc + rotY, xc + rotX, col, pim);
   rotX = (matXY[0] * x - matXY[1] * y);
   rotY = (matXY[2] * x - matXY[3] * y);
-  if (im.Contains( yc + rotY,  xc + rotX))
-    im( yc + rotY,  xc + rotX) = col;
+  safePutPixel( yc + rotY, xc + rotX, col, pim);
   rotX = (-matXY[0] * x - matXY[1] * y);
   rotY = (-matXY[2] * x - matXY[3] * y);
-  if (im.Contains( yc + rotY,  xc + rotX))
-    im( yc + rotY,  xc + rotX) = col;
+  safePutPixel( yc + rotY, xc + rotX, col, pim);
   rotX = (-matXY[0] * x + matXY[1] * y);
   rotY = (-matXY[2] * x + matXY[3] * y);
-  if (im.Contains( yc + rotY,  xc + rotX))
-    im( yc + rotY,  xc + rotX) = col;
+  safePutPixel( yc + rotY, xc + rotX, col, pim);
+
   while ( a*a*(y-.5) > b*b*(x+1) ) {
     if ( d1 < 0 ) {
       d1 += b*b*(2*x+3);
@@ -81,20 +90,16 @@ void DrawEllipse(int xc, int yc, int radiusA, int radiusB,
     }
     rotX = (matXY[0] * x + matXY[1] * y);
     rotY = (matXY[2] * x + matXY[3] * y);
-    if (im.Contains( yc + rotY,  xc + rotX))
-      im( yc + rotY,  xc + rotX) = col;
+    safePutPixel( yc + rotY, xc + rotX, col, pim);
     rotX = (matXY[0] * x - matXY[1] * y);
     rotY = (matXY[2] * x - matXY[3] * y);
-    if (im.Contains( yc + rotY,  xc + rotX))
-        im( yc + rotY,  xc + rotX) = col;
+    safePutPixel( yc + rotY, xc + rotX, col, pim);
     rotX = (-matXY[0] * x - matXY[1] * y);
     rotY = (-matXY[2] * x - matXY[3] * y);
-    if (im.Contains( yc + rotY,  xc + rotX))
-       im( yc + rotY,  xc + rotX) = col;
+    safePutPixel( yc + rotY, xc + rotX, col, pim);
     rotX = (-matXY[0] * x + matXY[1] * y);
     rotY = (-matXY[2] * x + matXY[3] * y);
-    if (im.Contains( yc + rotY,  xc + rotX))
-      im( yc + rotY,  xc + rotX) = col;
+    safePutPixel( yc + rotY, xc + rotX, col, pim);
   }
   d2 = b*b*(x+.5)*(x+.5) + a*a*(y-1)*(y-1) - a*a*b*b;
   while ( y > 0 ) {
@@ -109,20 +114,16 @@ void DrawEllipse(int xc, int yc, int radiusA, int radiusB,
     }
     rotX = (matXY[0] * x + matXY[1] * y);
     rotY = (matXY[2] * x + matXY[3] * y);
-    if (im.Contains( yc + rotY,  xc + rotX))
-      im( yc + rotY,  xc + rotX) = col;
+    safePutPixel( yc + rotY, xc + rotX, col, pim);
     rotX = (matXY[0] * x - matXY[1] * y);
     rotY = (matXY[2] * x - matXY[3] * y);
-    if (im.Contains( yc + rotY,  xc + rotX))
-      im( yc + rotY,  xc + rotX) = col;
+    safePutPixel( yc + rotY, xc + rotX, col, pim);
     rotX = (-matXY[0] * x - matXY[1] * y);
     rotY = (-matXY[2] * x - matXY[3] * y);
-    if (im.Contains( yc + rotY,  xc + rotX))
-      im( yc + rotY,  xc + rotX) = col;
+    safePutPixel( yc + rotY, xc + rotX, col, pim);
     rotX = (-matXY[0] * x + matXY[1] * y);
     rotY = (-matXY[2] * x + matXY[3] * y);
-    if (im.Contains( yc + rotY,  xc + rotX))
-      im( yc + rotY,  xc + rotX) = col;
+    safePutPixel( yc + rotY, xc + rotX, col, pim);
   }
 }
 
@@ -133,22 +134,22 @@ template <class Image, class Color>
 void DrawCircle(int x, int y, int radius, const Color &col, Image *pim) {
   Image &im = *pim;
   if (  im.Contains(y + radius, x + radius)
-     && im.Contains(y + radius, x - radius)
-     && im.Contains(y - radius, x + radius)
-     && im.Contains(y - radius, x - radius)) {
+     || im.Contains(y + radius, x - radius)
+     || im.Contains(y - radius, x + radius)
+     || im.Contains(y - radius, x - radius)) {
     int x1 = 0;
     int y1 = radius;
     int d = radius - 1;
     while (y1 >= x1) {
       // Draw the point for each octant.
-      im( y1 + y,  x1 + x) = col;
-      im( x1 + y,  y1 + x) = col;
-      im( y1 + y, -x1 + x) = col;
-      im( x1 + y, -y1 + x) = col;
-      im(-y1 + y,  x1 + x) = col;
-      im(-x1 + y,  y1 + x) = col;
-      im(-y1 + y, -x1 + x) = col;
-      im(-x1 + y, -y1 + x) = col;
+      safePutPixel( y1 + y,  x1 + x, col, pim);
+      safePutPixel( x1 + y,  y1 + x, col, pim);
+      safePutPixel( y1 + y, -x1 + x, col, pim);
+      safePutPixel( x1 + y, -y1 + x, col, pim);
+      safePutPixel(-y1 + y,  x1 + x, col, pim);
+      safePutPixel(-x1 + y,  y1 + x, col, pim);
+      safePutPixel(-y1 + y, -x1 + x, col, pim);
+      safePutPixel(-x1 + y, -y1 + x, col, pim);
       if (d >= 2 * x1) {
         d = d - 2 * x1 - 1;
         x1 += 1;
@@ -245,7 +246,7 @@ void DrawLine(int xa, int ya, int xb, int yb, const Color &col, Image *pim) {
     y = ybas;
     x = xbas;
     while (x != xhaut) {
-      im(y,x) = col;
+      safePutPixel( y, x, col, pim);
       x += incrmX;
       if (dp <= 0) { // Go in direction of the South Pixel.
         dp += S;
@@ -261,7 +262,7 @@ void DrawLine(int xa, int ya, int xb, int yb, const Color &col, Image *pim) {
     x = xbas;
     y = ybas;
     while (y < yhaut) {
-      im(y,x) = col;
+      safePutPixel( y, x, col, pim);
       y += incrmY;
       if (dp <= 0) { // Go in direction of the South Pixel.
         dp += S;
@@ -271,7 +272,7 @@ void DrawLine(int xa, int ya, int xb, int yb, const Color &col, Image *pim) {
       }
     }
   }
-  im(y,x) = col;
+  safePutPixel( y, x, col, pim);
 }
 
 } //namespace libmv
