@@ -13,3 +13,5 @@ Local modifications:
 * Code factoring of icvMSERMergeComp
 * Add function to draw mser pixels and fitted ellipses
 * Remove code to extract color mser
+* Simplify the code :
+*  - While merging the component stack we could not create a new component.

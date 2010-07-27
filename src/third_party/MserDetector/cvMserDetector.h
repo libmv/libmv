@@ -94,7 +94,6 @@ struct CvContour
 {
   vector<CvPoint> ptList;
   int color;
-  // Add a LTU_Rect HEre ? for BBOX ?
 };
 
 typedef vector< CvContour* > CvSeq;
@@ -257,14 +256,13 @@ inline static CvContour*
   contour->ptList.resize(comp->history->size);
   //-- Fill the point list :
   CvLinkedPoint* lpt = comp->head;
-  for ( int i = 0; i < comp->history->size && lpt != NULL; ++i ) // PM : Add the safety test NULL
+  for ( int i = 0; i < comp->history->size && lpt != NULL; ++i )
   {
     CvPoint& pt = contour->ptList[i];
     pt.x = lpt->pt.x;
     pt.y = lpt->pt.y;
     lpt = lpt->next;
   }
-  // PM do something : => cvBoundingRect ( contour );
   return contour;
 }
 
@@ -400,11 +398,9 @@ static void
     {
       imgptr = **heap_cur;
       ( *heap_cur )--;
-
     }
     else
     {
-
       heap_cur++;
       unsigned long pixel_val = 0;
       for ( unsigned long i = ( ( *imgptr ) &0xff ) +1; i < 256; i++ )
@@ -417,11 +413,9 @@ static void
         heap_cur++;
       }
       if ( pixel_val )
-
       {
         imgptr = **heap_cur;
         ( *heap_cur )--;
-
         if ( pixel_val < comptr[-1].grey_level )
         {
           // check the stablity and push a new history, increase the grey level
@@ -438,28 +432,13 @@ static void
         else
         {
           // keep merging top two comp in stack until the grey level >= pixel_val
-          for ( ; ; )
+          do
           {
             comptr--;
             icvMSERMergeComp ( comptr+1, comptr, comptr, histptr );
             histptr++;
-            if ( pixel_val <= comptr[0].grey_level )
-              break;
-            if ( pixel_val < comptr[-1].grey_level )
-            {
-              // check the stablity here otherwise it wouldn't be an ER
-              if ( icvMSERStableCheck ( comptr, params ) )
-              {
-                CvContour* contour = icvMSERToContour ( comptr );
-                contour->color = color;
-                contours->push_back( contour );
-              }
-              icvMSERNewHistory ( comptr, histptr );
-              comptr[0].grey_level = pixel_val;
-              histptr++;
-              break;
-            }
           }
+          while( pixel_val > comptr[0].grey_level);
         }
       }
       else
