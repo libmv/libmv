@@ -1,15 +1,15 @@
 // Copyright (c) 2007, 2008 libmv authors.
-// 
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
 // deal in the Software without restriction, including without limitation the
 // rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
 // sell copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -73,7 +73,27 @@ struct NViewDataSet {
 };
 #undef N
 
-NViewDataSet NRealisticCameras(int nviews, int npoints);
+struct nViewDatasetConfigator
+{
+  /// Internal camera parameters
+  int _fx;
+  int _fy;
+  int _cx;
+  int _cy;
+
+  /// Camera random position parameters
+  double _dist;
+  double _jitter_amount;
+
+  nViewDatasetConfigator( int fx = 1000,  int fy = 1000,
+                          int cx = 500,   int cy  = 500,
+                          double distance = 1.5,
+                          double jitter_amount = 0.01 );
+};
+
+NViewDataSet NRealisticCameras(int nviews, int npoints,
+                              const nViewDatasetConfigator
+                                config = nViewDatasetConfigator());
 
 } // namespace libmv
 
