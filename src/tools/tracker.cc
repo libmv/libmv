@@ -32,6 +32,7 @@
 #include "libmv/correspondence/robust_tracker.h"
 #include "libmv/detector/detector.h"
 #include "libmv/detector/fast_detector.h"
+#include "libmv/detector/mser_detector.h"
 #include "libmv/detector/star_detector.h"
 #include "libmv/detector/surf_detector.h"
 #include "libmv/descriptor/descriptor.h"
@@ -58,7 +59,7 @@
 
 using namespace libmv;
 
-DEFINE_string(detector, "FAST", "select the detector (FAST,STAR,SURF)");
+DEFINE_string(detector, "FAST", "select the detector (FAST,STAR,SURF,MSER)");
 DEFINE_string(describer, "DAISY",
               "select the detector (SIMPLIEST,SURF,DIPOLE,DAISY)");
 DEFINE_bool  (save_features, false,
@@ -248,6 +249,8 @@ int main (int argc, char *argv[]) {
     detector = detector::CreateSURFDetector();
   } else if (FLAGS_detector == "STAR") {
     detector = detector::CreateStarDetector(true);
+  } else if (FLAGS_detector == "MSER") {
+    detector = detector::CreateMserDetector();
   } else {
     LOG(FATAL) << "ERROR : undefined Detector !";
   }
