@@ -130,7 +130,7 @@ int main(int argc, char **argv) {
   // TODO(keir): Now do something useful with 'correspondences'!
   // XXX
   //
-  printf( "\n %2d tracks found\n", matches.NumTracks());
+  printf( "\n %2d tracks found\n", (int)matches.NumTracks());
   return 0;
 }
 
