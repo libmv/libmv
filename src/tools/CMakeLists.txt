@@ -82,3 +82,18 @@ TARGET_LINK_LIBRARIES(tracker
                       fast
                       daisy
                       )
+
+ADD_EXECUTABLE(nViewMatching nViewMatching.cc)
+TARGET_LINK_LIBRARIES(nViewMatching
+                      correspondence
+                      image
+                      gflags
+                      glog
+                      detector
+                      fast
+                      flann
+                      descriptor
+                      multiview
+                      daisy
+                      )
+
