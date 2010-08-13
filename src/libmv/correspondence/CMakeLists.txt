@@ -5,7 +5,8 @@ ADD_LIBRARY(correspondence
             feature_matching.cc
             feature_matching_FLANN.cc
             tracker.cc
-            robust_tracker.cc)
+            robust_tracker.cc
+            nRobustViewMatching.cc)
             
 LIBMV_TEST(klt "correspondence;image;numeric")
 LIBMV_TEST(bipartite_graph "")

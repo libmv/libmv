@@ -18,39 +18,25 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
+#include <algorithm>
 #include <fstream>
+#include <iterator>
 #include <map>
 #include <string>
+
 
 #include "libmv/base/vector.h"
 #include "libmv/base/vector_utils.h"
 #include "libmv/base/scoped_ptr.h"
 #include "libmv/correspondence/feature.h"
 #include "libmv/correspondence/feature_matching.h"
-#include "libmv/detector/fast_detector.h"
-#include "libmv/detector/mser_detector.h"
-#include "libmv/detector/star_detector.h"
-#include "libmv/detector/surf_detector.h"
-#include "libmv/detector/detector.h"
-#include "libmv/descriptor/descriptor.h"
-#include "libmv/descriptor/daisy_descriptor.h"
-#include "libmv/descriptor/dipole_descriptor.h"
-#include "libmv/descriptor/simpliest_descriptor.h"
-#include "libmv/descriptor/surf_descriptor.h"
-#include "libmv/descriptor/vector_descriptor.h"
 #include "libmv/image/image.h"
 #include "libmv/image/image_converter.h"
 #include "libmv/image/image_drawing.h"
 #include "libmv/image/image_io.h"
-#include "libmv/image/sample.h"
-#include "libmv/multiview/affine_2d_kernel.h"
-#include "libmv/multiview/homography_kernel.h"
-#include "libmv/multiview/panography_kernel.h"
-#include "libmv/multiview/robust_homography.h"
-#include "libmv/multiview/robust_affine_2d.h"
-#include "libmv/multiview/two_view_kernel.h"
-#include "libmv/multiview/robust_fundamental.h"
 #include "libmv/tools/tool.h"
+
+#include "libmv/correspondence/nRobustViewMatching.h"
 
 using namespace libmv;
 using namespace std;
@@ -61,322 +47,11 @@ using namespace std;
 //             "select the detector (SIMPLIEST,SURF,DIPOLE,DAISY)");
 DEFINE_bool(save_matches, true,
             "save images with detected and matched features");
-
-namespace libmv {
-namespace correspondence  {
-
-class nViewMatchingInterface {
-
-  public:
-  virtual ~nViewMatchingInterface() {};
-
-  /**
-   * Compute the data and store it in the class map<string,T>
-   *
-   * \param[in] filename   The file from which the data will be extracted.
-   *
-   * \return True if success.
-   */
-  virtual bool computeData(const string & filename)=0;
-
-  /**
-  * Compute the putative match between data computed from element A and B
-  *  Store the match data internally in the class
-  *  map< <string, string> , MatchObject >
-  *
-  * \param[in] The name of the filename A (use computed data for this element)
-  * \param[in] The name of the filename B (use computed data for this element)
-  *
-  * \return True if success.
-  */
-  virtual bool MatchData(const string & dataA, const string & dataB)=0;
-
-  /**
-  * From a series of element it compute the cross putative match list.
-  *
-  * \param[in] vec_data The data on which we want compute cross matches.
-  *
-  * \return True if success (and any matches was found).
-  */
-  virtual bool computeCrossMatch( const vector<string> & vec_data)=0;
-};
-
-
-class nRobustViewMatching :public nViewMatchingInterface  {
-
-  public:
-  //TODO(pmoulon) Add a constructor with a Detector and a Descriptor
-  // Add also a Template function to make the match robust..
-  ~nRobustViewMatching() {};
-
-  /**
-   * Compute the data and store it in the class map<string,T>
-   *
-   * \param[in] filename   The file from which the data will be extracted.
-   *
-   * \return True if success.
-   */
-  bool computeData(const string & filename)
-  {
-    Array3Du imageA;
-    if (!ReadImage(filename.c_str(), &imageA)) {
-      LOG(FATAL) << "Failed loading image: " << filename;
-      return false;
-    }
-    else
-    {
-      Array3Du imageTemp;
-      Rgb2Gray( imageA, &imageTemp);
-      Image im( new Array3Du(imageTemp) );
-
-      libmv::vector<libmv::Feature *> features;
-      //scoped_ptr<detector::Detector> detector(detector::CreateFastDetector(9, 30,true));
-      //scoped_ptr<detector::Detector> detector(detector::CreateStarDetector(true));
-      //scoped_ptr<detector::Detector> detector(detector::CreateFastDetectorLimited(30,true, 1024));
-      scoped_ptr<detector::Detector> detector(detector::CreateMserDetector());
-      detector->Detect( im, &features, NULL);
-
-      libmv::vector<descriptor::Descriptor *> descriptors;
-      scoped_ptr<descriptor::Describer>
-        //describer(descriptor::CreateSimpliestDescriber());
-        describer(descriptor::CreateSurfDescriber());
-        //describer(descriptor::CreateDaisyDescriber());
-        //describer(descriptor::CreateDipoleDescriber());
-      describer->Describe(features, im, NULL, &descriptors);
-
-      // Copy data.
-      m_ViewData.insert( make_pair(filename,FeatureSet()) );
-      FeatureSet & KeypointData = m_ViewData[filename];
-      KeypointData.features.resize(descriptors.size());
-      for(int i = 0;i < descriptors.size(); ++i)
-      {
-        KeypointFeature & feat = KeypointData.features[i];
-        feat.descriptor = *(descriptor::VecfDescriptor*)descriptors[i];
-        *(PointFeature*)(&feat) = *(PointFeature*)features[i];
-      }
-
-      DeleteElements(&features);
-      DeleteElements(&descriptors);
-
-      return true;
-    }
-  }
-
-  /**
-  * Compute the putative match between data computed from element A and B
-  *  Store the match data internally in the class
-  *  map< <string, string> , MatchObject >
-  *
-  * \param[in] The name of the filename A (use computed data for this element)
-  * \param[in] The name of the filename B (use computed data for this element)
-  *
-  * \return True if success.
-  */
-  bool MatchData(const string & dataA, const string & dataB)
-  {
-    // Check input data
-    if ( find(m_vec_InputNames.begin(), m_vec_InputNames.end(), dataA)
-            == m_vec_InputNames.end() ||
-           find(m_vec_InputNames.begin(), m_vec_InputNames.end(), dataB)
-            == m_vec_InputNames.end())
-    {
-      LOG(INFO) << "[nViewMatching::MatchData] "
-                << "Could not identify one of the input name.";
-      return false;
-    }
-    if (m_ViewData.find(dataA) == m_ViewData.end() ||
-        m_ViewData.find(dataB) == m_ViewData.end())
-    {
-      LOG(INFO) << "[nViewMatching::MatchData] "
-                << "Could not identify data for one of the input name.";
-      return false;
-    }
-
-    // Computed data exist for the given name
-    int iDataA = find(m_vec_InputNames.begin(), m_vec_InputNames.end(), dataA)
-                  - m_vec_InputNames.begin();
-    int iDataB = find(m_vec_InputNames.begin(), m_vec_InputNames.end(), dataB)
-                  - m_vec_InputNames.begin();
-
-    Matches matches;
-    //TODO(pmoulon) make FindCandidatesMatches a parameter.
-    FindCandidateMatches(m_ViewData[dataA],
-                         m_ViewData[dataB],
-                         &matches);
-    /*FindCandidateMatches_Ratio(m_ViewData[dataA],
-                         m_ViewData[dataB],
-                         &matches,eMATCH_KDTREE_FLANN , 0.6f);*/
-    Matches consistent_matches;
-    if (computeConstrainMatches(matches,iDataA,iDataB,&consistent_matches))
-    {
-      matches = consistent_matches;
-    }
-    if (matches.NumTracks() > 0)
-    {
-      m_sharedData.insert(
-        make_pair(
-          make_pair(m_vec_InputNames[iDataA],m_vec_InputNames[iDataB]),
-          matches)
-        );
-    }
-
-    return true;
-  }
-
-  /**
-  * From a series of element it compute the cross putative match list.
-  *
-  * \param[in] vec_data The data on which we want compute cross matches.
-  *
-  * \return True if success (and any matches was found).
-  */
-  bool computeCrossMatch( const vector<string> & vec_data)
-  {
-    m_vec_InputNames = vec_data;
-    bool bRes = true;
-    for (int i=0; i < vec_data.size(); ++i)
-    {
-      bRes &= computeData(vec_data[i]);
-    }
-
-    bool bRes2 = true;
-    for (int i=0; i < vec_data.size(); ++i) {
-      for (int j=0; j < i; ++j)
-      {
-        if (m_ViewData.find(vec_data[i]) != m_ViewData.end() &&
-          m_ViewData.find(vec_data[j]) != m_ViewData.end())
-        {
-          bRes2 &= this->MatchData( vec_data[i], vec_data[j]);
-        }
-      }
-    }
-    return bRes2;
-  }
-
-  /**
-  * Give the posibility to constrain the matches list.
-  *
-  * \param[in] matchIn The input match data between indexA and indexB.
-  * \param[in] dataAindex The reference index for element A.
-  * \param[in] dataBindex The reference index for element B.
-  * \param[out] matchesOut The output match that satisfy the internal constraint.
-  *
-  * \return True if success.
-  */
-  bool computeConstrainMatches(const Matches & matchIn,
-                               int dataAindex,
-                               int dataBindex,
-                               Matches * matchesOut)
-  {
-    if (matchesOut == NULL)
-    {
-      LOG(INFO) << "[nViewMatching::computeConstrainMatches]"
-                << " Could not export constrained matches.";
-      return false;
-    }
-    libmv::vector<Mat> x;
-    libmv::vector<int> tracks, images;
-    images.push_back(0);
-    images.push_back(1);
-    PointMatchMatrices(matchIn, images, &tracks, &x);
-
-    libmv::vector<int> inliers;
-    Mat3 H;
-    // TODO(pmoulon) Make the Correspondence filter a parameter.
-    //HomographyFromCorrespondences2PointRobust(x[0], x[1], 0.3, &H, &inliers);
-    //HomographyFromCorrespondences4PointRobust(x[0], x[1], 0.3, &H, &inliers);
-    //AffineFromCorrespondences2PointRobust(x[0], x[1], 1, &H, &inliers);
-    FundamentalFromCorrespondences7PointRobust(x[0], x[1], 1.0, &H, &inliers);
-
-    //TODO(pmoulon) insert an optimization phase.
-    // Rerun Robust correspondance on the inliers.
-    // it will allow to compute a better model and filter ugly fitting.
-
-    //-- Assert that the output of the model is consistent :
-    // As much as the minimal points are inliers.
-    if (inliers.size() > 4 * 2) {
-      // If tracks table is empty initialize it
-      if (m_featureToTrackTable.size() == 0)  {
-        // Build new correspondence graph containing only inliers.
-        for (int l = 0; l < inliers.size(); ++l)  {
-          const int k = inliers[l];
-          m_featureToTrackTable[matchIn.Get(0, tracks[k])] = l;
-          m_featureToTrackTable[matchIn.Get(1, tracks[k])] = l;
-          m_tracks.Insert(dataAindex, l,
-              matchIn.Get(dataBindex, tracks[k]));
-          m_tracks.Insert(dataBindex, l,
-              matchIn.Get(dataAindex, tracks[k]));
-        }
-      }
-      else  {
-        // Else update the tracks
-        for (int l = 0; l < inliers.size(); ++l)  {
-          const int k = inliers[l];
-          map<const Feature*, int>::const_iterator iter =
-            m_featureToTrackTable.find(matchIn.Get(1, tracks[k]));
-
-          if (iter!=m_featureToTrackTable.end())  {
-            // Add a feature to the existing track
-            const int trackIndex = iter->second;
-            m_featureToTrackTable[matchIn.Get(0, tracks[k])] = trackIndex;
-            m_tracks.Insert(dataAindex, trackIndex,
-              matchIn.Get(0, tracks[k]));
-          }
-          else  {
-            // It's a new track
-            const int trackIndex = m_tracks.NumTracks();
-            m_featureToTrackTable[matchIn.Get(0, tracks[k])] = trackIndex;
-            m_featureToTrackTable[matchIn.Get(1, tracks[k])] = trackIndex;
-            m_tracks.Insert(dataAindex, trackIndex,
-                matchIn.Get(0, tracks[k]));
-            m_tracks.Insert(dataBindex, trackIndex,
-                matchIn.Get(1, tracks[k]));
-          }
-        }
-      }
-      // Export common feature between the two view
-      if (matchesOut) {
-        Matches & consistent_matches = *matchesOut;
-        // Build new correspondence graph containing only inliers.
-        for (int l = 0; l < inliers.size(); ++l) {
-          int k = inliers[l];
-          for (int i = 0; i < 2; ++i) {
-            consistent_matches.Insert(images[i], tracks[k],
-                matchIn.Get(images[i], tracks[k]));
-          }
-        }
-      }
-    }
-    return true;
-  }
-
-  // Return pairwise correspondence ( geometrically filtered )
-  const map< pair<string,string>, Matches> & getSharedData() const
-    { return m_sharedData;}
-  // Return extracted feature over the given image.
-  const map<string,FeatureSet> & getViewData() const
-    { return m_ViewData;}
-
-private :
-  /// Input data names
-  vector<string> m_vec_InputNames;
-  /// Data that represent each named element.
-  map<string,FeatureSet> m_ViewData;
-  /// Matches between element named element <A,B>.
-  map< pair<string,string>, Matches> m_sharedData;
-
-  /// LookUpTable to make the crossCorrespondence easier between tracks
-  ///   and feature.
-  map<const Feature*, int> m_featureToTrackTable;
-
-  public:
-  /// Matches between all the view
-  Matches m_tracks;
-};
-
-
-} // namespace correspondence
-} // namespace libmv
+DEFINE_bool(save_hugin, true,
+            "save Hugin point matches (ready to minimize Hugin project)");
+//TODO(pmoulon) this parameter must set the homography as geometric constraint
+DEFINE_bool(save_reconstruction, true,
+            "save perspective reconstruction from largest track (.ply)");
 
 // TODO(pmoulon) move this function in a more general file
 template <typename Image>
@@ -404,10 +79,14 @@ std::string ExtractFilename( const std::string& path )
 }
 
 bool IsArgImage(const std::string & arg) {
-  return (arg.find_last_of (".png") == arg.size() - 1 ||
-          arg.find_last_of (".jpg") == arg.size() - 1 ||
-          arg.find_last_of (".jpeg") == arg.size()- 1 ||
-          arg.find_last_of (".pnm") == arg.size() - 1 );
+  string copy = arg;
+  // Convert to lower case to avoid JPG/jpg confusion
+  std::transform(copy.begin(), copy.end(), copy.begin(), ::tolower);
+  return (arg.size()>3 &&
+         (copy.find_last_of (".png") == copy.size() - 1 ||
+          copy.find_last_of (".jpg") == copy.size() - 1 ||
+          copy.find_last_of (".jpeg") == copy.size()- 1 ||
+          copy.find_last_of (".pnm") == copy.size() - 1 ));
 }
 
 //TODO(pmoulon) Move this function in matches. (use by this file and tracker)
@@ -453,11 +132,11 @@ int main(int argc, char **argv) {
   nViewMatcher.computeCrossMatch(image_vector);
 
   // Show Cross Matches
-  DisplayMatches(nViewMatcher.m_tracks);
+  DisplayMatches(nViewMatcher.getMatches());
 
   //-- Export and visualize data (show matches between the images)
   if (FLAGS_save_matches) {
-    for (size_t i=0; i< nViewMatcher.m_tracks.NumImages(); ++i) {
+    for (size_t i=0; i< nViewMatcher.getMatches().NumImages(); ++i) {
       Array3Du imageA;
       ReadImage( image_vector[i].c_str() , &imageA);
       Array3Du imageTemp;
@@ -466,7 +145,7 @@ int main(int argc, char **argv) {
 
       for (size_t j=0; j< i/*nViewMatcher.m_tracks.NumImages()*/; ++j)  {
         Matches::Features<KeypointFeature> features =
-          nViewMatcher.m_tracks.InImage<KeypointFeature>(i);
+          nViewMatcher.getMatches().InImage<KeypointFeature>(i);
         int cpt = 0;
         Array3Du bigIma;
         if (i!=j && features) {
@@ -497,7 +176,7 @@ int main(int argc, char **argv) {
           while (features) {
             Matches::TrackID id_track = features.track();
             const Feature * ref = features.feature();
-            const Feature * f = nViewMatcher.m_tracks.Get(j, id_track);
+            const Feature * f = nViewMatcher.getMatches().Get(j, id_track);
             if (f && ref)  {
               KeypointFeature * pt0 = ((KeypointFeature*)ref);
               KeypointFeature * pt1 = ((KeypointFeature*)f);
@@ -517,8 +196,7 @@ int main(int argc, char **argv) {
           }
         }
         //-- If many point have been added
-        if (cpt> 4*2)
-        {
+        if (cpt> 4*2) {
           ostringstream os;
           os<< "TOTO_" << ExtractFilename(image_vector[i].c_str()) << "_"
             << ExtractFilename(image_vector[j].c_str()) << "___"
@@ -530,15 +208,14 @@ int main(int argc, char **argv) {
   }
 
   //-- Export to Hugin oto format
-  {
+  if (FLAGS_save_hugin) {
     ofstream myFile("huginGenerated.txt");
 
     myFile << "# oto project file generated by Libmv"<< endl << endl;
 
     myFile << "input images :"<< endl;
 
-    for (int i = 0; i < image_vector.size(); ++i)
-    {
+    for (int i = 0; i < image_vector.size(); ++i) {
       //-- A. Export image info
       ByteImage byteImage;
       if ( 0 == ReadImage( image_vector[i].c_str(), &byteImage) )  {
@@ -557,18 +234,17 @@ int main(int argc, char **argv) {
 
     myFile << endl << "# Control points:"<<endl;
 
-    for (size_t i=0; i< nViewMatcher.m_tracks.NumImages(); ++i)
-    {
-      for (size_t j=0; j<i; ++j)
-      {
-        Matches::Features<KeypointFeature> features = nViewMatcher.m_tracks.InImage<KeypointFeature>(i);
+    for (size_t i=0; i< nViewMatcher.getMatches().NumImages(); ++i) {
+      for (size_t j=0; j<i; ++j)  {
+        Matches::Features<KeypointFeature> features =
+          nViewMatcher.getMatches().InImage<KeypointFeature>(i);
+
         while (features) {
 
           Matches::TrackID id_track = features.track();
           const Feature * ref = features.feature();
-          const Feature * f = nViewMatcher.m_tracks.Get(j, id_track);
-          if (f)
-          {
+          const Feature * f = nViewMatcher.getMatches().Get(j, id_track);
+          if (f && ref)  {
             KeypointFeature * pt0 = ((KeypointFeature*)ref);
             KeypointFeature * pt1 = ((KeypointFeature*)f);
             myFile << endl << "c "
@@ -584,6 +260,31 @@ int main(int argc, char **argv) {
         }
       }
     }
+  }
+
+  if (FLAGS_save_reconstruction)
+  {
+    //-- Do something with the Matches :
+    Matches matches = nViewMatcher.getMatches();
+
+    //-- Count the occurences of the tracks lenght
+    libmv::vector<int> vec_trackLenghtHisto(matches.NumImages()+1);
+    fill(vec_trackLenghtHisto.begin(), vec_trackLenghtHisto.end(),0);
+    for (size_t i = 0; i < matches.NumTracks(); i++) {
+      int iCount = 0;
+      for (size_t j = 0; j < matches.NumImages(); j++) {
+        const Feature * f = matches.Get(j,i);
+        iCount+= (f)? 1 : 0;
+      }
+      vec_trackLenghtHisto[iCount]++;
+    }
+
+    //-- Display the occurence of each track lenght :
+    copy(vec_trackLenghtHisto.begin(), vec_trackLenghtHisto.end(),
+      std::ostream_iterator<int>(std::cout, " "));
+
+    //-- Do we have sufficient point to perform a nView reconstruction :
+    //TODO(pmoulon) : perform the perspective reconstruction from NviewTensor
   }
 
   return 0;
