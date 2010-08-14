@@ -98,7 +98,7 @@ bool RobustTracker::Track(const Image &image,
   
   // TODO(jmichot) Avoid the conversion std::set <-> vector
   // Avoid to compute the fundamental btw images that does not share tracks
-  std::set<Matches::ImageID>::iterator iter_image =
+  std::set<Matches::ImageID>::const_iterator iter_image =
    known_features_graph.matches_.get_images().begin();
   const std::set<Matches::TrackID> new_track_set =
    new_features_graph->matches_.get_tracks();
@@ -109,7 +109,7 @@ bool RobustTracker::Track(const Image &image,
       vector<Mat> x(2);
       vector<Matches::TrackID> tracks;
 
-      std::set<Matches::TrackID>::iterator new_track_set_iter =
+      std::set<Matches::TrackID>::const_iterator new_track_set_iter =
        new_track_set.begin();
       for (; new_track_set_iter != new_track_set.end(); ++new_track_set_iter) {
         const PointFeature *f1 = static_cast<const PointFeature *>(

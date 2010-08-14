@@ -62,7 +62,7 @@ class nViewMatchingInterface {
   *
   * \return True if success (and any matches was found).
   */
-  virtual bool computeCrossMatch( const vector<string> & vec_data)=0;
+  virtual bool computeCrossMatch( const libmv::vector<string> & vec_data)=0;
 };
 
 } // using namespace correspondence

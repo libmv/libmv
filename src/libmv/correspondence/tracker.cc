@@ -151,7 +151,7 @@ bool Tracker::Track(const Image &image,
   //TODO (jmichot) For a rapid tracker, use only one feature 
   // (in the first image for instance) for every track
   std::map<size_t, size_t> reverse_correspondences_all;
-  std::set<Matches::ImageID>::iterator iter_image =
+  std::set<Matches::ImageID>::const_iterator iter_image =
    known_features_graph.matches_.get_images().begin();
   for (; iter_image != known_features_graph.matches_.get_images().end() 
       && *iter_image != *image_id; ++iter_image) {

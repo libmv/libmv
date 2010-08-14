@@ -164,7 +164,7 @@ bool nRobustViewMatching::MatchData(const string & dataA, const string & dataB)
 *
 * \return True if success (and any matches was found).
 */
-bool nRobustViewMatching::computeCrossMatch( const vector<string> & vec_data)
+bool nRobustViewMatching::computeCrossMatch( const libmv::vector<string> & vec_data)
 {
   m_vec_InputNames = vec_data;
   bool bRes = true;

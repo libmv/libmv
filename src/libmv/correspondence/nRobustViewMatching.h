@@ -67,7 +67,7 @@ class nRobustViewMatching :public nViewMatchingInterface  {
   *
   * \return True if success (and any matches was found).
   */
-  bool computeCrossMatch( const vector<string> & vec_data);
+  bool computeCrossMatch( const libmv::vector<string> & vec_data);
   
   /**
   * Give the posibility to constrain the matches list.
@@ -96,7 +96,7 @@ class nRobustViewMatching :public nViewMatchingInterface  {
     
 private :
   /// Input data names
-  vector<string> m_vec_InputNames;
+  libmv::vector<string> m_vec_InputNames;
   /// Data that represent each named element.
   map<string,FeatureSet> m_ViewData;
   /// Matches between element named element <A,B>.
