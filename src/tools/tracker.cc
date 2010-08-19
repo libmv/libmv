@@ -30,11 +30,7 @@
 #include "libmv/correspondence/feature_matching_FLANN.h"
 #include "libmv/correspondence/tracker.h"
 #include "libmv/correspondence/robust_tracker.h"
-#include "libmv/detector/detector.h"
-#include "libmv/detector/fast_detector.h"
-#include "libmv/detector/mser_detector.h"
-#include "libmv/detector/star_detector.h"
-#include "libmv/detector/surf_detector.h"
+#include "libmv/detector/detector_factory.h"
 #include "libmv/descriptor/descriptor.h"
 #include "libmv/descriptor/daisy_descriptor.h"
 #include "libmv/descriptor/dipole_descriptor.h"
@@ -243,17 +239,21 @@ int main (int argc, char *argv[]) {
   descriptor::Describer *describer              = NULL;
   correspondence::ArrayMatcher<float> *matcher  = NULL;
 
+  detector::eDetector edetector = detector::FAST;
   if (FLAGS_detector == "FAST") {
-    detector = detector::CreateFastDetector(9, 10, true);
+    edetector = detector::FAST;
   } else if (FLAGS_detector == "SURF") {
-    detector = detector::CreateSURFDetector();
+    edetector = detector::SURF;
   } else if (FLAGS_detector == "STAR") {
-    detector = detector::CreateStarDetector(true);
+    edetector = detector::STAR;
   } else if (FLAGS_detector == "MSER") {
-    detector = detector::CreateMserDetector();
+    edetector = detector::MSER;
   } else {
     LOG(FATAL) << "ERROR : undefined Detector !";
   }
+  
+  detector = detectorFactory( edetector );
+  
   if (FLAGS_describer == "SIMPLIEST") {
     describer = descriptor::CreateSimpliestDescriber();
   } else if (FLAGS_describer == "SURF") {

@@ -3,6 +3,7 @@ ADD_LIBRARY(detector
 			surf_detector.cc
 			star_detector.cc
 			fast_detector_limited.cc
-			mser_detector.cc)
+			mser_detector.cc
+			detector_factory.cc)
 LIBMV_TEST(fast_detector "detector;image;correspondence;fast")
 LIBMV_TEST(orientation_detector "detector;image;correspondence")
