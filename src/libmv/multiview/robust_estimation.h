@@ -38,7 +38,7 @@ class MLEScorer {
                const typename Kernel::Model &model,
                const vector<int> &samples,
                vector<int> *inliers) const {
-    double cost = 0;
+    double cost = 0.0;
     for (int j = 0; j < samples.size(); ++j) {
       double error = kernel.Error(samples[j], model);
       if (error < threshold_) {
@@ -58,7 +58,7 @@ static uint IterationsRequired(int min_samples,
                         double desired_certainty,
                         double inlier_ratio) {
   return static_cast<uint>(
-      log(desired_certainty) / log(1 - pow(inlier_ratio, min_samples)));
+      log(desired_certainty) / log(1.0 - pow(inlier_ratio, min_samples)));
 }
 
 // 1. The model.
@@ -75,13 +75,15 @@ static uint IterationsRequired(int min_samples,
 template<typename Kernel, typename Scorer>
 typename Kernel::Model Estimate(const Kernel &kernel,
                                 const Scorer &scorer,
-                                vector<int> *best_inliers = NULL) {
+                                vector<int> *best_inliers = NULL,
+                                double desired_certainty = 0.01) {
   uint iteration = 0;
-  uint max_iterations = 100;
-  const uint really_max_iterations = 1000;
 
   const int min_samples = Kernel::MINIMUM_SAMPLES;
   const int total_samples = kernel.NumSamples();
+
+  uint max_iterations = 100;
+  const uint really_max_iterations = total_samples;
 
   int best_num_inliers = 0;
   double best_cost = HUGE_VAL;
@@ -131,12 +133,12 @@ typename Kernel::Model Estimate(const Kernel &kernel,
                 << best_num_inliers << " inlying of "
                 << total_samples << " total samples.";
       }
+      max_iterations = IterationsRequired(min_samples, desired_certainty,
+                                          best_inlier_ratio);
+
+      VLOG(2) << "Max iterations needed given best inlier ratio: "
+        << max_iterations << "; best inlier ratio: " << best_inlier_ratio;
     }
-
-    max_iterations = IterationsRequired(min_samples, 0.03, best_inlier_ratio);
-
-    VLOG(2) << "Max iterations needed given best inlier ratio: "
-            << max_iterations << "; best inlier ratio: " << best_inlier_ratio;
   }
 
   return best_model;
