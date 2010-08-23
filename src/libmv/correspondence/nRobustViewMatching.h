@@ -21,8 +21,10 @@
 #ifndef LIBMV_CORRESPONDENCE_N_ROBUST_VIEW_MATCHING_INTERFACE_H_
 #define LIBMV_CORRESPONDENCE_N_ROBUST_VIEW_MATCHING_INTERFACE_H_
 
-class FeatureSet;
+struct FeatureSet;
 #include <map>
+#include "libmv/detector/detector.h"
+#include "libmv/descriptor/descriptor.h"
 #include "libmv/correspondence/feature.h"
 #include "libmv/correspondence/matches.h"
 #include "libmv/correspondence/nViewMatchingInterface.h"
@@ -30,11 +32,16 @@ class FeatureSet;
 namespace libmv {
 namespace correspondence  {
 
-  using namespace std;
+using namespace std;
 
 class nRobustViewMatching :public nViewMatchingInterface  {
 
   public:
+  nRobustViewMatching();
+  // Constructor (Specify a detector and a describer interface)
+  // The class do not handle memory management over this two parameter.
+  nRobustViewMatching(detector::Detector * pDetector,
+                      descriptor::Describer * pDescriber);
   //TODO(pmoulon) Add a constructor with a Detector and a Descriptor
   // Add also a Template function to make the match robust..
   ~nRobustViewMatching(){};
@@ -106,8 +113,13 @@ private :
   ///   and feature.
   map<const Feature*, int> m_featureToTrackTable;
 
-  /// Matches between all the view
+  /// Matches between all the view.
   Matches m_tracks;
+
+  /// Interface to detect Keypoint.
+  detector::Detector * m_pDetector;
+  /// Interface to describe Keypoint.
+  descriptor::Describer * m_pDescriber;
 };
 
 } // using namespace correspondence

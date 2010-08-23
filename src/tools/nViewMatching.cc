@@ -30,21 +30,21 @@
 #include "libmv/base/scoped_ptr.h"
 #include "libmv/correspondence/feature.h"
 #include "libmv/correspondence/feature_matching.h"
+#include "libmv/correspondence/nRobustViewMatching.h"
+#include "libmv/detector/detector_factory.h"
+#include "libmv/descriptor/descriptor_factory.h"
 #include "libmv/image/image.h"
 #include "libmv/image/image_converter.h"
 #include "libmv/image/image_drawing.h"
 #include "libmv/image/image_io.h"
 #include "libmv/tools/tool.h"
 
-#include "libmv/correspondence/nRobustViewMatching.h"
-
 using namespace libmv;
 using namespace std;
 
-//DEFINE_string(detector, "FAST",
-//              "select the detector (FAST,FAST-LIMITED,STAR,SURF)");
-//DEFINE_string(describer, "SIMPLIEST",
-//             "select the detector (SIMPLIEST,SURF,DIPOLE,DAISY)");
+DEFINE_string(detector, "FAST", "select the detector (FAST,STAR,SURF,MSER)");
+DEFINE_string(describer, "DIPOLE",
+              "select the descriptor (SIMPLIEST,SURF,DIPOLE,DAISY)");
 DEFINE_bool(save_matches, true,
             "save images with detected and matched features");
 DEFINE_bool(save_hugin, true,
@@ -127,7 +127,36 @@ int main(int argc, char **argv) {
     }
   }
 
-  libmv::correspondence::nRobustViewMatching nViewMatcher;
+  detector::eDetector edetector = detector::FAST_DETECTOR;
+  if (FLAGS_detector == "FAST") {
+    edetector = detector::FAST_DETECTOR;
+  } else if (FLAGS_detector == "SURF") {
+    edetector = detector::SURF_DETECTOR;
+  } else if (FLAGS_detector == "STAR") {
+    edetector = detector::STAR_DETECTOR;
+  } else if (FLAGS_detector == "MSER") {
+    edetector = detector::MSER_DETECTOR;
+  } else {
+    LOG(FATAL) << "ERROR : undefined Detector !";
+  }
+  scoped_ptr<detector::Detector> spDetector = detectorFactory(edetector);
+
+  descriptor::eDescriber edescriber = descriptor::DIPOLE_DESCRIBER;
+  if (FLAGS_describer == "SIMPLIEST") {
+    edescriber = descriptor::SIMPLEST_DESCRIBER;
+  } else if (FLAGS_describer == "SURF") {
+    edescriber = descriptor::SURF_DESCRIBER;
+  } else if (FLAGS_describer == "DIPOLE") {
+    edescriber = descriptor::DIPOLE_DESCRIBER;
+  } else if (FLAGS_describer == "DAISY") {
+    edescriber = descriptor::DAISY_DESCRIBER;
+  } else {
+    LOG(FATAL) << "ERROR : undefined Describer !";
+  }
+  scoped_ptr<descriptor::Describer> spDescriber  = describerFactory(edescriber);
+
+  libmv::correspondence::nRobustViewMatching nViewMatcher(spDetector.get(),
+                                                          spDescriber.get());
 
   nViewMatcher.computeCrossMatch(image_vector);
 

@@ -28,18 +28,18 @@ class Detector;
 
 enum eDetector
 {
-  FAST,
-  FAST_LIMITED,
-  SURF,
-  STAR,
-  MSER
+  FAST_DETECTOR,
+  FAST_LIMITED_DETECTOR,
+  SURF_DETECTOR,
+  STAR_DETECTOR,
+  MSER_DETECTOR
 };
 /**
  * Creates the corresponding detector.
  * Always allocate the detector. You must handle memory cleaning.
  * \param edetector The wanted detector.
  */
-Detector *detectorFactory(eDetector edetector = FAST_LIMITED);
+Detector *detectorFactory(eDetector edetector = FAST_LIMITED_DETECTOR);
 
 } // namespace detector
 } // namespace libmv

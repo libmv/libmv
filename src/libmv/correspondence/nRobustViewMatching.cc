@@ -24,16 +24,8 @@
 #include "libmv/correspondence/feature_matching.h"
 #include "libmv/correspondence/nRobustViewMatching.h"
 #include "libmv/descriptor/descriptor.h"
-#include "libmv/descriptor/daisy_descriptor.h"
-#include "libmv/descriptor/dipole_descriptor.h"
-#include "libmv/descriptor/simpliest_descriptor.h"
-#include "libmv/descriptor/surf_descriptor.h"
 #include "libmv/descriptor/vector_descriptor.h"
 #include "libmv/detector/detector.h"
-#include "libmv/detector/fast_detector.h"
-#include "libmv/detector/mser_detector.h"
-#include "libmv/detector/star_detector.h"
-#include "libmv/detector/surf_detector.h"
 #include "libmv/image/image.h"
 #include "libmv/image/image_io.h"
 #include "libmv/image/image_converter.h"
@@ -42,6 +34,18 @@
 using namespace libmv;
 using namespace correspondence;
 using namespace std;
+
+nRobustViewMatching::nRobustViewMatching(){
+   m_pDetector = NULL;
+  m_pDescriber = NULL;
+}
+
+nRobustViewMatching::nRobustViewMatching(
+  detector::Detector * pDetector,
+  descriptor::Describer * pDescriber){
+  m_pDetector = pDetector;
+  m_pDescriber = pDescriber;
+}
 
 /**
  * Compute the data and store it in the class map<string,T>
@@ -64,19 +68,10 @@ bool nRobustViewMatching::computeData(const string & filename)
     Image im( new Array3Du(imageTemp) );
 
     libmv::vector<libmv::Feature *> features;
-    //scoped_ptr<detector::Detector> detector(detector::CreateFastDetector(9, 30,true));
-    //scoped_ptr<detector::Detector> detector(detector::CreateStarDetector(true));
-    //scoped_ptr<detector::Detector> detector(detector::CreateFastDetectorLimited(30,true, 1024));
-    scoped_ptr<detector::Detector> detector(detector::CreateMserDetector());
-    detector->Detect( im, &features, NULL);
+    m_pDetector->Detect( im, &features, NULL);
 
     libmv::vector<descriptor::Descriptor *> descriptors;
-    scoped_ptr<descriptor::Describer>
-      //describer(descriptor::CreateSimpliestDescriber());
-      describer(descriptor::CreateSurfDescriber());
-      //describer(descriptor::CreateDaisyDescriber());
-      //describer(descriptor::CreateDipoleDescriber());
-    describer->Describe(features, im, NULL, &descriptors);
+    m_pDescriber->Describe(features, im, NULL, &descriptors);
 
     // Copy data.
     m_ViewData.insert( make_pair(filename,FeatureSet()) );
@@ -166,10 +161,14 @@ bool nRobustViewMatching::MatchData(const string & dataA, const string & dataB)
 */
 bool nRobustViewMatching::computeCrossMatch( const libmv::vector<string> & vec_data)
 {
+  if (m_pDetector == NULL || m_pDescriber == NULL)  {
+    LOG(FATAL) << "Invalid Detector or Describer.";
+    return false;
+  }
+
   m_vec_InputNames = vec_data;
   bool bRes = true;
-  for (int i=0; i < vec_data.size(); ++i)
-  {
+  for (int i=0; i < vec_data.size(); ++i) {
     bRes &= computeData(vec_data[i]);
   }
 

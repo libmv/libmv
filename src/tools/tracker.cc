@@ -31,11 +31,7 @@
 #include "libmv/correspondence/tracker.h"
 #include "libmv/correspondence/robust_tracker.h"
 #include "libmv/detector/detector_factory.h"
-#include "libmv/descriptor/descriptor.h"
-#include "libmv/descriptor/daisy_descriptor.h"
-#include "libmv/descriptor/dipole_descriptor.h"
-#include "libmv/descriptor/simpliest_descriptor.h"
-#include "libmv/descriptor/surf_descriptor.h"
+#include "libmv/descriptor/descriptor_factory.h"
 #include "libmv/image/array_nd.h"
 #include "libmv/image/image.h"
 #include "libmv/image/image_io.h"
@@ -57,7 +53,7 @@ using namespace libmv;
 
 DEFINE_string(detector, "FAST", "select the detector (FAST,STAR,SURF,MSER)");
 DEFINE_string(describer, "DAISY",
-              "select the detector (SIMPLIEST,SURF,DIPOLE,DAISY)");
+              "select the descriptor (SIMPLIEST,SURF,DIPOLE,DAISY)");
 DEFINE_bool  (save_features, false,
               "save images with detected and matched features");
 DEFINE_bool  (save_matches, false,
@@ -235,46 +231,47 @@ int main (int argc, char *argv[]) {
   size_t number_of_images = image_list.size();
 
   // Create the tracker
-  detector::Detector * detector                 = NULL;
-  descriptor::Describer *describer              = NULL;
   correspondence::ArrayMatcher<float> *matcher  = NULL;
 
-  detector::eDetector edetector = detector::FAST;
+  detector::eDetector edetector = detector::FAST_DETECTOR;
   if (FLAGS_detector == "FAST") {
-    edetector = detector::FAST;
+    edetector = detector::FAST_DETECTOR;
   } else if (FLAGS_detector == "SURF") {
-    edetector = detector::SURF;
+    edetector = detector::SURF_DETECTOR;
   } else if (FLAGS_detector == "STAR") {
-    edetector = detector::STAR;
+    edetector = detector::STAR_DETECTOR;
   } else if (FLAGS_detector == "MSER") {
-    edetector = detector::MSER;
+    edetector = detector::MSER_DETECTOR;
   } else {
     LOG(FATAL) << "ERROR : undefined Detector !";
   }
-  
-  detector = detectorFactory( edetector );
-  
+
+  detector::Detector * pDetector = detectorFactory(edetector);
+
+  descriptor::eDescriber edescriber = descriptor::DAISY_DESCRIBER;
   if (FLAGS_describer == "SIMPLIEST") {
-    describer = descriptor::CreateSimpliestDescriber();
+    edescriber = descriptor::SIMPLEST_DESCRIBER;
   } else if (FLAGS_describer == "SURF") {
-    describer = descriptor::CreateSurfDescriber();
+    edescriber = descriptor::SURF_DESCRIBER;
   } else if (FLAGS_describer == "DIPOLE") {
-    describer = descriptor::CreateDipoleDescriber();
+    edescriber = descriptor::DIPOLE_DESCRIBER;
   } else if (FLAGS_describer == "DAISY") {
-    describer = descriptor::CreateDaisyDescriber();
+    edescriber = descriptor::DAISY_DESCRIBER;
   } else {
     LOG(FATAL) << "ERROR : undefined Describer !";
   }
+  descriptor::Describer * pDescriber = describerFactory(edescriber);
+
   matcher = new correspondence::ArrayMatcher_Kdtree<float>();
 
   libmv::tracker::FeaturesGraph all_features_graph;
 
   tracker::Tracker *points_tracker = NULL;
   if (!FLAGS_robust_tracker) {
-    points_tracker = new tracker::Tracker(detector,describer,matcher);
+    points_tracker = new tracker::Tracker(pDetector, pDescriber, matcher);
   } else {
     tracker::RobustTracker * r_tracker =
-     new tracker::RobustTracker(detector,describer,matcher);
+     new tracker::RobustTracker(pDetector, pDescriber, matcher);
     r_tracker->set_rms_threshold_inlier(FLAGS_robust_tracker_threshold);
     points_tracker = r_tracker;
   }

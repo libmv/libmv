@@ -18,39 +18,29 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
-#include "libmv/detector/detector.h"
-#include "libmv/detector/detector_factory.h"
-#include "libmv/detector/fast_detector.h"
-#include "libmv/detector/star_detector.h"
-#include "libmv/detector/surf_detector.h"
-#include "libmv/logging/logging.h"
+#ifndef LIBMV_DESCRIPTOR_DESCRIBER_FACTORY_H
+#define LIBMV_DESCRIPTOR_DESCRIBER_FACTORY_H
 
 namespace libmv {
-namespace detector {
+namespace descriptor {
 
-Detector *detectorFactory(eDetector edetector)  {
+class Describer;
 
-  switch (edetector)
-  {
-  case FAST_DETECTOR:
-    return detector::CreateFastDetector();
-    break;
-  case FAST_LIMITED_DETECTOR:
-    return detector::CreateFastDetectorLimited();
-    break;
-  case SURF_DETECTOR:
-    return detector::CreateSURFDetector();
-    break;
-  case STAR_DETECTOR:
-    return detector::CreateStarDetector();
-    break;
-  case MSER_DETECTOR:
-    break;
-  default:
-    LOG(FATAL) << "ERROR : undefined Detector value : " << edetector;
-  }
-  return NULL;
-}
+enum eDescriber
+{
+  SIMPLEST_DESCRIBER,
+  DIPOLE_DESCRIBER,
+  SURF_DESCRIBER,
+  DAISY_DESCRIBER
+};
+/**
+ * Creates the corresponding describer (descriptor computing interface).
+ * Always allocate the descriptor. You must handle memory cleaning.
+ * \param edescriptor The wanted descriptor.
+ */
+Describer *describerFactory(eDescriber edescriber = SIMPLEST_DESCRIBER);
 
-}  // namespace detector
-}  // namespace libmv
+} // namespace descriptor
+} // namespace libmv
+
+#endif //LIBMV_DESCRIPTOR_DESCRIBER_FACTORY_H

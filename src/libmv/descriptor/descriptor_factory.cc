@@ -18,36 +18,36 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
-#include "libmv/detector/detector.h"
-#include "libmv/detector/detector_factory.h"
-#include "libmv/detector/fast_detector.h"
-#include "libmv/detector/star_detector.h"
-#include "libmv/detector/surf_detector.h"
+
+#include "libmv/descriptor/descriptor.h"
+#include "libmv/descriptor/descriptor_factory.h"
+#include "libmv/descriptor/simpliest_descriptor.h"
+#include "libmv/descriptor/dipole_descriptor.h"
+#include "libmv/descriptor/surf_descriptor.h"
+#include "libmv/descriptor/daisy_descriptor.h"
 #include "libmv/logging/logging.h"
 
 namespace libmv {
-namespace detector {
+namespace descriptor {
 
-Detector *detectorFactory(eDetector edetector)  {
+Describer *describerFactory(eDescriber edescriber)  {
 
-  switch (edetector)
+  switch (edescriber)
   {
-  case FAST_DETECTOR:
-    return detector::CreateFastDetector();
+  case SIMPLEST_DESCRIBER:
+    return descriptor::CreateSimpliestDescriber();
     break;
-  case FAST_LIMITED_DETECTOR:
-    return detector::CreateFastDetectorLimited();
+  case DIPOLE_DESCRIBER:
+    return descriptor::CreateDipoleDescriber();
     break;
-  case SURF_DETECTOR:
-    return detector::CreateSURFDetector();
+  case SURF_DESCRIBER:
+    return descriptor::CreateSurfDescriber();
     break;
-  case STAR_DETECTOR:
-    return detector::CreateStarDetector();
-    break;
-  case MSER_DETECTOR:
+  case DAISY_DESCRIBER:
+    return descriptor::CreateDaisyDescriber();
     break;
   default:
-    LOG(FATAL) << "ERROR : undefined Detector value : " << edetector;
+    LOG(FATAL) << "ERROR : undefined Describer value : " << edescriber;
   }
   return NULL;
 }
