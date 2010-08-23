@@ -1,5 +1,11 @@
-// Copyright 2010 Matthias Fauconneau
+// Copyright (c) 2010 libmv authors.
+// Initial revision by Matthias Fauconneau.
+
 #include "ui/nvr/nview.h"
+#include <QtGui>
+
+#include "libmv/descriptor/descriptor_factory.h"
+#include "libmv/detector/detector_factory.h"
 
 int main(int argc, char *argv[]) {
   Init("", &argc, &argv);
@@ -11,7 +17,7 @@ int main(int argc, char *argv[]) {
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
   setWindowTitle("nView");
-  setMinimumSize(1024,768);
+  setMinimumSize(800, 600);
 
   QDockWidget* actionsDock = new QDockWidget("Actions",this);
   QWidget* actionsWidget = new QWidget(actionsDock);
@@ -36,9 +42,14 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
   gridLayout = new QGridLayout(gridView);
   gridView->setLayout(gridLayout);
   tab->addTab( gridView, "Match View");
+
   tab->addTab( new QWidget(), "3D View"); //dummy
   setCentralWidget( tab );
+}
 
+MainWindow::~MainWindow()
+{
+  DeleteElements(&images);
 }
 
 void MainWindow::addImages() {
@@ -58,14 +69,17 @@ void MainWindow::addImages( QStringList filenames ) {
   int ratio = (int)ceil(sqrt((float)images.count()));
   for (int i=0;i<images.count();i++) {
     MatchView* view = new MatchView();
-    view->setImage(images[i]);
+    view->setImage(images[i], &(nViewMatcher.getMatches()), i );
     gridLayout->addWidget(view,i/ratio,i%ratio);
   }
 }
 
-void MatchView::setImage( nImage* image ) {
+void MatchView::setImage( nImage* image, const libmv::Matches * matches, int index ) {
   this->image=image;
   connect(image,SIGNAL(updated()),this,SLOT(update()));
+
+  _mMatches = matches;
+  _indexInMatchesTable = index;
 }
 
 void MatchView::paintEvent(QPaintEvent*) {
@@ -76,154 +90,66 @@ void MatchView::paintEvent(QPaintEvent*) {
                    (float)width()/image->width()));
 
   p.setBrush(Qt::NoBrush);
-  foreach( nMatch* match, image->allMatches().values() ) {
-    for (Matches::Points r = match->features(image); r; ++r ) {
-      const PointFeature* f = r.feature();
+
+  if (_indexInMatchesTable < _mMatches->NumImages())
+  {
+    libmv::Matches::Features<KeypointFeature> ptr =
+      _mMatches->InImage<KeypointFeature>(_indexInMatchesTable);
+    while( ptr)
+    {
+      const KeypointFeature* f = ptr.feature();
       p.setPen(QColor(255,255,255));
-      p.drawEllipse(QPointF(f->x(), f->y()), r.feature()->scale,
-                    r.feature()->scale );
+      p.drawEllipse(QPointF(f->x(), f->y()), f->scale,
+                    f->scale );
       p.drawLine( QPoint(f->x(), f->y()),
                   QPoint(
                     f->x() +
-                    r.feature()->scale*cos(r.feature()->orientation),
+                    f->scale*cos(f->orientation),
                     f->y() +
-                    r.feature()->scale*sin(r.feature()->orientation)));
+                    f->scale*sin(f->orientation)));
+      ++ptr;
     }
   }
 }
 
-void nImage::computeFeatures() {
-  Array3Du image(height(), width());
-  for (int y=0; y<height(); ++y) {
-    QRgb* rgb = (QRgb*)scanLine(y);
-    for (int x=0; x<width(); ++x)
-      image(y, x) = qGray(rgb[x]);
-  }
-  scoped_ptr<detector::Detector> detector(
-    detector::CreateFastDetector(9, 30, true));
-
-
-  vector<Feature *> features;
-  Image im(new Array3Du(image));
-  detector->Detect(im, &features, NULL);
-
-  vector<descriptor::Descriptor *> descriptors;
-  scoped_ptr<descriptor::Describer> describer(
-    //descriptor::CreateSimpliestDescriber());
-    descriptor::CreateDipoleDescriber());
-  describer->Describe(features, im, NULL, &descriptors);
-
-  // Copy data.
-  featureSet.features.resize(descriptors.size());
-  for (int i = 0;i < descriptors.size(); i++) {
-    KeypointFeature& feature = featureSet.features[i];
-    feature.descriptor = *(descriptor::VecfDescriptor*)descriptors[i];
-    *(PointFeature*)(&feature) = *(PointFeature*)features[i];
-  }
-
-  DeleteElements(&descriptors);
-  DeleteElements(&features);
-}
-bool nImage::hasMatch(nImage *other) {
-  return matches.contains(other);
-}
-QMap<nImage*,nMatch*> nImage::allMatches() {
-  return matches;
-}
-void nImage::clearMatches() {
-  matches.clear();
-}
 void nImage::update() {
-  emit updated();
-}
-
-nMatch::nMatch(nImage *A, nImage *B) : A(A), B(B) {
-
-  qDebug() << "nMatch::nMatch => FindCandidateMatches" << endl;
-
-  FindCandidateMatches( A->featureSet, B->featureSet, &mvMatch);
-
-  qDebug() << "nMatch::nMatch => filter" << endl;
-
-  bool bFilter_Epipolar = false, bFilter_Homography = true;
-  if (bFilter_Epipolar || bFilter_Homography) {
-    libmv::Matches robustMatches;
-    // Construct matrices containing the matches.
-    vector<Mat> x;
-    vector<int> tracks;
-    vector<int> imageIndices;
-    imageIndices.push_back(0);
-    imageIndices.push_back(1);
-
-    PointMatchMatrices(this->mvMatch, imageIndices, &tracks, &x);
-
-    vector<int> inliers;
-    int thresholdCriteria = 10;
-    if (bFilter_Epipolar) {
-      Mat3 F;
-      FundamentalFromCorrespondences7PointRobust(x[0], x[1], 1, &F, &inliers);
-      thresholdCriteria = 7 + 7/2;
-    }
-    else  {
-      if (bFilter_Homography) {
-        Mat3 H;
-        HomographyFromCorrespondences4PointRobust(x[0], x[1], 1, &H, &inliers);
-        thresholdCriteria = 4 + 4/2;
-      }
-    }
-
-    if (inliers.size() > thresholdCriteria) {
-      // Build new correspondence graph containing only inliers.
-      for (int j = 0; j < inliers.size(); ++j) {
-          int k = inliers[j];
-          for (int i = 0; i < 2; ++i) {
-              robustMatches.Insert(i, tracks[k], this->mvMatch.Get(i, tracks[k]));
-          }
-      }
-      this->mvMatch = robustMatches;
-
-      A->matches[B] = this;
-      B->matches[A] = this;
-    }
-    else  {
-      qDebug() << "No sufficient match to be robust" << endl;
-      this->mvMatch = libmv::Matches();
-    }
-  }
-  qDebug() << "nMatch::nMatch => filter END" << endl;
-}
-
-Matches::Points nMatch::features( nImage* image ) {
-  return mvMatch.InImage<PointFeature>(image == A ? 0 : 1);
+  emit updated(); //Refresh display
 }
 
 void MainWindow::computeMatches() {
-  int i=0;
+
+  libmv::vector<std::string> image_vector;
   foreach( nImage* image, images ) {
-    statusBar()->showMessage(
-      QString("Computing features (%1/%2)").arg(i++).arg(images.count()));
-    image->computeFeatures();
-    QApplication::processEvents();
+    image_vector.push_back( image->_path);
   }
-  int a=0;
-  foreach( nImage* A, images ) {
-    A->clearMatches();
-    int b=0;
-    foreach( nImage* B, images ) {
-      if ( A != B && !A->hasMatch(B) ) {
-        statusBar()->showMessage(
-          QString("Computing matches (%1 <-> %2)").arg(a).arg(b));
-        new nMatch( A, B ); //Memory leak !
-        A->update();
-        B->update();
-      }
-      QApplication::processEvents();
-      ++b;
-      if (b>=a)
-        break;
-    }
-    a++;
-  }
+
+  statusBar()->showMessage(
+          QString("Computing matches using NViewMatcher Interface"));
+
+  /*scoped_ptr<detector::Detector>
+  //detector(detector::CreateFastDetector(9, 30,true));
+  // detector(detector::CreateStarDetector(true));
+  // detector(detector::CreateFastDetectorLimited(30,true, 1024));
+   detector(detector::CreateMserDetector());
+
+  scoped_ptr<descriptor::Describer>
+    describer(descriptor::CreateSimpliestDescriber());
+  //describer(descriptor::CreateSurfDescriber());
+  //describer(descriptor::CreateDaisyDescriber());
+  //describer(descriptor::CreateDipoleDescriber());
+  nViewMatcher = correspondence::nRobustViewMatching(detector.get(),
+                                                     describer.get());*/
+
+  detector::Detector * pdetector  =
+    detector::detectorFactory(detector::FAST_DETECTOR);
+  descriptor::Describer* pdescriber =
+    descriptor::describerFactory(descriptor::DIPOLE_DESCRIBER);
+  nViewMatcher = correspondence::nRobustViewMatching(pdetector, pdescriber);
+
+  nViewMatcher.computeCrossMatch(image_vector);
+
+  //TODO(pmoulon) Update the Graph view with images that have cross matches nodes.
+
   statusBar()->showMessage("Done.");
 }
 
