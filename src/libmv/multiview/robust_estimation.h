@@ -83,7 +83,7 @@ typename Kernel::Model Estimate(const Kernel &kernel,
   const int total_samples = kernel.NumSamples();
 
   uint max_iterations = 100;
-  const uint really_max_iterations = total_samples;
+  const uint really_max_iterations = 1000;
 
   int best_num_inliers = 0;
   double best_cost = HUGE_VAL;
