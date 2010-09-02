@@ -44,21 +44,37 @@ class Image {
   Image(Array3Du *array) : array_type_(BYTE), array_(array) {}
   Image(Array3Df *array) : array_type_(FLOAT), array_(array) {}
 
+  Image(const Image &img): array_type_(NONE), array_(NULL) {
+    *this = img;
+  }
+
   // Underlying data type.
   enum DataType {
     NONE,
     BYTE,
     FLOAT,
+    INT,
+    SHORT,
   };
 
   // Size in bytes that the image takes in memory.
   int MemorySizeInBytes() {
     int size;
-    if (array_type_ == BYTE) {
-      size = reinterpret_cast<Array3Du *>(array_)->MemorySizeInBytes();
-    } else if (array_type_ == FLOAT) {
-      size = reinterpret_cast<Array3Df *>(array_)->MemorySizeInBytes();
-    } else {
+    switch (array_type_)
+    {
+      case BYTE:
+        size = reinterpret_cast<Array3Du *>(array_)->MemorySizeInBytes();
+      break;
+      case FLOAT:
+        size = reinterpret_cast<Array3Df *>(array_)->MemorySizeInBytes();
+      break;
+      case INT:
+        size = reinterpret_cast<Array3Di *>(array_)->MemorySizeInBytes();
+      break;
+      case SHORT:
+        size = reinterpret_cast<Array3Ds *>(array_)->MemorySizeInBytes();
+      break;
+    default :
       size = 0;
       assert(0);
     }
@@ -67,22 +83,52 @@ class Image {
   }
 
   ~Image() {
-    if (array_type_ == BYTE) {
-      delete reinterpret_cast<Array3Du *>(array_);
-    } else if (array_type_ == FLOAT) {
-      delete reinterpret_cast<Array3Df *>(array_);
-    }
+    switch (array_type_)
+      {
+        case BYTE:
+          delete reinterpret_cast<Array3Du *>(array_);
+
+        break;
+        case FLOAT:
+          delete reinterpret_cast<Array3Df *>(array_);
+
+        break;
+        case INT:
+          delete reinterpret_cast<Array3Di *>(array_);
+
+        break;
+        case SHORT:
+          delete reinterpret_cast<Array3Ds *>(array_);
+
+        break;
+        default:
+          assert(0);
+      }
   }
 
   Image& operator= (const Image& f)  {
     if (this != &f) {
       array_type_ = f.array_type_;
-      if (array_type_ == BYTE) {
-        delete reinterpret_cast<Array3Du *>(array_);
-        array_ = new Array3Du( *(Array3Du *)f.array_);
-      } else if (array_type_ == FLOAT) {
-        delete reinterpret_cast<Array3Df *>(array_);
-        array_ = new Array3Df( *(Array3Df *)f.array_);
+      switch (array_type_)
+      {
+        case BYTE:
+          delete reinterpret_cast<Array3Du *>(array_);
+          array_ = new Array3Du( *(Array3Du *)f.array_);
+        break;
+        case FLOAT:
+          delete reinterpret_cast<Array3Df *>(array_);
+          array_ = new Array3Df( *(Array3Df *)f.array_);
+        break;
+        case INT:
+          delete reinterpret_cast<Array3Di *>(array_);
+          array_ = new Array3Di( *(Array3Di *)f.array_);
+        break;
+        case SHORT:
+          delete reinterpret_cast<Array3Ds *>(array_);
+          array_ = new Array3Ds( *(Array3Ds *)f.array_);
+        break;
+        default:
+          assert(0);
       }
     }
     return *this;
