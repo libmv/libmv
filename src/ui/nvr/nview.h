@@ -1,18 +1,21 @@
 #pragma once
-
+#include <string>
 #include <QList>
 #include <QImage>
 #include <QDebug>
 #include <QApplication>
 #include <QMainWindow>
-#include <QStatusBar>
+#include <QProgressDialog>
 #include <QDockWidget>
 #include <QVBoxLayout>
 #include <QGridLayout>
 #include <QPushButton>
 #include <QFileDialog>
 #include <QPainter>
-#include <string>
+#include <QGraphicsView>
+#include <QGraphicsItem>
+#include <QVector2D>
+#include <QWheelEvent>
 
 #include "libmv/tools/tool.h"
 #include "libmv/base/scoped_ptr.h"
@@ -22,38 +25,77 @@
 #include "libmv/correspondence/nRobustViewMatching.h"
 #include "libmv/logging/logging.h"
 #include "libmv/multiview/projection.h"
+#include "libmv/descriptor/descriptor_factory.h"
+#include "libmv/detector/detector_factory.h"
 
 using namespace libmv;
+using namespace libmv::correspondence;
+using namespace libmv::descriptor;
+using namespace libmv::detector;
 
-/// Image object : (a QImage and his disk path)
-class nImage : public QObject, public QImage {
+/// an image displayed with matches
+class ImageView : public QWidget {
     Q_OBJECT
 public:
-    nImage( QString path ) : QImage(path) {
-      _path = path.toStdString();
-    }
-    void update();
+    ImageView( int i, QString path ) : index(i), _path(path),  image(QPixmap(path)), filter(-1) {}
+    QString path() { return _path; }
+    void setFeatures(QVector<QVector<KeypointFeature> >);
+public slots:
+    void setFilter(int i);
+    void clearFilter();
 signals:
-    void updated();
-public:
-    std::string _path;
-    /*double focalDistance;
-    libmv::Mat3 K;
-    libmv::Mat3 R;
-    libmv::Vec3 t;*/
+    void enter(int i);
+    void leave();
+protected:
+    void paintEvent(QPaintEvent*);
+    void enterEvent(QEvent *);
+    void leaveEvent(QEvent *);
+public: //private:
+    int index;
+    QString _path;
+    QPixmap image;
+    QVector<QVector<KeypointFeature> > features;
+    int filter;
 };
 
-/// QWidget displaying a nImage
-class MatchView : public QWidget {
-    Q_OBJECT
-public slots:
-    void setImage( nImage*, const libmv::Matches * matches, int index );
+class Node;
+
+/// a line linking two nodes
+struct Edge : public QGraphicsLineItem {
+  Edge(Node* a, Node* b) : a(a), b(b) { setZValue(-1); }
+  Node* a;
+  Node* b;
+};
+
+/// an image in the match graph
+struct Node : public QGraphicsPixmapItem {
+//Springs
+  QMap<Node*,Edge*> edges;
+
+//RK4 integration
+  QVector2D position[4];
+  QVector2D velocity[4];
+  QVector2D acceleration[4];
+};
+
+/// a graph of images with edge between matching nodes
+class Graph : public QGraphicsScene {
+  Q_OBJECT
+public:
+  Graph();
 protected:
-    void paintEvent(QPaintEvent *);
-private:
-    nImage* image;
-    const libmv::Matches * _mMatches; // SceneMatches
-    int _indexInMatchesTable;         // Reference image number in the scene
+  void timerEvent(QTimerEvent *event);
+  //void itemMoved();
+public: //private:
+  void evaluate( float dt, int current );
+  QList<Node*> nodes;
+  QList<Edge*> edges;
+};
+
+class GraphView : public QGraphicsView {
+    Q_OBJECT
+protected:
+    void wheelEvent(QWheelEvent* e) { scale(1.0+e->delta()/360.0,1.0+e->delta()/360.0); }
 };
 
 /// QMainWindow with Match/3D View and actions/graph QDockWidgets
@@ -61,23 +103,18 @@ class MainWindow : public QMainWindow {
     Q_OBJECT
 public:
     MainWindow(QWidget *parent = 0);
-    ~MainWindow();
 public slots:
-    void addImages();
-    void addImages( QStringList filenames );
-    void saveBlender();
+    void openImages();
+    void openImages( QStringList filenames );
     void computeMatches();
-    void focalFromFundamental();
-    void metricReconstruction();
-    void metricBundle();
+signals:
+    void setFilter(int i);
+    void clearFilter();
 private:
-    QList<nImage*> images;
-    libmv::correspondence::nRobustViewMatching nViewMatcher;
-
-    //To handle the point cloud
-    //vector<libmv::Vec3> X;
-    //vector<libmv::Vec3f> X_colors;
+    nRobustViewMatching nViewMatcher;
+    QList<ImageView*> images;
+    Graph* graph;
 
     QGridLayout* gridLayout;
-    //QGLView* view3D
+    GraphView* graphView;
 };
