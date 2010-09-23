@@ -142,6 +142,7 @@ void MainWindow::computeMatches() {
     QVector< QVector< QVector<KeypointFeature> > > matches;
     matches.resize(images.count());
     for (int i=0; i < images.count(); ++i) matches[i].resize(images.count());
+    int maxWidth=0;
     for (int i=0; i < images.count(); ++i) {
         Node* a = new Node;
         a->setFlag(QGraphicsItem::ItemIsMovable);
@@ -157,13 +158,16 @@ void MainWindow::computeMatches() {
                 nViewMatcher.getMatches().InImage<KeypointFeature>(i);features;++features) {
                 Matches::TrackID id_track = features.track();
                 const KeypointFeature * ref = features.feature();
-                const Feature * f = nViewMatcher.getMatches().Get(j, id_track);
+                const KeypointFeature * f = (KeypointFeature*) //FIXME: could Get() return FeatureT ?
+                                            nViewMatcher.getMatches().Get(j, id_track);
                 if (f && ref) {
                     matches[i][j].append( *ref );
-                    matches[j][i].append( *ref );
+                    matches[j][i].append( *f );
                     if(a->edges.contains(b)) {
                         Edge* e = a->edges[b];
-                        e->setPen(QPen(QBrush(Qt::SolidPattern),e->pen().widthF()+0.0001));
+                        int width = e->pen().width()+1;
+                        maxWidth = qMax(maxWidth,width);
+                        e->setPen(QPen(QBrush(Qt::SolidPattern),width));
                     } else {
                         Edge* e = new Edge(a,b);
                         a->edges[b] = b->edges[a] = e;
@@ -174,7 +178,10 @@ void MainWindow::computeMatches() {
             }
         }
     }
+    foreach(Edge* e, graph->edges )
+        e->setPen(QPen(QBrush(Qt::SolidPattern),0.1*e->pen().width()/maxWidth));
     for (int i=0; i < images.count(); ++i) images[i]->setFeatures(matches[i]);
+    graphView->fitInView(graph->sceneRect());
 }
 
 /// Graph
