@@ -232,40 +232,38 @@ int main (int argc, char *argv[]) {
 
   // Create the tracker
   correspondence::ArrayMatcher<float> *matcher  = NULL;
-
+  // Set the detector
   detector::eDetector edetector = detector::FAST_DETECTOR;
-  if (FLAGS_detector == "FAST") {
-    edetector = detector::FAST_DETECTOR;
-  } else if (FLAGS_detector == "SURF") {
-    edetector = detector::SURF_DETECTOR;
-  } else if (FLAGS_detector == "STAR") {
-    edetector = detector::STAR_DETECTOR;
-  } else if (FLAGS_detector == "MSER") {
-    edetector = detector::MSER_DETECTOR;
+  std::map<std::string, detector::eDetector> detectorMap;
+  detectorMap["FAST"] = detector::FAST_DETECTOR;
+  detectorMap["SURF"] = detector::SURF_DETECTOR;
+  detectorMap["STAR"] = detector::STAR_DETECTOR;
+  detectorMap["MSER"] = detector::MSER_DETECTOR;
+  if (detectorMap.find(FLAGS_detector) != detectorMap.end()) {
+    edetector = detectorMap[FLAGS_detector];
   } else {
     LOG(FATAL) << "ERROR : undefined Detector !";
   }
-
   detector::Detector * pDetector = detectorFactory(edetector);
-
+  
+  // Set the descriptor
   descriptor::eDescriber edescriber = descriptor::DAISY_DESCRIBER;
-  if (FLAGS_describer == "SIMPLIEST") {
-    edescriber = descriptor::SIMPLEST_DESCRIBER;
-  } else if (FLAGS_describer == "SURF") {
-    edescriber = descriptor::SURF_DESCRIBER;
-  } else if (FLAGS_describer == "DIPOLE") {
-    edescriber = descriptor::DIPOLE_DESCRIBER;
-  } else if (FLAGS_describer == "DAISY") {
-    edescriber = descriptor::DAISY_DESCRIBER;
+  std::map<std::string, descriptor::eDescriber> descriptorMap;
+  descriptorMap["SIMPLIEST"] = descriptor::SIMPLEST_DESCRIBER;
+  descriptorMap["SURF"]      = descriptor::SURF_DESCRIBER;
+  descriptorMap["DIPOLE"]    = descriptor::DIPOLE_DESCRIBER;
+  descriptorMap["DAISY"]     = descriptor::DAISY_DESCRIBER;
+  if (descriptorMap.find(FLAGS_describer) != descriptorMap.end()) {
+    edescriber = descriptorMap[FLAGS_describer];
   } else {
     LOG(FATAL) << "ERROR : undefined Describer !";
   }
   descriptor::Describer * pDescriber = describerFactory(edescriber);
 
+  // Set the matcher
   matcher = new correspondence::ArrayMatcher_Kdtree<float>();
 
   libmv::tracker::FeaturesGraph all_features_graph;
-
   tracker::Tracker *points_tracker = NULL;
   if (!FLAGS_robust_tracker) {
     points_tracker = new tracker::Tracker(pDetector, pDescriber, matcher);
