@@ -101,7 +101,7 @@ class Reconstruction {
   Reconstruction() {}
   ~Reconstruction() {}
 
-  void Insert(FrameID id, Camera *camera) {
+  void InsertCamera(FrameID id, Camera *camera) {
     std::map<FrameID, Camera *>::iterator it = cameras_.find(id);
     if (it != cameras_.end()) {
       delete it->second;
@@ -110,7 +110,7 @@ class Reconstruction {
       cameras_[id] = camera;
     }
   }
-  void Insert(TrackID id, Structure *structure) {
+  void InsertTrack(TrackID id, Structure *structure) {
     std::map<FrameID, Structure *>::iterator it = structures_.find(id);
     if (it != structures_.end()) {
       delete it->second;
@@ -154,8 +154,8 @@ class Reconstruction {
     structures_.clear();
   }
   
-  const size_t GetNumberCameras() const    { return cameras_.size(); }
-  const size_t GetNumberStructures() const { return structures_.size(); }
+  size_t GetNumberCameras() const    { return cameras_.size(); }
+  size_t GetNumberStructures() const { return structures_.size(); }
 
   std::map<FrameID, Camera *> &cameras()  { return cameras_; }
   std::map<TrackID, Structure *> &structures() { return structures_; }

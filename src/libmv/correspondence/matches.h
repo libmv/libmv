@@ -80,7 +80,7 @@ class Matches {
 
   template<typename T>
   Features<T> InTrack(TrackID track) const {
-    return Features<T>(graph_.ToLeft(track));
+    return Features<T>(graph_.ToRight(track));
   }
 
   // Does not take ownership of feature.

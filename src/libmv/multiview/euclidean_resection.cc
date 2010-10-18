@@ -41,7 +41,7 @@ void AbsoluteOrientation(const Mat3X &X,
     Xn.col(i)  = X.col(i) - C;
     Xpn.col(i) = Xp.col(i) - Cp;
   }
-
+  
   // Constrcuting the N matrix (pg. 635)
   double Sxx = Xn.row(0).dot(Xpn.row(0));
   double Syy = Xn.row(1).dot(Xpn.row(1));
@@ -58,7 +58,9 @@ void AbsoluteOrientation(const Mat3X &X,
        Syz - Szy,       Sxx - Syy - Szz, Sxy + Syx,        Szx + Sxz,
        Szx - Sxz,       Sxy + Syx,       -Sxx + Syy - Szz, Syz + Szy,
        Sxy - Syx,       Szx + Sxz,       Syz + Szy,        -Sxx - Syy + Szz;
-
+    
+  //CHECK(!std::isnan<double>(N(0,0)));
+       
   // Find the nit quaternion q that maximizes qNq. It is the eigenvector
   // corresponding to the lagest eigenvalue.
   Vec4 q = N.svd().matrixU().col(0);
@@ -163,7 +165,7 @@ void EuclideanResection(const Mat2X &x_camera, const Mat3X &X_world,
   x_camera_unit.block(0, 0, 2, num_points) = x_camera;
   x_camera_unit.row(2).setOnes();
   NormalizeColumnVectors(&x_camera_unit);
-
+  
   int num_m_rows = num_points * (num_points - 1) / 2;
   int num_tt_variables = num_points * (num_points + 1) / 2;
   int num_m_columns = num_tt_variables + 1;
@@ -251,10 +253,10 @@ void EuclideanResection(const Mat2X &x_camera, const Mat3X &X_world,
 
   // Pivot on the largest element, for numerical stability. Afterwards
   // recover the sign of the lambda solution.
-  int max_L_sq_value = abs(L_sq(IJ2LIndex(0, 0, num_lambda)));
+  double max_L_sq_value = fabs(L_sq(IJ2LIndex(0, 0, num_lambda)));
   int max_L_sq_index = 1;
   for (int i = 1; i < num_lambda; ++i) {
-    double abs_sq_value = abs(L_sq(IJ2LIndex(i, i, num_lambda)));
+    double abs_sq_value = fabs(L_sq(IJ2LIndex(i, i, num_lambda)));
     if (max_L_sq_value < abs_sq_value) {
       max_L_sq_value = abs_sq_value;
       max_L_sq_index = i;
@@ -264,10 +266,13 @@ void EuclideanResection(const Mat2X &x_camera, const Mat3X &X_world,
   L_sq = L_sq * Sign(L_sq(IJ2LIndex(max_L_sq_index,
                                     max_L_sq_index,
                                     num_lambda)));
+  
+  
   Vec L(num_lambda);
   L(max_L_sq_index) = sqrt(L_sq(IJ2LIndex(max_L_sq_index,
                                           max_L_sq_index,
                                           num_lambda)));
+  
   for (int i = 0; i < num_lambda; ++i) {
     if (i != max_L_sq_index) {
       L(i) = L_sq(IJ2LIndex(max_L_sq_index, i, num_lambda)) / L(max_L_sq_index);
@@ -277,7 +282,7 @@ void EuclideanResection(const Mat2X &x_camera, const Mat3X &X_world,
   // Correct the scale using the fact that the last constraint is equal to 1.
   L = L / (V.row(num_m_columns - 1).dot(L));
   Vec X = V * L;
-
+  
   // Recovering the distances from the camera center to the 3D points Q.
   Vec d(num_points);
   d.setZero();
