@@ -21,6 +21,7 @@
 #include "euclidean_resection.h"
 #include "libmv/numeric/numeric.h"
 #include "libmv/logging/logging.h"
+#include "libmv/multiview/projection.h"
 #include "testing/testing.h"
 
 using namespace libmv::resection;
@@ -138,12 +139,26 @@ TEST(EuclideanResection, Points4KnownImagePointsRandomTranslationRotation) {
                      &x_cam, &X_world, &R_expected, &T_expected);
   Mat3 R_output;
   Vec3 T_output;
-  EuclideanResection(x_cam, X_world, &R_output, &T_output);
-
+  EuclideanResection(x_cam, X_world, 
+                     &R_output, &T_output,
+                     eRESECTION_ANSARDANIILIDIS);
+ 
   EXPECT_MATRIX_NEAR(T_output, T_expected, 1e-5);
   EXPECT_MATRIX_NEAR(R_output, R_expected, 1e-7);
-}
+  
+  R_output.setIdentity();
+  T_output.setZero();
+  
+  // For now, EPnP has no non-linear optimization and is not precise enough
+  // with only 4 points.
+  /*
+  EuclideanResection(x_cam, X_world, 
+                     &R_output, &T_output,
+                     eRESECTION_EPNP);
 
+  EXPECT_MATRIX_NEAR(T_output, T_expected, 1e-5);
+  EXPECT_MATRIX_NEAR(R_output, R_expected, 1e-7);*/
+}
 
 TEST(EuclideanResection, Points6AllRandomInput) {
 
@@ -186,8 +201,29 @@ TEST(EuclideanResection, Points6AllRandomInput) {
                      &x_cam, &X_world, &R_expected, &T_expected);
   Mat3 R_output;
   Vec3 T_output;
-  EuclideanResection(x_cam, X_world, &R_output, &T_output);
-
-  EXPECT_MATRIX_NEAR(T_output, T_expected, 1e-6);
+  EuclideanResection(x_cam, X_world, 
+                     &R_output, &T_output,
+                     eRESECTION_ANSARDANIILIDIS);
+ 
+  EXPECT_MATRIX_NEAR(T_output, T_expected, 1e-5);
+  EXPECT_MATRIX_NEAR(R_output, R_expected, 1e-7);
+  
+  R_output.setIdentity();
+  T_output.setZero();
+  
+  EuclideanResection(x_cam, X_world, 
+                     &R_output, &T_output,
+                     eRESECTION_EPNP);
+ 
+  EXPECT_MATRIX_NEAR(T_output, T_expected, 1e-5);
+  EXPECT_MATRIX_NEAR(R_output, R_expected, 1e-7);
+  
+  R_output.setIdentity();
+  T_output.setZero();
+  
+  EuclideanResection(x_image, X_world, KK,
+                     &R_output, &T_output);
+ 
+  EXPECT_MATRIX_NEAR(T_output, T_expected, 1e-5);
   EXPECT_MATRIX_NEAR(R_output, R_expected, 1e-7);
 }

@@ -1,4 +1,4 @@
-// Copyright (c) 2009 libmv authors.
+// Copyright (c) 2010 libmv authors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
@@ -22,9 +22,50 @@
 #define LIBMV_MULTIVIEW_EUCLIDEAN_RESECTION_H_
 
 #include "libmv/numeric/numeric.h"
+#include "libmv/multiview/projection.h"
 
 namespace libmv {
 namespace resection {
+  
+enum eLibmvResectionMethod
+{
+  eRESECTION_ANSARDANIILIDIS,
+  eRESECTION_EPNP,
+};
+
+/**
+ * Computes the extrinsic parameters, R and t for a calibrated camera
+ * from 4 or more 3D points and their images.
+ *
+ * \param x_camera          Image points in normalized camera coordinates
+ *                          e.g. x_camera=inv(K)*x_image
+ * \param X_world           3D points in the world coordinate system
+ * \param R                 Solution for the camera rotation matrix
+ * \param t                 Solution for the camera translation vector
+ * \param eResectionMethod  Resection method
+ */
+void EuclideanResection(const Mat2X &x_camera, 
+                        const Mat3X &X_world,
+                        Mat3 *R, Vec3 *t,
+                        eLibmvResectionMethod eResectionMethod = eRESECTION_EPNP
+                       );
+
+/**
+ * Computes the extrinsic parameters, R and t for a calibrated camera
+ * from 4 or more 3D points and their images.
+ *
+ * \param x_image           Image points in normalized camera coordinates
+ * \param X_world           3D points in the world coordinate system
+ * \param K                 Intrinsic parameters camera matrix
+ * \param R                 Solution for the camera rotation matrix
+ * \param t                 Solution for the camera translation vector
+ * \param eResectionMethod  Resection method
+ */
+void EuclideanResection(const Mat &x_image, 
+                        const Mat3X &X_world,
+                        const Mat3 &K, Mat3 *R, Vec3 *t,
+                        eLibmvResectionMethod eResectionMethod = eRESECTION_EPNP
+                       );
 
 /**
  * The absolute orientation algorithm recovers the transformation
@@ -45,7 +86,7 @@ void AbsoluteOrientation(const Mat3X &X,
  * Computes the extrinsic parameters, R and t for a calibrated camera
  * from 4 or more 3D points and their images.
  *
- * \param x_camera Image points in normalized camera coordnates,
+ * \param x_camera Image points in normalized camera coordinates,
  *       e.g. x_camera=inv(K)*x_image
  * \param X_world 3D points in the world coordinate system
  * \param R       Solution for the camera rotation matrix
@@ -55,8 +96,26 @@ void AbsoluteOrientation(const Mat3X &X,
  * "Linear Pose Estimation from Points or Lines", by Ansar, A. and
  *  Daniilidis, PAMI 2003. vol. 25, no. 5
  */
-void EuclideanResection(const Mat2X &x_camera, const Mat3X &X_world,
-                        Mat3 *R, Vec3 *t);
+void EuclideanResectionAnsarDaniilidis(const Mat2X &x_camera, 
+                                       const Mat3X &X_world,
+                                       Mat3 *R, Vec3 *t);
+/**
+ * Computes the extrinsic parameters, R and t for a calibrated camera
+ * from 4 or more 3D points and their images.
+ *
+ * \param x_camera Image points in normalized camera coordinates,
+ *       e.g. x_camera=inv(K)*x_image
+ * \param X_world 3D points in the world coordinate system
+ * \param R       Solution for the camera rotation matrix
+ * \param t       Solution for the camera translation vector
+ *
+ * This is the algorithm described in:
+ * "{EP$n$P: An Accurate $O(n)$ Solution to the P$n$P Problem", by V. Lepetit
+ * and F. Moreno-Noguer and P. Fua, IJCV 2009. vol. 81, no. 2
+ * Warning: the non-linear optimization is not implemented here.
+ */
+void EuclideanResectionEPnP(const Mat2X &x_camera, const Mat3X &X_world, 
+                            Mat3 *R, Vec3 *t);
 
 } // namespace resection
 } // namespace libmv
