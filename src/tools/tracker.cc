@@ -365,7 +365,7 @@ int main (int argc, char *argv[]) {
     vector<Mat3> Es(number_of_images);
 
     size_t index_image = 0;
-    std::set<Matches::ImageID>::iterator image_iter =
+    std::set<Matches::ImageID>::const_iterator image_iter =
       all_features_graph.matches_.get_images().begin();
 
     Matches::ImageID previous_image_id = *image_iter;
