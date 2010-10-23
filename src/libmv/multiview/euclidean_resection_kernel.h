@@ -50,7 +50,7 @@ class Kernel {
     Mat3 K; K.setIdentity();
     Mat3 R;
     Vec3 t;
-    EuclideanResection(x, X, &R, &t);
+    EuclideanResection(x, X, &R, &t, eRESECTION_EPNP);
     P_From_KRt(K, R, t, &P);
     models->push_back(P);
   }

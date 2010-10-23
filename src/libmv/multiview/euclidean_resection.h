@@ -117,7 +117,7 @@ void EuclideanResectionAnsarDaniilidis(const Mat2X &x_camera,
 void EuclideanResectionEPnP(const Mat2X &x_camera, const Mat3X &X_world, 
                             Mat3 *R, Vec3 *t);
 
-} // namespace resection
+} // namespace euclidean_resection
 } // namespace libmv
 
 

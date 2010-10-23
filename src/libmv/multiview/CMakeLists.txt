@@ -22,6 +22,7 @@ ADD_LIBRARY(multiview
             structure.cc
             lens_distortion.cc
             conditioning.cc
+            robust_euclidean_resection.cc
             )
 
 TARGET_LINK_LIBRARIES(multiview numeric V3D colamd ldl)
@@ -54,6 +55,7 @@ MULTIVIEW_TEST(five_point)
 MULTIVIEW_TEST(affine_2d)
 MULTIVIEW_TEST(euclidean_resection)
 MULTIVIEW_TEST(euclidean_resection_kernel)
+MULTIVIEW_TEST(robust_euclidean_resection)
 MULTIVIEW_TEST(twoviewtriangulation)
 MULTIVIEW_TEST(camera)
 MULTIVIEW_TEST(lens_distortion)
