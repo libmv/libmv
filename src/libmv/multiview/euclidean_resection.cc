@@ -354,12 +354,9 @@ double RMSE(const Mat2X &x_camera,
             const Mat34 &P) {
   size_t num_points = x_camera.cols();
   Mat2X dx = Project(P, X_world) - x_camera;
-  double meanReprojectionError = 0.0;
-  for (size_t c = 0; c < num_points; c++) {
-    meanReprojectionError += std::sqrt(dx.col(c).cwise().square().sum());
-  }
-  return meanReprojectionError /= num_points;
+  return dx.norm() / num_points;
 }
+
 // TODO(julien): make this generic andmove it to projection.h ?
 // Estimates the root mean square error (2D)
 double RMSE(const Mat2X &x_camera, 
@@ -371,12 +368,9 @@ double RMSE(const Mat2X &x_camera,
   P_From_KRt(K, R, t, &P);
   size_t num_points = x_camera.cols();
   Mat2X dx = Project(P, X_world) - x_camera;
-  double meanReprojectionError = 0.0;
-  for (size_t c = 0; c < num_points; c++) {
-    meanReprojectionError += std::sqrt(dx.col(c).cwise().square().sum());
-  }
-  return meanReprojectionError /= num_points;
+  return dx.norm() / num_points;
 }
+
 // Selects 4 (virtuals) control points (mean and PCA)
 void SelectControlPoints(const Mat3X &X_world, 
                          Mat *X_centered, 
@@ -399,6 +393,7 @@ void SelectControlPoints(const Mat3X &X_world,
     X_control_points->col(c+1) = mean + k * u.col(c);
   }
 }
+
 // Computes the barycentric coordinates for all real points
 void ComputeBarycentricCoordinates(const Mat3X &X_world_centered, 
                                    const Mat34 &X_control_points,
@@ -416,6 +411,7 @@ void ComputeBarycentricCoordinates(const Mat3X &X_world_centered,
     (*alphas)(0, c) = 1.0 - alphas->col(c).sum();
   }
 }
+
 // Estimates the coordinates of all real points in the camera coordinate frame
 void ComputePointsCoordinatesInCameraFrame(const Mat4X &alphas, 
     const Vec4 &betas,
