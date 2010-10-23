@@ -133,8 +133,10 @@ typename Kernel::Model Estimate(const Kernel &kernel,
                 << best_num_inliers << " inlying of "
                 << total_samples << " total samples.";
       }
-      max_iterations = IterationsRequired(min_samples, desired_certainty,
-                                          best_inlier_ratio);
+      if (best_inlier_ratio)
+        max_iterations = IterationsRequired(min_samples, 
+                                            desired_certainty,
+                                            best_inlier_ratio);
 
       VLOG(2) << "Max iterations needed given best inlier ratio: "
         << max_iterations << "; best inlier ratio: " << best_inlier_ratio;

@@ -18,6 +18,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
+#include "libmv/multiview/projection.h"
 #include "libmv/numeric/numeric.h"
 
 namespace libmv {
@@ -157,6 +158,12 @@ void HomogeneousToEuclidean(const Mat &H, Mat *X) {
   }
 }
 
+void HomogeneousToEuclidean(const Mat3X &h, Mat2X *e) {
+  e->resize(2, h.cols());
+  e->row(0) = h.row(0).cwise() / h.row(2);
+  e->row(1) = h.row(1).cwise() / h.row(2);
+}
+
 void HomogeneousToEuclidean(const Vec3 &H, Vec2 *X) {
   double w = H(2);
   *X << H(0) / w, H(1) / w;
@@ -171,12 +178,8 @@ void EuclideanToHomogeneous(const Mat &X, Mat *H) {
   int d = X.rows();
   int n = X.cols();
   H->resize(d + 1, n);
-  for (int i = 0; i < n; ++i) {
-    for (int j = 0; j < d; ++j) {
-      (*H)(j, i) = X(j, i);
-    }
-    (*H)(d, i) = 1;
-  }
+  H->block(0, 0, d, n) = X;
+  H->row(d).setOnes();
 }
 
 void EuclideanToHomogeneous(const Vec2 &X, Vec3 *H) {
@@ -185,6 +188,18 @@ void EuclideanToHomogeneous(const Vec2 &X, Vec3 *H) {
 
 void EuclideanToHomogeneous(const Vec3 &X, Vec4 *H) {
   *H << X(0), X(1), X(2), 1;
+}
+
+void EuclideanToNormalizedCamera(const Mat2X &x, const Mat3 &K, Mat2X *n) {
+ Mat3X x_image_h;
+ EuclideanToHomogeneous(x, &x_image_h);
+ Mat3X x_camera_h = K.inverse() * x_image_h;
+ HomogeneousToEuclidean(x_camera_h, n);
+}
+
+void HomogeneousToNormalizedCamera(const Mat3X &x, const Mat3 &K, Mat2X *n) {
+ Mat3X x_camera_h = K.inverse() * x;
+ HomogeneousToEuclidean(x_camera_h, n);
 }
 
 double Depth(const Mat3 &R, const Vec3 &t, const Vec3 &X) {

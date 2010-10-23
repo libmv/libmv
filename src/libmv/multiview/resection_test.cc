@@ -30,6 +30,7 @@
 namespace {
 
 using namespace libmv;
+using namespace libmv::resection;
 
 TEST(Resection, ThreeViews) {
   int nviews = 5;

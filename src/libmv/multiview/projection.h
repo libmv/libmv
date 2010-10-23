@@ -46,6 +46,7 @@ void ProjectionChangeAspectRatio(const Mat34 &P,
                                  Mat34 *P_new);
 
 void HomogeneousToEuclidean(const Mat &H, Mat *X);
+void HomogeneousToEuclidean(const Mat3X &h, Mat2X *e);
 void HomogeneousToEuclidean(const Vec3 &H, Vec2 *X);
 void HomogeneousToEuclidean(const Vec4 &H, Vec3 *X);
 inline Vec2 HomogeneousToEuclidean(const Vec3 &h) {
@@ -62,6 +63,11 @@ inline Mat2X HomogeneousToEuclidean(const Mat3X &h) {
 }
 
 void EuclideanToHomogeneous(const Mat &X, Mat *H);
+inline void EuclideanToHomogeneous(const Mat2X &x, Mat3X *h) {
+  h->resize(3, x.cols());
+  h->block(0, 0, 2, x.cols()) = x;
+  h->row(2).setOnes();
+}
 void EuclideanToHomogeneous(const Vec2 &X, Vec3 *H);
 void EuclideanToHomogeneous(const Vec3 &X, Vec4 *H);
 inline Vec3 EuclideanToHomogeneous(const Vec2 &x) {
@@ -70,6 +76,9 @@ inline Vec3 EuclideanToHomogeneous(const Vec2 &x) {
 inline Vec4 EuclideanToHomogeneous(const Vec3 &x) {
   return Vec4(x(0), x(1), x(2), 1);
 }
+// Conversion from image coordinates to normalized camera coordinates 
+void EuclideanToNormalizedCamera(const Mat2X &x, const Mat3 &K, Mat2X *n);
+void HomogeneousToNormalizedCamera(const Mat3X &x, const Mat3 &K, Mat2X *n);
 
 inline void Project(const Mat34 &P, const Mat4X &X, Mat2X *x) {
   x->resize(2, X.cols());

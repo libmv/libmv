@@ -30,6 +30,7 @@
 #include "libmv/numeric/numeric.h"
 
 namespace libmv {
+namespace resection {
 
 // x's are 2D image coordinates, (x,y,1), and X's are homogeneous four vectors.
 template<typename T>
@@ -55,6 +56,7 @@ void Resection(const Matrix<T, 2, Dynamic> &x,
   reshape(p, 3, 4, P);
 }
 
+}  // namespace resection
 }  // namespace libmv
 
 #endif  // LIBMV_MULTIVIEW_RESECTION_H

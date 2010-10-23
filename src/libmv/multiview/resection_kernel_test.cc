@@ -27,7 +27,7 @@
 #include "testing/testing.h"
 
 namespace libmv {
-namespace {
+namespace resection {
 
 using libmv::resection::kernel::Kernel;
 
@@ -61,5 +61,5 @@ TEST(ResectionKernel, RobustResection) {
   }
 }
 
-}  // namespace
+}  // namespace resection
 }  // namespace libmv

@@ -28,7 +28,7 @@
 
 
 namespace libmv {
-namespace resection {
+namespace euclidean_resection {
 
 void EuclideanResection(const Mat2X &x_camera, 
                         const Mat3X &X_world,
@@ -59,16 +59,13 @@ void EuclideanResection(const Mat &x_image,
                         eLibmvResectionMethod eResectionMethod)
 {
   CHECK(x_image.rows() == 2 || x_image.rows() == 3);
-  Mat x_camera;
+  Mat2X x_camera;
   Mat3X x_camera_h;
   if (x_image.rows() == 2) {
-    Mat x_image_h;
-    EuclideanToHomogeneous(x_image, &x_image_h);
-    x_camera_h = K.inverse() * x_image_h;
+    EuclideanToNormalizedCamera(x_image, K, &x_camera);
   } else if (x_image.rows() == 3) {
-    x_camera_h = K.inverse() * x_image;
+    HomogeneousToNormalizedCamera(x_image, K, &x_camera);
   }
-  HomogeneousToEuclidean(x_camera_h, &x_camera);
   EuclideanResection(x_camera, X_world, R, t, eResectionMethod);
 }
 
@@ -381,16 +378,16 @@ void SelectControlPoints(const Mat3X &X_world,
   MeanAndVarianceAlongRows(X_world, &mean, &variance);
   X_control_points->col(0) = mean;
   // Computes PCA
-  *X_centered = X_world;
+  X_centered->resize (3, num_points);
   for (size_t c = 0; c < num_points; c++)
-    X_centered->col(c) -= mean;
+    X_centered->col (c) = X_world.col (c) - mean;
   Mat3 X_centered_sq = (*X_centered) * X_centered->transpose();
   Eigen::SVD<Mat3> X_centered_sq_svd = X_centered_sq.svd();
   Vec3 w = X_centered_sq_svd.singularValues();
   Mat3 u = X_centered_sq_svd.matrixU();
   for (size_t c = 0; c < 3; c++) {
-    double k = sqrt(w(c) / num_points);    
-    X_control_points->col(c+1) = mean + k * u.col(c);
+    double k = sqrt (w (c) / num_points);
+    X_control_points->col (c + 1) = mean + k * u.col (c);
   }
 }
 

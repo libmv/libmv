@@ -25,7 +25,7 @@
 #include "libmv/multiview/projection.h"
 
 namespace libmv {
-namespace resection {
+namespace euclidean_resection {
   
 enum eLibmvResectionMethod
 {

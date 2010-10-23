@@ -24,7 +24,7 @@
 #include "libmv/multiview/projection.h"
 #include "testing/testing.h"
 
-using namespace libmv::resection;
+using namespace libmv::euclidean_resection;
 using namespace libmv;
 
 // Generates all necessary inputs and desigred outputs for
