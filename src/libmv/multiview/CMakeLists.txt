@@ -22,6 +22,7 @@ ADD_LIBRARY(multiview
             structure.cc
             lens_distortion.cc
             conditioning.cc
+            reconstruction.cc
             robust_euclidean_resection.cc
             )
 
@@ -59,6 +60,7 @@ MULTIVIEW_TEST(robust_euclidean_resection)
 MULTIVIEW_TEST(twoviewtriangulation)
 MULTIVIEW_TEST(camera)
 MULTIVIEW_TEST(lens_distortion)
+MULTIVIEW_TEST(reconstruction)
 
 # TODO(keir): Make tests that depend on generated.cc to use generated sources.
 #ADD_GENERATED_SOURCE(generated.cc generator.py)

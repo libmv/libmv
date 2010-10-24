@@ -26,11 +26,13 @@ namespace libmv {
 PinholeCamera::PinholeCamera() {
   orientation_matrix_.setIdentity();
   intrinsic_matrix_.setIdentity();
+  UpdateProjectionMatrix();
 }
 
 PinholeCamera::PinholeCamera(const Mat3  &R, const Vec3  &t) {
   orientation_matrix_ = R;
   position_ = t;
+  UpdateProjectionMatrix();
 }
 
 PinholeCamera::PinholeCamera(const Mat3  &K,
@@ -39,6 +41,7 @@ PinholeCamera::PinholeCamera(const Mat3  &K,
   intrinsic_matrix_   = K;
   orientation_matrix_ = R;
   position_ = t;
+  UpdateProjectionMatrix();
 }
 PinholeCamera::PinholeCamera(double focal,
                              const Vec2 &principal_point) {
@@ -77,7 +80,7 @@ bool PinholeCamera::ProjectPointStructure(
     PointFeature *feature) const {
   Mat2X vector_2d_point(2, 1);
   Mat4X X(4, 1);
-  X << point_structure.homogeneous_coords();
+  X << point_structure.coords();
   Project(projection_matrix_, X, &vector_2d_point);
   feature->coords << vector_2d_point.col(0).cast<float>();
   return true;

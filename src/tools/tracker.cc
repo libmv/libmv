@@ -44,7 +44,9 @@
 #include "libmv/multiview/focal_from_fundamental.h"
 #include "libmv/multiview/nviewtriangulation.h"
 #include "libmv/multiview/projection.h"
+#include "libmv/multiview/reconstruction.h"
 #include "libmv/multiview/robust_fundamental.h"
+#include "libmv/multiview/triangulation.h"
 #include "libmv/numeric/numeric.h"
 #include "libmv/tools/tool.h"
 #include <zconf.h>
@@ -63,10 +65,14 @@ DEFINE_bool  (robust_tracker, false,
 DEFINE_double(robust_tracker_threshold, 1.0,
               "Epipolar filtering threshold (in pixels)");
 
-DEFINE_double(focal, 50,
-              "focale length for all the cameras");
 DEFINE_bool  (pose_estimation, false,
               "perform a pose estimation");
+DEFINE_double(focal, 50,
+              "focale length for all the cameras");
+DEFINE_double(principal_point_u, 0,
+              "principal point u coordinate");
+DEFINE_double(principal_point_v, 0,
+              "principal point v coordinate");
 DEFINE_string(patch, "", "only track this image/patch");
 
 void DrawFeatures(ByteImage &imageArrayBytes,
@@ -204,12 +210,92 @@ bool IsArgImage(const std::string & arg) {
            arg.rfind (".pnm") != std::string::npos );
 }
 
+void ProceedReconstruction(Matches &matches, 
+                           vector<std::pair<size_t, size_t> > &image_sizes) {
+  Reconstruction reconstruct;
+  Mat3 K1, K2;
+  size_t index_image = 0;
+  std::set<Matches::ImageID>::iterator image_iter =
+    matches.get_images().begin();
+  Matches::ImageID previous_image_id = *image_iter;
+    
+  double u = image_sizes[index_image].second/2.0;
+  if (FLAGS_principal_point_u > 0)
+    u = FLAGS_principal_point_u;
+  double v = image_sizes[index_image].first/2.0;
+  if (FLAGS_principal_point_v > 0)
+    v = FLAGS_principal_point_v;
+  // The first image is fixed
+  K1 << FLAGS_focal,  0, u,
+        0, FLAGS_focal,  v, 
+        0, 0,            1;
+      
+  // Estimation of the second image
+  image_iter++;
+  index_image++;
+  
+  u = image_sizes[index_image].second/2.0;
+  if (FLAGS_principal_point_u > 0)
+    u = FLAGS_principal_point_u;
+  v = image_sizes[index_image].first/2.0;
+  if (FLAGS_principal_point_v > 0)
+    v = FLAGS_principal_point_v;
+  K2 << FLAGS_focal,  0, u,
+        0, FLAGS_focal,  v,
+        0,  0,           1;
+
+  LOG(INFO) << " -- Initial Motion Estimation --  " << std::endl;
+  ReconstructFromTwoCalibratedViews(matches, previous_image_id, *image_iter,
+                                    K1, K2,
+                                    &matches, &reconstruct);
+  
+  LOG(INFO) << " -- Initial Intersection --  " << std::endl;
+  size_t minimum_num_views = 2;
+  PointStructureTriangulation(matches, *image_iter, minimum_num_views, 
+                              &reconstruct);
+
+  //LOG(INFO) << " -- Bundle Adjustment --  " << std::endl;
+  //TODO (julien) Perfom Bundle Adjustment (Euclidean BA)
+  
+  // Estimation of the pose of other images by resection
+  image_iter++;
+  index_image++;
+  for (; image_iter != matches.get_images().end();
+       ++image_iter, ++index_image) {
+    u = image_sizes[index_image].second/2.0;
+    if (FLAGS_principal_point_u > 0)
+      u = FLAGS_principal_point_u;
+    v = image_sizes[index_image].first/2.0;
+    if (FLAGS_principal_point_v > 0)
+      v = FLAGS_principal_point_v;
+    K1 << FLAGS_focal,  0, u,
+          0, FLAGS_focal,  v,
+          0,  0,           1;
+                       
+    LOG(INFO) << " -- Incremental Resection --  " << std::endl;
+    EuclideanCameraResection(matches, *image_iter, K1,
+                             &matches, &reconstruct);     
+
+    LOG(INFO) << " -- Incremental Intersection --  " << std::endl;
+    size_t minimum_num_views = 3;
+    PointStructureTriangulation(matches, *image_iter, minimum_num_views, 
+                                &reconstruct);
+    
+    //LOG(INFO) << " -- Bundle Adjustment --  " << std::endl;
+    //TODO (julien) Perfom Bundle Adjustment (Euclidean BA)
+  }
+  
+  ExportToPLY(reconstruct, "./out.ply");
+  reconstruct.ClearCamerasMap();
+  reconstruct.ClearStructuresMap();
+}
+
 int main (int argc, char *argv[]) {
   google::SetUsageMessage("Track a sequence.");
   google::ParseCommandLineFlags(&argc, &argv, true);
 
   std::list<std::string> image_list;
-  std::vector<std::pair<size_t, size_t> > image_sizes;
+  vector<std::pair<size_t, size_t> > image_sizes;
 
   for (int i = 1;i < argc;++i) {
     std::string arg (argv[i]);
@@ -227,8 +313,6 @@ int main (int argc, char *argv[]) {
     is_patch_tracking_mode = true;
     LOG(INFO) << "Patch traking mode activated. "<<std::endl;
   }
-
-  size_t number_of_images = image_list.size();
 
   // Create the tracker
   correspondence::ArrayMatcher<float> *matcher  = NULL;
@@ -352,77 +436,11 @@ int main (int argc, char *argv[]) {
   }
 
   DisplayMatches(all_features_graph.matches_);
-
-  //TODO (julien) Move this part into another tool (here it's a 2D tracker only)
-  // Pose estimation
+  // Estimates the camera trajectory and 3D structure of the scene
   if (FLAGS_pose_estimation)  {
-    vector<Mat3> Ks(number_of_images);
-
-    vector<Mat3> Rs(number_of_images);
-    vector<Vec3> ts(number_of_images);
-
-    vector<Mat3> Fs(number_of_images);
-    vector<Mat3> Es(number_of_images);
-
-    size_t index_image = 0;
-    std::set<Matches::ImageID>::const_iterator image_iter =
-      all_features_graph.matches_.get_images().begin();
-
-    Matches::ImageID previous_image_id = *image_iter;
-
-    Ks[0] << FLAGS_focal,  0, image_sizes[index_image].second/2.0,
-    0, FLAGS_focal, image_sizes[index_image].first/2.0,
-    0,  0,     1;
-    Rs[0].setIdentity();
-    ts[0]<< 0, 0, 0;
-
-    image_iter++;
-    index_image++;
-    for (; image_iter != all_features_graph.matches_.get_images().end();
-     ++image_iter, ++index_image) {
-
-      Ks[index_image] << FLAGS_focal,  0, image_sizes[index_image].second/2.0,
-      0, FLAGS_focal, image_sizes[index_image].first/2.0,
-      0,  0,     1;
-
-      vector<Mat> xs(2);
-      TwoViewPointMatchMatrices(all_features_graph.matches_,
-                                previous_image_id,
-                                *image_iter,
-                                &xs);
-      Mat &x0 = xs[0];
-      Mat &x1 = xs[1];
-      // Compute fundamental matrix
-      FundamentalFromCorrespondences7PointRobust(x0,
-                                                 x1,
-                                                 0.5,
-                                                 &Fs[index_image],
-                                                 NULL);
-
-      // Compute essential matrix
-      EssentialFromFundamental(Fs[index_image],
-                               Ks[index_image-1],
-                               Ks[index_image],
-                               &Es[index_image]);
-
-      // Recover variation dR, dt from E and K
-      MotionFromEssentialAndCorrespondence(Es[index_image],
-                                           Ks[index_image-1], x0.col(0),
-                                           Ks[index_image], x1.col(0),
-                                           &Rs[index_image],
-                                           &ts[index_image]);
-
-      // Recover the real R = Rprev * dR, t = Rprev * dt + tprev
-      Rs[index_image] = Rs[index_image-1] * Rs[index_image];
-      ts[index_image] = Rs[index_image-1] * ts[index_image] + ts[index_image-1];
-
-      LOG(INFO) << " T =  "<< ts[index_image] << std::endl;
-
-      //TODO (julien) Triangulation (features viewed in min N=3 views ?)
-      //TODO (julien) Bundle Adjustment (projective/Euclidean BA ?)
-    }
+    ProceedReconstruction(all_features_graph.matches_, image_sizes);     
   }
-
+  
   // Delete the tracker
   if (points_tracker) {
     delete points_tracker;

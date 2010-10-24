@@ -75,7 +75,12 @@ NViewDataSet NRealisticCameras(int nviews, int npoints,
                               const nViewDatasetConfigator config) {
   NViewDataSet d;
   d.n = nviews;
-
+  d.K.resize(nviews);
+  d.R.resize(nviews);
+  d.t.resize(nviews);
+  d.C.resize(nviews);
+  d.x.resize(nviews);
+   
   d.X.resize(3, npoints);
   d.X.setRandom();
   d.X *= 0.6;

@@ -344,30 +344,6 @@ void EuclideanResectionAnsarDaniilidis(const Mat2X &x_camera,
   AbsoluteOrientation(X_world, X_cam, R, t);
 }
 
-// TODO(julien): make this generic andmove it to projection.h ?
-// Estimates the root mean square error (2D)
-double RMSE(const Mat2X &x_camera, 
-            const Mat3X &X_world,               
-            const Mat34 &P) {
-  size_t num_points = x_camera.cols();
-  Mat2X dx = Project(P, X_world) - x_camera;
-  return dx.norm() / num_points;
-}
-
-// TODO(julien): make this generic andmove it to projection.h ?
-// Estimates the root mean square error (2D)
-double RMSE(const Mat2X &x_camera, 
-            const Mat3X &X_world,               
-            const Mat3 &K, 
-            const Mat3 &R, 
-            const Vec3 &t) {
-  Mat34 P;
-  P_From_KRt(K, R, t, &P);
-  size_t num_points = x_camera.cols();
-  Mat2X dx = Project(P, X_world) - x_camera;
-  return dx.norm() / num_points;
-}
-
 // Selects 4 (virtuals) control points (mean and PCA)
 void SelectControlPoints(const Mat3X &X_world, 
                          Mat *X_centered, 
@@ -444,11 +420,11 @@ void EuclideanResectionEPnP(const Mat2X &x_camera, const Mat3X &X_world,
   Mat34 X_control_points;
   Mat X_centered;
   SelectControlPoints(X_world, &X_centered, &X_control_points);
-
+  
   // Computes the barycentric coordinates
   Mat4X alphas(4, num_points);
   ComputeBarycentricCoordinates(X_centered, X_control_points, &alphas);
-  
+   
   // Estimates the M matrix with the barycentric coordinates
   double a0, a1, a2, a3, ui, vi;
   Mat M(2*num_points, 12);
@@ -552,9 +528,9 @@ void EuclideanResectionEPnP(const Mat2X &x_camera, const Mat3X &X_world,
     betas <<  b4(0), b4(1)/b4(0), b4(2)/b4(0), b4(3)/b4(0);
     ComputePointsCoordinatesInCameraFrame(alphas, betas, u2, &X_camera);
     AbsoluteOrientation(X_world, X_camera, &Rs[0], &ts[0]);
-    rmse(0) = RMSE(x_camera, X_world, K, Rs[0], ts[0]);
+    rmse(0) = RootMeanSquareError(x_camera, X_world, K, Rs[0], ts[0]);
   } else {
-   LOG(INFO) << " Beta first approximation not good enough." << std::endl;
+   LOG(ERROR) << " Beta first approximation not good enough." << std::endl;
    ts[0].setZero();
    rmse(0) = 1e10;
   }
@@ -581,9 +557,9 @@ void EuclideanResectionEPnP(const Mat2X &x_camera, const Mat3X &X_world,
       betas(0) = -betas(0);
     ComputePointsCoordinatesInCameraFrame(alphas, betas, u2, &X_camera);
     AbsoluteOrientation(X_world, X_camera, &Rs[1], &ts[1]);
-    rmse(1) = RMSE(x_camera, X_world, K, Rs[1], ts[1]);
+    rmse(1) = RootMeanSquareError(x_camera, X_world, K, Rs[1], ts[1]);
   } else {
-   LOG(INFO) << " Beta second approximation not good enough." << std::endl;
+   LOG(ERROR) << " Beta second approximation not good enough." << std::endl;
    ts[1].setZero();
    rmse(1) = 1e10;
   }
@@ -611,9 +587,9 @@ void EuclideanResectionEPnP(const Mat2X &x_camera, const Mat3X &X_world,
     betas(2) = b5(3) / betas(0);
     ComputePointsCoordinatesInCameraFrame(alphas, betas, u2, &X_camera);
     AbsoluteOrientation(X_world, X_camera, &Rs[2], &ts[2]);
-    rmse(2) = RMSE(x_camera, X_world, K, Rs[2], ts[2]);
+    rmse(2) = RootMeanSquareError(x_camera, X_world, K, Rs[2], ts[2]);
   } else {
-   LOG(INFO) << " Beta third approximation not good enough." << std::endl;
+   LOG(ERROR) << " Beta third approximation not good enough." << std::endl;
    ts[2].setZero();
    rmse(2) = 1e10;
   }

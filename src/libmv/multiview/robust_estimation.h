@@ -77,13 +77,13 @@ typename Kernel::Model Estimate(const Kernel &kernel,
                                 const Scorer &scorer,
                                 vector<int> *best_inliers = NULL,
                                 double desired_certainty = 0.01) {
-  uint iteration = 0;
+  size_t iteration = 0;
 
-  const int min_samples = Kernel::MINIMUM_SAMPLES;
-  const int total_samples = kernel.NumSamples();
+  const size_t min_samples = Kernel::MINIMUM_SAMPLES;
+  const size_t total_samples = kernel.NumSamples();
 
-  uint max_iterations = 100;
-  const uint really_max_iterations = 1000;
+  size_t max_iterations = 100;
+  const size_t really_max_iterations = 1000;
 
   int best_num_inliers = 0;
   double best_cost = HUGE_VAL;

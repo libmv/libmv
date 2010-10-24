@@ -31,6 +31,10 @@ Structure::~Structure() {
 PointStructure::PointStructure() {
 }
 
+PointStructure::PointStructure(const Vec3 &coords) {
+  set_coords_affine(coords);
+}
+
 PointStructure::PointStructure(const Vec4 &coords) : coords_(coords) {
 }
 

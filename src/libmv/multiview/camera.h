@@ -174,6 +174,8 @@ class PinholeCamera : public Camera {
   Vec2    principal_point_;
   double  skew_factor_;
   Vec2    image_size_;
+ public:
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 };
 
 // 

@@ -23,6 +23,7 @@
 
 #include "libmv/logging/logging.h"
 #include "libmv/numeric/numeric.h"
+#include "libmv/multiview/projection.h"
 
 namespace libmv {
 
@@ -37,20 +38,24 @@ class Structure {
 class PointStructure : public Structure {
  public:
   PointStructure();
+  PointStructure(const Vec3 &coords);
   PointStructure(const Vec4 &coords);
   virtual ~PointStructure();
 
-  const Vec3 coords() const { return Vec3(coords_(0), coords_(1), coords_(2)); }
-  void set_coords(const Vec3 &coords)  { coords_ = Vec4(coords(0),
-                                                        coords(1),
-                                                        coords(2),
-                                                        1); 
+  const Vec3 coords_affine() const { 
+    return HomogeneousToEuclidean(coords_);
   }
-  const Vec4 &homogeneous_coords() const          { return coords_; }
-  void set_homogeneous_coords(const Vec4 &coords) { coords_ = coords; }
+  void set_coords_affine(const Vec3 &coords)  { 
+    coords_ << coords, 1; 
+  }
+  const Vec4 &coords() const          { return coords_; }
+  void set_coords(const Vec4 &coords) { coords_ = coords; }
+  
  private:
   // Contains the homogeneous position of a structure point
   Vec4 coords_;
+ public:
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 };
 
 }  // namespace libmv

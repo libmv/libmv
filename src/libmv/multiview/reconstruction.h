@@ -24,16 +24,16 @@
 #include <cstdio>
 #include <map>
 
-#include "libmv/correspondence/bipartite_graph.h"
+#include "libmv/correspondence/matches.h"
 #include "libmv/logging/logging.h"
 #include "libmv/numeric/numeric.h"
 #include "libmv/multiview/camera.h"
 #include "libmv/multiview/structure.h"
 
 namespace libmv {
-
-typedef unsigned int FrameID;
-typedef unsigned int TrackID;
+// TODO(julien) shoud a camera have the same ID then an image? 
+typedef Matches::ImageID CameraID;
+typedef Matches::TrackID StructureID;
 
 // Use cases:
 //
@@ -93,7 +93,7 @@ typedef unsigned int TrackID;
 //   CameraResection(Matches, ID, Matches *, Reconstruction *);
 //   MergeReconstructions(Matches, Reconstruction &, Reconstruction &, Matches *, Reconstruction *);
 //   BundleAdjust(Matches, Reconstruction *);
-
+//
 // The reconstruction takes ownership of camera and structure.
 class Reconstruction {
  public:
@@ -101,8 +101,8 @@ class Reconstruction {
   Reconstruction() {}
   ~Reconstruction() {}
 
-  void InsertCamera(FrameID id, Camera *camera) {
-    std::map<FrameID, Camera *>::iterator it = cameras_.find(id);
+  void InsertCamera(CameraID id, Camera *camera) {
+    std::map<CameraID, Camera *>::iterator it = cameras_.find(id);
     if (it != cameras_.end()) {
       delete it->second;
       it->second = camera;
@@ -110,8 +110,9 @@ class Reconstruction {
       cameras_[id] = camera;
     }
   }
-  void InsertTrack(TrackID id, Structure *structure) {
-    std::map<FrameID, Structure *>::iterator it = structures_.find(id);
+  
+  void InsertTrack(StructureID id, Structure *structure) {
+    std::map<StructureID, Structure *>::iterator it = structures_.find(id);
     if (it != structures_.end()) {
       delete it->second;
       it->second = structure; 
@@ -120,34 +121,43 @@ class Reconstruction {
     }
   }
   
-  Camera * GetCamera(FrameID id) {
-    std::map<FrameID, Camera *>::iterator it = cameras_.find(id);
-    if (it != cameras_.end()) {
-      LOG(ERROR) << " No camera exists with this ID." << std::endl;
-      return NULL;
-    } else {
-      return cameras_[id];
-    }
+  bool ImageHasCamera(CameraID id) const {
+    std::map<CameraID, Camera *>::const_iterator it = cameras_.find(id);
+    return it != cameras_.end();
   }
-  Structure * GetStructure(TrackID id) {
-    std::map<TrackID, Structure *>::iterator it = structures_.find(id);
-    if (it != structures_.end()) {
-      LOG(ERROR) << " No Structure exists with this ID." << std::endl;
-      return NULL;
-    } else {
-      return structures_[id];
+  
+  bool TrackHasStructure(StructureID id) const {
+    std::map<StructureID, Structure *>::const_iterator it =
+      structures_.find(id);
+    return it != structures_.end();
+  }
+  
+  Camera * GetCamera(CameraID id) const {
+    std::map<CameraID, Camera *>::const_iterator it = cameras_.find(id);
+    if (it != cameras_.end()) {
+      return it->second;
     }
+    return NULL;
+  }
+  
+  Structure * GetStructure(StructureID id) const {
+    std::map<StructureID, Structure *>::const_iterator it =
+      structures_.find(id);
+    if (it != structures_.end()) {
+      return it->second;
+    }
+    return NULL;
   }
   
   void ClearCamerasMap() {
-    std::map<FrameID, Camera *>::iterator it = cameras_.begin();
+    std::map<CameraID, Camera *>::iterator it = cameras_.begin();
     for (; it != cameras_.end(); ++it) {
       delete it->second;
     }
     cameras_.clear();
   }
   void ClearStructuresMap() {
-    std::map<FrameID, Structure *>::iterator it = structures_.begin();
+    std::map<StructureID, Structure *>::iterator it = structures_.begin();
     for (; it != structures_.end(); ++it) {
       delete it->second;
     }
@@ -157,14 +167,72 @@ class Reconstruction {
   size_t GetNumberCameras() const    { return cameras_.size(); }
   size_t GetNumberStructures() const { return structures_.size(); }
 
-  std::map<FrameID, Camera *> &cameras()  { return cameras_; }
-  std::map<TrackID, Structure *> &structures() { return structures_; }
+  std::map<CameraID, Camera *> &cameras()  { return cameras_; }
+  std::map<StructureID, Structure *> &structures() { return structures_; }
+  Matches::Matches &matches() { return matches_; }
   
  private:
-  std::map<FrameID, Camera *> cameras_;
-  std::map<TrackID, Structure *> structures_;
+  std::map<CameraID, Camera *>     cameras_;
+  std::map<StructureID, Structure *>  structures_;
+  Matches::Matches                matches_;
 };
 
+// Estimates the poses of the two cameras using the fundamental and essential
+// matrices.
+// The method:
+//    selects the common matches of the two images from matches
+//    robustly estimates the fundamental matrix
+//    estimates the essential matrix from the fundamental matrix
+//    extracts the relative motion from the essential matrix
+//    if the first image has no camera, it creates the camera, initialized at
+//      the center of the coordinate frame
+//    estimates the absolute pose of the second camera from the first pose and
+//      the estimated motion.
+//    creates and adds it to the reconstruction
+//    TODO(julien) inserts only inliers matches in matches_out
+// Returns true if the pose estimation has succed
+// Returns false if 
+//    the number of common matches is less than 7
+//    there is no solution for the relative motion from the essential matrix
+bool ReconstructFromTwoCalibratedViews(const Matches::Matches &matches, 
+                                       CameraID image_id1, 
+                                       CameraID image_id2, 
+                                       const Mat3 &K1, 
+                                       const Mat3 &K2, 
+                                       Matches::Matches *matches_all,
+                                       Reconstruction *reconstruction);
+
+// Estimates the pose of the camera using the already reconstructed tracks.
+// The method:
+//    selects the matches that have an already reconstructed track
+//    estimates the camera extrinsic parameters (R,t)
+//    creates and adds the new camera to reconstruction
+//    TODO(julien) inserts only inliers matches in matches_out
+// Returns true if the resection has successed
+// Returns false if 
+//    the number of reconstructed Tracks is less than 5
+bool EuclideanCameraResection(const Matches::Matches &matches_one, 
+                              CameraID image_id, 
+                              const Mat3 &K, 
+                              Matches::Matches *matches_all,
+                              Reconstruction *reconstruction);
+
+// Reconstructs point tracks observed in the image image_id using theirs
+// observations (matches_in). To be reconstructed, the tracks need to be viewed
+// in more than minimum_num_views images.
+// The method:
+//    selects the tracks that haven't been already reconstructed
+//    reconstructs the tracks into structures
+//    TODO(julien) only add inliers?
+//    creates and add them in reconstruction
+// Returns true if the intersection has successed
+bool PointStructureTriangulation(const Matches::Matches &matches, 
+                                 CameraID image_id, 
+                                 size_t minimum_num_views, 
+                                 Reconstruction *reconstruction);
+
+// Exports the reconstruction in a PLY format file
+void ExportToPLY(Reconstruction &reconstruct, std::string outFileName);
 }  // namespace libmv
 
 #endif  // LIBMV_MULTIVIEW_RECONSTRUCTION_H_

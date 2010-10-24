@@ -65,7 +65,7 @@ TEST(CameraModel, PinholeCameraProjection) {
       MatrixColumn(d.x[i], j, &point_2d_gt);
       MatrixColumn(d.X, j, &point_3d_coords);
       
-      point_3d.set_coords(point_3d_coords);
+      point_3d.set_coords_affine(point_3d_coords);
       cameras[i].ProjectPointStructure(point_3d, &point_2d);
       point_2d_coords << point_2d.coords.cast<double>();
       

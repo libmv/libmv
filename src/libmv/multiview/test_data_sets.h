@@ -41,22 +41,21 @@ struct TwoViewDataSet {
 // Two cameras at (-1,-1,-10) and (2,1,-10) looking approximately towards z+.
 TwoViewDataSet TwoRealisticCameras(bool same_K = false);
 
-// An N-view metric dataset (with N < 10). An important difference between this
+// An N-view metric dataset . An important difference between this
 // and the other reconstruction data types is that all points are seen by all
 // cameras.
-#define N 10
 struct NViewDataSet {
-  Mat3 K[N];   // Internal parameters (fx, fy, etc).
-  Mat3 R[N];   // Rotation.
-  Vec3 t[N];   // Translation.
-  Vec3 C[N];   // Camera centers.
+  vector<Mat3> K;   // Internal parameters (fx, fy, etc).
+  vector<Mat3> R;   // Rotation.
+  vector<Vec3> t;   // Translation.
+  vector<Vec3> C;   // Camera centers.
   Mat3X X;     // 3D points.
-  Mat2X x[N];  // Projected points; may have noise added.
+  vector<Mat2X> x;  // Projected points; may have noise added.
 
   int n;  // Actual number of cameras.
 
   Mat34 P(int i) {
-    assert(i < N);
+    assert(i < n);
     return K[i] * HStack(R[i], t[i]);
   }
   Mat3 F(int i, int j) {
@@ -71,7 +70,6 @@ struct NViewDataSet {
   }
   // TODO(keir): Add gaussian jitter functions.
 };
-#undef N
 
 struct nViewDatasetConfigator
 {
@@ -92,8 +90,8 @@ struct nViewDatasetConfigator
 };
 
 NViewDataSet NRealisticCameras(int nviews, int npoints,
-                              const nViewDatasetConfigator
-                                config = nViewDatasetConfigator());
+                               const nViewDatasetConfigator
+                                 config = nViewDatasetConfigator());
 
 } // namespace libmv
 

@@ -142,6 +142,28 @@ inline Vec2 ImageToNormImageCoordinates(Mat3 &Kinverse, Vec2 &x){
   return HomogeneousToEuclidean( x_h );
 }
 
+// Estimates the root mean square error (2D)
+inline double RootMeanSquareError(const Mat2X &x_image, 
+                           const Mat3X &X_world,               
+                           const Mat34 &P) {
+  size_t num_points = x_image.cols();
+  Mat2X dx = Project(P, X_world) - x_image;
+  return dx.norm() / num_points;
+}
+
+// Estimates the root mean square error (2D)
+inline double RootMeanSquareError(const Mat2X &x_image, 
+                           const Mat3X &X_world,               
+                           const Mat3 &K, 
+                           const Mat3 &R, 
+                           const Vec3 &t) {
+  Mat34 P;
+  P_From_KRt(K, R, t, &P);
+  size_t num_points = x_image.cols();
+  Mat2X dx = Project(P, X_world) - x_image;
+  return dx.norm() / num_points;
+}
+
 } // namespace libmv
 
 #endif  // LIBMV_MULTIVIEW_PROJECTION_H_
