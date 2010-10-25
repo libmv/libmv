@@ -1,6 +1,7 @@
 // Copyright (c) 2010 libmv authors.
 // Initial revision by Matthias Fauconneau.
 #include "ui/nvr/nview.h"
+#include <QLabel>
 
 int main(int argc, char *argv[]) {
     Init("", &argc, &argv);
@@ -54,6 +55,11 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
         connect(button,SIGNAL(clicked()),SLOT(computeMatches()));
         layout->addWidget(button);
     }
+    {
+        QPushButton* button = new QPushButton("Reconstruction...");
+        connect(button,SIGNAL(clicked()),SLOT(computeReconstruction()));
+        layout->addWidget(button);
+    }
     addDockWidget(Qt::LeftDockWidgetArea,actionsDock);
 
     QDockWidget* graphDock = new QDockWidget("Match Graph",this);
@@ -78,6 +84,11 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
     QStringList args = qApp->arguments(); args.removeFirst();
     openImages(args);
     if(!args.isEmpty()) computeMatches();
+}
+
+MainWindow::~MainWindow() {
+  reconstruct.ClearCamerasMap();
+  reconstruct.ClearStructuresMap(); 
 }
 
 void MainWindow::openImages() {
@@ -184,8 +195,86 @@ void MainWindow::computeMatches() {
     graphView->fitInView(graph->sceneRect());
 }
 
-/// Graph
+void MainWindow::computeReconstruction() {
+  QProgressDialog progress("Computing reconstruction...","Abort", 0,
+                           images.count(),this);
+  progress.setWindowModality(Qt::WindowModal);
+  currentProgress = &progress;
+  Matches &matches = nViewMatcher.getMatches();
+  size_t index_image = 0;
+  Vec2u image_size;
+  PinholeCamera * camera = NULL;
+  std::set<Matches::ImageID>::const_iterator image_iter =
+    matches.get_images().begin();
+  Matches::ImageID previous_image_id = *image_iter;
+    
+  if (images.count()<2)
+    return;
+  // Estimation of the second image
+  image_iter++;
+  index_image++;
+  
+  progress.setLabelText("Initial Motion Estimation");
+  LOG(INFO) << " -- Initial Motion Estimation --  " << std::endl;
+  ReconstructFromTwoUncalibratedViews(matches, previous_image_id, *image_iter,
+                                      &matches, &reconstruct);
+  camera = dynamic_cast<PinholeCamera*>(
+    reconstruct.GetCamera(*(matches.get_images().begin())));
+  if (camera) {
+    image_size << images[0]->width(), images[0]->height();
+    camera->set_image_size(image_size); 
+  }
+  camera = dynamic_cast<PinholeCamera*>(reconstruct.GetCamera(*image_iter));
+  if (camera) {
+    image_size << images[1]->width(), images[1]->height();
+    camera->set_image_size(image_size); 
+  }
+  progressCallback(2);
+  
+  progress.setLabelText("Initial Intersection");
+  LOG(INFO) << " -- Initial Intersection --  " << std::endl;
+  size_t minimum_num_views = 2;
+  PointStructureTriangulation(matches, *image_iter, minimum_num_views, 
+                              &reconstruct);
 
+  //LOG(INFO) << " -- Bundle Adjustment --  " << std::endl;
+  //TODO (julien) Perfom Bundle Adjustment (Euclidean BA)
+  
+  // Estimation of the pose of other images by resection
+  image_iter++;
+  index_image++;
+  for (; image_iter != matches.get_images().end();
+       ++image_iter, ++index_image) {
+    
+    progress.setLabelText("Incremental Resection");
+    LOG(INFO) << " -- Incremental Resection --  " << std::endl;
+    UncalibratedCameraResection(matches, *image_iter,
+                                &matches, &reconstruct);     
+    
+    camera = dynamic_cast<PinholeCamera*>(reconstruct.GetCamera(*image_iter));
+    if (camera) {
+      image_size << images[index_image]->width(), images[index_image]->height();
+      camera->set_image_size(image_size); 
+    }
+    progressCallback(index_image);
+    progress.setLabelText("Incremental Intersection");
+    LOG(INFO) << " -- Incremental Intersection --  " << std::endl;
+    size_t minimum_num_views = 3;
+    PointStructureTriangulation(matches, 
+                                *image_iter,
+                                minimum_num_views, 
+                                &reconstruct);
+    
+    //LOG(INFO) << " -- Bundle Adjustment --  " << std::endl;
+    //TODO (julien) Perfom Bundle Adjustment (Euclidean BA)
+  }
+  progress.setLabelText("Metric rectification");
+  // Metric rectification
+  UpgradeToMetric(matches, &reconstruct);
+  progress.setLabelText("Reconstruction done.");
+  ExportToPLY(reconstruct, "./out.ply");
+}
+/// Graph
 Graph::Graph() : QGraphicsScene() { startTimer(40); }
 
 void Graph::evaluate( float dt, int current ) {

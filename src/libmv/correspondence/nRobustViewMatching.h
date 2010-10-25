@@ -98,7 +98,7 @@ class nRobustViewMatching :public nViewMatchingInterface  {
   const map<string,FeatureSet> & getViewData() const
     { return m_ViewData;  }
   /// Return detected geometrical consistent matches
-  const Matches & getMatches() const
+  Matches & getMatches() 
     { return m_tracks;  }
     
 private :

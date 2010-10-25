@@ -25,6 +25,7 @@
 #include "libmv/correspondence/nRobustViewMatching.h"
 #include "libmv/logging/logging.h"
 #include "libmv/multiview/projection.h"
+#include "libmv/multiview/reconstruction.h"
 #include "libmv/descriptor/descriptor_factory.h"
 #include "libmv/detector/detector_factory.h"
 
@@ -103,10 +104,12 @@ class MainWindow : public QMainWindow {
     Q_OBJECT
 public:
     MainWindow(QWidget *parent = 0);
+    ~MainWindow();
 public slots:
     void openImages();
     void openImages( QStringList filenames );
     void computeMatches();
+    void computeReconstruction();
 signals:
     void setFilter(int i);
     void clearFilter();
@@ -114,6 +117,7 @@ private:
     nRobustViewMatching nViewMatcher;
     QList<ImageView*> images;
     Graph* graph;
+    Reconstruction reconstruct;
 
     QGridLayout* gridLayout;
     GraphView* graphView;
