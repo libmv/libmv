@@ -66,6 +66,7 @@ class Camera {
 class PinholeCamera : public Camera {
  public:
   PinholeCamera();
+  PinholeCamera(const Mat34  &P);
   PinholeCamera(const Mat3  &R, const Vec3  &t);
   PinholeCamera(const Mat3  &K, const Mat3  &R, const Vec3  &t);
   PinholeCamera(double focal, const Vec2 &principal_point);
@@ -93,7 +94,9 @@ class PinholeCamera : public Camera {
   double focal_y() const                  { return focal_y_; }
   double skew_factor() const              { return skew_factor_; }
   const Vec2 &principal_point() const     { return principal_point_; }
-  const Vec2 &image_size() const          { return image_size_; }
+  const Vec2u &image_size() const          { return image_size_; }
+  uint image_width() const          { return image_size_(0); }
+  uint image_height() const          { return image_size_(1); }
 
   void set_projection_matrix(const Mat34 & p) { 
     projection_matrix_ = p; 
@@ -131,7 +134,7 @@ class PinholeCamera : public Camera {
     position_ = position;
     UpdateProjectionMatrix();
   }
-
+  // TODO(julien) clean the code: avoid to have SetXXX and set_XXX
   void SetIntrinsicParameters(double focal, const Vec2 &principal_point) {
     focal_x_ = focal;
     focal_y_ = focal;
@@ -156,7 +159,8 @@ class PinholeCamera : public Camera {
     skew_factor_ = skew_factor;
     UpdateIntrinsicMatrix();
   }
-  void set_image_size(const Vec2 &size) {
+  // Sets the image size (width, height)
+  void set_image_size(const Vec2u &size) {
     image_size_ = size;
   }
   
@@ -173,7 +177,8 @@ class PinholeCamera : public Camera {
   double  focal_y_;
   Vec2    principal_point_;
   double  skew_factor_;
-  Vec2    image_size_;
+  // Contains the image size (width, height)
+  Vec2u    image_size_;
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 };

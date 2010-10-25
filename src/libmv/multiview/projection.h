@@ -47,6 +47,7 @@ void ProjectionChangeAspectRatio(const Mat34 &P,
 
 void HomogeneousToEuclidean(const Mat &H, Mat *X);
 void HomogeneousToEuclidean(const Mat3X &h, Mat2X *e);
+void HomogeneousToEuclidean(const Mat4X &h, Mat3X *e);
 void HomogeneousToEuclidean(const Vec3 &H, Vec2 *X);
 void HomogeneousToEuclidean(const Vec4 &H, Vec3 *X);
 inline Vec2 HomogeneousToEuclidean(const Vec3 &h) {
@@ -67,6 +68,11 @@ inline void EuclideanToHomogeneous(const Mat2X &x, Mat3X *h) {
   h->resize(3, x.cols());
   h->block(0, 0, 2, x.cols()) = x;
   h->row(2).setOnes();
+}
+inline void EuclideanToHomogeneous(const Mat3X &x, Mat4X *h) {
+  h->resize(4, x.cols());
+  h->block(0, 0, 3, x.cols()) = x;
+  h->row(3).setOnes();
 }
 void EuclideanToHomogeneous(const Vec2 &X, Vec3 *H);
 void EuclideanToHomogeneous(const Vec3 &X, Vec4 *H);
@@ -144,8 +150,8 @@ inline Vec2 ImageToNormImageCoordinates(Mat3 &Kinverse, Vec2 &x){
 
 // Estimates the root mean square error (2D)
 inline double RootMeanSquareError(const Mat2X &x_image, 
-                           const Mat3X &X_world,               
-                           const Mat34 &P) {
+                                  const Mat4X &X_world,               
+                                  const Mat34 &P) {
   size_t num_points = x_image.cols();
   Mat2X dx = Project(P, X_world) - x_image;
   return dx.norm() / num_points;
@@ -163,7 +169,6 @@ inline double RootMeanSquareError(const Mat2X &x_image,
   Mat2X dx = Project(P, X_world) - x_image;
   return dx.norm() / num_points;
 }
-
 } // namespace libmv
 
 #endif  // LIBMV_MULTIVIEW_PROJECTION_H_

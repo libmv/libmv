@@ -29,6 +29,12 @@ PinholeCamera::PinholeCamera() {
   UpdateProjectionMatrix();
 }
 
+PinholeCamera::PinholeCamera(const Mat34  &P) {
+  projection_matrix_ = P;
+  // TODO(julien) when the reconstruction is metric, we can call KRt_From_P();
+  // but whent it is projective, what to do? add a boolean?
+}
+
 PinholeCamera::PinholeCamera(const Mat3  &R, const Vec3  &t) {
   orientation_matrix_ = R;
   position_ = t;

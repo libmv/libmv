@@ -96,4 +96,3 @@ TARGET_LINK_LIBRARIES(nViewMatching
                       multiview
                       daisy
                       )
-

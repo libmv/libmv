@@ -24,6 +24,7 @@ ADD_LIBRARY(multiview
             conditioning.cc
             reconstruction.cc
             robust_euclidean_resection.cc
+            robust_resection.cc
             )
 
 TARGET_LINK_LIBRARIES(multiview numeric V3D colamd ldl)
@@ -61,6 +62,7 @@ MULTIVIEW_TEST(twoviewtriangulation)
 MULTIVIEW_TEST(camera)
 MULTIVIEW_TEST(lens_distortion)
 MULTIVIEW_TEST(reconstruction)
+MULTIVIEW_TEST(robust_resection)
 
 # TODO(keir): Make tests that depend on generated.cc to use generated sources.
 #ADD_GENERATED_SOURCE(generated.cc generator.py)

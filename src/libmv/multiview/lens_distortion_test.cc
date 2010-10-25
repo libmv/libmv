@@ -34,7 +34,7 @@ TEST(LensDistortion, LensDistortionDistortUndistor) {
 
   NViewDataSet d = NRealisticCameras(nviews, npoints);
 
-  Vec2 size_image(d.K[0](0,2)*2., d.K[0](1,2)*2.);
+  Vec2u size_image(d.K[0](0,2)*2., d.K[0](1,2)*2.);
   Vec radial_k,tangential_p;
 
   Mat2X x_distorted_undistorted[nviews];

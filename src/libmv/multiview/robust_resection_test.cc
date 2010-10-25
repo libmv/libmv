@@ -20,7 +20,7 @@
 
 #include "libmv/logging/logging.h"
 #include "libmv/multiview/projection.h"
-#include "libmv/multiview/robust_euclidean_resection.h"
+#include "libmv/multiview/robust_resection.h"
 #include "libmv/multiview/robust_estimation.h"
 #include "libmv/multiview/test_data_sets.h"
 #include "libmv/numeric/numeric.h"
@@ -29,26 +29,26 @@
 namespace libmv {
 namespace {
 
-TEST(EuclideanResectionRobustKernel, TestSynthetic6FullViews) {
+TEST(UncalibratedResectionRobustKernel, TestSynthetic6FullViews) {
   int nviews = 6;
   int npoints = 50;
   int noutliers = 0.4*npoints;
   double threshold_inlier = 0.2;
   NViewDataSet d = NRealisticCameras(nviews, npoints);
+  Mat4X X;
+  EuclideanToHomogeneous(d.X, &X);
+  
   for (int i = 0; i < nviews; ++i) {
     Mat2X x = d.x[i];
     
     // Now make 40% of the points in x totally wrong.
     x.block(0, 0, 2, noutliers).setRandom();
-    
-    Mat3 R;
-    Vec3 t;
+  
+    Mat34 P;
     vector<int> inliers;
-    EuclideanResectionEPnPRobust(x, d.X, d.K[i], threshold_inlier, 
-                                 &R, &t, &inliers);
+    ResectionRobust(x, X, threshold_inlier, &P, &inliers);
     
-    EXPECT_MATRIX_PROP(R, d.R[i], 3e-8);
-    EXPECT_MATRIX_PROP(t, d.t[i], 3e-8);
+    EXPECT_MATRIX_PROP(P, d.P(i), 3e-8);
     
     // Make sure inliers were classified properly.
     for (int i = 0; i < inliers.size(); ++i) {

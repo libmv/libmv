@@ -53,19 +53,22 @@ void GenerateMatchesFromNViewDataSet(const NViewDataSet &d,
   }
 }
 
-TEST(EuclideanReconstruction, TestSynthetic6FullViews) {
+TEST(CalibratedReconstruction, TestSynthetic6FullViews) {
+  // TODO(julien) maybe a better check is the relative motion 
   int nviews = 6;
   int npoints = 100;
   int noutliers = 0.4*npoints;// 30% of outliers
   NViewDataSet d = NRealisticCameras(nviews, npoints);
   
+  Mat4X X;
+  EuclideanToHomogeneous(d.X, &X);
   // These are the expected precision of the results
   // Dont expect much since for now
   //  - this is an incremental approach
   //  - the 3D structure is not retriangulated when new views are estimated
   //  - there is no optimization!
-  const double kPrecisionOrientationMatrix = 5e-2;
-  const double kPrecisionPosition          = 5e-2;
+  const double kPrecisionOrientationMatrix = 3e-2;
+  const double kPrecisionPosition          = 3e-2;
   
   Reconstruction reconstruction;
   // Create the matches
@@ -89,7 +92,7 @@ TEST(EuclideanReconstruction, TestSynthetic6FullViews) {
   EXPECT_MATRIX_PROP(camera->orientation_matrix(), d.R[0], 1e-8);
   EXPECT_MATRIX_PROP(camera->position(), d.t[0], 1e-8);
   
-  double rms = RootMeanSquareError(d.x[0], d.X, camera->projection_matrix());
+  double rms = RootMeanSquareError(d.x[0], X, camera->projection_matrix());
   LOG(INFO) << "RMSE Camera 0 =" << rms << std::endl;
   
   camera = dynamic_cast<PinholeCamera *>(reconstruction.GetCamera(1));
@@ -106,11 +109,10 @@ TEST(EuclideanReconstruction, TestSynthetic6FullViews) {
   camera->set_position(camera0->orientation_matrix() * dt
     + camera0->position());
   
-  EXPECT_MATRIX_PROP(camera->orientation_matrix(), 
-                     d.R[1],
+  EXPECT_MATRIX_PROP(camera->orientation_matrix(), d.R[1],
                      kPrecisionOrientationMatrix);
   EXPECT_MATRIX_PROP(camera->position(), d.t[1], kPrecisionPosition);
-  rms = RootMeanSquareError(d.x[1], d.X, camera->projection_matrix());
+  rms = RootMeanSquareError(d.x[1], X, camera->projection_matrix());
   LOG(INFO) << "RMSE Camera 1 =" << rms << std::endl;
   
   LOG(INFO) << "Proceed Initial Intersection" << std::endl;
@@ -127,14 +129,13 @@ TEST(EuclideanReconstruction, TestSynthetic6FullViews) {
   for (int i = 2; i < nviews; ++i) {   
     LOG(INFO) << "Proceed Incremental Resection" << std::endl;
     // Proceed Incremental Resection 
-    EuclideanCameraResection(matches, i, d.K[i],
-                             &matches, &reconstruction);    
+    CalibratedCameraResection(matches, i, d.K[i],
+                              &matches, &reconstruction);    
     
     EXPECT_EQ(reconstruction.GetNumberCameras(), i+1);
     camera = dynamic_cast<PinholeCamera *>(reconstruction.GetCamera(i));
     EXPECT_TRUE(camera != NULL);
-    EXPECT_MATRIX_PROP(camera->orientation_matrix(), 
-                       d.R[i], 
+    EXPECT_MATRIX_PROP(camera->orientation_matrix(), d.R[i], 
                        kPrecisionOrientationMatrix);
     EXPECT_MATRIX_PROP(camera->position(), d.t[i], kPrecisionPosition);
     
@@ -144,10 +145,102 @@ TEST(EuclideanReconstruction, TestSynthetic6FullViews) {
                                 minimum_num_views_incremental, 
                                 &reconstruction);
 
-    rms = RootMeanSquareError(d.x[i], d.X, camera->projection_matrix());
+    // TODO(julien) Check the rms with the reconstructed structure
+    rms = RootMeanSquareError(d.x[i], X, camera->projection_matrix());
     LOG(INFO) << "RMSE Camera " << i << " =" << rms << std::endl;
     // TODO(julien) Check the 3D structure coordinates and inliers
   }
+  // Performs bundle adjustment
+  BundleAdjust(matches, &reconstruction);
+  // TODO(julien) Check the results of BA
+  // clears the cameras, structures and features
+  reconstruction.ClearCamerasMap();
+  reconstruction.ClearStructuresMap();
+  std::list<Feature *>::iterator features_iter = list_features.begin();
+  for (; features_iter != list_features.end(); ++features_iter)
+    delete *features_iter;
+  list_features.clear();
+}
+
+TEST(UncalibratedReconstruction, TestSynthetic6FullViews) {
+  int nviews = 6;
+  int npoints = 100;
+  int noutliers = 0.4*npoints;// 30% of outliers
+  double rms;
+  NViewDataSet d = NRealisticCameras(nviews, npoints);
+ 
+  Vec2u image_size;
+  // TODO(julien) Clean this..add image size in NViewDataSet?
+  image_size << 2*d.K[0](0, 2), 2*d.K[0](1, 2);
+  Mat4X X;
+  EuclideanToHomogeneous(d.X, &X);
+    
+  // These are the expected precision of the results
+  // Dont expect much since for now
+  //  - this is an incremental approach
+  //  - the 3D structure is not retriangulated when new views are estimated
+  //  - there is no optimization!
+  const double kPrecisionOrientationMatrix = 3e-2;
+  const double kPrecisionPosition          = 3e-2;
+  
+  Reconstruction reconstruction;
+  // Create the matches
+  Matches matches;
+  std::list<Feature *> list_features;
+  GenerateMatchesFromNViewDataSet(d, noutliers, &matches, &list_features);
+              
+  LOG(INFO) << "Proceed Initial Motion Estimation" << std::endl;
+  // Proceed Initial Motion Estimation
+  ReconstructFromTwoUncalibratedViews(matches, 0, 1,
+                                      &matches, &reconstruction);
+ 
+  // Set the image size need for the metric rectification
+  // TODO(julien) find a way to do somewhere else..
+  ((PinholeCamera*)reconstruction.GetCamera(0))->set_image_size(image_size);
+  ((PinholeCamera*)reconstruction.GetCamera(1))->set_image_size(image_size);
+    
+  // TODO(julien) Check the two projection matrices    
+  // Proceed Initial Intersection 
+  size_t minimum_num_views_batch = 2;
+  PointStructureTriangulation(matches, 1, 
+                              minimum_num_views_batch, 
+                              &reconstruction); 
+     
+  // TODO(julien) Check the rms with the reconstructed structure
+  // TODO(julien) Check the 3D structure coordinates and inliers
+  size_t minimum_num_views_incremental = 3;  
+  Mat3 R;
+  Vec3 t;
+  // Checks the incremental reconstruction
+  for (int i = 2; i < nviews; ++i) {   
+    LOG(INFO) << "Proceed Incremental Resection" << std::endl;
+    // Proceed Incremental Resection 
+    UncalibratedCameraResection(matches, i, &matches, &reconstruction);    
+    // TODO(julien) Check the projection matrix    
+    
+    // Set the image size need for the metric rectification
+    // TODO(julien) find a way to do somewhere else..
+    ((PinholeCamera*)reconstruction.GetCamera(i))->set_image_size(image_size);
+    
+    LOG(INFO) << "Proceed Incremental Intersection" << std::endl;
+    // Proceed Incremental Intersection 
+    PointStructureTriangulation(matches, i, 
+                                minimum_num_views_incremental, 
+                                &reconstruction);
+
+    // TODO(julien) Check the rms with the reconstructed structure
+    // TODO(julien) Check the 3D structure coordinates and inliers
+  }
+  
+  LOG(INFO) << "Metric rectification" << std::endl;
+  // Metric rectification
+  UpgradeToMetric(matches, &reconstruction);
+  
+  // TODO(julien) register the reconstruction so that the first camera
+  // correspond to the real pose
+  // TODO(julien) Check the metric reconstruction
+  
+  // clears the cameras, structures and features
   reconstruction.ClearCamerasMap();
   reconstruction.ClearStructuresMap();
   std::list<Feature *>::iterator features_iter = list_features.begin();

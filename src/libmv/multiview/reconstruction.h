@@ -177,20 +177,42 @@ class Reconstruction {
   Matches                matches_;
 };
 
+// Estimates the projection matrices of the two cameras using the fundamental
+// matrix.
+// The method:
+//    selects common matches of the two images
+//    robustly estimates the fundamental matrix
+//    if the first image has no camera, it creates the camera and initializes
+//       the projection matrix as the world frame
+//    else, note that we also set the first projection matrix to the world
+//        frame (for the time being)
+//    estimates the projection matrix of the second camera from the fundamental
+//      matrix
+//    creates and adds it to the reconstruction
+//    TODO(julien) inserts only inliers matches in matches_all
+// Returns true if the projection matrix has succeed
+// Returns false if 
+//    the number of common matches is less than 7
+bool ReconstructFromTwoUncalibratedViews(const Matches &matches, 
+                                         CameraID image_id1, 
+                                         CameraID image_id2, 
+                                         Matches *matches_all,
+                                         Reconstruction *reconstruction);
+
 // Estimates the poses of the two cameras using the fundamental and essential
 // matrices.
 // The method:
-//    selects the common matches of the two images from matches
+//    selects common matches of the two images
 //    robustly estimates the fundamental matrix
 //    estimates the essential matrix from the fundamental matrix
 //    extracts the relative motion from the essential matrix
-//    if the first image has no camera, it creates the camera, initialized at
-//      the center of the coordinate frame
+//    if the first image has no camera, it creates the camera and initializes
+//      the pose to be the world frame
 //    estimates the absolute pose of the second camera from the first pose and
 //      the estimated motion.
 //    creates and adds it to the reconstruction
-//    TODO(julien) inserts only inliers matches in matches_out
-// Returns true if the pose estimation has succed
+//    TODO(julien) inserts only inliers matches in matches_all
+// Returns true if the pose estimation has succeed
 // Returns false if 
 //    the number of common matches is less than 7
 //    there is no solution for the relative motion from the essential matrix
@@ -202,20 +224,35 @@ bool ReconstructFromTwoCalibratedViews(const Matches &matches,
                                        Matches *matches_all,
                                        Reconstruction *reconstruction);
 
-// Estimates the pose of the camera using the already reconstructed tracks.
+// Estimates the projection matrix of the camera using the already reconstructed
+// structures.
 // The method:
-//    selects the matches that have an already reconstructed track
-//    estimates the camera extrinsic parameters (R,t)
+//    selects the tracks that have an already reconstructed structure
+//    robustly estimates the camera projection matrix by resection (P)
 //    creates and adds the new camera to reconstruction
-//    TODO(julien) inserts only inliers matches in matches_out
-// Returns true if the resection has successed
+//    TODO(julien) inserts only inliers matches in matches_all
+// Returns true if the resection has succeed
+// Returns false if 
+//    the number of reconstructed Tracks is less than 6
+bool UncalibratedCameraResection(const Matches &matches_one, 
+                                 CameraID image_id, 
+                                 Matches *matches_all,
+                                 Reconstruction *reconstruction);
+
+// Estimates the pose of the camera using the already reconstructed structures.
+// The method:
+//    selects the tracks that have an already reconstructed structure
+//    robustly estimates the camera extrinsic parameters (R,t) by resection
+//    creates and adds the new camera to reconstruction
+//    TODO(julien) inserts only inliers matches in matches_all
+// Returns true if the resection has succeed
 // Returns false if 
 //    the number of reconstructed Tracks is less than 5
-bool EuclideanCameraResection(const Matches &matches_one, 
-                              CameraID image_id, 
-                              const Mat3 &K, 
-                              Matches *matches_all,
-                              Reconstruction *reconstruction);
+bool CalibratedCameraResection(const Matches &matches_one, 
+                               CameraID image_id, 
+                               const Mat3 &K, 
+                               Matches *matches_all,
+                               Reconstruction *reconstruction);
 
 // Reconstructs point tracks observed in the image image_id using theirs
 // observations (matches_in). To be reconstructed, the tracks need to be viewed
@@ -225,14 +262,28 @@ bool EuclideanCameraResection(const Matches &matches_one,
 //    reconstructs the tracks into structures
 //    TODO(julien) only add inliers?
 //    creates and add them in reconstruction
-// Returns true if the intersection has successed
+// Returns true if the intersection has succeed
 bool PointStructureTriangulation(const Matches &matches, 
                                  CameraID image_id, 
                                  size_t minimum_num_views, 
                                  Reconstruction *reconstruction);
 
+// This method upgrade the reconstruction into a metric one.
+// The method use the linear approach;
+//  computes a metric reconstruction from a projective one by computing
+//    the dual absolute quadric using linear constraints.
+//  estimates the metric rectification H
+//  upgrades the reconstruction using H
+bool UpgradeToMetric(const Matches &matches, 
+                     Reconstruction *reconstruction);
+
+// This method perfoms a (metric?) bundle adjustment
+// TODO(julien)  implement it!
+void BundleAdjust(const Matches &matches, 
+                  Reconstruction *reconstruction);
+
 // Exports the reconstruction in a PLY format file
-void ExportToPLY(Reconstruction &reconstruct, std::string outFileName);
+void ExportToPLY(Reconstruction &reconstruct, std::string out_file_name);
 }  // namespace libmv
 
 #endif  // LIBMV_MULTIVIEW_RECONSTRUCTION_H_

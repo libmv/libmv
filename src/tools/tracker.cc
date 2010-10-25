@@ -273,7 +273,7 @@ void ProceedReconstruction(Matches &matches,
           0,  0,           1;
                        
     LOG(INFO) << " -- Incremental Resection --  " << std::endl;
-    EuclideanCameraResection(matches, *image_iter, K1,
+    CalibratedCameraResection(matches, *image_iter, K1,
                              &matches, &reconstruct);     
 
     LOG(INFO) << " -- Incremental Intersection --  " << std::endl;

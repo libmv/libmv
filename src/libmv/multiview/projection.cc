@@ -163,6 +163,12 @@ void HomogeneousToEuclidean(const Mat3X &h, Mat2X *e) {
   e->row(0) = h.row(0).cwise() / h.row(2);
   e->row(1) = h.row(1).cwise() / h.row(2);
 }
+void HomogeneousToEuclidean(const Mat4X &h, Mat3X *e) {
+  e->resize(3, h.cols());
+  e->row(0) = h.row(0).cwise() / h.row(3);
+  e->row(1) = h.row(1).cwise() / h.row(3);
+  e->row(2) = h.row(2).cwise() / h.row(3);
+}
 
 void HomogeneousToEuclidean(const Vec3 &H, Vec2 *X) {
   double w = H(2);

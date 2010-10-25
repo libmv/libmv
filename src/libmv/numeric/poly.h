@@ -22,6 +22,7 @@
 #define LIBMV_NUMERIC_POLY_H_
 
 #include <cmath>
+#include <stdio.h>
 
 namespace libmv {
 
@@ -118,6 +119,5 @@ int SolveCubicPolynomial(const Real *coeffs, Real *solutions) {
                               solutions + 1,
                               solutions + 2);
 }
-
 }  // namespace libmv
 #endif  // LIBMV_NUMERIC_POLY_H_
