@@ -169,12 +169,12 @@ class Reconstruction {
 
   std::map<CameraID, Camera *> &cameras()  { return cameras_; }
   std::map<StructureID, Structure *> &structures() { return structures_; }
-  Matches::Matches &matches() { return matches_; }
+  Matches &matches() { return matches_; }
   
  private:
   std::map<CameraID, Camera *>     cameras_;
   std::map<StructureID, Structure *>  structures_;
-  Matches::Matches                matches_;
+  Matches                matches_;
 };
 
 // Estimates the poses of the two cameras using the fundamental and essential
@@ -194,12 +194,12 @@ class Reconstruction {
 // Returns false if 
 //    the number of common matches is less than 7
 //    there is no solution for the relative motion from the essential matrix
-bool ReconstructFromTwoCalibratedViews(const Matches::Matches &matches, 
+bool ReconstructFromTwoCalibratedViews(const Matches &matches, 
                                        CameraID image_id1, 
                                        CameraID image_id2, 
                                        const Mat3 &K1, 
                                        const Mat3 &K2, 
-                                       Matches::Matches *matches_all,
+                                       Matches *matches_all,
                                        Reconstruction *reconstruction);
 
 // Estimates the pose of the camera using the already reconstructed tracks.
@@ -211,10 +211,10 @@ bool ReconstructFromTwoCalibratedViews(const Matches::Matches &matches,
 // Returns true if the resection has successed
 // Returns false if 
 //    the number of reconstructed Tracks is less than 5
-bool EuclideanCameraResection(const Matches::Matches &matches_one, 
+bool EuclideanCameraResection(const Matches &matches_one, 
                               CameraID image_id, 
                               const Mat3 &K, 
-                              Matches::Matches *matches_all,
+                              Matches *matches_all,
                               Reconstruction *reconstruction);
 
 // Reconstructs point tracks observed in the image image_id using theirs
@@ -226,7 +226,7 @@ bool EuclideanCameraResection(const Matches::Matches &matches_one,
 //    TODO(julien) only add inliers?
 //    creates and add them in reconstruction
 // Returns true if the intersection has successed
-bool PointStructureTriangulation(const Matches::Matches &matches, 
+bool PointStructureTriangulation(const Matches &matches, 
                                  CameraID image_id, 
                                  size_t minimum_num_views, 
                                  Reconstruction *reconstruction);

@@ -169,7 +169,7 @@ void BlendImages(const ByteImage &imageArrayBytesA,
     }
 }
 
-void DisplayMatches(Matches::Matches &matches) {
+void DisplayMatches(Matches &matches) {
   std::cout << "Matches : \t\t"<<std::endl << "\t";
   for (size_t j = 0; j < matches.NumImages(); j++) {
     std::cout << j << " ";
@@ -215,7 +215,7 @@ void ProceedReconstruction(Matches &matches,
   Reconstruction reconstruct;
   Mat3 K1, K2;
   size_t index_image = 0;
-  std::set<Matches::ImageID>::iterator image_iter =
+  std::set<Matches::ImageID>::const_iterator image_iter =
     matches.get_images().begin();
   Matches::ImageID previous_image_id = *image_iter;
     

@@ -48,7 +48,7 @@ inline void VectorToMatrix(vector<Tvec> &vs, Tmat *m) {
 
 // Selects only the already reconstructed tracks observed in the image image_id
 // and returns a vector of StructureID and their feature coordinates
-void SelectExistingPointStructures(const Matches::Matches &matches, 
+void SelectExistingPointStructures(const Matches &matches, 
                                    CameraID image_id,
                                    const Reconstruction &reconstruction,
                                    vector<StructureID> *structures_ids,
@@ -72,7 +72,7 @@ void SelectExistingPointStructures(const Matches::Matches &matches,
 
 // Selects only the NOT already reconstructed tracks observed in the image
 // image_id and returns a vector of StructureID and their feature coordinates
-void SelectUnexistingPointStructures(const Matches::Matches &matches, 
+void SelectUnexistingPointStructures(const Matches &matches, 
                                     CameraID image_id,
                                     const Reconstruction &reconstruction,
                                     vector<StructureID> *structures_ids,
@@ -110,12 +110,12 @@ void MatrixOfPointStructureCoordinates(
   }
 }
 
-bool ReconstructFromTwoCalibratedViews(const Matches::Matches &matches, 
+bool ReconstructFromTwoCalibratedViews(const Matches &matches, 
                                        CameraID image_id1, 
                                        CameraID image_id2, 
                                        const Mat3 &K1, 
                                        const Mat3 &K2, 
-                                       Matches::Matches *matches_all,
+                                       Matches *matches_all,
                                        Reconstruction *reconstruction) {
   double epipolar_threshold = 0.5;
   vector<Mat> xs(2);
@@ -202,7 +202,7 @@ bool ReconstructFromTwoCalibratedViews(const Matches::Matches &matches,
   return true;
 }
 
-bool PointStructureTriangulation(const Matches::Matches &matches, 
+bool PointStructureTriangulation(const Matches &matches, 
                                  CameraID image_id, 
                                  size_t minimum_num_views, 
                                  Reconstruction *reconstruction) {
@@ -259,10 +259,10 @@ bool PointStructureTriangulation(const Matches::Matches &matches,
   return true;
 }
 
-bool EuclideanCameraResection(const Matches::Matches &matches_one, 
+bool EuclideanCameraResection(const Matches &matches_one, 
                               CameraID image_id, 
                               const Mat3 &K, 
-                              Matches::Matches *matches_all,
+                              Matches *matches_all,
                               Reconstruction *reconstruction) {
   vector<StructureID> structures_ids;
   Mat2X x_image;
