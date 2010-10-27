@@ -1,4 +1,6 @@
 ADD_LIBRARY(numeric numeric.cc poly.cc)
+LIBMV_INSTALL_LIB(numeric)
+
 LIBMV_TEST(numeric numeric)
 LIBMV_TEST(tinyvector numeric)
 LIBMV_TEST(poly numeric)

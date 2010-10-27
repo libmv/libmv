@@ -5,5 +5,6 @@ ADD_LIBRARY(detector
 			fast_detector_limited.cc
 			mser_detector.cc
 			detector_factory.cc)
+LIBMV_INSTALL_LIB(detector)
 LIBMV_TEST(fast_detector "detector;image;correspondence;fast")
 LIBMV_TEST(orientation_detector "detector;image;correspondence")

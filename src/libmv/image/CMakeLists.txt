@@ -14,6 +14,8 @@ ADD_LIBRARY(image image.cc image_io.cc convolve.cc image_pyramid.cc array_nd.cc
 
 TARGET_LINK_LIBRARIES(image png jpeg glog gflags ${PTHREAD})
 
+LIBMV_INSTALL_LIB(image)
+
 MACRO (IMAGE_TEST NAME)
   LIBMV_TEST(${NAME} image)
 ENDMACRO (IMAGE_TEST)

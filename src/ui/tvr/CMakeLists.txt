@@ -21,3 +21,4 @@ TARGET_LINK_LIBRARIES(tvr
                       ${OPENGL_gl_LIBRARY}
                       ${OPENGL_glu_LIBRARY})
 
+LIBMV_INSTALL_EXE(tvr)

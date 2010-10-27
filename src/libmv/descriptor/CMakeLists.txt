@@ -4,4 +4,5 @@ ADD_LIBRARY(descriptor
 			surf_descriptor.cc
 			dipole_descriptor.cc
 			descriptor_factory.cc)
+LIBMV_INSTALL_LIB(descriptor)
 LIBMV_TEST(daisy_descriptor "descriptor;image;daisy")

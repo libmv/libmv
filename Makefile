@@ -18,6 +18,12 @@ test : debug
 test-release : release
 	cd bin-opt && ctest
 
+install : debug
+	cd bin-dbg && make install
+
+install-release : release
+	cd bin-opt && make install
+
 documentation :
 	doxygen Doxyfile
 

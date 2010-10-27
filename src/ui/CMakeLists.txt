@@ -18,5 +18,7 @@ TARGET_LINK_LIBRARIES(imageviewer image
                       ${OPENGL_gl_LIBRARY}
                       ${OPENGL_glu_LIBRARY})
 
+LIBMV_INSTALL_EXE(imageviewer)
+
 ADD_SUBDIRECTORY(tvr)
 ADD_SUBDIRECTORY(nvr)

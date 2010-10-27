@@ -20,3 +20,5 @@ TARGET_LINK_LIBRARIES(nview
                       descriptor
                       multiview
                       daisy )
+
+LIBMV_INSTALL_EXE(nview)

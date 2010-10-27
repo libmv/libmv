@@ -7,6 +7,7 @@ ADD_LIBRARY(correspondence
             tracker.cc
             robust_tracker.cc
             nRobustViewMatching.cc)
+LIBMV_INSTALL_LIB(correspondence)
             
 LIBMV_TEST(klt "correspondence;image;numeric")
 LIBMV_TEST(bipartite_graph "")
