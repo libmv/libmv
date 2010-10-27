@@ -32,7 +32,7 @@ int main(int argc, char **argv) {
 
   int nviews = FLAGS_views;
   int npoints = 8;
-  NViewDataSet d = NRealisticCameras(nviews, npoints);
+  NViewDataSet d = NRealisticCamerasFull(nviews, npoints);
 
   LOG(INFO) << "Points:" << "\n" << d.X;
   for (int i = 0; i < nviews; ++i) {

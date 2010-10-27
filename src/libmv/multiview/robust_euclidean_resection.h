@@ -29,12 +29,14 @@ namespace libmv {
 // Estimate robustly the the extrinsic parameters, R and t for a calibrated
 // camera from 4 or more 3D points and their images.
 // The euclidean resection solver relies on the EPnP method.
+// Returns the score associated to the solution (R,t)
 double EuclideanResectionEPnPRobust(const Mat2X &x_image, 
                                     const Mat3X &X_world,
                                     const Mat3  &K,
                                     double max_error,
                                     Mat3 *R, Vec3 *t,
-                                    vector<int> *inliers);
+                                    vector<int> *inliers = NULL,
+                                    double outliers_probability = 1e-2);
 
 } // namespace libmv
 

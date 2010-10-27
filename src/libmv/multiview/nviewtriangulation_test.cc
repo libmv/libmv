@@ -35,7 +35,7 @@ using namespace libmv;
 TEST(NViewTriangulate, ThreeViews) {
   int nviews = 5;
   int npoints = 6;
-  NViewDataSet d = NRealisticCameras(nviews, npoints);
+  NViewDataSet d = NRealisticCamerasFull(nviews, npoints);
 
   // Collect P matrices together.
   vector<Mat34> Ps(nviews);

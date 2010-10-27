@@ -212,9 +212,10 @@ bool IsArgImage(const std::string & arg) {
 
 void ProceedReconstruction(Matches &matches, 
                            vector<std::pair<size_t, size_t> > &image_sizes) {
-  Reconstruction reconstruct;
+  Reconstruction reconstruction;
   Mat3 K1, K2;
   size_t index_image = 0;
+  Matches matches_inliers;
   std::set<Matches::ImageID>::const_iterator image_iter =
     matches.get_images().begin();
   Matches::ImageID previous_image_id = *image_iter;
@@ -247,12 +248,12 @@ void ProceedReconstruction(Matches &matches,
   LOG(INFO) << " -- Initial Motion Estimation --  " << std::endl;
   ReconstructFromTwoCalibratedViews(matches, previous_image_id, *image_iter,
                                     K1, K2,
-                                    &matches, &reconstruct);
+                                    &matches_inliers, &reconstruction);
   
   LOG(INFO) << " -- Initial Intersection --  " << std::endl;
   size_t minimum_num_views = 2;
-  PointStructureTriangulation(matches, *image_iter, minimum_num_views, 
-                              &reconstruct);
+  PointStructureTriangulation(matches_inliers, *image_iter, minimum_num_views, 
+                              &reconstruction);
 
   //LOG(INFO) << " -- Bundle Adjustment --  " << std::endl;
   //TODO (julien) Perfom Bundle Adjustment (Euclidean BA)
@@ -274,20 +275,22 @@ void ProceedReconstruction(Matches &matches,
                        
     LOG(INFO) << " -- Incremental Resection --  " << std::endl;
     CalibratedCameraResection(matches, *image_iter, K1,
-                             &matches, &reconstruct);     
+                             &matches_inliers, &reconstruction);     
 
     LOG(INFO) << " -- Incremental Intersection --  " << std::endl;
     size_t minimum_num_views = 3;
-    PointStructureTriangulation(matches, *image_iter, minimum_num_views, 
-                                &reconstruct);
+    PointStructureTriangulation(matches_inliers, 
+                                *image_iter,
+                                minimum_num_views, 
+                                &reconstruction);
     
-    //LOG(INFO) << " -- Bundle Adjustment --  " << std::endl;
-    //TODO (julien) Perfom Bundle Adjustment (Euclidean BA)
+    LOG(INFO) << " -- Bundle Adjustment --  " << std::endl;
+    BundleAdjust(matches_inliers, &reconstruction);
   }
   
-  ExportToPLY(reconstruct, "./out.ply");
-  reconstruct.ClearCamerasMap();
-  reconstruct.ClearStructuresMap();
+  ExportToPLY(reconstruction, "./out.ply");
+  reconstruction.ClearCamerasMap();
+  reconstruction.ClearStructuresMap();
 }
 
 int main (int argc, char *argv[]) {

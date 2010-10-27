@@ -36,7 +36,7 @@ void EuclideanResection(const Mat2X &x_camera,
                         eLibmvResectionMethod eResectionMethod) {
   switch (eResectionMethod)
   {
-  case eRESECTION_ANSARDANIILIDIS:
+  case eRESECTION_ANSAR_DANIILIDIS:
     {
       EuclideanResectionAnsarDaniilidis(x_camera, X_world, R, t);
     }

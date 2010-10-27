@@ -25,6 +25,7 @@
 #include <vector>
 
 #include "libmv/base/vector.h"
+// TODO(julien) use the bipartite_graph_new.h now
 #include "libmv/correspondence/bipartite_graph.h"
 #include "libmv/logging/logging.h"
 #include "libmv/correspondence/feature.h"
@@ -198,6 +199,14 @@ class Matches {
   }
   const std::set<TrackID> &get_tracks() const {
     return tracks_;
+  }
+  
+  int NumFeatureImage(ImageID image_id) const {
+    return graph_.NumLeftLeft(image_id);
+  }
+  
+  int NumFeatureTrack(TrackID track_id) const {
+    return graph_.NumLeftRight(track_id);
   }
     
   size_t NumTracks() const { return tracks_.size(); }

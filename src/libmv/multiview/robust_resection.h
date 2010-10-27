@@ -28,11 +28,13 @@ namespace libmv {
 
 // Estimate robustly the the projection matrix of a uncalibrated
 // camera from 6 or more 3D points and their images.
+// Returns the score associated to the solution P
 double ResectionRobust(const Mat2X &x_image, 
                        const Mat4X &X_world,
                        double max_error,
                        Mat34 *P,
-                       vector<int> *inliers);
+                       vector<int> *inliers = NULL,
+                       double outliers_probability = 1e-2);
 
 } // namespace libmv
 

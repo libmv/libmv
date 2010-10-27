@@ -32,15 +32,18 @@ double EuclideanResectionEPnPRobust(const Mat2X &x_image,
                                     const Mat3  &K,
                                     double max_error,
                                     Mat3 *R, Vec3 *t,
-                                    vector<int> *inliers) {
+                                    vector<int> *inliers,
+                                    double outliers_probability) {
   // The threshold is on the sum of the squared errors.
   double threshold = Square(max_error);
+  double best_score = HUGE_VAL;
   typedef libmv::euclidean_resection::kernel::Kernel Kernel;
   Kernel kernel(x_image, X_world, K);
-  Mat34 P = Estimate(kernel, MLEScorer<Kernel>(threshold), inliers);
+  Mat34 P = Estimate(kernel, MLEScorer<Kernel>(threshold), 
+                     inliers, &best_score, outliers_probability);
   Mat3 K_unused;
   KRt_From_P(P, &K_unused, R, t);
-  return 0.0;  // This doesn't mean much for the robust case.
+  return best_score;
 }
 
 }  // namespace libmv

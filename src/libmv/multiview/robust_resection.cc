@@ -30,13 +30,16 @@ double ResectionRobust(const Mat2X &x_image,
                        const Mat4X &X_world,
                        double max_error,
                        Mat34 *P,
-                       vector<int> *inliers) {
+                       vector<int> *inliers,
+                       double outliers_probability) {
   // The threshold is on the sum of the squared errors.
   double threshold = Square(max_error);
+  double best_score = HUGE_VAL;
   typedef libmv::resection::kernel::Kernel Kernel;
   Kernel kernel(x_image, X_world);
-  *P = Estimate(kernel, MLEScorer<Kernel>(threshold), inliers);
-  return 0.0;  // This doesn't mean much for the robust case.
+  *P = Estimate(kernel, MLEScorer<Kernel>(threshold), inliers, 
+                &best_score, outliers_probability);
+  return best_score;
 }
 
 }  // namespace libmv

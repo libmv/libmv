@@ -28,21 +28,25 @@ namespace libmv {
 
 // Estimate robustly the homography matrix between two dataset of 2D point
 // (image coords space). The homography solver relies on the 4 point solution.
+// Returns the score associated to the solution H
 double HomographyFromCorrespondences4PointRobust(
     const Mat &x1,
     const Mat &x2,
     double max_error,
     Mat3 *H,
-    vector<int> *inliers = NULL);
+    vector<int> *inliers = NULL,
+    double outliers_probability = 1e-2);
 
 // Estimate robustly the homography matrix between two dataset of 2D point
 // (image coords space). The homography solver relies on the 2 point solution.
 // It assumes the homographies take the form of those induced by a rotating camera.
-double HomographyFromCorrespondences2PointRobust(const Mat &x1,
-                                                  const Mat &x2,
-                                                  double max_error,
-                                                  Mat3 * H,
-                                                  vector<int> *inliers);
+double HomographyFromCorrespondences2PointRobust(
+    const Mat &x1,
+    const Mat &x2,
+    double max_error,
+    Mat3 * H,
+    vector<int> *inliers = NULL,
+    double outliers_probability = 1e-2);
 
 } // namespace libmv
 

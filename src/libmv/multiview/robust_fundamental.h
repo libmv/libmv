@@ -28,20 +28,25 @@ namespace libmv {
 
 // Estimate robustly the fundamental matrix between two dataset of 2D point
 // (image coords space). The fundamental solver relies on the 8 point solution.
+// Returns the score associated to the solution F
 double FundamentalFromCorrespondences8PointRobust(
     const Mat &x1,
     const Mat &x2,
     double max_error,
     Mat3 *F,
-    vector<int> *inliers = NULL);
+    vector<int> *inliers = NULL,
+    double outliers_probability = 1e-2);
 
 // Estimate robustly the fundamental matrix between two dataset of 2D point
 // (image coords space). The fundamental solver relies on the 7 point solution.
-double FundamentalFromCorrespondences7PointRobust(const Mat &x1,
-                                                  const Mat &x2,
-                                                  double max_error,
-                                                  Mat3 * F,
-                                                  vector<int> *inliers);
+// Returns the score associated to the solution F
+double FundamentalFromCorrespondences7PointRobust(
+    const Mat &x1,
+    const Mat &x2,
+    double max_error,
+    Mat3 * F,
+    vector<int> *inliers = NULL,
+    double outliers_probability = 1e-2);
 
 } // namespace libmv
 

@@ -22,6 +22,7 @@
 #include "libmv/base/vector_utils.h"
 #include "libmv/correspondence/matches.h"
 #include "libmv/multiview/autocalibration.h"
+#include "libmv/multiview/bundle.h"
 #include "libmv/multiview/camera.h"
 #include "libmv/multiview/five_point.h"
 #include "libmv/multiview/fundamental.h"
@@ -29,6 +30,7 @@
 #include "libmv/multiview/robust_resection.h"
 #include "libmv/multiview/robust_euclidean_resection.h"
 #include "libmv/multiview/robust_fundamental.h"
+#include "libmv/multiview/robust_homography.h"
 #include "libmv/multiview/reconstruction.h"
 #include "libmv/multiview/structure.h"
 
@@ -55,12 +57,12 @@ void SelectExistingPointStructures(const Matches &matches,
                                    const Reconstruction &reconstruction,
                                    vector<StructureID> *structures_ids,
                                    Mat2X *x_image) {
-  const size_t kNumberTracksToReserve = 1000;
+  const size_t kNumberStructuresToReserve = 1000;
   structures_ids->resize(0);
   //TODO(julien) clean this
-  structures_ids->reserve(kNumberTracksToReserve);
+  structures_ids->reserve(kNumberStructuresToReserve);
   vector<Vec2> xs;
-  xs.reserve(kNumberTracksToReserve);
+  xs.reserve(kNumberStructuresToReserve);
   Matches::Features<PointFeature> fp =
     matches.InImage<PointFeature>(image_id);
   while (fp) {
@@ -80,12 +82,12 @@ void SelectUnexistingPointStructures(const Matches &matches,
                                     const Reconstruction &reconstruction,
                                     vector<StructureID> *structures_ids,
                                     Mat2X *x_image) {
-  const size_t kNumberTracksToReserve = 1000;
+  const size_t kNumberStructuresToReserve = 1000;
   structures_ids->resize(0);
   //TODO(julien) clean this
-  structures_ids->reserve(kNumberTracksToReserve);
+  structures_ids->reserve(kNumberStructuresToReserve);
   vector<Vec2> xs;
-  xs.reserve(kNumberTracksToReserve);
+  xs.reserve(kNumberStructuresToReserve);
   Matches::Features<PointFeature> fp =
     matches.InImage<PointFeature>(image_id);
   while (fp) {
@@ -117,9 +119,9 @@ void MatrixOfPointStructureCoordinates(
 bool ReconstructFromTwoUncalibratedViews(const Matches &matches, 
                                          CameraID image_id1, 
                                          CameraID image_id2, 
-                                         Matches *matches_all,
+                                         Matches *matches_inliers,
                                          Reconstruction *reconstruction) {
-  double epipolar_threshold = 0.5;
+  double epipolar_threshold = 1;// in pixels
   vector<Mat> xs(2);
   vector<Matches::TrackID> tracks;
   vector<Matches::ImageID> images;
@@ -142,7 +144,8 @@ bool ReconstructFromTwoUncalibratedViews(const Matches &matches,
   // directly the 5 points algorithm
   FundamentalFromCorrespondences7PointRobust(x0, x1,
                                              epipolar_threshold,
-                                             &F, &feature_inliers);
+                                             &F, &feature_inliers, 
+                                             1e-3);
   Mat34 P1;
   Mat34 P2;
   P1<< Mat3::Identity(), Vec3::Zero();
@@ -173,7 +176,15 @@ bool ReconstructFromTwoUncalibratedViews(const Matches &matches,
             << image_id2 <<"]"<< std::endl <<"P="
               << P2 << std::endl;
             
-  // TODO(julien) Add only inliers matches to matches_out
+  //Adds only inliers matches into 
+  const Feature * feature = NULL;
+  for (size_t s = 0; s < feature_inliers.size(); ++s) {
+    feature = matches.Get(image_id1, tracks[feature_inliers[s]]);
+    matches_inliers->Insert(image_id1, tracks[feature_inliers[s]], feature);
+    feature = matches.Get(image_id2, tracks[feature_inliers[s]]);
+    matches_inliers->Insert(image_id2, tracks[feature_inliers[s]], feature);
+  }
+  LOG(INFO) << "Inliers added: " << feature_inliers.size() << std::endl;
   return true;
 }
 
@@ -182,9 +193,9 @@ bool ReconstructFromTwoCalibratedViews(const Matches &matches,
                                        CameraID image_id2, 
                                        const Mat3 &K1, 
                                        const Mat3 &K2, 
-                                       Matches *matches_all,
+                                       Matches *matches_inliers,
                                        Reconstruction *reconstruction) {
-  double epipolar_threshold = 0.5;
+  double epipolar_threshold = 1;// in pixels
   vector<Mat> xs(2);
   vector<Matches::TrackID> tracks;
   vector<Matches::ImageID> images;
@@ -207,7 +218,8 @@ bool ReconstructFromTwoCalibratedViews(const Matches &matches,
   // directly the 5 points algorithm
   FundamentalFromCorrespondences7PointRobust(x0,x1,
                                              epipolar_threshold,
-                                             &F, &feature_inliers);
+                                             &F, &feature_inliers,
+                                             1e-3);
   // Only inliers are selected in order to estimation the relative motion
   Mat2X v0(2, feature_inliers.size());
   Mat2X v1(2, feature_inliers.size());
@@ -263,11 +275,19 @@ bool ReconstructFromTwoCalibratedViews(const Matches &matches,
             << t.transpose()
             << std::endl;
             
-  // TODO(julien) Add only inliers matches to matches_out
+  //Adds only inliers matches into 
+  const Feature * feature = NULL;
+  for (size_t s = 0; s < feature_inliers.size(); ++s) {
+    feature = matches.Get(image_id1, tracks[feature_inliers[s]]);
+    matches_inliers->Insert(image_id1, tracks[feature_inliers[s]], feature);
+    feature = matches.Get(image_id2, tracks[feature_inliers[s]]);
+    matches_inliers->Insert(image_id2, tracks[feature_inliers[s]], feature);
+  }
+  LOG(INFO) << "Inliers added: " << feature_inliers.size() << std::endl;
   return true;
 }
 
-bool PointStructureTriangulation(const Matches &matches, 
+uint PointStructureTriangulation(const Matches &matches, 
                                  CameraID image_id, 
                                  size_t minimum_num_views, 
                                  Reconstruction *reconstruction) {
@@ -275,7 +295,7 @@ bool PointStructureTriangulation(const Matches &matches,
   if (!reconstruction->ImageHasCamera(image_id)) {
       LOG(INFO) << "Error: the image " << image_id 
                 << " has no camera." << std::endl;
-    return false;
+    return 0;
   }
   vector<StructureID> structures_ids;
   Mat2X x_image;
@@ -288,6 +308,7 @@ bool PointStructureTriangulation(const Matches &matches,
   // Selects the point structures that are observed at least in
   // minimum_num_views images (images that have an already localized camera) 
   Mat41 X_world;
+  uint number_new_structure = 0;
   PinholeCamera *camera = NULL;
   for (size_t t = 0; t < structures_ids.size(); ++t) {
     Matches::Features<PointFeature> fp =
@@ -313,7 +334,7 @@ bool PointStructureTriangulation(const Matches &matches,
       PointStructure * p = new PointStructure();
       p->set_coords(X_world.col(0));
       reconstruction->InsertTrack(structures_ids[t], p);
-      
+      number_new_structure++;
       LOG(INFO) << "Add Point Structure ["
                 << structures_ids[t] <<"] "
                 << p->coords().transpose() << " ("
@@ -321,18 +342,74 @@ bool PointStructureTriangulation(const Matches &matches,
                 << std::endl;
     }
   }
-  return true;
+  return number_new_structure;
 }
 
-bool UncalibratedCameraResection(const Matches &matches_one, 
+uint PointStructureRetriangulation(const Matches &matches, 
+                                   CameraID image_id,  
+                                   Reconstruction *reconstruction) {
+  // Checks that the camera is in reconstruction
+  if (!reconstruction->ImageHasCamera(image_id)) {
+      LOG(INFO) << "Error: the image " << image_id 
+                << " has no camera." << std::endl;
+    return 0;
+  }
+  vector<StructureID> structures_ids;
+  Mat2X x_image;
+  vector<Mat34> Ps; 
+  vector<Vec2> xs; 
+  Vec2 x;
+  // Selects only the reconstructed structures observed in the image
+  SelectExistingPointStructures(matches, image_id, *reconstruction,
+                                  &structures_ids, &x_image);
+  Mat41 X_world;
+  uint number_updated_structure = 0;
+  PinholeCamera *camera = NULL;
+  PointStructure *pstructure = NULL;
+  for (size_t t = 0; t < structures_ids.size(); ++t) {
+    Matches::Features<PointFeature> fp =
+      matches.InTrack<PointFeature>(structures_ids[t]);
+    Ps.clear();
+    xs.clear();
+    while (fp) {
+      camera = dynamic_cast<PinholeCamera *>(
+        reconstruction->GetCamera(fp.image()));
+      if (camera) {
+        Ps.push_back(camera->projection_matrix()); 
+        x << fp.feature()->x(), fp.feature()->y();
+        xs.push_back(x);
+      }
+      fp.operator++();
+    }
+    Mat2X x(2, xs.size());
+    VectorToMatrix<Vec2, Mat2X>(xs, &x);
+    NViewTriangulate<double>(x, Ps, &X_world);
+    // Creates an add the point structure to the reconstruction
+    pstructure = dynamic_cast<PointStructure *>(
+      reconstruction->GetStructure(structures_ids[t]));
+    if (pstructure) {
+      // TODO(julien) don't keep ouliers? (RMSE > threshold)
+      pstructure->set_coords(X_world.col(0));
+      number_updated_structure++;
+      LOG(INFO) << "Point structure updated ["
+                << structures_ids[t] <<"] "
+                << pstructure->coords().transpose() << " ("
+                << pstructure->coords().transpose() / pstructure->coords()[3] 
+                << ")" << std::endl;
+    }
+  }
+  return number_updated_structure;
+}
+bool UncalibratedCameraResection(const Matches &matches, 
                                  CameraID image_id, 
-                                 Matches *matches_all,
+                                 Matches *matches_inliers,
                                  Reconstruction *reconstruction) {
+  double rms_inliers_threshold = 1;// in pixels
   vector<StructureID> structures_ids;
   Mat2X x_image;
   Mat4X X_world;
   // Selects only the reconstructed tracks observed in the image
-  SelectExistingPointStructures(matches_one, image_id, *reconstruction,
+  SelectExistingPointStructures(matches, image_id, *reconstruction,
                                 &structures_ids, &x_image);
  
   // TODO(julien) Also remove structures that are on the same location
@@ -346,10 +423,9 @@ bool UncalibratedCameraResection(const Matches &matches_one,
   MatrixOfPointStructureCoordinates(structures_ids, *reconstruction, &X_world);
   CHECK(x_image.cols() == X_world.cols());
   
-  double max_error_threshold = 0.3;
   Mat34 P;
   vector<int> inliers;
-  ResectionRobust(x_image, X_world, max_error_threshold, &P,&inliers);
+  ResectionRobust(x_image, X_world, rms_inliers_threshold, &P,&inliers, 1e-3);
 
   // TODO(julien) Performs non-linear optimization of the pose.
   
@@ -360,20 +436,27 @@ bool UncalibratedCameraResection(const Matches &matches_one,
   LOG(INFO) << "Add Camera ["
             << image_id <<"]"<< std::endl <<"P="
             << P << std::endl;
-  // TODO(julien) Add only inliers matches to matches_out
+  //Adds only inliers matches into 
+  const Feature * feature = NULL;
+  for (size_t s = 0; s < structures_ids.size(); ++s) {
+    feature = matches.Get(image_id, structures_ids[s]);
+    matches_inliers->Insert(image_id, structures_ids[s], feature);
+  }
+  LOG(INFO) << "Inliers added: " << structures_ids.size() << std::endl;
   return true;
 }
 
-bool CalibratedCameraResection(const Matches &matches_one, 
+bool CalibratedCameraResection(const Matches &matches, 
                                CameraID image_id, 
                                const Mat3 &K, 
-                               Matches *matches_all,
+                               Matches *matches_inliers,
                                Reconstruction *reconstruction) {
+  double rms_inliers_threshold = 1;// in pixels
   vector<StructureID> structures_ids;
   Mat2X x_image;
   Mat4X X_world;
   // Selects only the reconstructed tracks observed in the image
-  SelectExistingPointStructures(matches_one, image_id, *reconstruction,
+  SelectExistingPointStructures(matches, image_id, *reconstruction,
                                 &structures_ids, &x_image);
  
   // TODO(julien) Also remove structures that are on the same location
@@ -388,25 +471,29 @@ bool CalibratedCameraResection(const Matches &matches_one,
  
   Mat3X X;
   HomogeneousToEuclidean(X_world, &X);
-  double max_error_threshold = 0.3;
   Mat3 R;
   Vec3 t;
   vector<int> inliers;
-  EuclideanResectionEPnPRobust(x_image, X, K, max_error_threshold,
-                               &R, &t,&inliers);
+  EuclideanResectionEPnPRobust(x_image, X, K, rms_inliers_threshold,
+                               &R, &t, &inliers, 1e-3);
 
   // TODO(julien) Performs non-linear optimization of the pose.
   
   // Creates a new camera and add it to the reconstruction
   PinholeCamera * camera = new PinholeCamera(K, R, t);
   reconstruction->InsertCamera(image_id, camera);
-  
   LOG(INFO) << "Add Camera ["
             << image_id <<"]"<< std::endl <<"R="
             << R << std::endl <<"t= "
             << t.transpose()
             << std::endl;
-  // TODO(julien) Add only inliers matches to matches_out
+  //Adds only inliers matches into 
+  const Feature * feature = NULL;
+  for (size_t s = 0; s < structures_ids.size(); ++s) {
+    feature = matches.Get(image_id, structures_ids[s]);
+    matches_inliers->Insert(image_id, structures_ids[s], feature);
+  }
+  LOG(INFO) << "Inliers added: " << structures_ids.size() << std::endl;
   return true;
 }
 
@@ -433,6 +520,8 @@ double EstimatesRootMeanSquare(const Matches &matches,
                                         *reconstruction,
                                         &X_world);
       Mat2X dx =Project(pcamera->projection_matrix(), X_world) - x_image;
+      std::cout << "|Err Cam "<<camera_iter->first<<"| = " 
+                << sqrt(Square(dx.norm()) / x_image.cols())<<"\n";
       // TODO(julien) use normSquare
       sum_rms2 += Square(dx.norm());
       num_features += x_image.cols();
@@ -443,8 +532,9 @@ double EstimatesRootMeanSquare(const Matches &matches,
 }
 
 bool UpgradeToMetric(const Matches &matches, 
-                     Reconstruction *reconstruction) {  
-  
+                     Reconstruction *reconstruction) { 
+  double rms = EstimatesRootMeanSquare(matches, reconstruction);
+  std::cout << "Upgrade to Metric - Initial RMS:" << rms << std::endl;
   AutoCalibrationLinear auto_calibration_linear;
   uint image_width = 0;
   uint image_height = 0;
@@ -459,8 +549,8 @@ bool UpgradeToMetric(const Matches &matches,
       // HACK to avoid to have null values of image width and height
       // TODO(julien) REMOVE THIS!!!!
       if (!image_width  && !image_height) {
-        image_width  = 1;
-        image_height = 1;
+        image_width  = 640;
+        image_height = 480;
       }
       auto_calibration_linear.AddProjection(pcamera->projection_matrix(),
                                             image_width, image_height);
@@ -475,11 +565,18 @@ bool UpgradeToMetric(const Matches &matches,
                << "matrix contains NaN values.\n";
     return false;
   }
+  Mat34 P;
   camera_iter = reconstruction->cameras().begin();
   for (; camera_iter != reconstruction->cameras().end(); ++camera_iter) {
     pcamera = dynamic_cast<PinholeCamera *>(camera_iter->second);
     if (pcamera) {
-      pcamera->set_projection_matrix(pcamera->projection_matrix() * H);
+      P = pcamera->projection_matrix() * H;
+      pcamera->set_projection_matrix(P);
+      P_From_KRt(pcamera->intrinsic_matrix(),  
+                 pcamera->orientation_matrix(),
+                 pcamera->position(), &P);
+      // TODO(julien) change this.
+      pcamera->set_projection_matrix(P);
     }
   }
   Mat4 H_inverse = H.inverse();
@@ -497,12 +594,151 @@ bool UpgradeToMetric(const Matches &matches,
   return true;
 }
 
-void BundleAdjust(const Matches &matches, 
-                  Reconstruction *reconstruction) {
+double BundleAdjust(const Matches &matches, 
+                    Reconstruction *reconstruction) {
+  double rms = 0, rms0 = EstimatesRootMeanSquare(matches, reconstruction);
+  std::cout << "Initial RMS = " << rms0 << std::endl;
+  size_t ncamera = reconstruction->GetNumberCameras();
+  size_t nstructure = reconstruction->GetNumberStructures();
+  vector<Mat2X> x(ncamera);
+  vector<Vecu>   x_ids(ncamera);
+  vector<Mat3>  Ks(ncamera);
+  vector<Mat3>  Rs(ncamera);
+  vector<Vec3>  ts(ncamera);
+  Mat3X         X(3, nstructure);
+  vector<StructureID> structures_ids;
+  std::map<StructureID, uint> map_structures_ids;
   
-  double rms = EstimatesRootMeanSquare(matches, reconstruction);
-  LOG(INFO) << "RMS = " << rms << "\n";
-  // TODO(julien) Performs bundle adjustment
+  size_t str_id = 0;
+  PointStructure *pstructure = NULL;
+  std::map<StructureID, Structure *>::iterator str_iter =  
+    reconstruction->structures().begin();
+  for (; str_iter != reconstruction->structures().end(); ++str_iter) {
+    pstructure = dynamic_cast<PointStructure *>(str_iter->second);
+    if (pstructure) {
+      X.col(str_id) = pstructure->coords_affine();
+      map_structures_ids[str_iter->first] = str_id;
+      str_id++;
+    } else {
+      LOG(FATAL) << "Error: the bundle adjustment cannont handle non point "
+                 << "structure.";
+      return 0;
+    }
+  }
+  
+  PinholeCamera * pcamera = NULL;
+  size_t cam_id = 0;
+  std::map<CameraID, Camera *>::iterator cam_iter =  
+    reconstruction->cameras().begin();
+  for (; cam_iter != reconstruction->cameras().end(); ++cam_iter) {
+    pcamera = dynamic_cast<PinholeCamera *>(cam_iter->second);
+    if (pcamera) {
+      pcamera->GetIntrinsicExtrinsicParameters(&Ks[cam_id],
+                                               &Rs[cam_id],
+                                               &ts[cam_id]);
+      SelectExistingPointStructures(matches, cam_iter->first,
+                                    *reconstruction,
+                                    &structures_ids, &x[cam_id]);
+      x_ids[cam_id].resize(structures_ids.size());
+      for (size_t s = 0; s < structures_ids.size(); ++s) {
+        x_ids[cam_id][s] = map_structures_ids[structures_ids[s]];
+      }
+      //std::cout << "x_ids = " << x_ids[cam_id].transpose()<<"\n";
+      cam_id++;
+    } else {
+      LOG(FATAL) << "Error: the bundle adjustment cannont handle non pinhole "
+                 << "cameras.";
+      return 0;
+    }
+  }
+  // Performs metric bundle adjustment
+  rms = EuclideanBA(x, x_ids, &Ks, &Rs, &ts, &X);
+  
+  // Copy the results only if it's better
+  if (rms < rms0) {
+    cam_id = 0;
+    cam_iter = reconstruction->cameras().begin();
+    for (; cam_iter != reconstruction->cameras().end(); ++cam_iter) {
+      pcamera = dynamic_cast<PinholeCamera *>(cam_iter->second);
+      if (pcamera) {
+        pcamera->SetIntrinsicExtrinsicParameters(Ks[cam_id],
+                                                 Rs[cam_id],
+                                                 ts[cam_id]);
+        cam_id++;
+      }
+    }
+    str_id = 0;
+    str_iter = reconstruction->structures().begin();
+    for (; str_iter != reconstruction->structures().end(); ++str_iter) {
+      pstructure = dynamic_cast<PointStructure *>(str_iter->second);
+      if (pstructure) {
+        pstructure->set_coords_affine(X.col(str_id));
+        str_id++;
+      }
+    }
+  }
+  std::cout << "Final RMS = " << rms << std::endl;
+  return rms;
+}
+
+void SelectBestImageReconstructionOrder(
+    const Matches &matches, 
+    std::list<vector<Matches::ImageID> >*connected_graph_list) {
+  typedef std::pair<Matches::ImageID, Matches::ImageID> ImagesTypePairs;
+  typedef vector<ImagesTypePairs > ImagesPairs;
+  double h, score, max_error_h = 1;
+  Mat3 H;  
+ 
+  // TODO(julien) Find connected graph and do the rest of every graph
+  {
+    // Selects the two views that are not too closed but share common tracks
+    size_t i = 0;
+    double score_max_1 = 0;
+    ImagesTypePairs image_pair_max_1;
+    vector<Mat2X> xs(matches.NumImages());
+    std::set<Matches::ImageID>::const_iterator image_iter1 =
+      matches.get_images().begin();
+    std::set<Matches::ImageID>::const_iterator image_iter2;
+    vector<Mat> xs2;
+    for (;image_iter1 != matches.get_images().end(); ++image_iter1) {
+      image_iter2 = image_iter1;
+      image_iter2++;
+      for (;image_iter2 != matches.get_images().end(); ++image_iter2) {
+        TwoViewPointMatchMatrices(matches, *image_iter1, *image_iter2, &xs2);
+        if (xs2[0].cols() >= 4) {
+          h = HomographyFromCorrespondences4PointRobust(xs2[0], xs2[1], 
+                                                        max_error_h, 
+                                                        &H, NULL, 1e-2);
+          // the score is homography x number of matches
+          //TODO(julien) Actually it should be the median of the homography...
+          score = h * xs2[0].cols();
+          i++;
+          std::cout << "Score["<<i<<"] = " << score <<"\n";
+          if (score > score_max_1) {
+            score_max_1 = score;
+            image_pair_max_1 = ImagesTypePairs(*image_iter1, *image_iter2);
+            std::cout << " max score found !\n";
+          }
+        }
+      }
+    }
+    vector<Matches::ImageID> v(matches.NumImages());
+    if (score_max_1 != 0) {
+      v[0] = image_pair_max_1.first;
+      v[1] = image_pair_max_1.second;
+    }
+    // Fill the rest of images (not ordered)
+    // TODO(julien) maybe we can do better than a non ordered list here?
+    i = 2;
+    image_iter1 = matches.get_images().begin();
+    for (;image_iter1 != matches.get_images().end(); ++image_iter1) {
+      if (*image_iter1 != v[0] && *image_iter1 != v[1]) {
+        v[i] = *image_iter1;
+        ++i;
+      }
+    }
+    connected_graph_list->push_back(v);
+  }
 }
 
 void ExportToPLY(Reconstruction &reconstruct, std::string out_file_name) {

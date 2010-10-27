@@ -150,7 +150,7 @@ void HomogeneousToEuclidean(const Mat &H, Mat *X) {
   int d = H.rows() - 1;
   int n = H.cols();
   X->resize(d, n);
-  for (int i = 0; i < n; ++i) {
+  for (size_t i = 0; i < n; ++i) {
     double h = H(d, i);
     for (int j = 0; j < d; ++j) {
       (*X)(j, i) = H(j, i) / h;

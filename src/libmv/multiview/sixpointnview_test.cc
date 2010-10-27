@@ -35,7 +35,7 @@ using namespace libmv;
 TEST(SixPointNView, ThreeView) {
   int nviews = 3;
   int npoints = 6;
-  NViewDataSet d = NRealisticCameras(nviews, npoints);
+  NViewDataSet d = NRealisticCamerasFull(nviews, npoints);
 
   Mat2X xs = HStack(HStack(d.x[0], d.x[1]), d.x[2]);
   vector<SixPointReconstruction> reconstructions;

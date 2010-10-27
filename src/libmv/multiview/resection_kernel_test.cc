@@ -34,7 +34,7 @@ using libmv::resection::kernel::Kernel;
 TEST(ResectionKernel, RobustResection) {
   int nviews = 5;
   int npoints = 60;
-  NViewDataSet d = NRealisticCameras(nviews, npoints);
+  NViewDataSet d = NRealisticCamerasFull(nviews, npoints);
   for (int i = 0; i < nviews; ++i) {
     Mat4X X(4, npoints);
     X.block(0, 0, 3, npoints) = d.X;

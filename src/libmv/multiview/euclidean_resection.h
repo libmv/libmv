@@ -29,7 +29,7 @@ namespace euclidean_resection {
   
 enum eLibmvResectionMethod
 {
-  eRESECTION_ANSARDANIILIDIS,
+  eRESECTION_ANSAR_DANIILIDIS,
   eRESECTION_EPNP,
 };
 

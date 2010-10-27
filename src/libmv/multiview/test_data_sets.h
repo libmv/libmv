@@ -51,6 +51,7 @@ struct NViewDataSet {
   vector<Vec3> C;   // Camera centers.
   Mat3X X;     // 3D points.
   vector<Mat2X> x;  // Projected points; may have noise added.
+  vector<Vecu>  x_ids;// Indexes of points corresponding to the projections
 
   int n;  // Actual number of cameras.
 
@@ -89,9 +90,16 @@ struct nViewDatasetConfigator
                           double jitter_amount = 0.01 );
 };
 
-NViewDataSet NRealisticCameras(int nviews, int npoints,
-                               const nViewDatasetConfigator
-                                 config = nViewDatasetConfigator());
+NViewDataSet NRealisticCamerasFull(int nviews, int npoints,
+                                   const nViewDatasetConfigator
+                                     config = nViewDatasetConfigator());
+
+// Generates sparse projections (not all points are projected)
+NViewDataSet NRealisticCamerasSparse(int nviews, int npoints,
+                                     float view_ratio = 0.6,
+                                     uint min_projections = 3,
+                                     const nViewDatasetConfigator
+                                       config = nViewDatasetConfigator());
 
 } // namespace libmv
 

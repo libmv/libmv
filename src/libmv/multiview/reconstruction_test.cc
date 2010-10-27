@@ -37,10 +37,10 @@ void GenerateMatchesFromNViewDataSet(const NViewDataSet &d,
   Matches::TrackID track_id;
   vector<int> wrong_matches;
   for (size_t n = 0; n < d.n; ++n) {
-    //LOG(INFO) << "n -> "<< d.x[n]<< std::endl;
+    //std::cout << "n -> "<< d.x[n]<< std::endl;
     // Generates wrong matches
     UniformSample(noutliers, d.X.cols(), &wrong_matches);
-    //LOG(INFO) << "Features :"<<d.x[n].transpose()<<"\n";
+    //std::cout << "Features :"<<d.x[n].transpose()<<"\n";
     for (size_t p = 0; p < d.x[n].cols(); ++p) {
       PointFeature * feature = new PointFeature(d.x[n](0, p), d.x[n](1, p));
       list_features->push_back(feature);
@@ -58,7 +58,7 @@ TEST(CalibratedReconstruction, TestSynthetic6FullViews) {
   int nviews = 6;
   int npoints = 100;
   int noutliers = 0.4*npoints;// 30% of outliers
-  NViewDataSet d = NRealisticCameras(nviews, npoints);
+  NViewDataSet d = NRealisticCamerasFull(nviews, npoints);
   
   Mat4X X;
   EuclideanToHomogeneous(d.X, &X);
@@ -73,6 +73,7 @@ TEST(CalibratedReconstruction, TestSynthetic6FullViews) {
   Reconstruction reconstruction;
   // Create the matches
   Matches matches;
+  Matches matches_inliers;
   std::list<Feature *> list_features;
   GenerateMatchesFromNViewDataSet(d, noutliers, &matches, &list_features);
   
@@ -80,11 +81,11 @@ TEST(CalibratedReconstruction, TestSynthetic6FullViews) {
   PinholeCamera * camera0 = new PinholeCamera(d.K[0], d.R[0], d.t[0]);
   reconstruction.InsertCamera(0, camera0);
             
-  LOG(INFO) << "Proceed Initial Motion Estimation" << std::endl;
+  std::cout << "Proceed Initial Motion Estimation" << std::endl;
   // Proceed Initial Motion Estimation
   ReconstructFromTwoCalibratedViews(matches, 0, 1,
                                     d.K[0], d.K[1],
-                                    &matches, &reconstruction);
+                                    &matches_inliers, &reconstruction);
   PinholeCamera * camera = NULL;
   EXPECT_EQ(reconstruction.GetNumberCameras(), 2);
   camera = dynamic_cast<PinholeCamera *>(reconstruction.GetCamera(0));
@@ -93,7 +94,7 @@ TEST(CalibratedReconstruction, TestSynthetic6FullViews) {
   EXPECT_MATRIX_PROP(camera->position(), d.t[0], 1e-8);
   
   double rms = RootMeanSquareError(d.x[0], X, camera->projection_matrix());
-  LOG(INFO) << "RMSE Camera 0 =" << rms << std::endl;
+  std::cout << "RMSE Camera 0 = " << rms << std::endl;
   
   camera = dynamic_cast<PinholeCamera *>(reconstruction.GetCamera(1));
   EXPECT_TRUE(camera != NULL);
@@ -113,24 +114,26 @@ TEST(CalibratedReconstruction, TestSynthetic6FullViews) {
                      kPrecisionOrientationMatrix);
   EXPECT_MATRIX_PROP(camera->position(), d.t[1], kPrecisionPosition);
   rms = RootMeanSquareError(d.x[1], X, camera->projection_matrix());
-  LOG(INFO) << "RMSE Camera 1 =" << rms << std::endl;
+  std::cout << "RMSE Camera 1 = " << rms << std::endl;
   
-  LOG(INFO) << "Proceed Initial Intersection" << std::endl;
+  std::cout << "Proceed Initial Intersection" << std::endl;
   // Proceed Initial Intersection 
+  uint nInliers_added = 0;
   size_t minimum_num_views_batch = 2;
-  PointStructureTriangulation(matches, 1, 
-                              minimum_num_views_batch, 
-                              &reconstruction); 
-  
+  nInliers_added = PointStructureTriangulation(matches_inliers, 1, 
+                                               minimum_num_views_batch, 
+                                               &reconstruction); 
+  ASSERT_NEAR(nInliers_added, npoints - noutliers, 1);
+    
   size_t minimum_num_views_incremental = 3;  
   Mat3 R;
   Vec3 t;
   // Checks the incremental reconstruction
   for (int i = 2; i < nviews; ++i) {   
-    LOG(INFO) << "Proceed Incremental Resection" << std::endl;
+    std::cout << "Proceed Incremental Resection" << std::endl;
     // Proceed Incremental Resection 
     CalibratedCameraResection(matches, i, d.K[i],
-                              &matches, &reconstruction);    
+                              &matches_inliers, &reconstruction);    
     
     EXPECT_EQ(reconstruction.GetNumberCameras(), i+1);
     camera = dynamic_cast<PinholeCamera *>(reconstruction.GetCamera(i));
@@ -139,19 +142,21 @@ TEST(CalibratedReconstruction, TestSynthetic6FullViews) {
                        kPrecisionOrientationMatrix);
     EXPECT_MATRIX_PROP(camera->position(), d.t[i], kPrecisionPosition);
     
-    LOG(INFO) << "Proceed Incremental Intersection" << std::endl;
+    std::cout << "Proceed Incremental Intersection" << std::endl;
     // Proceed Incremental Intersection 
-    PointStructureTriangulation(matches, i, 
-                                minimum_num_views_incremental, 
-                                &reconstruction);
+    nInliers_added = PointStructureTriangulation(matches_inliers, i, 
+                                                 minimum_num_views_incremental, 
+                                                 &reconstruction);
+    ASSERT_NEAR(nInliers_added, 0, 1);
 
     // TODO(julien) Check the rms with the reconstructed structure
     rms = RootMeanSquareError(d.x[i], X, camera->projection_matrix());
-    LOG(INFO) << "RMSE Camera " << i << " =" << rms << std::endl;
+    std::cout << "RMSE Camera " << i << " = " << rms << std::endl;
     // TODO(julien) Check the 3D structure coordinates and inliers
   }
   // Performs bundle adjustment
-  BundleAdjust(matches, &reconstruction);
+  rms = BundleAdjust(matches_inliers, &reconstruction);
+  std::cout << " Final RMSE = " << rms << std::endl;
   // TODO(julien) Check the results of BA
   // clears the cameras, structures and features
   reconstruction.ClearCamerasMap();
@@ -167,7 +172,7 @@ TEST(UncalibratedReconstruction, TestSynthetic6FullViews) {
   int npoints = 100;
   int noutliers = 0.4*npoints;// 30% of outliers
   double rms;
-  NViewDataSet d = NRealisticCameras(nviews, npoints);
+  NViewDataSet d = NRealisticCamerasFull(nviews, npoints);
  
   Vec2u image_size;
   // TODO(julien) Clean this..add image size in NViewDataSet?
@@ -186,13 +191,14 @@ TEST(UncalibratedReconstruction, TestSynthetic6FullViews) {
   Reconstruction reconstruction;
   // Create the matches
   Matches matches;
+  Matches matches_inliers;
   std::list<Feature *> list_features;
   GenerateMatchesFromNViewDataSet(d, noutliers, &matches, &list_features);
               
-  LOG(INFO) << "Proceed Initial Motion Estimation" << std::endl;
+  std::cout << "Proceed Initial Motion Estimation" << std::endl;
   // Proceed Initial Motion Estimation
   ReconstructFromTwoUncalibratedViews(matches, 0, 1,
-                                      &matches, &reconstruction);
+                                      &matches_inliers, &reconstruction);
  
   // Set the image size need for the metric rectification
   // TODO(julien) find a way to do somewhere else..
@@ -202,7 +208,7 @@ TEST(UncalibratedReconstruction, TestSynthetic6FullViews) {
   // TODO(julien) Check the two projection matrices    
   // Proceed Initial Intersection 
   size_t minimum_num_views_batch = 2;
-  PointStructureTriangulation(matches, 1, 
+  PointStructureTriangulation(matches_inliers, 1, 
                               minimum_num_views_batch, 
                               &reconstruction); 
      
@@ -213,18 +219,18 @@ TEST(UncalibratedReconstruction, TestSynthetic6FullViews) {
   Vec3 t;
   // Checks the incremental reconstruction
   for (int i = 2; i < nviews; ++i) {   
-    LOG(INFO) << "Proceed Incremental Resection" << std::endl;
+    std::cout << "Proceed Incremental Resection" << std::endl;
     // Proceed Incremental Resection 
-    UncalibratedCameraResection(matches, i, &matches, &reconstruction);    
+    UncalibratedCameraResection(matches, i, &matches_inliers, &reconstruction);
     // TODO(julien) Check the projection matrix    
     
     // Set the image size need for the metric rectification
     // TODO(julien) find a way to do somewhere else..
     ((PinholeCamera*)reconstruction.GetCamera(i))->set_image_size(image_size);
     
-    LOG(INFO) << "Proceed Incremental Intersection" << std::endl;
+    std::cout << "Proceed Incremental Intersection" << std::endl;
     // Proceed Incremental Intersection 
-    PointStructureTriangulation(matches, i, 
+    PointStructureTriangulation(matches_inliers, i, 
                                 minimum_num_views_incremental, 
                                 &reconstruction);
 
@@ -232,10 +238,14 @@ TEST(UncalibratedReconstruction, TestSynthetic6FullViews) {
     // TODO(julien) Check the 3D structure coordinates and inliers
   }
   
-  LOG(INFO) << "Metric rectification" << std::endl;
+  std::cout << "Bundle adjustment" << std::endl;
+  // Performs bundle adjustment
+  rms = BundleAdjust(matches_inliers, &reconstruction);
+  std::cout << " Final RMSE = " << rms << std::endl;
+  // TODO(julien) Check the results of BA
+  std::cout << "Metric rectification" << std::endl;
   // Metric rectification
-  UpgradeToMetric(matches, &reconstruction);
-  
+  UpgradeToMetric(matches_inliers, &reconstruction);
   // TODO(julien) register the reconstruction so that the first camera
   // correspond to the real pose
   // TODO(julien) Check the metric reconstruction

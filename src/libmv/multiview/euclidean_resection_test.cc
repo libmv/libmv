@@ -141,7 +141,7 @@ TEST(EuclideanResection, Points4KnownImagePointsRandomTranslationRotation) {
   Vec3 T_output;
   EuclideanResection(x_cam, X_world, 
                      &R_output, &T_output,
-                     eRESECTION_ANSARDANIILIDIS);
+                     eRESECTION_ANSAR_DANIILIDIS);
  
   EXPECT_MATRIX_NEAR(T_output, T_expected, 1e-5);
   EXPECT_MATRIX_NEAR(R_output, R_expected, 1e-7);
@@ -203,7 +203,7 @@ TEST(EuclideanResection, Points6AllRandomInput) {
   Vec3 T_output;
   EuclideanResection(x_cam, X_world, 
                      &R_output, &T_output,
-                     eRESECTION_ANSARDANIILIDIS);
+                     eRESECTION_ANSAR_DANIILIDIS);
  
   EXPECT_MATRIX_NEAR(T_output, T_expected, 1e-5);
   EXPECT_MATRIX_NEAR(R_output, R_expected, 1e-7);

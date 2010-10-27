@@ -30,28 +30,34 @@ double FundamentalFromCorrespondences8PointRobust(const Mat &x1,
                                                   const Mat &x2,
                                                   double max_error,
                                                   Mat3 *F,
-                                                  vector<int> *inliers) {
+                                                  vector<int> *inliers,
+                                                  double outliers_probability) {
   // The threshold is on the sum of the squared errors in the two images.
   // Actually, Sampson's approximation of this error.
   double threshold = 2 * Square(max_error);
+  double best_score = HUGE_VAL;
   typedef fundamental::kernel::NormalizedEightPointKernel Kernel;
   Kernel kernel(x1, x2);
-  *F = Estimate(kernel, MLEScorer<Kernel>(threshold), inliers);
-  return 0.0;  // This doesn't mean much for the robust case.
+  *F = Estimate(kernel, MLEScorer<Kernel>(threshold), inliers, 
+                &best_score, outliers_probability);
+  return best_score;
 }
 
 double FundamentalFromCorrespondences7PointRobust(const Mat &x1,
                                                   const Mat &x2,
                                                   double max_error,
                                                   Mat3 * F,
-                                                  vector<int> *inliers) {
+                                                  vector<int> *inliers,
+                                                  double outliers_probability) {
   // The threshold is on the sum of the squared errors in the two images.
   // Actually, Sampson's approximation of this error.
   double threshold = 2 * Square(max_error);
+  double best_score = HUGE_VAL;
   typedef fundamental::kernel::NormalizedSevenPointKernel Kernel;
   Kernel kernel(x1, x2);
-  *F = Estimate(kernel, MLEScorer<Kernel>(threshold), inliers);
-  return 0.0;  // This doesn't mean much for the robust case.
+  *F = Estimate(kernel, MLEScorer<Kernel>(threshold), inliers, 
+                &best_score, outliers_probability);
+  return best_score; 
 }
 
 }  // namespace libmv

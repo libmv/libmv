@@ -109,7 +109,12 @@ public slots:
     void openImages();
     void openImages( QStringList filenames );
     void computeMatches();
-    void computeReconstruction();
+    void computeUncalibratedReconstruction();
+    void computeCalibratedReconstruction();
+    void computeMetricRectification();
+    void computeBA();
+    
+    void warningNotFunctional();
 signals:
     void setFilter(int i);
     void clearFilter();
@@ -117,7 +122,8 @@ private:
     nRobustViewMatching nViewMatcher;
     QList<ImageView*> images;
     Graph* graph;
-    Reconstruction reconstruct;
+    Reconstruction reconstruction_;
+    Matches matches_inliers_;
 
     QGridLayout* gridLayout;
     GraphView* graphView;

@@ -31,27 +31,33 @@ double HomographyFromCorrespondences4PointRobust(const Mat &x1,
                                                  const Mat &x2,
                                                  double max_error,
                                                  Mat3 *H,
-                                                 vector<int> *inliers) {
+                                                 vector<int> *inliers,
+                                                 double outliers_probability) {
   // The threshold is on the sum of the squared errors in the two images.
   double threshold = 2 * Square(max_error);
+  double best_score = HUGE_VAL;
   typedef homography::kernel::Kernel KernelH;
   KernelH kernel(x1, x2);
-  *H = Estimate(kernel, MLEScorer<KernelH>(threshold), inliers);
-  return 0.0;  // This doesn't mean much for the robust case.
+  *H = Estimate(kernel, MLEScorer<KernelH>(threshold), inliers, 
+                &best_score, outliers_probability);
+  return best_score; 
 }
 
 double HomographyFromCorrespondences2PointRobust(const Mat &x1,
                                                   const Mat &x2,
                                                   double max_error,
                                                   Mat3 * H,
-                                                  vector<int> *inliers) {
+                                                  vector<int> *inliers,
+                                                  double outliers_probability) {
   // The threshold is on the sum of the squared errors in the two images.
   // Actually, Sampson's approximation of this error.
   double threshold = 2 * Square(max_error);
+  double best_score = HUGE_VAL;
   typedef panography::kernel::Kernel Kernel;
   Kernel kernel(x1, x2);
-  *H = Estimate(kernel, MLEScorer<Kernel>(threshold), inliers);
-  return 0.0;  // This doesn't mean much for the robust case.
+  *H = Estimate(kernel, MLEScorer<Kernel>(threshold), inliers, 
+                &best_score, outliers_probability);
+  return best_score;  
 }
 
 }  // namespace libmv

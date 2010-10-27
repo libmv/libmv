@@ -22,6 +22,7 @@
 #define LIBMV_MULTIVIEW_RECONSTRUCTION_H_
 
 #include <cstdio>
+#include <list>
 #include <map>
 
 #include "libmv/correspondence/matches.h"
@@ -172,7 +173,7 @@ class Reconstruction {
   Matches &matches() { return matches_; }
   
  private:
-  std::map<CameraID, Camera *>     cameras_;
+  std::map<CameraID, Camera *>        cameras_;
   std::map<StructureID, Structure *>  structures_;
   Matches                matches_;
 };
@@ -189,14 +190,14 @@ class Reconstruction {
 //    estimates the projection matrix of the second camera from the fundamental
 //      matrix
 //    creates and adds it to the reconstruction
-//    TODO(julien) inserts only inliers matches in matches_all
+//    inserts only inliers matches into matches_inliers
 // Returns true if the projection matrix has succeed
 // Returns false if 
 //    the number of common matches is less than 7
 bool ReconstructFromTwoUncalibratedViews(const Matches &matches, 
                                          CameraID image_id1, 
                                          CameraID image_id2, 
-                                         Matches *matches_all,
+                                         Matches *matches_inliers,
                                          Reconstruction *reconstruction);
 
 // Estimates the poses of the two cameras using the fundamental and essential
@@ -211,7 +212,7 @@ bool ReconstructFromTwoUncalibratedViews(const Matches &matches,
 //    estimates the absolute pose of the second camera from the first pose and
 //      the estimated motion.
 //    creates and adds it to the reconstruction
-//    TODO(julien) inserts only inliers matches in matches_all
+//    inserts only inliers matches into matches_inliers
 // Returns true if the pose estimation has succeed
 // Returns false if 
 //    the number of common matches is less than 7
@@ -221,7 +222,7 @@ bool ReconstructFromTwoCalibratedViews(const Matches &matches,
                                        CameraID image_id2, 
                                        const Mat3 &K1, 
                                        const Mat3 &K2, 
-                                       Matches *matches_all,
+                                       Matches *matches_inliers,
                                        Reconstruction *reconstruction);
 
 // Estimates the projection matrix of the camera using the already reconstructed
@@ -230,13 +231,13 @@ bool ReconstructFromTwoCalibratedViews(const Matches &matches,
 //    selects the tracks that have an already reconstructed structure
 //    robustly estimates the camera projection matrix by resection (P)
 //    creates and adds the new camera to reconstruction
-//    TODO(julien) inserts only inliers matches in matches_all
+//    inserts only inliers matches into matches_inliers
 // Returns true if the resection has succeed
 // Returns false if 
 //    the number of reconstructed Tracks is less than 6
-bool UncalibratedCameraResection(const Matches &matches_one, 
+bool UncalibratedCameraResection(const Matches &matches, 
                                  CameraID image_id, 
-                                 Matches *matches_all,
+                                 Matches *matches_inliers,
                                  Reconstruction *reconstruction);
 
 // Estimates the pose of the camera using the already reconstructed structures.
@@ -244,29 +245,41 @@ bool UncalibratedCameraResection(const Matches &matches_one,
 //    selects the tracks that have an already reconstructed structure
 //    robustly estimates the camera extrinsic parameters (R,t) by resection
 //    creates and adds the new camera to reconstruction
-//    TODO(julien) inserts only inliers matches in matches_all
+//    inserts only inliers matches into matches_inliers
 // Returns true if the resection has succeed
 // Returns false if 
 //    the number of reconstructed Tracks is less than 5
-bool CalibratedCameraResection(const Matches &matches_one, 
+bool CalibratedCameraResection(const Matches &matches, 
                                CameraID image_id, 
                                const Mat3 &K, 
-                               Matches *matches_all,
+                               Matches *matches_inliers,
                                Reconstruction *reconstruction);
 
 // Reconstructs point tracks observed in the image image_id using theirs
-// observations (matches_in). To be reconstructed, the tracks need to be viewed
+// observations (matches). To be reconstructed, the tracks need to be viewed
 // in more than minimum_num_views images.
 // The method:
 //    selects the tracks that haven't been already reconstructed
 //    reconstructs the tracks into structures
 //    TODO(julien) only add inliers?
 //    creates and add them in reconstruction
-// Returns true if the intersection has succeed
-bool PointStructureTriangulation(const Matches &matches, 
+// Returns the number of structures reconstructed
+uint PointStructureTriangulation(const Matches &matches, 
                                  CameraID image_id, 
                                  size_t minimum_num_views, 
                                  Reconstruction *reconstruction);
+
+// Retriangulates point tracks observed in the image image_id using theirs
+// observations (matches). To be reconstructed, the tracks need to be viewed
+// in more than minimum_num_views images.
+// The method:
+//    selects the tracks that have been already reconstructed
+//    reconstructs the tracks into structures
+//    TODO(julien) only add inliers?
+// Returns the number of structures retriangulated
+uint PointStructureRetriangulation(const Matches &matches, 
+                                   CameraID image_id,  
+                                   Reconstruction *reconstruction);
 
 // This method upgrade the reconstruction into a metric one.
 // The method use the linear approach;
@@ -277,10 +290,19 @@ bool PointStructureTriangulation(const Matches &matches,
 bool UpgradeToMetric(const Matches &matches, 
                      Reconstruction *reconstruction);
 
-// This method perfoms a (metric?) bundle adjustment
-// TODO(julien)  implement it!
-void BundleAdjust(const Matches &matches, 
-                  Reconstruction *reconstruction);
+// This method performs an Euclidean Bundle Adjustment
+// and returns the root mean square error.
+double BundleAdjust(const Matches &matches, 
+                    Reconstruction *reconstruction);
+
+// This method selects the best order of images, with the first two are
+// selected because they have a good baseline.
+// The criterion is:  the homography error x number of common matches
+// The oupout connected_graph_list contains a list of connected graphs
+// (vectors), each vector contains the ImageID ordered by the criterion.
+void SelectBestImageReconstructionOrder(
+  const Matches &matches, 
+  std::list<vector<Matches::ImageID> >*connected_graph_list);
 
 // Exports the reconstruction in a PLY format file
 void ExportToPLY(Reconstruction &reconstruct, std::string out_file_name);

@@ -544,15 +544,15 @@ void TvrMainWindow::MetricBundle() {
   QMainWindow::statusBar()->showMessage("Start : MetricBundle");
   using namespace libmv;
 
-  std::vector<Mat3> K(2);
-  std::vector<Mat3> R(2);
-  std::vector<Vec3> t(2);
+  vector<Mat3> K(2);
+  vector<Mat3> R(2);
+  vector<Vec3> t(2);
   for (int i = 0; i < 2; ++i) {
     K[i] = document_.K[i];
     R[i] = document_.R[i];
     t[i] = document_.t[i];
   }
-  std::vector<Mat2X> x(2);
+  vector<Mat2X> x(2);
   vector<Mat> xs(2);
   TwoViewPointMatchMatrices(document_.matches, 0, 1, &xs);
   for (int i = 0; i < 2; ++i) {

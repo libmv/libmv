@@ -32,7 +32,7 @@ TEST(LensDistortion, LensDistortionDistortUndistor) {
   const size_t nviews = 5;
   const size_t npoints = 20;
 
-  NViewDataSet d = NRealisticCameras(nviews, npoints);
+  NViewDataSet d = NRealisticCamerasFull(nviews, npoints);
 
   Vec2u size_image(d.K[0](0,2)*2., d.K[0](1,2)*2.);
   Vec radial_k,tangential_p;

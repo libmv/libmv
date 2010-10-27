@@ -86,9 +86,16 @@ inline Vec4 EuclideanToHomogeneous(const Vec3 &x) {
 void EuclideanToNormalizedCamera(const Mat2X &x, const Mat3 &K, Mat2X *n);
 void HomogeneousToNormalizedCamera(const Mat3X &x, const Mat3 &K, Mat2X *n);
 
+inline Vec2 Project(const Mat34 &P, const Vec3 &X) {
+  Vec4 HX;
+  HX << X, 1.0;
+  Vec3 hx = P * HX;
+  return hx.start<2>() / hx(2);
+}
+
 inline void Project(const Mat34 &P, const Mat4X &X, Mat2X *x) {
   x->resize(2, X.cols());
-  for (int c = 0; c < X.cols(); ++c) {
+  for (size_t c = 0; c < X.cols(); ++c) {
     Vec3 hx = P * X.col(c);
     x->col(c) = hx.start<2>() / hx(2);
   }
@@ -102,7 +109,7 @@ inline Mat2X Project(const Mat34 &P, const Mat4X &X) {
 
 inline void Project(const Mat34 &P, const Mat3X &X, Mat2X *x) {
   x->resize(2, X.cols());
-  for (int c = 0; c < X.cols(); ++c) {
+  for (size_t c = 0; c < X.cols(); ++c) {
     Vec4 HX;
     HX << X.col(c), 1.0;
     Vec3 hx = P * HX;
@@ -110,9 +117,26 @@ inline void Project(const Mat34 &P, const Mat3X &X, Mat2X *x) {
   }
 }
 
+inline void Project(const Mat34 &P, const Mat3X &X, const Vecu &ids, Mat2X *x) {
+  x->resize(2, ids.size());
+  Vec4 HX;
+  Vec3 hx;
+  for (size_t c = 0; c < ids.size(); ++c) {
+    HX << X.col(ids[c]), 1.0;
+    hx = P * HX;
+    x->col(c) = hx.start<2>() / hx(2);
+  }
+}
+
 inline Mat2X Project(const Mat34 &P, const Mat3X &X) {
   Mat2X x(2, X.cols());
   Project(P, X, &x);
+  return x;
+}
+
+inline Mat2X Project(const Mat34 &P, const Mat3X &X, const Vecu &ids) {
+  Mat2X x(2, ids.size());
+  Project(P, X, ids, &x);
   return x;
 }
 

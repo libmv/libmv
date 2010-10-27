@@ -71,8 +71,8 @@ nViewDatasetConfigator::nViewDatasetConfigator( int fx ,  int fy,
   _jitter_amount = jitter_amount;
 }
 
-NViewDataSet NRealisticCameras(int nviews, int npoints,
-                              const nViewDatasetConfigator config) {
+NViewDataSet NRealisticCamerasFull(int nviews, int npoints,
+                                   const nViewDatasetConfigator config) {
   NViewDataSet d;
   d.n = nviews;
   d.K.resize(nviews);
@@ -80,12 +80,17 @@ NViewDataSet NRealisticCameras(int nviews, int npoints,
   d.t.resize(nviews);
   d.C.resize(nviews);
   d.x.resize(nviews);
+  d.x_ids.resize(nviews);
    
   d.X.resize(3, npoints);
   d.X.setRandom();
   d.X *= 0.6;
+  
+  Vecu all_point_ids(npoints);
+  for (size_t j = 0; j < npoints; ++j)
+    all_point_ids[j] = j;
 
-  for (int i = 0; i < nviews; ++i) {
+  for (size_t i = 0; i < nviews; ++i) {
     Vec3 camera_center, t, jitter, lookdir;
 
     double theta = i * 2 * M_PI / nviews;
@@ -103,8 +108,89 @@ NViewDataSet NRealisticCameras(int nviews, int npoints,
     d.R[i] = LookAt(lookdir);
     d.t[i] = -d.R[i] * camera_center;
     d.x[i] = Project(d.P(i), d.X);
+    d.x_ids[i] = all_point_ids;
   }
   return d;
 }
+
+
+NViewDataSet NRealisticCamerasSparse(int nviews, int npoints, 
+                                     float view_ratio, uint min_projections,
+                                     const nViewDatasetConfigator config) {
+  assert(view_ratio <= 1.0);
+  assert(view_ratio > 0.0);
+  assert(min_projections <= npoints);
+  NViewDataSet d;
+  d.n = nviews;
+  d.K.resize(nviews);
+  d.R.resize(nviews);
+  d.t.resize(nviews);
+  d.C.resize(nviews);
+  d.x.resize(nviews);
+  d.x_ids.resize(nviews);
+   
+  d.X.resize(3, npoints);
+  d.X.setRandom();
+  d.X *= 0.6;
+  
+  Mat visibility(nviews, npoints);
+  visibility.setZero();
+  Mat randoms(nviews, npoints);
+  randoms.setRandom();
+  randoms = (randoms.cwise() + 1)/2.0;
+  uint num_visibles = 0;
+  for (size_t i = 0; i < nviews; ++i) {
+    num_visibles = 0;
+    for (size_t j = 0; j < npoints; j++) {
+      if (randoms(i, j) <= view_ratio) {
+        visibility(i, j) = true;
+        num_visibles++;
+      }
+    }
+    if (num_visibles < min_projections) {
+      uint num_projections_to_add = min_projections - num_visibles;
+      for (size_t j = 0; j < npoints && num_projections_to_add > 0; ++j) {
+        if (!visibility(i, j)) {
+          num_projections_to_add--;
+        }          
+      }
+      num_visibles += num_projections_to_add;
+    }      
+    d.x_ids[i].resize(num_visibles);
+    d.x[i].resize(2, num_visibles);
+  }
+  
+  size_t j_visible = 0;
+  Vec3 X;
+  for (size_t i = 0; i < nviews; ++i) {
+    Vec3 camera_center, t, jitter, lookdir;
+
+    double theta = i * 2 * M_PI / nviews;
+    camera_center << sin(theta), 0.0, cos(theta);
+    camera_center *= config._dist;
+    d.C[i] = camera_center;
+
+    jitter.setRandom();
+    jitter *= config._jitter_amount / camera_center.norm();
+    lookdir = -camera_center + jitter;
+
+    d.K[i] << config._fx, 0,          config._cx,
+               0,         config._fy, config._cy,
+               0,         0,          1;
+    d.R[i] = LookAt(lookdir);
+    d.t[i] = -d.R[i] * camera_center;
+    j_visible = 0;
+    for (size_t j = 0; j < npoints; j++) {
+      if (visibility(i, j)) {
+        X =  d.X.col(j); 
+        d.x[i].col(j_visible) = Project(d.P(i),X);
+        d.x_ids[i][j_visible] = j;
+        j_visible++;
+      }
+    }
+  }
+  return d;
+}
+
 
 }  // namespace libmv

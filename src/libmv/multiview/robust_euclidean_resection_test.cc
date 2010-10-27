@@ -34,7 +34,7 @@ TEST(EuclideanResectionRobustKernel, TestSynthetic6FullViews) {
   int npoints = 50;
   int noutliers = 0.4*npoints;
   double threshold_inlier = 0.2;
-  NViewDataSet d = NRealisticCameras(nviews, npoints);
+  NViewDataSet d = NRealisticCamerasFull(nviews, npoints);
   for (int i = 0; i < nviews; ++i) {
     Mat2X x = d.x[i];
     

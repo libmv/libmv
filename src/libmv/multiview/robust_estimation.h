@@ -55,10 +55,10 @@ class MLEScorer {
 };
 
 static uint IterationsRequired(int min_samples,
-                        double desired_certainty,
+                        double outliers_probability,
                         double inlier_ratio) {
   return static_cast<uint>(
-      log(desired_certainty) / log(1.0 - pow(inlier_ratio, min_samples)));
+      log(outliers_probability) / log(1.0 - pow(inlier_ratio, min_samples)));
 }
 
 // 1. The model.
@@ -70,15 +70,15 @@ static uint IterationsRequired(int min_samples,
 // 2. Kernel::MINIMUM_SAMPLES
 // 3. Kernel::Fit(vector<int>, vector<Kernel::Model> *)
 // 4. Kernel::Error(Model, int) -> error
-
-
 template<typename Kernel, typename Scorer>
 typename Kernel::Model Estimate(const Kernel &kernel,
                                 const Scorer &scorer,
                                 vector<int> *best_inliers = NULL,
-                                double desired_certainty = 0.01) {
+                                double *best_score = NULL,
+                                double outliers_probability = 1e-2) {
+  CHECK(outliers_probability < 1.0);
+  CHECK(outliers_probability > 0.0);
   size_t iteration = 0;
-
   const size_t min_samples = Kernel::MINIMUM_SAMPLES;
   const size_t total_samples = kernel.NumSamples();
 
@@ -135,14 +135,15 @@ typename Kernel::Model Estimate(const Kernel &kernel,
       }
       if (best_inlier_ratio)
         max_iterations = IterationsRequired(min_samples, 
-                                            desired_certainty,
+                                            outliers_probability,
                                             best_inlier_ratio);
 
       VLOG(2) << "Max iterations needed given best inlier ratio: "
         << max_iterations << "; best inlier ratio: " << best_inlier_ratio;
     }
   }
-
+  if (best_score)
+    *best_score = best_cost;
   return best_model;
 }
 

@@ -28,12 +28,14 @@ namespace libmv {
 
 // Estimate robustly the 2d affine matrix between two dataset of 2D point
 // (image coords space). The 2d affine solver relies on the 2 points solution.
+// Returns the score associated to the solution H
 double AffineFromCorrespondences2PointRobust(
     const Mat &x1,
     const Mat &x2,
     double max_error,
     Mat3 *H,
-    vector<int> *inliers = NULL);
+    vector<int> *inliers = NULL,
+    double outliers_probability = 1e-2);
 
 } // namespace libmv
 

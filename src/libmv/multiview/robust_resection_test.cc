@@ -34,7 +34,7 @@ TEST(UncalibratedResectionRobustKernel, TestSynthetic6FullViews) {
   int npoints = 50;
   int noutliers = 0.4*npoints;
   double threshold_inlier = 0.2;
-  NViewDataSet d = NRealisticCameras(nviews, npoints);
+  NViewDataSet d = NRealisticCamerasFull(nviews, npoints);
   Mat4X X;
   EuclideanToHomogeneous(d.X, &X);
   

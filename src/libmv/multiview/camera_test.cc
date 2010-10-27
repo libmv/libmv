@@ -31,7 +31,7 @@ TEST(CameraModel, PinholeCameraProjection) {
   const int nviews = 8;
   const int npoints = 20;
   
-  NViewDataSet d = NRealisticCameras(nviews, npoints);
+  NViewDataSet d = NRealisticCamerasFull(nviews, npoints);
  
   vector<PinholeCamera> cameras(nviews);
   

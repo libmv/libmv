@@ -27,18 +27,18 @@ namespace {
 
 using namespace libmv;
 
-TEST(EuclideanBA, TwoViews) {
+TEST(EuclideanBA, TwoViewsFull) {
   TwoViewDataSet d = TwoRealisticCameras(true);
-  std::vector<Mat3> K(2);
-  std::vector<Mat3> R(2);
-  std::vector<Vec3> t(2);
+  vector<Mat3> K(2);
+  vector<Mat3> R(2);
+  vector<Vec3> t(2);
   K[0] = d.K1;
   R[0] = d.R1;
   t[0] = d.t1;
   K[1] = d.K2;
   R[1] = d.R2;
   t[1] = d.t2;
-  std::vector<Mat2X> x(2);
+  vector<Mat2X> x(2);
   x[0] = d.x1;
   x[1] = d.x2;
 
@@ -72,4 +72,44 @@ TEST(EuclideanBA, TwoViews) {
   }
 }
 
+TEST(EuclideanBA, NViews) {
+  int nviews = 5;
+  int npoints = 30;
+  NViewDataSet  d = NRealisticCamerasSparse(nviews, npoints);
+  vector<Mat3>  K = d.K;
+  vector<Mat3>  R = d.R;
+  vector<Vec3>  t = d.t;
+  vector<Mat2X> x = d.x;
+  const vector<Vecu>   &x_ids = d.x_ids;
+
+  Mat3X X;
+  X = d.X;
+  
+  for (int i = 0; i < nviews; ++i) {               // Add noise to motion.
+    K[i](0, 0) *= 1 + (rand() / RAND_MAX - 0.5) * 0.1;
+    K[i](1, 1) *= 1 + (rand() / RAND_MAX - 0.5) * 0.1;
+    R[i] *= RotationAroundX((rand() / RAND_MAX - 0.5) * 0.1)
+          * RotationAroundY((rand() / RAND_MAX - 0.5) * 0.1)
+          * RotationAroundZ((rand() / RAND_MAX - 0.5) * 0.1);
+    t[i] += Vec3::Random() * 0.1;
+  }
+  X += Mat3X::Random(3, X.cols()) * 0.1;  // and structure.
+  
+  Mat3X subX;
+  Mat34 P;
+  Mat2X error;
+  for (int i = 0; i < nviews; ++i) {         // Check there's enough error.
+    P_From_KRt(K[i], R[i], t[i], &P);
+    error = x[i] - Project(P, X, x_ids[i]);
+    EXPECT_GT(FrobeniusNorm(error), 1);
+  }
+  
+  EuclideanBA(x, x_ids, &K, &R, &t, &X);                 // Run BA.
+
+  for (int i = 0; i < nviews; ++i) {                // Check there is no error.
+    P_From_KRt(K[i], R[i], t[i], &P);
+    error = x[i] - Project(P, X, x_ids[i]);
+    EXPECT_LT(FrobeniusNorm(error), 1e-3);
+  }
+}
 }

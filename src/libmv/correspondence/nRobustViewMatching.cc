@@ -63,9 +63,15 @@ bool nRobustViewMatching::computeData(const string & filename)
   }
   else
   {
-    Array3Du imageTemp;
-    Rgb2Gray( imageA, &imageTemp);
-    Image im( new Array3Du(imageTemp) );
+    Array3Du *img_array = NULL;
+    if (imageA.Depth() == 1) {
+      img_array = new Array3Du(imageA);
+    } else {
+      Array3Du imageTemp;
+      Rgb2Gray( imageA, &imageTemp);
+      img_array = new Array3Du(imageTemp);      
+    }
+    Image im(img_array);
 
     libmv::vector<libmv::Feature *> features;
     m_pDetector->Detect( im, &features, NULL);

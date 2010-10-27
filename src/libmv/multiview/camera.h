@@ -100,6 +100,7 @@ class PinholeCamera : public Camera {
 
   void set_projection_matrix(const Mat34 & p) { 
     projection_matrix_ = p; 
+    // scale K so that K(2,2) = 1
     KRt_From_P(projection_matrix_, 
                &intrinsic_matrix_, 
                &orientation_matrix_,
@@ -109,8 +110,8 @@ class PinholeCamera : public Camera {
     skew_factor_        = intrinsic_matrix_(0, 1);
     principal_point_(0) = intrinsic_matrix_(0, 2) ;
     principal_point_(1) = intrinsic_matrix_(1, 2) ;
-   
   }
+  
   void set_intrinsic_matrix(const Mat3 &intrinsic_matrix) {
     intrinsic_matrix_   = intrinsic_matrix;
     focal_x_            = intrinsic_matrix_(0, 0);
@@ -135,29 +136,64 @@ class PinholeCamera : public Camera {
     UpdateProjectionMatrix();
   }
   // TODO(julien) clean the code: avoid to have SetXXX and set_XXX
+  void SetExtrinsicParameters(const Mat3 &orientation_matrix,
+                              const Vec3 &position) {
+    orientation_matrix_ = orientation_matrix;
+    position_ = position;
+    UpdateProjectionMatrix();
+  }
   void SetIntrinsicParameters(double focal, const Vec2 &principal_point) {
     focal_x_ = focal;
     focal_y_ = focal;
     principal_point_ = principal_point;
     UpdateIntrinsicMatrix();
+    UpdateProjectionMatrix();
+  }
+  void SetIntrinsicExtrinsicParameters(const Mat3 &intrinsic_matrix,
+                                       const Mat3 &orientation_matrix,
+                                       const Vec3 &position) {
+    intrinsic_matrix_   = intrinsic_matrix;
+    focal_x_ = intrinsic_matrix_(0, 0);
+    focal_y_ = intrinsic_matrix_(1, 1);
+    principal_point_ << intrinsic_matrix_(0, 2), intrinsic_matrix_(1, 2);
+    orientation_matrix_ = orientation_matrix;
+    position_ = position;
+    UpdateProjectionMatrix();
+  }
+  void GetIntrinsicExtrinsicParameters(Mat3 *intrinsic_matrix,
+                                       Mat3 *orientation_matrix,
+                                       Vec3 *position) {
+    *intrinsic_matrix   = intrinsic_matrix_;
+    *orientation_matrix = orientation_matrix_;
+    *position = position_;
+  }
+  const Mat34 GetPoseMatrix() const  { 
+    Mat34 P;
+    P.block<3, 3>(0, 0) = orientation_matrix_;
+    P.col(3) = position_;
+    return P;
   }
   void SetFocal(double focal) {
     focal_x_ = focal;
     focal_y_ = focal;
     UpdateIntrinsicMatrix();
+    UpdateProjectionMatrix();
   }
   void SetFocal(double focal_x, double focal_y) {
     focal_x_ = focal_x;
     focal_y_ = focal_y;
     UpdateIntrinsicMatrix();
+    UpdateProjectionMatrix();
   }
   void set_principal_point(const Vec2 &principal_point) {
     principal_point_ = principal_point;
     UpdateIntrinsicMatrix();
+    UpdateProjectionMatrix();
   }
   void set_skew_factor(double skew_factor) {
     skew_factor_ = skew_factor;
     UpdateIntrinsicMatrix();
+    UpdateProjectionMatrix();
   }
   // Sets the image size (width, height)
   void set_image_size(const Vec2u &size) {

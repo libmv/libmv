@@ -48,6 +48,26 @@ class BipartiteGraph {
       right_to_left_.erase(iter);
   }
   
+  int NumLeftLeft(T left) const { 
+    int n = 0;
+    typename EdgeMap::const_iterator it;
+    for (it = left_to_right_.begin(); it != left_to_right_.end(); ++it) {
+      if (it->first.first == left)
+        n++;
+    }
+    return n;
+  }
+  
+  int NumLeftRight(T right) const { 
+    int n = 0;
+    typename EdgeMap::const_iterator it;
+    for (it = left_to_right_.begin(); it != left_to_right_.end(); ++it) {
+      if (it->first.second == right)
+        n++;
+    }
+    return n;
+  }
+  
   class Range {
    friend class BipartiteGraph<T, EdgeT>;
    public:
