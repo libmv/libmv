@@ -531,6 +531,14 @@ double EstimatesRootMeanSquare(const Matches &matches,
   return sqrt(sum_rms2 / num_features);
 }
 
+bool isNaN(double i) {
+#ifdef WIN32
+  return _isnan(i);
+#else
+  return std::isnan(i);
+#endif
+} 
+
 bool UpgradeToMetric(const Matches &matches, 
                      Reconstruction *reconstruction) { 
   double rms = EstimatesRootMeanSquare(matches, reconstruction);
@@ -560,7 +568,7 @@ bool UpgradeToMetric(const Matches &matches,
   // Upgrade the reconstruction to metric using {Pm, Xm} = {P*H, H^{-1}*X}
   Mat4 H = auto_calibration_linear.MetricTransformation();
   LOG(INFO) << "Rectification H = " << H << "\n";
-  if (isnan(H.sum())) {
+  if (isNaN(H.sum())) {
     LOG(ERROR) << "Warning: The metric rectification cannot be applied, the "  
                << "matrix contains NaN values.\n";
     return false;
