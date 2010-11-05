@@ -68,13 +68,24 @@ class nRobustViewMatching :public nViewMatchingInterface  {
   bool MatchData(const string & dataA, const string & dataB);
 
   /**
-  * From a series of element it compute the cross putative match list.
+  * From a series of element it computes the cross putative match list.
   *
   * \param[in] vec_data The data on which we want compute cross matches.
   *
   * \return True if success (and any matches was found).
   */
   bool computeCrossMatch( const libmv::vector<string> & vec_data);
+  
+  
+  /**
+  * From a series of element it computes the incremental putative match list.
+  * (only locally, in the relative neighborhood)
+  *
+  * \param[in] vec_data The data on which we want compute matches.
+  *
+  * \return True if success (and any matches was found).
+  */
+  bool computeRelativeMatch( const libmv::vector<string> & vec_data);
   
   /**
   * Give the posibility to constrain the matches list.

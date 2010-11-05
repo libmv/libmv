@@ -1,9 +1,11 @@
 // Copyright (c) 2010 libmv authors.
 // Initial revision by Matthias Fauconneau.
+#include <QComboBox>
 #include <QInputDialog>
 #include <QLabel>
 #include <QMessageBox>
 #include "ui/nvr/nview.h"
+#include <QLabel>
 
 int main(int argc, char *argv[]) {
     Init("", &argc, &argv);
@@ -49,36 +51,41 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
     actionsDock->setWidget(actionsWidget);
     QVBoxLayout* layout = new QVBoxLayout(actionsWidget);
     {
-        QPushButton* button = new QPushButton("Open Images");
-        connect(button,SIGNAL(clicked()),SLOT(openImages()));
-        layout->addWidget(button);
+      QPushButton* button = new QPushButton("Open Images");
+      connect(button,SIGNAL(clicked()),SLOT(openImages()));
+      layout->addWidget(button);
     }
     {
-        QPushButton* button = new QPushButton("Compute Matches");
-        connect(button,SIGNAL(clicked()),SLOT(computeMatches()));
-        layout->addWidget(button);
+      QPushButton* button = new QPushButton("Compute Matches (images)");
+      connect(button,SIGNAL(clicked()),SLOT(computeMatches()));
+      layout->addWidget(button);
     }
     {
-        QPushButton* button = new QPushButton("*Uncalibrated Reconstruction*");
-        connect(button,SIGNAL(clicked()),
-          SLOT(computeUncalibratedReconstruction()));
-        layout->addWidget(button);
+      QPushButton* button = new QPushButton("Compute Relative Matches (video)");
+      connect(button,SIGNAL(clicked()),SLOT(computeRelativeMatches()));
+      layout->addWidget(button);
     }
     {
-        QPushButton* button = new QPushButton("Metric Rectification");
-        connect(button,SIGNAL(clicked()),SLOT(computeMetricRectification()));
-        layout->addWidget(button);
+      QPushButton* button = new QPushButton("*Uncalibrated Reconstruction*");
+      connect(button,SIGNAL(clicked()),
+        SLOT(computeUncalibratedReconstruction()));
+      layout->addWidget(button);
     }
     {
-        QPushButton* button = new QPushButton("*Calibrated Reconstruction*");
-        connect(button,SIGNAL(clicked()),
-          SLOT(computeCalibratedReconstruction()));
-        layout->addWidget(button);
+      QPushButton* button = new QPushButton("Metric Rectification");
+      connect(button,SIGNAL(clicked()),SLOT(computeMetricRectification()));
+      layout->addWidget(button);
     }
     {
-        QPushButton* button = new QPushButton("Metric Bundle Adjustment");
-        connect(button,SIGNAL(clicked()),SLOT(computeBA()));
-        layout->addWidget(button);
+      QPushButton* button = new QPushButton("*Calibrated Reconstruction*");
+      connect(button,SIGNAL(clicked()),
+        SLOT(computeCalibratedReconstruction()));
+      layout->addWidget(button);
+    }
+    {
+      QPushButton* button = new QPushButton("Metric Bundle Adjustment");
+      connect(button,SIGNAL(clicked()),SLOT(computeBA()));
+      layout->addWidget(button);
     }
     addDockWidget(Qt::LeftDockWidgetArea,actionsDock);
 
@@ -145,27 +152,56 @@ void MainWindow::warningNotFunctional() {
                         "This process is STILL in development.");
 }
 
+bool MainWindow::SelectDetectorDescriber(eDetector detector, 
+                                         eDescriber describer) {
+
+  // Set the detector
+  std::map<std::string, detector::eDetector> detectorMap;
+  detectorMap["FAST"] = detector::FAST_DETECTOR;
+  detectorMap["SURF"] = detector::SURF_DETECTOR;
+  detectorMap["STAR"] = detector::STAR_DETECTOR;
+  detectorMap["MSER"] = detector::MSER_DETECTOR;
+  
+  // Set the descriptor
+  std::map<std::string, descriptor::eDescriber> descriptorMap;
+  descriptorMap["SIMPLIEST"] = descriptor::SIMPLEST_DESCRIBER;
+  descriptorMap["SURF"]      = descriptor::SURF_DESCRIBER;
+  descriptorMap["DIPOLE"]    = descriptor::DIPOLE_DESCRIBER;
+  descriptorMap["DAISY"]     = descriptor::DAISY_DESCRIBER;
+    
+  QStringList detector_list;
+  detector_list << tr("FAST") << tr("SURF") 
+                << tr("STAR") << tr("MSER");
+  
+  QStringList descriptor_list;
+  descriptor_list << tr("SIMPLIEST") << tr("SURF") 
+                  << tr("DIPOLE") << tr("DAISY");
+  
+  bool ok;
+  QString item = QInputDialog::getItem(this, tr("Choose a detector..."),
+                                        tr("Detector:"), 
+                                        detector_list, 0, false, &ok);
+  if (ok && !item.isEmpty())    
+    detector = detectorMap[item.toStdString()];
+  item = QInputDialog::getItem(this, tr("Choose a describer..."),
+                                        tr("Descriptor:"), 
+                                        descriptor_list, 3, false, &ok);
+  if (ok && !item.isEmpty())    
+    describer = descriptorMap[item.toStdString()];
+  
+  return ok;
+}
+
 void MainWindow::computeMatches() {
     QProgressDialog progress("Computing matches...","Abort", 0, 
                              images.count(), this);
     progress.setWindowModality(Qt::WindowModal);
-
-    /*scoped_ptr<detector::Detector>
-  //detector(detector::CreateFastDetector(9, 30,true));
-  // detector(detector::CreateStarDetector(true));
-  // detector(detector::CreateFastDetectorLimited(30,true, 1024));
-   detector(detector::CreateMserDetector());
-
-  scoped_ptr<descriptor::Describer>
-    describer(descriptor::CreateSimpliestDescriber());
-  //describer(descriptor::CreateSurfDescriber());
-  //describer(descriptor::CreateDaisyDescriber());
-  //describer(descriptor::CreateDipoleDescriber());
-  nViewMatcher = correspondence::nRobustViewMatching(detector.get(),
-                                                     describer.get());*/
+    eDetector detector   = detector::FAST_DETECTOR;
+    eDescriber describer = descriptor::DAISY_DESCRIBER;
+    SelectDetectorDescriber(detector, describer);
     // TODO(julien) create a UI to selection the detector/describer we want
-    Detector * pdetector  = detectorFactory(FAST_DETECTOR);
-    Describer* pdescriber = describerFactory(DAISY_DESCRIBER);
+    Detector * pdetector  = detectorFactory(detector);
+    Describer* pdescriber = describerFactory(describer);
     nViewMatcher = correspondence::nRobustViewMatching(pdetector, pdescriber);
 
     libmv::vector<std::string> image_vector;
@@ -173,6 +209,74 @@ void MainWindow::computeMatches() {
       image_vector.push_back(image->path().toStdString());
     nViewMatcher.computeCrossMatch(image_vector);
 
+    // TODO(julien) put the following in a private function
+    graph->clear(); graph->nodes.clear(); graph->edges.clear(); //leak?
+    QVector< QVector< QVector<KeypointFeature> > > matches;
+    matches.resize(images.count());
+    for (int i=0; i < images.count(); ++i) matches[i].resize(images.count());
+    int maxWidth=0;
+    for (int i=0; i < images.count(); ++i) {
+        Node* a = new Node;
+        a->setFlag(QGraphicsItem::ItemIsMovable);
+        a->setPixmap(images[i]->image);
+        a->setScale(1.0/a->pixmap().width());
+        a->setOffset(-a->pixmap().width()/2,-a->pixmap().height()/2);
+        a->setPos( (float)qrand()/INT_MAX, (float)qrand()/INT_MAX );
+        graph->addItem(a);
+        graph->nodes << a;
+        for (int j=0; j<i; ++j)  {
+            Node* b = graph->nodes[j];
+            for(Matches::Features<KeypointFeature> features = 
+                  nViewMatcher.getMatches().InImage<KeypointFeature>(i);
+                  features;++features) {
+                Matches::TrackID id_track = features.track();
+                const KeypointFeature * ref = features.feature();
+                const KeypointFeature * f = (KeypointFeature*) 
+                //FIXME: could Get() return FeatureT ?
+                nViewMatcher.getMatches().Get(j, id_track);
+                if (f && ref) {
+                    matches[i][j].append( *ref );
+                    matches[j][i].append( *f );
+                    if(a->edges.contains(b)) {
+                        Edge* e = a->edges[b];
+                        int width = e->pen().width()+1;
+                        maxWidth = qMax(maxWidth,width);
+                        e->setPen(QPen(QBrush(Qt::SolidPattern),width));
+                    } else {
+                        Edge* e = new Edge(a,b);
+                        a->edges[b] = b->edges[a] = e;
+                        graph->edges << e;
+                        graph->addItem( e );
+                    }
+                }
+            }
+        }
+      progressCallback(progress, i);
+    }
+    foreach(Edge* e, graph->edges )
+        e->setPen(QPen(QBrush(Qt::SolidPattern),0.1*e->pen().width()/maxWidth));
+    for (int i=0; i < images.count(); ++i) images[i]->setFeatures(matches[i]);
+    graphView->fitInView(graph->sceneRect());
+}
+
+void MainWindow::computeRelativeMatches() {
+    QProgressDialog progress("Computing relative matches...","Abort", 0, 
+                             images.count(), this);
+    progress.setWindowModality(Qt::WindowModal);
+    eDetector detector   = detector::FAST_DETECTOR;
+    eDescriber describer = descriptor::DAISY_DESCRIBER;
+    SelectDetectorDescriber(detector, describer);
+    // TODO(julien) create a UI to selection the detector/describer we want
+    Detector * pdetector  = detectorFactory(detector);
+    Describer* pdescriber = describerFactory(describer);
+    nViewMatcher = correspondence::nRobustViewMatching(pdetector, pdescriber);
+
+    libmv::vector<std::string> image_vector;
+    foreach (ImageView* image, images) 
+      image_vector.push_back(image->path().toStdString());
+    nViewMatcher.computeRelativeMatch(image_vector);
+
+    // TODO(julien) put the following in a private function
     graph->clear(); graph->nodes.clear(); graph->edges.clear(); //leak?
     QVector< QVector< QVector<KeypointFeature> > > matches;
     matches.resize(images.count());
@@ -255,8 +359,8 @@ void MainWindow::computeUncalibratedReconstruction() {
     camera = dynamic_cast<PinholeCamera*>(
       reconstruction_.GetCamera(image_id));
     if (camera) {
-      image_size << images[image_id]->width(), 
-                    images[image_id]->height();
+      image_size << images[image_id]->GetImageWidth(), 
+                    images[image_id]->GetImageHeight();
       camera->set_image_size(image_size); 
     }
     index_image_graph = 1;
@@ -264,8 +368,8 @@ void MainWindow::computeUncalibratedReconstruction() {
     camera = dynamic_cast<PinholeCamera*>(
       reconstruction_.GetCamera(image_id));
     if (camera) {
-      image_size << images[image_id]->width(), 
-                    images[image_id]->height();
+      image_size << images[image_id]->GetImageWidth(), 
+                    images[image_id]->GetImageHeight();
       camera->set_image_size(image_size); 
     }
     progressCallback(progress, 1);
@@ -294,8 +398,8 @@ void MainWindow::computeUncalibratedReconstruction() {
       camera = dynamic_cast<PinholeCamera*>(
         reconstruction_.GetCamera(image_id));
       if (camera) {
-        image_size << images[image_id]->width(),
-                      images[image_id]->height();
+        image_size << images[image_id]->GetImageWidth(),
+                      images[image_id]->GetImageHeight();
         camera->set_image_size(image_size); 
       }
       // TODO(julien) Avoid to retriangulate, prefer projective BA
@@ -330,20 +434,21 @@ void MainWindow::computeCalibratedReconstruction() {
     return;
   
   double focal = 505;
-  double cu = 320, cv = 240;
+  double cu = images[0]->GetImageWidth()/2 - 0.5, cv = images[0]->GetImageHeight()/2 - 0.5;
   bool ok;
+    
   //HACK(julien) create a better UI...
   focal = QInputDialog::getDouble(this, 
 				  tr("Set the focal length (in pixels)"),
-                                  tr("Focal:"), focal, 0, 10000, 2, &ok);
+                                  tr("Focal:"), focal, 0, 10000, 4, &ok);
   if (!ok) return;
   cu = QInputDialog::getDouble(this, 
-			       tr("Set the principal point coordinate(x)"),
-                               tr("Amount:"), cu, 0, 10000, 2, &ok);
+			       tr("Set the principal point coordinate (x)"),
+                               tr("Principal point coordinate x:"), cu, 0, 10000, 4, &ok);
   if (!ok) return;
   cv = QInputDialog::getDouble(this, 
-			       tr("Set the principal point coordinate(x)"),
-                               tr("Amount:"), cv, 0, 10000, 2, &ok);
+			       tr("Set the principal point coordinate (y)"),
+                               tr("Principal point coordinate y:"), cv, 0, 10000, 4, &ok);
   if (!ok) return;
   
   Mat3 K;
@@ -354,6 +459,12 @@ void MainWindow::computeCalibratedReconstruction() {
   progress.setLabelText("Selecting best initial images...");
   std::list<libmv::vector<Matches::ImageID> > connected_graph_list;
   SelectBestImageReconstructionOrder(matches,  &connected_graph_list);
+  
+  std::cout << " List order:";
+  for (size_t i = 0; i < connected_graph_list.begin()->size(); ++i) {
+    std::cout << (*connected_graph_list.begin())[i] << " ";
+  }
+  std::cout << std::endl;
   
   size_t image_id = 0;
   size_t index_image_graph = 0;
@@ -373,7 +484,7 @@ void MainWindow::computeCalibratedReconstruction() {
     camera = dynamic_cast<PinholeCamera*>(
       reconstruction_.GetCamera(image_id));
     if (camera) {
-      image_size << images[image_id]->width(), images[image_id]->height();
+      image_size << images[image_id]->GetImageWidth(), images[image_id]->GetImageHeight();
       camera->set_image_size(image_size); 
     }
     index_image_graph = 1;
@@ -381,7 +492,7 @@ void MainWindow::computeCalibratedReconstruction() {
     camera = dynamic_cast<PinholeCamera*>(
       reconstruction_.GetCamera(image_id));
     if (camera) {
-      image_size << images[image_id]->width(), images[image_id]->height();
+      image_size << images[image_id]->GetImageWidth(), images[image_id]->GetImageHeight();
       camera->set_image_size(image_size); 
     }
     progressCallback(progress, 1);
@@ -413,8 +524,8 @@ void MainWindow::computeCalibratedReconstruction() {
       camera = dynamic_cast<PinholeCamera*>(
         reconstruction_.GetCamera(image_id));
       if (camera) {
-        image_size << images[image_id]->width(),
-                      images[image_id]->height();
+        image_size << images[image_id]->GetImageWidth(),
+                      images[image_id]->GetImageHeight();
         camera->set_image_size(image_size); 
       }
       

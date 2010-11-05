@@ -563,7 +563,7 @@ bool UpgradeToMetric(const Matches &matches,
       auto_calibration_linear.AddProjection(pcamera->projection_matrix(),
                                             image_width, image_height);
     }
-  }
+  } 
   // TODO(julien) Put the following in a function.
   // Upgrade the reconstruction to metric using {Pm, Xm} = {P*H, H^{-1}*X}
   Mat4 H = auto_calibration_linear.MetricTransformation();
@@ -628,7 +628,7 @@ double BundleAdjust(const Matches &matches,
       map_structures_ids[str_iter->first] = str_id;
       str_id++;
     } else {
-      LOG(FATAL) << "Error: the bundle adjustment cannont handle non point "
+      LOG(FATAL) << "Error: the bundle adjustment cannot handle non point "
                  << "structure.";
       return 0;
     }
@@ -654,13 +654,13 @@ double BundleAdjust(const Matches &matches,
       //std::cout << "x_ids = " << x_ids[cam_id].transpose()<<"\n";
       cam_id++;
     } else {
-      LOG(FATAL) << "Error: the bundle adjustment cannont handle non pinhole "
+      LOG(FATAL) << "Error: the bundle adjustment cannot handle non pinhole "
                  << "cameras.";
       return 0;
     }
   }
   // Performs metric bundle adjustment
-  rms = EuclideanBA(x, x_ids, &Ks, &Rs, &ts, &X);
+  rms = EuclideanBA(x, x_ids, &Ks, &Rs, &ts, &X, eBUNDLE_METRIC);
   
   // Copy the results only if it's better
   if (rms < rms0) {
@@ -734,18 +734,30 @@ void SelectBestImageReconstructionOrder(
     if (score_max_1 != 0) {
       v[0] = image_pair_max_1.first;
       v[1] = image_pair_max_1.second;
+      i = 2;
+    } else {
+      i = 0;
     }
     // Fill the rest of images (not ordered)
     // TODO(julien) maybe we can do better than a non ordered list here?
-    i = 2;
     image_iter1 = matches.get_images().begin();
     for (;image_iter1 != matches.get_images().end(); ++image_iter1) {
-      if (*image_iter1 != v[0] && *image_iter1 != v[1]) {
+      if (score_max_1 == 0 || (*image_iter1 != v[0] && *image_iter1 != v[1])) {
         v[i] = *image_iter1;
         ++i;
       }
     }
     connected_graph_list->push_back(v);
+  }
+}
+
+void PrintVectorPLYFormat(const Vec &v, std::ofstream *output_stream) {
+  int floor_v = 0;
+  double precision = pow(10, output_stream->precision());
+  for (size_t i = 0; i < v.size(); ++i) {
+    floor_v = floor(v[i]);
+    *output_stream << floor_v << "," 
+                   << floor((v[i] - floor_v) * precision) << " ";
   }
 }
 
@@ -781,7 +793,7 @@ void ExportToPLY(Reconstruction &reconstruct, std::string out_file_name) {
         dynamic_cast<PointStructure*>(track_iter->second);
       if (point_s) {
         // Exports the point affine position
-        outfile << point_s->coords_affine().transpose() << " ";
+        PrintVectorPLYFormat(point_s->coords_affine(), &outfile);
         // Exports the point color
         outfile << "255 255 255" << std::endl;
       }
@@ -793,7 +805,7 @@ void ExportToPLY(Reconstruction &reconstruct, std::string out_file_name) {
         dynamic_cast<PinholeCamera *>(camera_iter->second);
       if (camera_pinhole) {
         // Exports the camera position
-        outfile << camera_pinhole->position().transpose() << " ";
+        PrintVectorPLYFormat(camera_pinhole->position(), &outfile);
         // Exports the camera color
         outfile << "255 0 0" << std::endl;
       }

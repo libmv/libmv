@@ -41,6 +41,8 @@ public:
     ImageView( int i, QString path ) : index(i), _path(path),  image(QPixmap(path)), filter(-1) {}
     QString path() { return _path; }
     void setFeatures(QVector<QVector<KeypointFeature> >);
+    int GetImageWidth()  { return image.width();  }
+    int GetImageHeight() { return image.height(); }
 public slots:
     void setFilter(int i);
     void clearFilter();
@@ -109,12 +111,14 @@ public slots:
     void openImages();
     void openImages( QStringList filenames );
     void computeMatches();
+    void computeRelativeMatches();
     void computeUncalibratedReconstruction();
     void computeCalibratedReconstruction();
     void computeMetricRectification();
     void computeBA();
     
     void warningNotFunctional();
+    bool SelectDetectorDescriber(eDetector detector, eDescriber describer);
 signals:
     void setFilter(int i);
     void clearFilter();

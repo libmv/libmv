@@ -159,7 +159,7 @@ bool nRobustViewMatching::MatchData(const string & dataA, const string & dataB)
 }
 
 /**
-* From a series of element it compute the cross putative match list.
+* From a series of element it computes the cross putative match list.
 *
 * \param[in] vec_data The data on which we want compute cross matches.
 *
@@ -189,6 +189,32 @@ bool nRobustViewMatching::computeCrossMatch( const libmv::vector<string> & vec_d
       }
     }
   }
+  return bRes2;
+}
+
+bool nRobustViewMatching::computeRelativeMatch(
+    const libmv::vector<string>& vec_data) {
+  if (m_pDetector == NULL || m_pDescriber == NULL)  {
+    LOG(FATAL) << "Invalid Detector or Describer.";
+    return false;
+  }
+
+  m_vec_InputNames = vec_data;
+  bool bRes = true;
+  for (int i=0; i < vec_data.size(); ++i) {
+    bRes &= computeData(vec_data[i]);
+  }
+
+  bool bRes2 = true;
+  for (int i=1; i < vec_data.size(); ++i) {
+    if (m_ViewData.find(vec_data[i-1]) != m_ViewData.end() &&
+        m_ViewData.find(vec_data[i])   != m_ViewData.end())
+    {
+      bRes2 &= this->MatchData(vec_data[i-1], vec_data[i]);
+    }
+  }
+  // Match the first and the last images (in order to detect loop)
+  bRes2 &= this->MatchData(vec_data[0], vec_data[vec_data.size() - 1]);
   return bRes2;
 }
 
