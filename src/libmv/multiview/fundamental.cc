@@ -222,14 +222,6 @@ double FundamentalFromCorrespondences7Point(const Mat &x1,
   return smaller_singular_value;
 }
 
-void FundamentalFromCorrespondencesSampson(const Mat2X &x1,
-                                           const Mat2X &x2,
-                                           Mat3 *F) {
-  (void)x1;
-  (void)x2;
-  (void)F;
-}
-
 void NormalizeFundamental(const Mat3 &F, Mat3 *F_normalized) {
   *F_normalized = F / FrobeniusNorm(F);
   if((*F_normalized)(2,2) < 0) {
@@ -267,7 +259,7 @@ double SymmetricEpipolarDistance2(const Mat &F,
                           + 1 / Ft_y.start<2>().squaredNorm());
 }
 
-// HZ 9.6 pag 257
+// HZ 9.6 pag 257 (formula 9.12)
 void EssentialFromFundamental(const Mat3 &F,
                               const Mat3 &K1,
                               const Mat3 &K2,
@@ -298,6 +290,7 @@ void EssentialFromRt(const Mat3 &R1,
   *E = Tx * R;
 }
 
+// HZ 9.6 pag 259 (Result 9.19)
 void MotionFromEssential(const Mat3 &E,
                          std::vector<Mat3> *Rs,
                          std::vector<Vec3> *ts) {
@@ -331,6 +324,7 @@ void MotionFromEssential(const Mat3 &E,
   (*Rs)[3] = U_Wt_Vt; (*ts)[3] = -U.col(2);
 }
 
+// HZ 9.6 pag 259 (9.6.3 Geometrical interpretation of the 4 solutions)
 int MotionFromEssentialChooseSolution(const std::vector<Mat3> &Rs,
                                       const std::vector<Vec3> &ts,
                                       const Mat3 &K1,
@@ -354,6 +348,7 @@ int MotionFromEssentialChooseSolution(const std::vector<Mat3> &Rs,
     TriangulateDLT(P1, x1, P2, x2, &X);
     double d1 = Depth(R1, t1, X);
     double d2 = Depth(R2, t2, X);
+    // Test if point is front to the two cameras.
     if (d1 > 0 && d2 > 0) {
       return i;
     }
