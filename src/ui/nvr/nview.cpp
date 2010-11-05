@@ -152,8 +152,8 @@ void MainWindow::warningNotFunctional() {
                         "This process is STILL in development.");
 }
 
-bool MainWindow::SelectDetectorDescriber(eDetector detector, 
-                                         eDescriber describer) {
+bool MainWindow::SelectDetectorDescriber(eDetector &detector, 
+                                         eDescriber &describer) {
 
   // Set the detector
   std::map<std::string, detector::eDetector> detectorMap;

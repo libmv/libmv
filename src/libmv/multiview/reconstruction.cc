@@ -400,6 +400,7 @@ uint PointStructureRetriangulation(const Matches &matches,
   }
   return number_updated_structure;
 }
+
 bool UncalibratedCameraResection(const Matches &matches, 
                                  CameraID image_id, 
                                  Matches *matches_inliers,
