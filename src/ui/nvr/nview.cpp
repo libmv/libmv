@@ -87,6 +87,11 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
       connect(button,SIGNAL(clicked()),SLOT(computeBA()));
       layout->addWidget(button);
     }
+    {
+      QPushButton* button = new QPushButton("Save Reconstruction");
+      connect(button,SIGNAL(clicked()),SLOT(SaveReconstructionFile()));
+      layout->addWidget(button);
+    }
     addDockWidget(Qt::LeftDockWidgetArea,actionsDock);
 
     QDockWidget* graphDock = new QDockWidget("Match Graph",this);
@@ -124,6 +129,13 @@ void MainWindow::openImages() {
 	    "Pictures (*.png *.jpg *.jpeg *.bmp *.ppm *.pgm *.xpm *.tif *.tiff*.tga);All Files"));
 }
 
+void MainWindow::SaveReconstructionFile() {
+  QString out_file = QFileDialog::getSaveFileName(this,
+                                                  "Export Reconstruction","",
+                                                  "PLY format (*.ply");
+  if(out_file.isEmpty()) return;
+  ExportToPLY(reconstruction_, out_file.toStdString());
+}
 void MainWindow::openImages( QStringList files ) {
     if(files.isEmpty()) return;
     foreach(ImageView* w,images) {
@@ -152,9 +164,8 @@ void MainWindow::warningNotFunctional() {
                         "This process is STILL in development.");
 }
 
-bool MainWindow::SelectDetectorDescriber(eDetector &detector, 
-                                         eDescriber &describer) {
-
+bool MainWindow::SelectDetectorDescriber(eDetector *detector, 
+                                         eDescriber *describer) {
   // Set the detector
   std::map<std::string, detector::eDetector> detectorMap;
   detectorMap["FAST"] = detector::FAST_DETECTOR;
@@ -182,12 +193,12 @@ bool MainWindow::SelectDetectorDescriber(eDetector &detector,
                                         tr("Detector:"), 
                                         detector_list, 0, false, &ok);
   if (ok && !item.isEmpty())    
-    detector = detectorMap[item.toStdString()];
+    *detector = detectorMap[item.toStdString()];
   item = QInputDialog::getItem(this, tr("Choose a describer..."),
                                         tr("Descriptor:"), 
                                         descriptor_list, 3, false, &ok);
   if (ok && !item.isEmpty())    
-    describer = descriptorMap[item.toStdString()];
+    *describer = descriptorMap[item.toStdString()];
   
   return ok;
 }
@@ -198,7 +209,7 @@ void MainWindow::computeMatches() {
     progress.setWindowModality(Qt::WindowModal);
     eDetector detector   = detector::FAST_DETECTOR;
     eDescriber describer = descriptor::DAISY_DESCRIBER;
-    SelectDetectorDescriber(detector, describer);
+    SelectDetectorDescriber(&detector, &describer);
     // TODO(julien) create a UI to selection the detector/describer we want
     Detector * pdetector  = detectorFactory(detector);
     Describer* pdescriber = describerFactory(describer);
@@ -265,7 +276,7 @@ void MainWindow::computeRelativeMatches() {
     progress.setWindowModality(Qt::WindowModal);
     eDetector detector   = detector::FAST_DETECTOR;
     eDescriber describer = descriptor::DAISY_DESCRIBER;
-    SelectDetectorDescriber(detector, describer);
+    SelectDetectorDescriber(&detector, &describer);
     // TODO(julien) create a UI to selection the detector/describer we want
     Detector * pdetector  = detectorFactory(detector);
     Describer* pdescriber = describerFactory(describer);
@@ -554,7 +565,6 @@ void MainWindow::computeMetricRectification() {
   progress.setLabelText("Metric rectification");
   // Metric rectification
   UpgradeToMetric(matches_inliers_, &reconstruction_);
-  ExportToPLY(reconstruction_, "out.ply");
 }
 
 void MainWindow::computeBA() {
@@ -565,7 +575,6 @@ void MainWindow::computeBA() {
   // Performs bundle adjustment
   BundleAdjust(matches_inliers_, &reconstruction_);
   progress.setLabelText("Reconstruction done.");
-  ExportToPLY(reconstruction_, "out.ply");
 }
 
 /// Graph

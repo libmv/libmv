@@ -752,16 +752,6 @@ void SelectBestImageReconstructionOrder(
   }
 }
 
-void PrintVectorPLYFormat(const Vec &v, std::ofstream *output_stream) {
-  int floor_v = 0;
-  double precision = pow(10, output_stream->precision());
-  for (size_t i = 0; i < v.size(); ++i) {
-    floor_v = floor(v[i]);
-    *output_stream << floor_v << "," 
-                   << floor((v[i] - floor_v) * precision) << " ";
-  }
-}
-
 void ExportToPLY(Reconstruction &reconstruct, std::string out_file_name) {
   std::ofstream outfile;
   outfile.open(out_file_name.c_str(), std::ios_base::out);
@@ -794,7 +784,7 @@ void ExportToPLY(Reconstruction &reconstruct, std::string out_file_name) {
         dynamic_cast<PointStructure*>(track_iter->second);
       if (point_s) {
         // Exports the point affine position
-        PrintVectorPLYFormat(point_s->coords_affine(), &outfile);
+        outfile << point_s->coords_affine().transpose() << " ";
         // Exports the point color
         outfile << "255 255 255" << std::endl;
       }
@@ -806,7 +796,7 @@ void ExportToPLY(Reconstruction &reconstruct, std::string out_file_name) {
         dynamic_cast<PinholeCamera *>(camera_iter->second);
       if (camera_pinhole) {
         // Exports the camera position
-        PrintVectorPLYFormat(camera_pinhole->position(), &outfile);
+        outfile << camera_pinhole->position().transpose() << " ";
         // Exports the camera color
         outfile << "255 0 0" << std::endl;
       }

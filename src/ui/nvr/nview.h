@@ -110,6 +110,7 @@ public:
 public slots:
     void openImages();
     void openImages( QStringList filenames );
+    void SaveReconstructionFile();
     void computeMatches();
     void computeRelativeMatches();
     void computeUncalibratedReconstruction();
@@ -118,7 +119,7 @@ public slots:
     void computeBA();
     
     void warningNotFunctional();
-    bool SelectDetectorDescriber(eDetector &detector, eDescriber &describer);
+    bool SelectDetectorDescriber(eDetector *detector, eDescriber *describer);
 signals:
     void setFilter(int i);
     void clearFilter();
