@@ -290,7 +290,8 @@ bool ReconstructFromTwoCalibratedViews(const Matches &matches,
 uint PointStructureTriangulation(const Matches &matches, 
                                  CameraID image_id, 
                                  size_t minimum_num_views, 
-                                 Reconstruction *reconstruction) {
+                                 Reconstruction *reconstruction,
+                                 vector<StructureID> *new_structures_ids) {
   // Checks that the camera is in reconstruction
   if (!reconstruction->ImageHasCamera(image_id)) {
       LOG(INFO) << "Error: the image " << image_id 
@@ -309,6 +310,8 @@ uint PointStructureTriangulation(const Matches &matches,
   // minimum_num_views images (images that have an already localized camera) 
   Mat41 X_world;
   uint number_new_structure = 0;
+  if (new_structures_ids)
+    new_structures_ids->reserve(structures_ids.size());
   PinholeCamera *camera = NULL;
   for (size_t t = 0; t < structures_ids.size(); ++t) {
     Matches::Features<PointFeature> fp =
@@ -334,6 +337,8 @@ uint PointStructureTriangulation(const Matches &matches,
       PointStructure * p = new PointStructure();
       p->set_coords(X_world.col(0));
       reconstruction->InsertTrack(structures_ids[t], p);
+      if (new_structures_ids)
+        new_structures_ids->push_back(structures_ids[t]);
       number_new_structure++;
       LOG(INFO) << "Add Point Structure ["
                 << structures_ids[t] <<"] "
@@ -690,7 +695,7 @@ double BundleAdjust(const Matches &matches,
   return rms;
 }
 
-void SelectBestImageReconstructionOrder(
+void SelectEfficientImageOrder(
     const Matches &matches, 
     std::list<vector<Matches::ImageID> >*connected_graph_list) {
   typedef std::pair<Matches::ImageID, Matches::ImageID> ImagesTypePairs;

@@ -255,19 +255,23 @@ bool CalibratedCameraResection(const Matches &matches,
                                Matches *matches_inliers,
                                Reconstruction *reconstruction);
 
-// Reconstructs point tracks observed in the image image_id using theirs
-// observations (matches). To be reconstructed, the tracks need to be viewed
-// in more than minimum_num_views images.
+// Reconstructs unreconstructed point tracks observed in the image image_id
+// using theirs observations (matches). 
+// To be reconstructed, the tracks need to be viewed in more than
+// minimum_num_views images.
 // The method:
 //    selects the tracks that haven't been already reconstructed
 //    reconstructs the tracks into structures
 //    TODO(julien) only add inliers?
 //    creates and add them in reconstruction
-// Returns the number of structures reconstructed
-uint PointStructureTriangulation(const Matches &matches, 
-                                 CameraID image_id, 
-                                 size_t minimum_num_views, 
-                                 Reconstruction *reconstruction);
+// Returns the number of structures reconstructed and the list of triangulated
+// points
+uint PointStructureTriangulation(
+   const Matches &matches, 
+   CameraID image_id, 
+   size_t minimum_num_views, 
+   Reconstruction *reconstruction,
+   vector<StructureID> *new_structures_ids = NULL);
 
 // Retriangulates point tracks observed in the image image_id using theirs
 // observations (matches). To be reconstructed, the tracks need to be viewed
@@ -295,12 +299,12 @@ bool UpgradeToMetric(const Matches &matches,
 double BundleAdjust(const Matches &matches, 
                     Reconstruction *reconstruction);
 
-// This method selects the best order of images, with the first two are
+// This method selects an efficient order of images, with the first two are
 // selected because they have a good baseline.
 // The criterion is:  the homography error x number of common matches
 // The oupout connected_graph_list contains a list of connected graphs
 // (vectors), each vector contains the ImageID ordered by the criterion.
-void SelectBestImageReconstructionOrder(
+void SelectEfficientImageOrder(
   const Matches &matches, 
   std::list<vector<Matches::ImageID> >*connected_graph_list);
 

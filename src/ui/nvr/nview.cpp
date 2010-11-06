@@ -96,21 +96,22 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
 
     QDockWidget* graphDock = new QDockWidget("Match Graph",this);
     graph = new Graph;
-    graphView = new GraphView;
-    graphView->setScene(graph);
-    graphView->setRenderHint(QPainter::Antialiasing);
-    graphView->setDragMode(QGraphicsView::ScrollHandDrag);
-    graphView->setTransformationAnchor(QGraphicsView::AnchorUnderMouse);
-    graphDock->setWidget(graphView);
+    graph_view_ = new GraphView;
+    graph_view_->setScene(graph);
+    graph_view_->setRenderHint(QPainter::Antialiasing);
+    graph_view_->setDragMode(QGraphicsView::ScrollHandDrag);
+    graph_view_->setTransformationAnchor(QGraphicsView::AnchorUnderMouse);
+    graphDock->setWidget(graph_view_);
     addDockWidget(Qt::LeftDockWidgetArea,graphDock);
 
     QTabWidget* tab = new QTabWidget(this);
     QWidget* gridView = new QWidget(tab);
-    gridLayout = new QGridLayout(gridView);
-    gridView->setLayout(gridLayout);
+    grid_layout_ = new QGridLayout(gridView);
+    gridView->setLayout(grid_layout_);
     tab->addTab( gridView, "Match View");
 
-    tab->addTab( new QWidget(), "3D View");
+    gl_widget_ = new GLWidget(this);
+    tab->addTab( gl_widget_, "3D View");
     setCentralWidget( tab );
 
     QStringList args = qApp->arguments(); args.removeFirst();
@@ -121,12 +122,18 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
 MainWindow::~MainWindow() {
   reconstruction_.ClearCamerasMap();
   reconstruction_.ClearStructuresMap(); 
+  delete gl_widget_;
+  gl_widget_ = NULL;
+  delete graph_view_;
+  graph_view_ = NULL;
+  delete grid_layout_;
+  grid_layout_ = NULL;
 }
 
 void MainWindow::openImages() {
     openImages(QFileDialog::getOpenFileNames(
             this,"Select Images","",
-	    "Pictures (*.png *.jpg *.jpeg *.bmp *.ppm *.pgm *.xpm *.tif *.tiff*.tga);All Files"));
+"Pictures (*.png *.jpg *.jpeg *.bmp *.ppm *.pgm *.xpm *.tif *.tiff*.tga);All Files"));
 }
 
 void MainWindow::SaveReconstructionFile() {
@@ -139,7 +146,7 @@ void MainWindow::SaveReconstructionFile() {
 void MainWindow::openImages( QStringList files ) {
     if(files.isEmpty()) return;
     foreach(ImageView* w,images) {
-        gridLayout->removeWidget(w);
+        grid_layout_->removeWidget(w);
         delete w;
     }
     images.clear();
@@ -150,7 +157,7 @@ void MainWindow::openImages( QStringList files ) {
         connect(view,SIGNAL(leave()),SIGNAL(clearFilter()));
         connect(this,SIGNAL(setFilter(int)),view,SLOT(setFilter(int)));
         connect(this,SIGNAL(clearFilter()),view,SLOT(clearFilter()));
-        gridLayout->addWidget(view,i/ratio,i%ratio);
+        grid_layout_->addWidget(view,i/ratio,i%ratio);
         images << view;
     }
 }
@@ -267,7 +274,7 @@ void MainWindow::computeMatches() {
     foreach(Edge* e, graph->edges )
         e->setPen(QPen(QBrush(Qt::SolidPattern),0.1*e->pen().width()/maxWidth));
     for (int i=0; i < images.count(); ++i) images[i]->setFeatures(matches[i]);
-    graphView->fitInView(graph->sceneRect());
+    graph_view_->fitInView(graph->sceneRect());
 }
 
 void MainWindow::computeRelativeMatches() {
@@ -334,7 +341,7 @@ void MainWindow::computeRelativeMatches() {
     foreach(Edge* e, graph->edges )
         e->setPen(QPen(QBrush(Qt::SolidPattern),0.1*e->pen().width()/maxWidth));
     for (int i=0; i < images.count(); ++i) images[i]->setFeatures(matches[i]);
-    graphView->fitInView(graph->sceneRect());
+    graph_view_->fitInView(graph->sceneRect());
 }
 
 void MainWindow::computeUncalibratedReconstruction() {
@@ -351,10 +358,11 @@ void MainWindow::computeUncalibratedReconstruction() {
  
   progress.setLabelText("Selecting best initial images...");
   std::list<libmv::vector<Matches::ImageID> > connected_graph_list;
-  SelectBestImageReconstructionOrder(matches,  &connected_graph_list);
+  SelectEfficientImageOrder(matches,  &connected_graph_list);
   
   size_t image_id = 0;
   size_t index_image_graph = 0;
+  libmv::vector<StructureID> new_structures_ids;
   std::list<libmv::vector<Matches::ImageID> >::iterator graph_iter =
     connected_graph_list.begin();
   for (; graph_iter != connected_graph_list.end(); ++graph_iter) {
@@ -391,8 +399,10 @@ void MainWindow::computeUncalibratedReconstruction() {
     PointStructureTriangulation(matches_inliers_, 
                                 image_id,
                                 minimum_num_views, 
-                                &reconstruction_);
-
+                                &reconstruction_,
+                                &new_structures_ids);
+    DrawNewStructures(new_structures_ids);
+    new_structures_ids.clear();
     // Performs projective bundle adjustment
     //LOG(INFO) << " -- Projective Bundle Adjustment --  " << std::endl;
     
@@ -425,7 +435,10 @@ void MainWindow::computeUncalibratedReconstruction() {
       PointStructureTriangulation(matches_inliers_, 
                                   image_id,
                                   minimum_num_views, 
-                                  &reconstruction_);
+                                  &reconstruction_,
+                                  &new_structures_ids);
+      DrawNewStructures(new_structures_ids);
+      new_structures_ids.clear();
 
       // TODO(julien) Performs projective bundle adjustment
       progressCallback(progress, index_image_graph);
@@ -469,7 +482,7 @@ void MainWindow::computeCalibratedReconstruction() {
  
   progress.setLabelText("Selecting best initial images...");
   std::list<libmv::vector<Matches::ImageID> > connected_graph_list;
-  SelectBestImageReconstructionOrder(matches,  &connected_graph_list);
+  SelectEfficientImageOrder(matches,  &connected_graph_list);
   
   std::cout << " List order:";
   for (size_t i = 0; i < connected_graph_list.begin()->size(); ++i) {
@@ -479,6 +492,7 @@ void MainWindow::computeCalibratedReconstruction() {
   
   size_t image_id = 0;
   size_t index_image_graph = 0;
+  libmv::vector<StructureID> new_structures_ids;
   std::list<libmv::vector<Matches::ImageID> >::iterator graph_iter =
     connected_graph_list.begin();
   for (; graph_iter != connected_graph_list.end(); ++graph_iter) {
@@ -514,8 +528,11 @@ void MainWindow::computeCalibratedReconstruction() {
     PointStructureTriangulation(matches_inliers_, 
                                 image_id,
                                 minimum_num_views, 
-                                &reconstruction_);
-
+                                &reconstruction_,
+                                &new_structures_ids);
+    DrawNewStructures(new_structures_ids);
+    new_structures_ids.clear();
+    
     // Performs projective bundle adjustment
     LOG(INFO) << " -- Bundle adjustment --  " << std::endl;
     progress.setLabelText("Bundle adjustment");
@@ -545,8 +562,11 @@ void MainWindow::computeCalibratedReconstruction() {
       PointStructureTriangulation(matches_inliers_, 
                                   image_id,
                                   minimum_num_views, 
-                                  &reconstruction_);
-
+                                  &reconstruction_,
+                                  &new_structures_ids);
+      DrawNewStructures(new_structures_ids);
+      new_structures_ids.clear();
+      
       // Performs bundle adjustment
       LOG(INFO) << " -- Bundle adjustment --  " << std::endl;
       progress.setLabelText("Bundle adjustment");
@@ -575,6 +595,20 @@ void MainWindow::computeBA() {
   // Performs bundle adjustment
   BundleAdjust(matches_inliers_, &reconstruction_);
   progress.setLabelText("Reconstruction done.");
+}
+
+void MainWindow::DrawNewStructures(libmv::vector<StructureID> &struct_ids) {
+  PointStructure *ps = NULL;
+  libmv::vector<Vec3> struct_coords;
+  struct_coords.reserve(struct_ids.size());
+  for (size_t s = 0; s < struct_ids.size(); ++s) {
+    ps = dynamic_cast<PointStructure *>(
+     reconstruction_.GetStructure(struct_ids[s]));
+    if (ps) {
+      struct_coords.push_back(ps->coords_affine());
+    }
+  }
+  gl_widget_->AddNewStructure(struct_coords);
 }
 
 /// Graph
@@ -626,3 +660,4 @@ void Graph::timerEvent(QTimerEvent* ) {
       void GraphWidget::itemMoved() { startTimer(40); }
     */
 }
+

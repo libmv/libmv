@@ -29,6 +29,9 @@
 #include "libmv/descriptor/descriptor_factory.h"
 #include "libmv/detector/detector_factory.h"
 
+#include "glwidget.h"
+
+// TODO(julien) avoid using namespace in headers!
 using namespace libmv;
 using namespace libmv::correspondence;
 using namespace libmv::descriptor;
@@ -63,6 +66,7 @@ public: //private:
 
 class Node;
 
+// TODO(julien) put this (Edge, node, graph, GraphView) in a widget (.h/.cc)
 /// a line linking two nodes
 struct Edge : public QGraphicsLineItem {
   Edge(Node* a, Node* b) : a(a), b(b) { setZValue(-1); }
@@ -98,7 +102,8 @@ public: //private:
 class GraphView : public QGraphicsView {
     Q_OBJECT
 protected:
-    void wheelEvent(QWheelEvent* e) { scale(1.0+e->delta()/360.0,1.0+e->delta()/360.0); }
+    void wheelEvent(QWheelEvent* e) { scale(1.0+e->delta()/360.0,
+                                            1.0+e->delta()/360.0); }
 };
 
 /// QMainWindow with Match/3D View and actions/graph QDockWidgets
@@ -124,12 +129,15 @@ signals:
     void setFilter(int i);
     void clearFilter();
 private:
+    void DrawNewStructures(libmv::vector<StructureID> &struct_ids);
+    
     nRobustViewMatching nViewMatcher;
     QList<ImageView*> images;
     Graph* graph;
     Reconstruction reconstruction_;
     Matches matches_inliers_;
 
-    QGridLayout* gridLayout;
-    GraphView* graphView;
+    QGridLayout *grid_layout_;
+    GraphView   *graph_view_;
+    GLWidget    *gl_widget_;
 };
