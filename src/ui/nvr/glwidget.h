@@ -51,6 +51,8 @@ class GLWidget : public QGLWidget
   QPoint        last_mouse_position_;    
   libmv::Vec3f  viewer_orientation_;
   libmv::Vec3f  viewer_position_;
+  
+  float point_size_;
 };
 
 #endif // GLWIDGET_H

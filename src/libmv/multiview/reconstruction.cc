@@ -157,13 +157,13 @@ bool ReconstructFromTwoUncalibratedViews(const Matches &matches,
   if (!pcamera) {
     pcamera = new PinholeCamera(P1);
     reconstruction->InsertCamera(image_id1, pcamera);
-    LOG(INFO) << "Add Camera ["
+    VLOG(1)   << "Add Camera ["
               << image_id1 <<"]"<< std::endl <<"P="
               << P1 << std::endl;
   } else {
     // TODO(julien) what should we do?
     // for now we enforce the first projection matrix to be the world reference
-    LOG(INFO) << "Warning: the first projection matrix is overwritten to be the"
+    VLOG(1)   << "Warning: the first projection matrix is overwritten to be the"
             << " world reference frame.";
     pcamera->set_projection_matrix(P1);
   }
@@ -172,7 +172,7 @@ bool ReconstructFromTwoUncalibratedViews(const Matches &matches,
   // Creates and adds the second camera
   pcamera = new PinholeCamera(P2);
   reconstruction->InsertCamera(image_id2, pcamera);
-  LOG(INFO) << "Add Camera ["
+  VLOG(1)   << "Add Camera ["
             << image_id2 <<"]"<< std::endl <<"P="
               << P2 << std::endl;
             
@@ -184,7 +184,7 @@ bool ReconstructFromTwoUncalibratedViews(const Matches &matches,
     feature = matches.Get(image_id2, tracks[feature_inliers[s]]);
     matches_inliers->Insert(image_id2, tracks[feature_inliers[s]], feature);
   }
-  LOG(INFO) << "Inliers added: " << feature_inliers.size() << std::endl;
+  VLOG(1)   << "Inliers added: " << feature_inliers.size() << std::endl;
   return true;
 }
 
@@ -228,8 +228,7 @@ bool ReconstructFromTwoCalibratedViews(const Matches &matches,
     index_inlier = feature_inliers[c];
     v0.col(c) = x0.col(index_inlier);
     v1.col(c) = x1.col(index_inlier);
-  }
-  
+  }  
   Mat3 E;
   // Computes essential matrix
   EssentialFromFundamental(F, K1, K2, &E);
@@ -244,7 +243,7 @@ bool ReconstructFromTwoCalibratedViews(const Matches &matches,
     LOG(ERROR) << "Error: the motion cannot be estimated.";
     return false;
   }
-    
+  
   Mat3 R;
   Vec3 t;
   PinholeCamera * pcamera = NULL;
@@ -257,7 +256,7 @@ bool ReconstructFromTwoCalibratedViews(const Matches &matches,
     t.setZero();
     pcamera = new PinholeCamera(K1, R, t);
     reconstruction->InsertCamera(image_id1, pcamera);
-    LOG(INFO) << "Add Camera ["
+    VLOG(1)   << "Add Camera ["
               << image_id1 <<"]"<< std::endl <<"R="
               << R << std::endl <<"t= "
               << t.transpose()
@@ -266,15 +265,17 @@ bool ReconstructFromTwoCalibratedViews(const Matches &matches,
   // Recover the asolute pose: R2 = R1 * dR, t2 = R1 * dt + t1
   R = pcamera->orientation_matrix() * dR;
   t = pcamera->orientation_matrix() * dt + pcamera->position();
+  
   // Creates and adds the second camera
   pcamera = new PinholeCamera(K2, R, t);
   reconstruction->InsertCamera(image_id2, pcamera);
-  LOG(INFO) << "Add Camera ["
+  VLOG(1)   << "Add Camera ["
             << image_id2 <<"]"<< std::endl <<"R="
             << R << std::endl <<"t= "
             << t.transpose()
             << std::endl;
             
+              
   //Adds only inliers matches into 
   const Feature * feature = NULL;
   for (size_t s = 0; s < feature_inliers.size(); ++s) {
@@ -283,7 +284,7 @@ bool ReconstructFromTwoCalibratedViews(const Matches &matches,
     feature = matches.Get(image_id2, tracks[feature_inliers[s]]);
     matches_inliers->Insert(image_id2, tracks[feature_inliers[s]], feature);
   }
-  LOG(INFO) << "Inliers added: " << feature_inliers.size() << std::endl;
+  VLOG(1)   << "Inliers added: " << feature_inliers.size() << std::endl;
   return true;
 }
 
@@ -294,7 +295,7 @@ uint PointStructureTriangulation(const Matches &matches,
                                  vector<StructureID> *new_structures_ids) {
   // Checks that the camera is in reconstruction
   if (!reconstruction->ImageHasCamera(image_id)) {
-      LOG(INFO) << "Error: the image " << image_id 
+      VLOG(1)   << "Error: the image " << image_id 
                 << " has no camera." << std::endl;
     return 0;
   }
@@ -331,16 +332,17 @@ uint PointStructureTriangulation(const Matches &matches,
     if (Ps.size() >= minimum_num_views) {
       Mat2X x(2, xs.size());
       VectorToMatrix<Vec2, Mat2X>(xs, &x);
-      NViewTriangulate<double>(x, Ps, &X_world);
+      // TODO(julien) apply an isotropic normalisation of 2D points 
+      NViewTriangulateAlgebraic<double>(x, Ps, &X_world);
+      
       // Creates an add the point structure to the reconstruction
-      // TODO(julien) don't keep ouliers? (RMSE > threshold)
       PointStructure * p = new PointStructure();
       p->set_coords(X_world.col(0));
       reconstruction->InsertTrack(structures_ids[t], p);
       if (new_structures_ids)
         new_structures_ids->push_back(structures_ids[t]);
       number_new_structure++;
-      LOG(INFO) << "Add Point Structure ["
+      VLOG(1)   << "Add Point Structure ["
                 << structures_ids[t] <<"] "
                 << p->coords().transpose() << " ("
                 << p->coords().transpose() / p->coords()[3] << ")"
@@ -355,7 +357,7 @@ uint PointStructureRetriangulation(const Matches &matches,
                                    Reconstruction *reconstruction) {
   // Checks that the camera is in reconstruction
   if (!reconstruction->ImageHasCamera(image_id)) {
-      LOG(INFO) << "Error: the image " << image_id 
+      VLOG(1)   << "Error: the image " << image_id 
                 << " has no camera." << std::endl;
     return 0;
   }
@@ -388,7 +390,8 @@ uint PointStructureRetriangulation(const Matches &matches,
     }
     Mat2X x(2, xs.size());
     VectorToMatrix<Vec2, Mat2X>(xs, &x);
-    NViewTriangulate<double>(x, Ps, &X_world);
+    // TODO(julien) apply an isotropic normalisation of 2D points 
+    NViewTriangulateAlgebraic<double>(x, Ps, &X_world);
     // Creates an add the point structure to the reconstruction
     pstructure = dynamic_cast<PointStructure *>(
       reconstruction->GetStructure(structures_ids[t]));
@@ -396,7 +399,7 @@ uint PointStructureRetriangulation(const Matches &matches,
       // TODO(julien) don't keep ouliers? (RMSE > threshold)
       pstructure->set_coords(X_world.col(0));
       number_updated_structure++;
-      LOG(INFO) << "Point structure updated ["
+      VLOG(1)   << "Point structure updated ["
                 << structures_ids[t] <<"] "
                 << pstructure->coords().transpose() << " ("
                 << pstructure->coords().transpose() / pstructure->coords()[3] 
@@ -439,7 +442,7 @@ bool UncalibratedCameraResection(const Matches &matches,
   PinholeCamera * camera = new PinholeCamera(P);
   reconstruction->InsertCamera(image_id, camera);
   
-  LOG(INFO) << "Add Camera ["
+  VLOG(1)   << "Add Camera ["
             << image_id <<"]"<< std::endl <<"P="
             << P << std::endl;
   //Adds only inliers matches into 
@@ -448,7 +451,7 @@ bool UncalibratedCameraResection(const Matches &matches,
     feature = matches.Get(image_id, structures_ids[s]);
     matches_inliers->Insert(image_id, structures_ids[s], feature);
   }
-  LOG(INFO) << "Inliers added: " << structures_ids.size() << std::endl;
+  VLOG(1)   << "Inliers added: " << structures_ids.size() << std::endl;
   return true;
 }
 
@@ -488,7 +491,7 @@ bool CalibratedCameraResection(const Matches &matches,
   // Creates a new camera and add it to the reconstruction
   PinholeCamera * camera = new PinholeCamera(K, R, t);
   reconstruction->InsertCamera(image_id, camera);
-  LOG(INFO) << "Add Camera ["
+  VLOG(1)   << "Add Camera ["
             << image_id <<"]"<< std::endl <<"R="
             << R << std::endl <<"t= "
             << t.transpose()
@@ -499,13 +502,13 @@ bool CalibratedCameraResection(const Matches &matches,
     feature = matches.Get(image_id, structures_ids[s]);
     matches_inliers->Insert(image_id, structures_ids[s], feature);
   }
-  LOG(INFO) << "Inliers added: " << structures_ids.size() << std::endl;
+  VLOG(1)   << "Inliers added: " << structures_ids.size() << std::endl;
   return true;
 }
 
 // TODO(julien) put this somewhere else...
-double EstimatesRootMeanSquare(const Matches &matches, 
-                               Reconstruction *reconstruction) {
+double EstimatesRootMeanSquareError(const Matches &matches, 
+                                    Reconstruction *reconstruction) {
   PinholeCamera * pcamera = NULL;
   vector<StructureID> structures_ids;
   Mat2X x_image;
@@ -547,7 +550,7 @@ bool isNaN(double i) {
 
 bool UpgradeToMetric(const Matches &matches, 
                      Reconstruction *reconstruction) { 
-  double rms = EstimatesRootMeanSquare(matches, reconstruction);
+  double rms = EstimatesRootMeanSquareError(matches, reconstruction);
   std::cout << "Upgrade to Metric - Initial RMS:" << rms << std::endl;
   AutoCalibrationLinear auto_calibration_linear;
   uint image_width = 0;
@@ -573,7 +576,7 @@ bool UpgradeToMetric(const Matches &matches,
   // TODO(julien) Put the following in a function.
   // Upgrade the reconstruction to metric using {Pm, Xm} = {P*H, H^{-1}*X}
   Mat4 H = auto_calibration_linear.MetricTransformation();
-  LOG(INFO) << "Rectification H = " << H << "\n";
+  VLOG(1)   << "Rectification H = " << H << "\n";
   if (isNaN(H.sum())) {
     LOG(ERROR) << "Warning: The metric rectification cannot be applied, the "  
                << "matrix contains NaN values.\n";
@@ -610,7 +613,7 @@ bool UpgradeToMetric(const Matches &matches,
 
 double BundleAdjust(const Matches &matches, 
                     Reconstruction *reconstruction) {
-  double rms = 0, rms0 = EstimatesRootMeanSquare(matches, reconstruction);
+  double rms = 0, rms0 = EstimatesRootMeanSquareError(matches, reconstruction);
   std::cout << "Initial RMS = " << rms0 << std::endl;
   size_t ncamera = reconstruction->GetNumberCameras();
   size_t nstructure = reconstruction->GetNumberStructures();
@@ -667,7 +670,6 @@ double BundleAdjust(const Matches &matches,
   }
   // Performs metric bundle adjustment
   rms = EuclideanBA(x, x_ids, &Ks, &Rs, &ts, &X, eBUNDLE_METRIC);
-  
   // Copy the results only if it's better
   if (rms < rms0) {
     cam_id = 0;
@@ -691,6 +693,8 @@ double BundleAdjust(const Matches &matches,
       }
     }
   }
+  // HACK remove the following line
+  rms = EstimatesRootMeanSquareError(matches, reconstruction);
   std::cout << "Final RMS = " << rms << std::endl;
   return rms;
 }

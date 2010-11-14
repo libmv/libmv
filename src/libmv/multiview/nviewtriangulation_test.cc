@@ -32,7 +32,7 @@ namespace {
 
 using namespace libmv;
 
-TEST(NViewTriangulate, ThreeViews) {
+TEST(NViewTriangulate, FiveViews) {
   int nviews = 5;
   int npoints = 6;
   NViewDataSet d = NRealisticCamerasFull(nviews, npoints);
@@ -62,4 +62,33 @@ TEST(NViewTriangulate, ThreeViews) {
   }
 }
 
+TEST(NViewTriangulateAlgebraic, FiveViews) {
+  int nviews = 5;
+  int npoints = 6;
+  NViewDataSet d = NRealisticCamerasFull(nviews, npoints);
+
+  // Collect P matrices together.
+  vector<Mat34> Ps(nviews);
+  for (int j = 0; j < nviews; ++j) {
+    Ps[j] = d.P(j);
+  }
+
+  for (int i = 0; i < npoints; ++i) {
+    // Collect the image of point i in each frame.
+    Mat2X xs(2, nviews);
+    for (int j = 0; j < nviews; ++j) {
+      xs.col(j) = d.x[j].col(i);
+    }
+    Vec4 X;
+    NViewTriangulate(xs, Ps, &X);
+
+    // Check reprojection error. Should be nearly zero.
+    for (int j = 0; j < nviews; ++j) {
+      Vec3 x_reprojected = Ps[j]*X;
+      x_reprojected /= x_reprojected(2);
+      double error = (x_reprojected.start(2) - xs.col(j)).norm();
+      EXPECT_NEAR(error, 0.0, 1e-9);
+    }
+  }
+}
 } // namespace

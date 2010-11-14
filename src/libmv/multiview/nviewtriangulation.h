@@ -55,6 +55,29 @@ void NViewTriangulate(const Matrix<T, 2, Dynamic> &x,
   *X = X_and_alphas.start(4);
 }
 
+// x's are 2D coordinates (x,y,1) in each image; Ps are projective cameras. The
+// output, X, is a homogeneous four vectors.
+// This method uses the algebraic distance approximation.
+// Note that this method works better when the 2D points are normalized
+// with an isotopic normalization.
+template<typename T>
+void NViewTriangulateAlgebraic(const Matrix<T, 2, Dynamic> &x,
+                               const vector<Matrix<T, 3, 4> > &Ps,
+                               Matrix<T, 4, 1> *X) {
+  int nviews = x.cols();
+  assert(nviews == Ps.size());
+
+  Matrix<T, Dynamic, Dynamic> design(2*nviews, 4);
+  Mat23 mx;
+  for (int i = 0; i < nviews; i++) {
+    mx << 0, -1, x(1, i),
+          1, 0, -x(0, i);
+    design.template block<2, 4>(2*i, 0) = mx * Ps[i];
+  }
+  X->resize(4);
+  Nullspace(&design, X);
+}
+
 }  // namespace libmv
 
 #endif  // LIBMV_MULTIVIEW_RESECTION_H

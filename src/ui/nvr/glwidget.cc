@@ -30,6 +30,7 @@ GLWidget::GLWidget(QWidget *parent)
  :QGLWidget(QGLFormat(QGL::SampleBuffers), parent) {
   viewer_position_ << 0, 0,  -10;
   viewer_orientation_ << 0, 0, 0;
+  point_size_ = 0.03;
 }
 GLWidget::~GLWidget(){
   foreach(GLuint s, structures_list_) {
@@ -68,15 +69,7 @@ void GLWidget::paintGL()
   glViewport(0, 0, width(), height());
   glDisable(GL_DEPTH_TEST);
   glClearColor(0.0f, 0.0f, 0.0f, 0.5f);
-  
-  // NOTE just to have something...
-  // remove this and adds x, y and z axis
-  glBegin(GL_TRIANGLES);           // Drawing Using Triangles
-    glVertex3f( 0.0f, 1.0f, 0.0f);        // Top
-    glVertex3f(-1.0f,-1.0f, 0.0f);        // Bottom Left
-    glVertex3f( 1.0f,-1.0f, 0.0f);        // Bottom Right
-  glEnd();
-    
+     
   foreach(GLuint s, structures_list_) {
     glCallList(s);
   }
@@ -124,10 +117,10 @@ void GLWidget::wheelEvent(QWheelEvent *event) {
 
 inline void GLWidget::DrawPointStructure(libmv::Vec3 &p) {
 //  glVertex3f(p[0], p[1], p[2]);
-  glVertex3f(p[0]-0.1, p[1]-0.1, p[2]+0.1);
-  glVertex3f(p[0]+0.1, p[1]-0.1, p[2]+0.1);
-  glVertex3f(p[0]+0.1, p[1]+0.1, p[2]+0.1);
-  glVertex3f(p[0]-0.1, p[1]+0.1, p[2]+0.1);
+  glVertex3f(p[0]-point_size_, p[1]-point_size_, p[2]+point_size_);
+  glVertex3f(p[0]+point_size_, p[1]-point_size_, p[2]+point_size_);
+  glVertex3f(p[0]+point_size_, p[1]+point_size_, p[2]+point_size_);
+  glVertex3f(p[0]-point_size_, p[1]+point_size_, p[2]+point_size_);
 }
 void GLWidget::AddNewStructure(vector<Vec3> &struct_coords) {
   GLuint s_new = glGenLists(1);

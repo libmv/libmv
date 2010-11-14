@@ -36,6 +36,7 @@ namespace libmv {
 typedef Matches::ImageID CameraID;
 typedef Matches::TrackID StructureID;
 
+// TODO(julien) clean this file (too many functions...)
 // Use cases:
 //
 // Reconstruction is a subset of the tracks.  For a single track, there is a 3D
