@@ -597,7 +597,7 @@ void MainWindow::computeBA() {
   progress.setLabelText("Reconstruction done.");
 }
 
-void MainWindow::DrawNewStructures(libmv::vector<StructureID> &struct_ids) {
+void MainWindow::DrawNewStructures(const libmv::vector<StructureID> &struct_ids) {
   PointStructure *ps = NULL;
   libmv::vector<Vec3> struct_coords;
   struct_coords.reserve(struct_ids.size());

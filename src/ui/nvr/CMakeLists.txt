@@ -14,6 +14,8 @@ TARGET_LINK_LIBRARIES(nview
                       ${QT_QTCORE_LIBRARY} 
                       ${QT_QTGUI_LIBRARY}
                       ${QT_QTOPENGL_LIBRARY}
+                      ${OPENGL_gl_LIBRARY}
+                      ${OPENGL_glu_LIBRARY}
                       correspondence
                       image
                       gflags

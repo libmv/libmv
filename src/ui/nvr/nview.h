@@ -64,7 +64,7 @@ public: //private:
     int filter;
 };
 
-class Node;
+struct Node;
 
 // TODO(julien) put this (Edge, node, graph, GraphView) in a widget (.h/.cc)
 /// a line linking two nodes
@@ -129,7 +129,7 @@ signals:
     void setFilter(int i);
     void clearFilter();
 private:
-    void DrawNewStructures(libmv::vector<StructureID> &struct_ids);
+    void DrawNewStructures(const libmv::vector<StructureID> &struct_ids);
     
     nRobustViewMatching nViewMatcher;
     QList<ImageView*> images;

@@ -18,6 +18,9 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
+#ifdef WIN32
+#define NOMINMAX
+#endif
 #include <QtOpenGL> 
 #include "glwidget.h"
 
@@ -41,7 +44,6 @@ void GLWidget::initializeGL()
   glShadeModel(GL_SMOOTH);
   glEnable(GL_LIGHTING);
   glEnable(GL_LIGHT0);
-  glEnable(GL_MULTISAMPLE);
   static GLfloat light_position[4] = { 0, 0, 50.0, 1.0 };
   glLightfv(GL_LIGHT0, GL_POSITION, light_position);
 }
