@@ -438,6 +438,6 @@ void reshape(const TMat &a, int rows, int cols, TDest *b) {
   }
 }
 
-}  // namespace mv
+}  // namespace libmv
 
 #endif  // LIBMV_NUMERIC_NUMERIC_H
