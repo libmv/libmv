@@ -42,14 +42,11 @@ showErrorStatistics(double const f0,
   using namespace V3D;
   int const K = measurements.size();
 
-  //LOG(INFO) << " Obs =: " ;
   double meanReprojectionError = 0.0;
   for (int k = 0; k < K; ++k) {
     int const i = correspondingView[k];
     int const j = correspondingPoint[k];
-    //LOG(INFO) << " c="<<i<<" p="<<j<<" " ;
     Vector2d p = cams[i].projectPoint(distortion, Xs[j]);
-    //LOG(INFO) << " "<<Square(norm_L2(f0 * (p - measurements[k])))<<"\n" ;
     meanReprojectionError += Square(norm_L2(f0 * (p - measurements[k])));
   }
   LOG(INFO) << "mean reprojection error (in pixels): " 

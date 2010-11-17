@@ -67,7 +67,7 @@ void NViewTriangulateAlgebraic(const Matrix<T, 2, Dynamic> &x,
   int nviews = x.cols();
   assert(nviews == Ps.size());
 
-  Matrix<T, Dynamic, Dynamic> design(2*nviews, 4);
+  Matrix<T, Dynamic, 4> design(2*nviews, 4);
   Mat23 mx;
   for (int i = 0; i < nviews; i++) {
     mx << 0, -1, x(1, i),

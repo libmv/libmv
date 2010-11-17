@@ -309,8 +309,12 @@ void SelectEfficientImageOrder(
   const Matches &matches, 
   std::list<vector<Matches::ImageID> >*connected_graph_list);
 
+// TODO(julien) Put the Exports functions into another file.
 // Exports the reconstruction in a PLY format file
 void ExportToPLY(Reconstruction &reconstruct, std::string out_file_name);
+// Exports the reconstruction in a Blender script format file
+void ExportToBlenderScript(Reconstruction &reconstruct, 
+                           std::string out_file_name);
 }  // namespace libmv
 
 #endif  // LIBMV_MULTIVIEW_RECONSTRUCTION_H_

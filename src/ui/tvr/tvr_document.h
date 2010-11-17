@@ -85,8 +85,9 @@ struct TvrDocument {
           // do a 180 degree X axis rotation. The math works out so that
           // the following conditional nicely implements that.
           if (j == 2 || j == 1)
-            fprintf(fid, "-");
-          fprintf(fid, "%g,", R[i](j,k)); // transposed!
+            fprintf(fid, "%g,", -R[i](j,k)); // transposed + opposite!
+          else
+            fprintf(fid, "%g,", R[i](j,k)); // transposed!
         }
         fprintf(fid, "0.0],");
       }

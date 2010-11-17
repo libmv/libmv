@@ -132,26 +132,32 @@ MainWindow::~MainWindow() {
 
 void MainWindow::openImages() {
     openImages(QFileDialog::getOpenFileNames(
-            this,"Select Images","",
-"Pictures (*.png *.jpg *.jpeg *.bmp *.ppm *.pgm *.xpm *.tif *.tiff*.tga);All Files"));
+                this, tr("Select Images"),"",
+                "Pictures (*.png *.jpg *.jpeg *.bmp \
+                *.ppm *.pgm *.xpm *.tif *.tiff *.tga);;All Files (*.*)"));
 }
 
 void MainWindow::SaveReconstructionFile() {
-  QString out_file = QFileDialog::getSaveFileName(this,
-                                                  "Export Reconstruction","",
-                                                  "PLY format (*.ply");
-  if(out_file.isEmpty()) return;
-  ExportToPLY(reconstruction_, out_file.toStdString());
+  QString selected_filter = "";
+  QString out_file = QFileDialog::getSaveFileName(
+                      this, tr("Export Reconstruction"),"",
+                      tr("Blender Script (*.py);;PLY format (*.ply)"),
+                      &selected_filter);
+  if (out_file.isEmpty()) return;
+  if (selected_filter == tr("PLY format (*.ply)"))
+    ExportToPLY(reconstruction_, out_file.toStdString());
+  else
+    ExportToBlenderScript(reconstruction_, out_file.toStdString());
 }
 void MainWindow::openImages( QStringList files ) {
-    if(files.isEmpty()) return;
+    if (files.isEmpty()) return;
     foreach(ImageView* w,images) {
         grid_layout_->removeWidget(w);
         delete w;
     }
     images.clear();
     int ratio = (int)ceil(sqrt((float)files.count()));
-    for(int i=0;i<files.count();i++ ) {
+    for (int i = 0; i < files.count(); i++) {
         ImageView* view = new ImageView(i,files[i]);
         connect(view,SIGNAL(enter(int)),SIGNAL(setFilter(int)));
         connect(view,SIGNAL(leave()),SIGNAL(clearFilter()));
@@ -280,6 +286,7 @@ void MainWindow::computeMatches() {
 void MainWindow::computeRelativeMatches() {
     QProgressDialog progress("Computing relative matches...","Abort", 0, 
                              images.count(), this);
+    warningNotFunctional();
     progress.setWindowModality(Qt::WindowModal);
     eDetector detector   = detector::FAST_DETECTOR;
     eDescriber describer = descriptor::DAISY_DESCRIBER;
@@ -432,6 +439,7 @@ void MainWindow::computeUncalibratedReconstruction() {
       
       progress.setLabelText("Incremental Intersection");
       LOG(INFO) << " -- Incremental Intersection --  " << std::endl;
+      // TODO(julien) this do nothing (no points)...fix it
       PointStructureTriangulation(matches_inliers_, 
                                   image_id,
                                   minimum_num_views, 
@@ -457,22 +465,23 @@ void MainWindow::computeCalibratedReconstruction() {
   if (images.count()<2)
     return;
   
-  double focal = 505;
-  double cu = images[0]->GetImageWidth()/2 - 0.5, cv = images[0]->GetImageHeight()/2 - 0.5;
+  double focal = 1639.47;
+  double cu = images[0]->GetImageWidth()/2 - 0.5, 
+         cv = images[0]->GetImageHeight()/2 - 0.5;
   bool ok;
     
-  //HACK(julien) create a better UI...
+  //TODO(julien) create a better UI...
   focal = QInputDialog::getDouble(this, 
-				  tr("Set the focal length (in pixels)"),
-                                  tr("Focal:"), focal, 0, 10000, 4, &ok);
+           tr("Set the focal length (in pixels)"),
+           tr("Focal:"), focal, 0, 10000, 4, &ok);
   if (!ok) return;
   cu = QInputDialog::getDouble(this, 
-			       tr("Set the principal point coordinate (x)"),
-                               tr("Principal point coordinate x:"), cu, 0, 10000, 4, &ok);
+        tr("Set the principal point coordinate (x)"),
+        tr("Principal point coordinate x:"), cu, 0, 10000, 4, &ok);
   if (!ok) return;
   cv = QInputDialog::getDouble(this, 
-			       tr("Set the principal point coordinate (y)"),
-                               tr("Principal point coordinate y:"), cv, 0, 10000, 4, &ok);
+        tr("Set the principal point coordinate (y)"),
+        tr("Principal point coordinate y:"), cv, 0, 10000, 4, &ok);
   if (!ok) return;
   
   Mat3 K;
@@ -509,7 +518,8 @@ void MainWindow::computeCalibratedReconstruction() {
     camera = dynamic_cast<PinholeCamera*>(
       reconstruction_.GetCamera(image_id));
     if (camera) {
-      image_size << images[image_id]->GetImageWidth(), images[image_id]->GetImageHeight();
+      image_size << images[image_id]->GetImageWidth(), 
+                    images[image_id]->GetImageHeight();
       camera->set_image_size(image_size); 
     }
     index_image_graph = 1;
@@ -517,7 +527,8 @@ void MainWindow::computeCalibratedReconstruction() {
     camera = dynamic_cast<PinholeCamera*>(
       reconstruction_.GetCamera(image_id));
     if (camera) {
-      image_size << images[image_id]->GetImageWidth(), images[image_id]->GetImageHeight();
+      image_size << images[image_id]->GetImageWidth(), 
+                    images[image_id]->GetImageHeight();
       camera->set_image_size(image_size); 
     }
     progressCallback(progress, 1);
@@ -538,9 +549,9 @@ void MainWindow::computeCalibratedReconstruction() {
     progress.setLabelText("Bundle adjustment");
     // Performs bundle adjustment
     BundleAdjust(matches_inliers_, &reconstruction_);
-    
+   
     // Estimation of the pose of other images by resection
-    minimum_num_views = 3;
+    minimum_num_views = 2;
     for (index_image_graph = 2; index_image_graph < graph_iter->size();
         ++index_image_graph) {
       image_id = (*graph_iter)[index_image_graph];
@@ -559,6 +570,7 @@ void MainWindow::computeCalibratedReconstruction() {
       
       progress.setLabelText("Incremental Intersection");
       LOG(INFO) << " -- Incremental Intersection --  " << std::endl;
+      // TODO(julien) this do nothing (no points)...fix it
       PointStructureTriangulation(matches_inliers_, 
                                   image_id,
                                   minimum_num_views, 
@@ -597,7 +609,8 @@ void MainWindow::computeBA() {
   progress.setLabelText("Reconstruction done.");
 }
 
-void MainWindow::DrawNewStructures(const libmv::vector<StructureID> &struct_ids) {
+void MainWindow::DrawNewStructures(const libmv::vector<StructureID> &struct_ids)
+{
   PointStructure *ps = NULL;
   libmv::vector<Vec3> struct_coords;
   struct_coords.reserve(struct_ids.size());
@@ -620,7 +633,7 @@ void Graph::evaluate( float dt, int current ) {
         foreach( Node* p, nodes ) {
             p->position[current] = p->position[0] + dt * p->velocity[current-1];
             p->velocity[current] = p->velocity[0] + dt *
-	    p->acceleration[current-1];
+      p->acceleration[current-1];
         }
     }
     foreach( Node* a, nodes ) {
@@ -649,9 +662,9 @@ void Graph::timerEvent(QTimerEvent* ) {
     //integrate
     foreach( Node* p, nodes ) {
         p->position[0] += 1/6.0 * 0.04 * (p->velocity[0] 
-	  + 2*p->velocity[1] + 2*p->velocity[2] + p->velocity[3]);
+    + 2*p->velocity[1] + 2*p->velocity[2] + p->velocity[3]);
         p->velocity[0] += 1/6.0 * 0.04 * ( p->acceleration[0] 
-	  + 2*p->acceleration[1] + 2*p->acceleration[2] + p->acceleration[3]);
+    + 2*p->acceleration[1] + 2*p->acceleration[2] + p->acceleration[3]);
         p->setPos(p->position[0].toPointF());
     }
     foreach( Edge* e, edges ) e->setLine(QLineF(e->a->pos(),e->b->pos()));

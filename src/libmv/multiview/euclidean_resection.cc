@@ -403,8 +403,13 @@ void ComputePointsCoordinatesInCameraFrame(const Mat4X &alphas,
   for (size_t c = 0; c < num_points; c++) {
     X_camera->col(c) << C2b * alphas.col(c);
   }
-  // Check the sign of the z coordinate of the first point
-  if ((*X_camera)(2,0) < 0) {
+  // Check the sign of the z coordinate of the points (should be positive)
+  uint num_z_neg = 0;
+  for (size_t i = 0; i < X_camera->cols(); ++i)
+    if ((*X_camera)(2,i) < 0)
+      num_z_neg++;
+  // If more than 50% of z are negative, we change the signs
+  if (num_z_neg > 0.5 * X_camera->cols()) {
     C2b = -C2b;
     *X_camera = -(*X_camera);
   }    
@@ -548,13 +553,19 @@ void EuclideanResectionEPnP(const Mat2X &x_camera, const Mat3X &X_world,
       betas(0) = std::sqrt(-b3(0));
       if (b3(2) < 0)
         betas(1) = std::sqrt(-b3(2));
+      else 
+        betas(1) = 0;
     } else {
       betas(0) = std::sqrt(b3(0));
       if (b3(2) > 0)
         betas(1) = std::sqrt(b3(2));
+      else 
+        betas(1) = 0;
     }
     if (b3(1) < 0)
       betas(0) = -betas(0);
+    betas(2) = 0;
+    betas(3) = 0;
     ComputePointsCoordinatesInCameraFrame(alphas, betas, u2, &X_camera);
     AbsoluteOrientation(X_world, X_camera, &Rs[1], &ts[1]);
     rmse(1) = RootMeanSquareError(x_camera, X_world, K, Rs[1], ts[1]);
@@ -577,14 +588,19 @@ void EuclideanResectionEPnP(const Mat2X &x_camera, const Mat3X &X_world,
       betas(0) = std::sqrt(-b5(0));
       if (b5(2) < 0)
         betas(1) = std::sqrt(-b5(2));
+      else
+        b5(2) = 0;
     } else {
       betas(0) = std::sqrt(b5(0));
       if (b5(2) > 0)
         betas(1) = std::sqrt(b5(2));
+      else
+        b5(2) = 0;
     }
     if (b5(1) < 0)
       betas(0) = -betas(0);
     betas(2) = b5(3) / betas(0);
+    betas(3) = 0;
     ComputePointsCoordinatesInCameraFrame(alphas, betas, u2, &X_camera);
     AbsoluteOrientation(X_world, X_camera, &Rs[2], &ts[2]);
     rmse(2) = RootMeanSquareError(x_camera, X_world, K, Rs[2], ts[2]);
