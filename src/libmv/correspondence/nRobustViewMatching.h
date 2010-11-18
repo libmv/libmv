@@ -102,16 +102,16 @@ class nRobustViewMatching :public nViewMatchingInterface  {
                                int dataBindex,
                                Matches * matchesOut);
 
-  // Return pairwise correspondence ( geometrically filtered )
+  /// Return pairwise correspondence ( geometrically filtered )
   const map< pair<string,string>, Matches> & getSharedData() const
     { return m_sharedData;  }
-  // Return extracted feature over the given image.
+  /// Return extracted feature over the given image.
   const map<string,FeatureSet> & getViewData() const
     { return m_ViewData;  }
   /// Return detected geometrical consistent matches
-  Matches & getMatches() 
+  const Matches & getMatches()  const
     { return m_tracks;  }
-    
+
 private :
   /// Input data names
   libmv::vector<string> m_vec_InputNames;

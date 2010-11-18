@@ -259,7 +259,7 @@ bool nRobustViewMatching::computeConstrainMatches(const Matches & matchIn,
 
   //-- Assert that the output of the model is consistent :
   // As much as the minimal points are inliers.
-  if (inliers.size() > 4 * 2) {
+  if (inliers.size() > 7 * 2) { //2* [nbPoints required by the estimator]
     // If tracks table is empty initialize it
     if (m_featureToTrackTable.size() == 0)  {
       // Build new correspondence graph containing only inliers.

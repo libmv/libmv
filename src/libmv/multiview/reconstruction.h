@@ -169,14 +169,21 @@ class Reconstruction {
   size_t GetNumberCameras() const    { return cameras_.size(); }
   size_t GetNumberStructures() const { return structures_.size(); }
 
-  std::map<CameraID, Camera *> &cameras()  { return cameras_; }
-  std::map<StructureID, Structure *> &structures() { return structures_; }
-  Matches &matches() { return matches_; }
+  std::map<CameraID, Camera *>       & cameras()  { return cameras_; }
+  std::map<StructureID, Structure *> & structures() { return structures_; }
+  Matches                            & matches() { return matches_; }
+
+  const std::map<CameraID, Camera *>        & cameras() const {
+    return cameras_; }
+  const std::map<StructureID, Structure *>  & structures() const  {
+    return structures_; }
+  const Matches                             & matches() const {
+    return matches_; }
   
  private:
   std::map<CameraID, Camera *>        cameras_;
   std::map<StructureID, Structure *>  structures_;
-  Matches                matches_;
+  Matches                             matches_;
 };
 
 // Estimates the projection matrices of the two cameras using the fundamental
@@ -311,9 +318,9 @@ void SelectEfficientImageOrder(
 
 // TODO(julien) Put the Exports functions into another file.
 // Exports the reconstruction in a PLY format file
-void ExportToPLY(Reconstruction &reconstruct, std::string out_file_name);
+void ExportToPLY(const Reconstruction &reconstruct, std::string out_file_name);
 // Exports the reconstruction in a Blender script format file
-void ExportToBlenderScript(Reconstruction &reconstruct, 
+void ExportToBlenderScript(const Reconstruction &reconstruct, 
                            std::string out_file_name);
 }  // namespace libmv
 

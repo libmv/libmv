@@ -764,7 +764,7 @@ void SelectEfficientImageOrder(
   }
 }
 
-void ExportToPLY(Reconstruction &reconstruct, std::string out_file_name) {
+void ExportToPLY(const Reconstruction &reconstruct, std::string out_file_name) {
   std::ofstream outfile;
   outfile.open(out_file_name.c_str(), std::ios_base::out);
   if (outfile.is_open()) {
@@ -789,7 +789,7 @@ void ExportToPLY(Reconstruction &reconstruct, std::string out_file_name) {
     outfile << "property uchar green" << std::endl;
     outfile << "property uchar blue" << std::endl;
     outfile << "end_header" << std::endl;
-    std::map<StructureID, Structure *>::iterator track_iter =
+    std::map<StructureID, Structure *>::const_iterator track_iter =
       reconstruct.structures().begin();
     for (; track_iter != reconstruct.structures().end(); ++track_iter) {
       PointStructure * point_s = 
@@ -801,7 +801,7 @@ void ExportToPLY(Reconstruction &reconstruct, std::string out_file_name) {
         outfile << "255 255 255" << std::endl;
       }
     }
-    std::map<CameraID, Camera *>::iterator camera_iter =  
+    std::map<CameraID, Camera *>::const_iterator camera_iter =  
       reconstruct.cameras().begin();
     for (; camera_iter != reconstruct.cameras().end(); ++camera_iter) {
       PinholeCamera * camera_pinhole =  
@@ -817,7 +817,7 @@ void ExportToPLY(Reconstruction &reconstruct, std::string out_file_name) {
   }
 }
 
-void ExportToBlenderScript(Reconstruction &reconstruct, 
+void ExportToBlenderScript(const Reconstruction &reconstruct, 
                            std::string out_file_name) {
   // Avoid to have comas instead of dots (foreign lang.) 
   setlocale(LC_ALL, "C");
@@ -839,7 +839,7 @@ void ExportToBlenderScript(Reconstruction &reconstruct,
   PinholeCamera *pcamera = NULL;
   uint i = 0;
   Mat3 K, R; Vec3 t;
-  std::map<CameraID, Camera *>::iterator camera_iter =  
+  std::map<CameraID, Camera *>::const_iterator camera_iter =  
     reconstruct.cameras().begin();
   for (; camera_iter != reconstruct.cameras().end(); ++camera_iter) {
     pcamera = dynamic_cast<PinholeCamera *>(camera_iter->second);
@@ -902,7 +902,7 @@ void ExportToBlenderScript(Reconstruction &reconstruct,
   fprintf(fid, "ob.setLocation(0.0,0.0,0.0)\n");
   fprintf(fid, "mesh=ob.getData()\n");
   fprintf(fid, "cur.link(ob)\n");
-  std::map<StructureID, Structure *>::iterator track_iter =
+  std::map<StructureID, Structure *>::const_iterator track_iter =
     reconstruct.structures().begin();
   for (; track_iter != reconstruct.structures().end(); ++track_iter) {
     PointStructure * point_s = 

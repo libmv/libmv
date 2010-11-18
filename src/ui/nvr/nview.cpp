@@ -355,7 +355,7 @@ void MainWindow::computeUncalibratedReconstruction() {
   QProgressDialog progress("Computing uncalibrated reconstruction...","Abort",0,
                            images.count(), this);
   progress.setWindowModality(Qt::WindowModal);
-  Matches &matches = nViewMatcher.getMatches();
+  const Matches &matches = nViewMatcher.getMatches();
   Vec2u image_size;
   PinholeCamera * camera = NULL;
   
@@ -458,7 +458,7 @@ void MainWindow::computeCalibratedReconstruction() {
   QProgressDialog progress("Computing calibrated reconstruction...","Abort", 0,
                            images.count(), this);
   progress.setWindowModality(Qt::WindowModal);
-  Matches &matches = nViewMatcher.getMatches();
+  const Matches &matches = nViewMatcher.getMatches();
   Vec2u image_size;
   PinholeCamera * camera = NULL;
   
