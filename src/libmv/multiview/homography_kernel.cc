@@ -32,7 +32,7 @@ void FourPointSolver::Solve(const Mat &x, const Mat &y, vector<Mat3> *Hs) {
   assert(x.cols() == y.cols());
 
   int n = x.cols();
-  Mat L = Mat::Zero(n * 2, 9);
+  MatX9 L = Mat::Zero(n * 2, 9);
   for (int i = 0; i < n; ++i) {
     int j = 2 * i;
     L(j, 0) = x(0, i);

@@ -27,7 +27,7 @@ namespace libmv {
 // sin  cos ty
 // 0    0   1
 
-// It give the following system A x = B :
+// It gives the following system A x = B :
 // | Xa -Ya 0 1 | | sin |   | Xb |
 // | Xa  Ya 1 0 | | cos |   | Yb |
 //                | tx  | =
@@ -60,7 +60,7 @@ bool Affine2D_FromCorrespondencesLinear(const Mat &x1, const Mat &x2,
     b(j+1,0) = x2(1,i);
   }
   // Solve Ax=B
-  Vec x;
+  Vec4 x;
   if (A.lu().solve(b, &x))  {
     // Configure output matrix :
     (*M)<<x(1), x(0), x(2), // cos sin tx
@@ -73,4 +73,4 @@ bool Affine2D_FromCorrespondencesLinear(const Mat &x1, const Mat &x2,
   }
 }
 
-}
+} // namespace libmv
