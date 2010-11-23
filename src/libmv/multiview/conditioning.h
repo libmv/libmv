@@ -25,8 +25,10 @@
 
 namespace libmv {
 
-// Point conditioning :
+// Point conditioning (non isotropic)
 void PreconditionerFromPoints(const Mat &points, Mat3 *T);
+// Point conditioning (isotropic)
+void IsotropicPreconditionerFromPoints(const Mat &points, Mat3 *T);
 
 void ApplyTransformationToPoints(const Mat &points,
                                  const Mat3 &T,
@@ -35,6 +37,10 @@ void ApplyTransformationToPoints(const Mat &points,
 void NormalizePoints(const Mat &points,
                      Mat *normalized_points,
                      Mat3 *T);
+
+void NormalizeIsotropicPoints(const Mat &points,
+                              Mat *normalized_points,
+                              Mat3 *T);
 
 /// Use inverse for unnormalize
 struct UnnormalizerI {

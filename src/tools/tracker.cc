@@ -362,7 +362,6 @@ int main (int argc, char *argv[]) {
   }
 
   // Track the sequence of images
-
   if (is_patch_tracking_mode) {
     std::string image_path = FLAGS_patch;
     LOG(INFO) << "Tracking patch '"<< image_path << "'" << std::endl;
@@ -450,7 +449,7 @@ int main (int argc, char *argv[]) {
     points_tracker = NULL;
   }
   // Delete the features graph
-  all_features_graph.Clear();
+  all_features_graph.DeleteAndClear();
 
   //TODO(julien) Clean the variables detector, describer, matcher
   return 0;

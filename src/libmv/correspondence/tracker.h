@@ -51,8 +51,15 @@ struct FeaturesGraph {
       features_sets_.push_back(*iter);
     }
   }
-  
+  // Erases all the elements.  
+  // Note that this function does not desallocate FeatureSets
   void Clear() {
+    matches_.Clear();
+    features_sets_.clear();
+  }
+  
+  void DeleteAndClear() {
+    matches_.Clear();
     std::list<FeatureSet *>::iterator iter = features_sets_.begin();
     for (; iter != features_sets_.end(); ++iter) {
       delete *iter;

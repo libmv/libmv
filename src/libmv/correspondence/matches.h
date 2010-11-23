@@ -94,6 +94,12 @@ class Matches {
   void Remove(ImageID image, TrackID track) {
     graph_.Remove(image, track);
   }
+  
+  // Erases all the elements.  
+  // Note that this function does not desallocate features
+  void Clear() {
+    graph_.Clear();
+  }
   // Insert all elements of matches (images, tracks, feature) as new data
   void Insert(const Matches &matches) {
     size_t max_images = GetMaxImageID();

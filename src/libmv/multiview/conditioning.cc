@@ -19,10 +19,11 @@
 // IN THE SOFTWARE.
 
 #include "libmv/multiview/conditioning.h"
+#include "libmv/multiview/projection.h"
 
 namespace libmv {
-
-// HZ 4.4.4 pag.109
+ 
+// HZ 4.4.4 pag.109: Point conditioning (non isotropic)
 void PreconditionerFromPoints(const Mat &points, Mat3 *T) {
   Vec mean, variance;
   MeanAndVarianceAlongRows(points, &mean, &variance);
@@ -41,26 +42,48 @@ void PreconditionerFromPoints(const Mat &points, Mat3 *T) {
         0,       yfactor, -yfactor * mean(1),
         0,       0,        1;
 }
+// HZ 4.4.4 pag.107: Point conditioning (isotropic)
+void IsotropicPreconditionerFromPoints(const Mat &points, Mat3 *T) {
+  Vec mean, variance;
+  MeanAndVarianceAlongRows(points, &mean, &variance);
 
-// TODO(pau) this can be done by matrix multiplication.
+  double var_norm = variance.norm();
+  double factor = sqrt(2.0 / var_norm);
+
+  // If variance is equal to 0.0 set scaling factor to identity.
+  // -> Else it will provide nan value (because division by 0).
+  if (var_norm < 1e-8) {
+    factor = 1.0;
+    mean.setOnes();
+  }
+
+  *T << factor, 0,       -factor * mean(0),
+        0,       factor, -factor * mean(1),
+        0,       0,        1;
+}
+
 void ApplyTransformationToPoints(const Mat &points,
                                  const Mat3 &T,
                                  Mat *transformed_points) {
   int n = points.cols();
   transformed_points->resize(2,n);
-  for (int i = 0; i < n; ++i) {
-    Vec3 in, out;
-    in << points(0, i), points(1, i), 1;
-    out = T * in;
-    (*transformed_points)(0, i) = out(0);
-    (*transformed_points)(1, i) = out(1);
-  }
+  Mat3X p(3, n);
+  EuclideanToHomogeneous(points, &p);
+  p = T * p;
+  HomogeneousToEuclidean(p, transformed_points);
 }
 
 void NormalizePoints(const Mat &points,
                      Mat *normalized_points,
                      Mat3 *T) {
   PreconditionerFromPoints(points, T);
+  ApplyTransformationToPoints(points, *T, normalized_points);
+}
+
+void NormalizeIsotropicPoints(const Mat &points,
+                              Mat *normalized_points,
+                              Mat3 *T) {
+  IsotropicPreconditionerFromPoints(points, T);
   ApplyTransformationToPoints(points, *T, normalized_points);
 }
 

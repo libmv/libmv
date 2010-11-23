@@ -68,6 +68,12 @@ class BipartiteGraph {
     return n;
   }
   
+  // Erases all the elements.  
+  // Note that this function does not desallocate pointers
+  void Clear() { 
+    left_to_right_.clear();
+    right_to_left_.clear();
+  }
   class Range {
    friend class BipartiteGraph<T, EdgeT>;
    public:

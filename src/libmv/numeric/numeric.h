@@ -438,6 +438,14 @@ void reshape(const TMat &a, int rows, int cols, TDest *b) {
   }
 }
 
+inline bool isnan(double i) {
+#ifdef WIN32
+  return _isnan(i);
+#else
+  return std::isnan(i);
+#endif
+} 
+
 }  // namespace libmv
 
 #endif  // LIBMV_NUMERIC_NUMERIC_H
