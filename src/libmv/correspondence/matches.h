@@ -99,6 +99,8 @@ class Matches {
   // Note that this function does not desallocate features
   void Clear() {
     graph_.Clear();
+    images_.clear();
+    tracks_.clear();
   }
   // Insert all elements of matches (images, tracks, feature) as new data
   void Insert(const Matches &matches) {
@@ -136,41 +138,28 @@ class Matches {
   }
   // Merge common elements add new data (image, track, feature).
   void Merge(const Matches &matches) {
-    size_t max_images = GetMaxImageID();
-    size_t max_tracks = GetMaxTrackID();
-    std::map<ImageID, ImageID> new_image_ids;
     std::map<TrackID, TrackID> new_track_ids;
     std::set<ImageID>::const_iterator iter_image;
     std::set<TrackID>::const_iterator iter_track;
-    
-    //Find not common elements and add them into new_matches
-    ImageID image_id;
-    TrackID track_id;
+    //Find non common elements and add them into new_matches
     std::set<ImageID>::const_iterator found_image;
     std::set<TrackID>::const_iterator found_track;
     iter_image = matches.images_.begin();
     for (; iter_image != matches.images_.end(); ++iter_image) {
       found_image = images_.find(*iter_image);
       if (found_image == images_.end()) {
-        image_id = ++max_images;
-        new_image_ids[*iter_image] = image_id;
-        images_.insert(image_id);
-      } else {
-        image_id = *iter_image;
+        images_.insert(*iter_image);
       }
       iter_track = matches.tracks_.begin();
       for (; iter_track != matches.tracks_.end(); ++iter_track) {
         found_track = tracks_.find(*iter_track);
         if (found_track == tracks_.end() 
           && new_track_ids.find(*iter_track) == new_track_ids.end()) {
-          track_id = ++max_tracks;
-          new_track_ids[*iter_track] = track_id;
-          tracks_.insert(track_id);
-        } else {
-          track_id = *iter_track; 
-        }        
+          new_track_ids[*iter_track] = *iter_track;
+          tracks_.insert(*iter_track);
+        }      
         const Feature * feature = matches.Get(*iter_image, *iter_track);
-        graph_.Insert(image_id, track_id, feature);
+        graph_.Insert(*iter_image, *iter_track, feature);
       }
     }
   }

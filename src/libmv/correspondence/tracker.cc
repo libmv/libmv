@@ -144,7 +144,7 @@ bool Tracker::Track(const Image &image,
   if (known_features_graph.matches_.NumImages() == 0)
     *image_id = 0;
   else
-    *image_id = known_features_graph.matches_.GetMaxImageID()+1;
+    *image_id = known_features_graph.matches_.GetMaxImageID() + 1;
     
   //TODO (jmichot) Use the matcher_ to match and not the generic function
   // FindCorrespondences(*feature_set1, *feature_set2, correspondences);

@@ -65,6 +65,9 @@ DEFINE_bool  (robust_tracker, false,
 DEFINE_double(robust_tracker_threshold, 1.0,
               "Epipolar filtering threshold (in pixels)");
 
+DEFINE_bool  (track_all_known_features, false,
+              "track all known features in all images");
+
 DEFINE_bool  (pose_estimation, false,
               "perform a pose estimation");
 DEFINE_double(focal, 50,
@@ -170,23 +173,26 @@ void BlendImages(const ByteImage &imageArrayBytesA,
 }
 
 void DisplayMatches(Matches &matches) {
+  std::set<Matches::ImageID>::const_iterator iter_i;
+  std::set<Matches::TrackID>::const_iterator iter_t;
   std::cout << "Matches : \t\t"<<std::endl << "\t";
-  for (size_t j = 0; j < matches.NumImages(); j++) {
-    std::cout << j << " ";
+  iter_i = matches.get_images().begin();
+  for (; iter_i != matches.get_images().end();++iter_i) {
+    std::cout << *iter_i << " ";
   }
   std::cout << std::endl;
-
-  for (size_t i = 0; i < matches.NumTracks(); i++) {
-    std::cout << i <<"\t";
-
-    for (size_t j = 0; j < matches.NumImages(); j++) {
-      const Feature * f = matches.Get(j,i);
+  iter_t = matches.get_tracks().begin();
+  for (; iter_t != matches.get_tracks().end();++iter_t) {
+    std::cout << *iter_t <<"\t";
+    iter_i = matches.get_images().begin();
+    for (; iter_i != matches.get_images().end();++iter_i) {
+      const Feature * f = matches.Get(*iter_i, *iter_t);
       if (f)
         std::cout << "X ";
       else
         std::cout << "  ";
     }
-    std::cout <<std::endl;
+    std::cout << std::endl;
   }
 }
 
@@ -294,7 +300,11 @@ void ProceedReconstruction(Matches &matches,
 }
 
 int main (int argc, char *argv[]) {
-  google::SetUsageMessage("Track a sequence.");
+  std::string usage ="Track salient 2D points in a sequence of images.\n";
+  usage += "It uses an incremental approach (an image is matched only with \
+  its 2 neighbors.";
+  //usage += argv[0] + "<detector>";
+  google::SetUsageMessage(usage);
   google::ParseCommandLineFlags(&argc, &argv, true);
 
   std::list<std::string> image_list;
@@ -351,6 +361,7 @@ int main (int argc, char *argv[]) {
   matcher = new correspondence::ArrayMatcher_Kdtree<float>();
 
   libmv::tracker::FeaturesGraph all_features_graph;
+  libmv::tracker::FeaturesGraph prev_features_graph;
   tracker::Tracker *points_tracker = NULL;
   if (!FLAGS_robust_tracker) {
     points_tracker = new tracker::Tracker(pDetector, pDescriber, matcher);
@@ -360,7 +371,7 @@ int main (int argc, char *argv[]) {
     r_tracker->set_rms_threshold_inlier(FLAGS_robust_tracker_threshold);
     points_tracker = r_tracker;
   }
-
+  
   // Track the sequence of images
   if (is_patch_tracking_mode) {
     std::string image_path = FLAGS_patch;
@@ -376,14 +387,14 @@ int main (int argc, char *argv[]) {
     libmv::tracker::FeaturesGraph new_features_graph;
     libmv::Matches::ImageID new_image_id = 0;
     points_tracker->Track(image,
-                          all_features_graph,
+                          prev_features_graph,
                           &new_features_graph,
                           &new_image_id,
                           true);
+    prev_features_graph.matches_.Merge(new_features_graph.matches_);
+    all_features_graph.Merge(new_features_graph);
     LOG(INFO) << "#Patch Tracks "<< new_features_graph.matches_.NumTracks()
       << std::endl;
-
-    all_features_graph.Merge(new_features_graph);
   }
   // Track the sequence of images
   size_t image_index = 0;
@@ -403,16 +414,31 @@ int main (int argc, char *argv[]) {
 
     libmv::tracker::FeaturesGraph new_features_graph;
     libmv::Matches::ImageID new_image_id = 0;
-    points_tracker->Track(image,
-                          all_features_graph,
-                          &new_features_graph,
-                          &new_image_id,
-                          is_keep_new_detected_features);
+    if (FLAGS_track_all_known_features) {
+      LOG(INFO) << "#Tracks Searched "<<
+        all_features_graph.matches_.NumTracks() << std::endl;
+      points_tracker->Track(image,
+                            all_features_graph,
+                            &new_features_graph,
+                            &new_image_id,
+                            is_keep_new_detected_features);
+    } else {
+      LOG(INFO) << "#Tracks Searched "<<
+        prev_features_graph.matches_.NumTracks() << std::endl;
+      points_tracker->Track(image,
+                            prev_features_graph,
+                            &new_features_graph,
+                            &new_image_id,
+                            is_keep_new_detected_features);
+      if (!is_patch_tracking_mode) {
+        prev_features_graph.Clear();
+        prev_features_graph.matches_.Merge(new_features_graph.matches_);
+      }
+    }
+    all_features_graph.Merge(new_features_graph);
+    LOG(INFO) << " New Image ID "<< new_image_id << std::endl;
     LOG(INFO) << "#New Tracks "<< new_features_graph.matches_.NumTracks()
       << std::endl;
-
-    if (!is_patch_tracking_mode)
-      all_features_graph.Merge(new_features_graph);
 
     if (FLAGS_save_features || FLAGS_save_matches) {
       Matches::Features<PointFeature> features_set =
@@ -437,6 +463,8 @@ int main (int argc, char *argv[]) {
     image_index++;
   }
 
+  // TODO(julien) Export matches
+  
   DisplayMatches(all_features_graph.matches_);
   // Estimates the camera trajectory and 3D structure of the scene
   if (FLAGS_pose_estimation)  {
@@ -451,6 +479,6 @@ int main (int argc, char *argv[]) {
   // Delete the features graph
   all_features_graph.DeleteAndClear();
 
-  //TODO(julien) Clean the variables detector, describer, matcher
+  // TODO(julien) Clean the variables detector, describer, matcher
   return 0;
 }
