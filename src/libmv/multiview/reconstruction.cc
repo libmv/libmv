@@ -720,8 +720,13 @@ void SelectEfficientImageOrder(
     std::set<Matches::ImageID>::const_iterator image_iter1 =
       matches.get_images().begin();
     std::set<Matches::ImageID>::const_iterator image_iter2;
+    image_pair_max_1 = ImagesTypePairs(*matches.get_images().begin(),
+                                       *(++matches.get_images().begin()));
     vector<Mat> xs2;
-    for (;image_iter1 != matches.get_images().end(); ++image_iter1) {
+    // HACK(julien) we force to keep the first image 
+    // TODO(julien) implements a better selection
+    //for (;image_iter1 != matches.get_images().end(); ++image_iter1) {
+    {
       image_iter2 = image_iter1;
       image_iter2++;
       for (;image_iter2 != matches.get_images().end(); ++image_iter2) {
