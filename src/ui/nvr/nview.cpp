@@ -9,6 +9,7 @@
 #include "ui/nvr/nview.h"
 #include "libmv/multiview/reconstruction_export_blender.h"
 #include "libmv/multiview/reconstruction_export_ply.h"
+#include "libmv/multiview/reconstruction_mapping.h"
 
 int main(int argc, char *argv[]) {
     Init("", &argc, &argv);
