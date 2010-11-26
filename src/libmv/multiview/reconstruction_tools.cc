@@ -37,17 +37,20 @@ void SelectExistingPointStructures(const Matches &matches,
   //TODO(julien) clean this
   structures_ids->reserve(kNumberStructuresToReserve);
   vector<Vec2> xs;
-  xs.reserve(kNumberStructuresToReserve);
+  if (x_image)
+    xs.reserve(kNumberStructuresToReserve);
   Matches::Features<PointFeature> fp =
     matches.InImage<PointFeature>(image_id);
   while (fp) {
     if (reconstruction.TrackHasStructure(fp.track())) {
       structures_ids->push_back(fp.track());
-      xs.push_back(fp.feature()->coords.cast<double>());
+      if (x_image)
+        xs.push_back(fp.feature()->coords.cast<double>());
     }
     fp.operator++();
   }
-  VectorToMatrix<Vec2, Mat2X>(xs, x_image);
+  if (x_image)
+    VectorToMatrix<Vec2, Mat2X>(xs, x_image);
 }
 
 // Selects only the NOT already reconstructed tracks observed in the image
@@ -62,17 +65,20 @@ void SelectUnexistingPointStructures(const Matches &matches,
   //TODO(julien) clean this
   structures_ids->reserve(kNumberStructuresToReserve);
   vector<Vec2> xs;
-  xs.reserve(kNumberStructuresToReserve);
+  if (x_image)
+    xs.reserve(kNumberStructuresToReserve);
   Matches::Features<PointFeature> fp =
     matches.InImage<PointFeature>(image_id);
   while (fp) {
     if (!reconstruction.TrackHasStructure(fp.track())) {
       structures_ids->push_back(fp.track());
-      xs.push_back(fp.feature()->coords.cast<double>());
+      if (x_image)
+        xs.push_back(fp.feature()->coords.cast<double>());
     }
     fp.operator++();
   }
-  VectorToMatrix<Vec2, Mat2X>(xs, x_image);
+  if (x_image)
+    VectorToMatrix<Vec2, Mat2X>(xs, x_image);
 }
 
 // Recover the position of the selected point structures

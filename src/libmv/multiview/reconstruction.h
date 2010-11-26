@@ -35,8 +35,6 @@ namespace libmv {
 // TODO(julien) shoud a camera have the same ID then an image? 
 typedef Matches::ImageID CameraID;
 typedef Matches::TrackID StructureID;
-
-// TODO(julien) clean this file (too many functions...)
 // Use cases:
 //
 // Reconstruction is a subset of the tracks.  For a single track, there is a 3D
@@ -120,6 +118,22 @@ class Reconstruction {
       it->second = structure; 
     } else {
       structures_[id] = structure;
+    }
+  }
+  
+  void RemoveCamera(CameraID id) {
+    std::map<CameraID, Camera *>::iterator it = cameras_.find(id);
+    if (it != cameras_.end()) {
+      delete it->second; 
+      cameras_.erase(it);
+    }
+  }
+  
+  void RemoveTrack(StructureID id) {
+    std::map<StructureID, Structure *>::iterator it = structures_.find(id);
+    if (it != structures_.end()) {
+      delete it->second; 
+      structures_.erase(it);
     }
   }
   

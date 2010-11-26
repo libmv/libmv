@@ -45,7 +45,7 @@ void SelectExistingPointStructures(const Matches &matches,
                                    CameraID image_id,
                                    const Reconstruction &reconstruction,
                                    vector<StructureID> *structures_ids,
-                                   Mat2X *x_image);
+                                   Mat2X *x_image = NULL);
 
 // Selects only the NOT already reconstructed tracks observed in the image
 // image_id and returns a vector of StructureID and their feature coordinates
@@ -53,7 +53,7 @@ void SelectUnexistingPointStructures(const Matches &matches,
                                     CameraID image_id,
                                     const Reconstruction &reconstruction,
                                     vector<StructureID> *structures_ids,
-                                    Mat2X *x_image);
+                                    Mat2X *x_image = NULL);
 
 // Recover the position of the selected point structures
 void MatrixOfPointStructureCoordinates(
