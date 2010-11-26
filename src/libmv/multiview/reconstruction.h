@@ -272,15 +272,6 @@ bool CalibratedCameraResection(const Matches &matches,
 bool UpgradeToMetric(const Matches &matches, 
                      Reconstruction *reconstruction);
 
-// This method selects an efficient order of images, with the first two are
-// selected because they have a good baseline.
-// The criterion is:  the homography error x number of common matches
-// The oupout connected_graph_list contains a list of connected graphs
-// (vectors), each vector contains the ImageID ordered by the criterion.
-void SelectEfficientImageOrder(
-  const Matches &matches, 
-  std::list<vector<Matches::ImageID> >*connected_graph_list);
-
 }  // namespace libmv
 
 #endif  // LIBMV_MULTIVIEW_RECONSTRUCTION_H_

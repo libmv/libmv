@@ -9,6 +9,7 @@
 #include "ui/nvr/nview.h"
 #include "libmv/multiview/reconstruction_export_blender.h"
 #include "libmv/multiview/reconstruction_export_ply.h"
+#include "libmv/multiview/reconstruction_image_order_selection.h"
 #include "libmv/multiview/reconstruction_mapping.h"
 #include "libmv/multiview/reconstruction_optimization.h"
 
