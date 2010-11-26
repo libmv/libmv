@@ -23,6 +23,7 @@
 #include "libmv/multiview/projection.h"
 #include "libmv/multiview/reconstruction.h"
 #include "libmv/multiview/reconstruction_mapping.h"
+#include "libmv/multiview/reconstruction_optimization.h"
 #include "libmv/multiview/test_data_sets.h"
 #include "libmv/numeric/numeric.h"
 #include "libmv/multiview/random_sample.h"
@@ -156,7 +157,7 @@ TEST(CalibratedReconstruction, TestSynthetic6FullViews) {
     // TODO(julien) Check the 3D structure coordinates and inliers
   }
   // Performs bundle adjustment
-  rms = BundleAdjust(matches_inliers, &reconstruction);
+  rms = MetricBundleAdjust(matches_inliers, &reconstruction);
   std::cout << " Final RMSE = " << rms << std::endl;
   // TODO(julien) Check the results of BA
   // clears the cameras, structures and features
@@ -241,14 +242,14 @@ TEST(UncalibratedReconstruction, TestSynthetic6FullViews) {
   
   std::cout << "Bundle adjustment" << std::endl;
   // Performs bundle adjustment
-  rms = BundleAdjust(matches_inliers, &reconstruction);
+  rms = MetricBundleAdjust(matches_inliers, &reconstruction);
   std::cout << " Final RMSE = " << rms << std::endl;
   // TODO(julien) Check the results of BA
   std::cout << "Metric rectification" << std::endl;
   // Metric rectification
   UpgradeToMetric(matches_inliers, &reconstruction);
   // TODO(julien) register the reconstruction so that the first camera
-  // correspond to the real pose
+  // corresponds to the real pose
   // TODO(julien) Check the metric reconstruction
   
   // clears the cameras, structures and features

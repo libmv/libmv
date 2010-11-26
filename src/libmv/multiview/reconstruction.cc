@@ -21,7 +21,6 @@
 #include "libmv/base/vector_utils.h"
 #include "libmv/correspondence/matches.h"
 #include "libmv/multiview/autocalibration.h"
-#include "libmv/multiview/bundle.h"
 #include "libmv/multiview/camera.h"
 #include "libmv/multiview/five_point.h"
 #include "libmv/multiview/fundamental.h"
@@ -31,6 +30,7 @@
 #include "libmv/multiview/robust_homography.h"
 #include "libmv/multiview/reconstruction.h"
 #include "libmv/multiview/reconstruction_mapping.h"
+#include "libmv/multiview/reconstruction_optimization.h"
 #include "libmv/multiview/reconstruction_tools.h"
 #include "libmv/multiview/structure.h"
 
@@ -207,40 +207,6 @@ bool ReconstructFromTwoCalibratedViews(const Matches &matches,
   return true;
 }
 
-// TODO(julien) put this somewhere else...
-double EstimatesRootMeanSquareError(const Matches &matches, 
-                                    Reconstruction *reconstruction) {
-  PinholeCamera * pcamera = NULL;
-  vector<StructureID> structures_ids;
-  Mat2X x_image;
-  Mat4X X_world;
-  double sum_rms2 = 0;
-  size_t num_features = 0;
-  std::map<StructureID, Structure *>::iterator stucture_iter;
-  std::map<CameraID, Camera *>::iterator camera_iter = 
-      reconstruction->cameras().begin();
-  for (; camera_iter != reconstruction->cameras().end(); ++camera_iter) {
-    pcamera = dynamic_cast<PinholeCamera *>(camera_iter->second);
-    if (pcamera) {
-      SelectExistingPointStructures(matches, camera_iter->first,
-                                    *reconstruction, 
-                                    &structures_ids,
-                                    &x_image);
-      MatrixOfPointStructureCoordinates(structures_ids, 
-                                        *reconstruction,
-                                        &X_world);
-      Mat2X dx =Project(pcamera->projection_matrix(), X_world) - x_image;
-      VLOG(1)   << "|Err Cam "<<camera_iter->first<<"| = " 
-                << sqrt(Square(dx.norm()) / x_image.cols()) << std::endl;
-      // TODO(julien) use normSquare
-      sum_rms2 += Square(dx.norm());
-      num_features += x_image.cols();
-    }
-  }
-  // TODO(julien) devide by total number of features
-  return sqrt(sum_rms2 / num_features);
-}
-
 bool UncalibratedCameraResection(const Matches &matches, 
                                  CameraID image_id, 
                                  Matches *matches_inliers,
@@ -340,7 +306,7 @@ bool CalibratedCameraResection(const Matches &matches,
 
 bool UpgradeToMetric(const Matches &matches, 
                      Reconstruction *reconstruction) { 
-  double rms = EstimatesRootMeanSquareError(matches, reconstruction);
+  double rms = EstimateRootMeanSquareError(matches, reconstruction);
   VLOG(1)   << "Upgrade to Metric - Initial RMS:" << rms << std::endl;
   AutoCalibrationLinear auto_calibration_linear;
   uint image_width = 0;
@@ -396,96 +362,8 @@ bool UpgradeToMetric(const Matches &matches,
       pstructure->set_coords(H_inverse * pstructure->coords());
     }
   }
-  // TODO(julien) Performs metric bundle adjustment
-  BundleAdjust(matches, reconstruction);
+  MetricBundleAdjust(matches, reconstruction);
   return true;
-}
-
-double BundleAdjust(const Matches &matches, 
-                    Reconstruction *reconstruction) {
-  double rms = 0, rms0 = EstimatesRootMeanSquareError(matches, reconstruction);
-  VLOG(1)   << "Initial RMS = " << rms0 << std::endl;
-  size_t ncamera = reconstruction->GetNumberCameras();
-  size_t nstructure = reconstruction->GetNumberStructures();
-  vector<Mat2X> x(ncamera);
-  vector<Vecu>   x_ids(ncamera);
-  vector<Mat3>  Ks(ncamera);
-  vector<Mat3>  Rs(ncamera);
-  vector<Vec3>  ts(ncamera);
-  Mat3X         X(3, nstructure);
-  vector<StructureID> structures_ids;
-  std::map<StructureID, uint> map_structures_ids;
-  
-  size_t str_id = 0;
-  PointStructure *pstructure = NULL;
-  std::map<StructureID, Structure *>::iterator str_iter =  
-    reconstruction->structures().begin();
-  for (; str_iter != reconstruction->structures().end(); ++str_iter) {
-    pstructure = dynamic_cast<PointStructure *>(str_iter->second);
-    if (pstructure) {
-      X.col(str_id) = pstructure->coords_affine();
-      map_structures_ids[str_iter->first] = str_id;
-      str_id++;
-    } else {
-      LOG(FATAL) << "Error: the bundle adjustment cannot handle non point "
-                 << "structure.";
-      return 0;
-    }
-  }
-  
-  PinholeCamera * pcamera = NULL;
-  size_t cam_id = 0;
-  std::map<CameraID, Camera *>::iterator cam_iter =  
-    reconstruction->cameras().begin();
-  for (; cam_iter != reconstruction->cameras().end(); ++cam_iter) {
-    pcamera = dynamic_cast<PinholeCamera *>(cam_iter->second);
-    if (pcamera) {
-      pcamera->GetIntrinsicExtrinsicParameters(&Ks[cam_id],
-                                               &Rs[cam_id],
-                                               &ts[cam_id]);
-      SelectExistingPointStructures(matches, cam_iter->first,
-                                    *reconstruction,
-                                    &structures_ids, &x[cam_id]);
-      x_ids[cam_id].resize(structures_ids.size());
-      for (size_t s = 0; s < structures_ids.size(); ++s) {
-        x_ids[cam_id][s] = map_structures_ids[structures_ids[s]];
-      }
-      //VLOG(1)   << "x_ids = " << x_ids[cam_id].transpose()<<"\n";
-      cam_id++;
-    } else {
-      LOG(FATAL) << "Error: the bundle adjustment cannot handle non pinhole "
-                 << "cameras.";
-      return 0;
-    }
-  }
-  // Performs metric bundle adjustment
-  rms = EuclideanBA(x, x_ids, &Ks, &Rs, &ts, &X, eBUNDLE_METRIC);
-  // Copy the results only if it's better
-  if (rms < rms0) {
-    cam_id = 0;
-    cam_iter = reconstruction->cameras().begin();
-    for (; cam_iter != reconstruction->cameras().end(); ++cam_iter) {
-      pcamera = dynamic_cast<PinholeCamera *>(cam_iter->second);
-      if (pcamera) {
-        pcamera->SetIntrinsicExtrinsicParameters(Ks[cam_id],
-                                                 Rs[cam_id],
-                                                 ts[cam_id]);
-        cam_id++;
-      }
-    }
-    str_id = 0;
-    str_iter = reconstruction->structures().begin();
-    for (; str_iter != reconstruction->structures().end(); ++str_iter) {
-      pstructure = dynamic_cast<PointStructure *>(str_iter->second);
-      if (pstructure) {
-        pstructure->set_coords_affine(X.col(str_id));
-        str_id++;
-      }
-    }
-  }
-  //rms = EstimatesRootMeanSquareError(matches, reconstruction);
-  VLOG(1)   << "Final RMS = " << rms << std::endl;
-  return rms;
 }
 
 void SelectEfficientImageOrder(

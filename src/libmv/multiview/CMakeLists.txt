@@ -26,6 +26,7 @@ ADD_LIBRARY(multiview
             reconstruction_export_blender.cc
             reconstruction_export_ply.cc
             reconstruction_mapping.cc
+            reconstruction_optimization.cc
             reconstruction_tools.cc
             robust_euclidean_resection.cc
             robust_resection.cc

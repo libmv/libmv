@@ -10,6 +10,7 @@
 #include "libmv/multiview/reconstruction_export_blender.h"
 #include "libmv/multiview/reconstruction_export_ply.h"
 #include "libmv/multiview/reconstruction_mapping.h"
+#include "libmv/multiview/reconstruction_optimization.h"
 
 int main(int argc, char *argv[]) {
     Init("", &argc, &argv);
@@ -552,7 +553,7 @@ void MainWindow::computeCalibratedReconstruction() {
     LOG(INFO) << " -- Bundle adjustment --  " << std::endl;
     progress.setLabelText("Bundle adjustment");
     // Performs bundle adjustment
-    BundleAdjust(matches_inliers_, &reconstruction_);
+    MetricBundleAdjust(matches_inliers_, &reconstruction_);
    
     // Estimation of the pose of other images by resection
     minimum_num_views = 2;
@@ -586,7 +587,7 @@ void MainWindow::computeCalibratedReconstruction() {
       // Performs bundle adjustment
       LOG(INFO) << " -- Bundle adjustment --  " << std::endl;
       progress.setLabelText("Bundle adjustment");
-      BundleAdjust(matches_inliers_, &reconstruction_);
+      MetricBundleAdjust(matches_inliers_, &reconstruction_);
   
       progressCallback(progress, index_image_graph);
     }
@@ -609,7 +610,7 @@ void MainWindow::computeBA() {
   progress.setWindowModality(Qt::WindowModal);
   progress.setLabelText("Bundle adjustment");
   // Performs bundle adjustment
-  BundleAdjust(matches_inliers_, &reconstruction_);
+  MetricBundleAdjust(matches_inliers_, &reconstruction_);
   progress.setLabelText("Reconstruction done.");
 }
 

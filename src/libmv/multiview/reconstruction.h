@@ -272,11 +272,6 @@ bool CalibratedCameraResection(const Matches &matches,
 bool UpgradeToMetric(const Matches &matches, 
                      Reconstruction *reconstruction);
 
-// This method performs an Euclidean Bundle Adjustment
-// and returns the root mean square error.
-double BundleAdjust(const Matches &matches, 
-                    Reconstruction *reconstruction);
-
 // This method selects an efficient order of images, with the first two are
 // selected because they have a good baseline.
 // The criterion is:  the homography error x number of common matches
