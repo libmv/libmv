@@ -22,6 +22,7 @@
 #include "libmv/logging/logging.h"
 #include "libmv/multiview/projection.h"
 #include "libmv/multiview/reconstruction.h"
+#include "libmv/multiview/reconstruction_mapping.h"
 #include "libmv/multiview/test_data_sets.h"
 #include "libmv/numeric/numeric.h"
 #include "libmv/multiview/random_sample.h"

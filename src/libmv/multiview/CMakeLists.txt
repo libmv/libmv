@@ -23,10 +23,12 @@ ADD_LIBRARY(multiview
             lens_distortion.cc
             conditioning.cc
             reconstruction.cc
-            robust_euclidean_resection.cc
-            robust_resection.cc
             reconstruction_export_blender.cc
             reconstruction_export_ply.cc
+            reconstruction_mapping.cc
+            reconstruction_tools.cc
+            robust_euclidean_resection.cc
+            robust_resection.cc
             )
 
 TARGET_LINK_LIBRARIES(multiview numeric V3D colamd ldl)

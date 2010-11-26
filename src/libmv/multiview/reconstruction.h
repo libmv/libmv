@@ -263,36 +263,6 @@ bool CalibratedCameraResection(const Matches &matches,
                                Matches *matches_inliers,
                                Reconstruction *reconstruction);
 
-// Reconstructs unreconstructed point tracks observed in the image image_id
-// using theirs observations (matches). 
-// To be reconstructed, the tracks need to be viewed in more than
-// minimum_num_views images.
-// The method:
-//    selects the tracks that haven't been already reconstructed
-//    reconstructs the tracks into structures
-//    TODO(julien) only add inliers?
-//    creates and add them in reconstruction
-// Returns the number of structures reconstructed and the list of triangulated
-// points
-uint PointStructureTriangulation(
-   const Matches &matches, 
-   CameraID image_id, 
-   size_t minimum_num_views, 
-   Reconstruction *reconstruction,
-   vector<StructureID> *new_structures_ids = NULL);
-
-// Retriangulates point tracks observed in the image image_id using theirs
-// observations (matches). To be reconstructed, the tracks need to be viewed
-// in more than minimum_num_views images.
-// The method:
-//    selects the tracks that have been already reconstructed
-//    reconstructs the tracks into structures
-//    TODO(julien) only add inliers?
-// Returns the number of structures retriangulated
-uint PointStructureRetriangulation(const Matches &matches, 
-                                   CameraID image_id,  
-                                   Reconstruction *reconstruction);
-
 // This method upgrade the reconstruction into a metric one.
 // The method use the linear approach;
 //  computes a metric reconstruction from a projective one by computing

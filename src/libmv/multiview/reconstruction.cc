@@ -25,95 +25,16 @@
 #include "libmv/multiview/camera.h"
 #include "libmv/multiview/five_point.h"
 #include "libmv/multiview/fundamental.h"
-#include "libmv/multiview/nviewtriangulation.h"
 #include "libmv/multiview/robust_resection.h"
 #include "libmv/multiview/robust_euclidean_resection.h"
 #include "libmv/multiview/robust_fundamental.h"
 #include "libmv/multiview/robust_homography.h"
 #include "libmv/multiview/reconstruction.h"
+#include "libmv/multiview/reconstruction_mapping.h"
+#include "libmv/multiview/reconstruction_tools.h"
 #include "libmv/multiview/structure.h"
 
 namespace libmv {
-
-/// TODO(julien) put this in vector_utils.h?
-/// TODO(julien) can we use Eigen::Map?
-/// Convert a vector<Tvec> of vectors Tvec to a matrix Tmat
-template <typename Tvec, typename Tmat>
-inline void VectorToMatrix(vector<Tvec> &vs, Tmat *m) {
-  Tvec v;
-  m->resize(v.size(), vs.size());
-  size_t c = 0;
-  for (Tvec * vec = vs.begin(); vec != vs.end(); ++vec) {
-    m->col(c) = *vec;
-    c++;
-  }
-}
-
-// Selects only the already reconstructed tracks observed in the image image_id
-// and returns a vector of StructureID and their feature coordinates
-void SelectExistingPointStructures(const Matches &matches, 
-                                   CameraID image_id,
-                                   const Reconstruction &reconstruction,
-                                   vector<StructureID> *structures_ids,
-                                   Mat2X *x_image) {
-  const size_t kNumberStructuresToReserve = 1000;
-  structures_ids->resize(0);
-  //TODO(julien) clean this
-  structures_ids->reserve(kNumberStructuresToReserve);
-  vector<Vec2> xs;
-  xs.reserve(kNumberStructuresToReserve);
-  Matches::Features<PointFeature> fp =
-    matches.InImage<PointFeature>(image_id);
-  while (fp) {
-    if (reconstruction.TrackHasStructure(fp.track())) {
-      structures_ids->push_back(fp.track());
-      xs.push_back(fp.feature()->coords.cast<double>());
-    }
-    fp.operator++();
-  }
-  VectorToMatrix<Vec2, Mat2X>(xs, x_image);
-}
-
-// Selects only the NOT already reconstructed tracks observed in the image
-// image_id and returns a vector of StructureID and their feature coordinates
-void SelectUnexistingPointStructures(const Matches &matches, 
-                                    CameraID image_id,
-                                    const Reconstruction &reconstruction,
-                                    vector<StructureID> *structures_ids,
-                                    Mat2X *x_image) {
-  const size_t kNumberStructuresToReserve = 1000;
-  structures_ids->resize(0);
-  //TODO(julien) clean this
-  structures_ids->reserve(kNumberStructuresToReserve);
-  vector<Vec2> xs;
-  xs.reserve(kNumberStructuresToReserve);
-  Matches::Features<PointFeature> fp =
-    matches.InImage<PointFeature>(image_id);
-  while (fp) {
-    if (!reconstruction.TrackHasStructure(fp.track())) {
-      structures_ids->push_back(fp.track());
-      xs.push_back(fp.feature()->coords.cast<double>());
-    }
-    fp.operator++();
-  }
-  VectorToMatrix<Vec2, Mat2X>(xs, x_image);
-}
-
-// Recover the position of the selected point structures
-void MatrixOfPointStructureCoordinates(
-    const vector<StructureID> &structures_ids,
-    const Reconstruction &reconstruction,
-    Mat4X *X_world) {
-  X_world->resize(4, structures_ids.size());
-  PointStructure *point_s = NULL;
-  for (size_t s = 0; s < structures_ids.size(); ++s) {
-    point_s = dynamic_cast<PointStructure*>(
-      reconstruction.GetStructure(structures_ids[s]));
-    if (point_s) {
-      X_world->col(s) << point_s->coords();
-    }
-  }
-}
 
 bool ReconstructFromTwoUncalibratedViews(const Matches &matches, 
                                          CameraID image_id1, 
@@ -284,129 +205,6 @@ bool ReconstructFromTwoCalibratedViews(const Matches &matches,
   }
   VLOG(1)   << "Inliers added: " << feature_inliers.size() << std::endl;
   return true;
-}
-
-uint PointStructureTriangulation(const Matches &matches, 
-                                 CameraID image_id, 
-                                 size_t minimum_num_views, 
-                                 Reconstruction *reconstruction,
-                                 vector<StructureID> *new_structures_ids) {
-  // Checks that the camera is in reconstruction
-  if (!reconstruction->ImageHasCamera(image_id)) {
-      VLOG(1)   << "Error: the image " << image_id 
-                << " has no camera." << std::endl;
-    return 0;
-  }
-  vector<StructureID> structures_ids;
-  Mat2X x_image;
-  vector<Mat34> Ps; 
-  vector<Vec2> xs; 
-  Vec2 x;
-  // Selects only the unreconstructed tracks observed in the image
-  SelectUnexistingPointStructures(matches, image_id, *reconstruction,
-                                  &structures_ids, &x_image);
-  
-  VLOG(1)   << "Points structure selected:" << x_image.cols() << std::endl;
-  // Selects the point structures that are observed at least in
-  // minimum_num_views images (images that have an already localized camera) 
-  Mat41 X_world;
-  uint number_new_structure = 0;
-  if (new_structures_ids)
-    new_structures_ids->reserve(structures_ids.size());
-  PinholeCamera *camera = NULL;
-  for (size_t t = 0; t < structures_ids.size(); ++t) {
-    Matches::Features<PointFeature> fp =
-      matches.InTrack<PointFeature>(structures_ids[t]);
-    Ps.clear();
-    xs.clear();
-    while (fp) {
-      camera = dynamic_cast<PinholeCamera *>(
-        reconstruction->GetCamera(fp.image()));
-      if (camera) {
-        Ps.push_back(camera->projection_matrix()); 
-        x << fp.feature()->x(), fp.feature()->y();
-        xs.push_back(x);
-      }
-      fp.operator++();
-    }
-    if (Ps.size() >= minimum_num_views) {
-      Mat2X x(2, xs.size());
-      VectorToMatrix<Vec2, Mat2X>(xs, &x);
-      // TODO(julien) apply an isotropic normalisation of 2D points 
-      NViewTriangulateAlgebraic<double>(x, Ps, &X_world);
-      
-      // Creates an add the point structure to the reconstruction
-      PointStructure * p = new PointStructure();
-      p->set_coords(X_world.col(0));
-      reconstruction->InsertTrack(structures_ids[t], p);
-      if (new_structures_ids)
-        new_structures_ids->push_back(structures_ids[t]);
-      number_new_structure++;
-      VLOG(1)   << "Add Point Structure ["
-                << structures_ids[t] <<"] "
-                << p->coords().transpose() << " ("
-                << p->coords().transpose() / p->coords()[3] << ")"
-                << std::endl;
-    }
-  }
-  return number_new_structure;
-}
-
-uint PointStructureRetriangulation(const Matches &matches, 
-                                   CameraID image_id,  
-                                   Reconstruction *reconstruction) {
-  // Checks that the camera is in reconstruction
-  if (!reconstruction->ImageHasCamera(image_id)) {
-      VLOG(1)   << "Error: the image " << image_id 
-                << " has no camera." << std::endl;
-    return 0;
-  }
-  vector<StructureID> structures_ids;
-  Mat2X x_image;
-  vector<Mat34> Ps; 
-  vector<Vec2> xs; 
-  Vec2 x;
-  // Selects only the reconstructed structures observed in the image
-  SelectExistingPointStructures(matches, image_id, *reconstruction,
-                                  &structures_ids, &x_image);
-  Mat41 X_world;
-  uint number_updated_structure = 0;
-  PinholeCamera *camera = NULL;
-  PointStructure *pstructure = NULL;
-  for (size_t t = 0; t < structures_ids.size(); ++t) {
-    Matches::Features<PointFeature> fp =
-      matches.InTrack<PointFeature>(structures_ids[t]);
-    Ps.clear();
-    xs.clear();
-    while (fp) {
-      camera = dynamic_cast<PinholeCamera *>(
-        reconstruction->GetCamera(fp.image()));
-      if (camera) {
-        Ps.push_back(camera->projection_matrix()); 
-        x << fp.feature()->x(), fp.feature()->y();
-        xs.push_back(x);
-      }
-      fp.operator++();
-    }
-    Mat2X x(2, xs.size());
-    VectorToMatrix<Vec2, Mat2X>(xs, &x);
-    // TODO(julien) apply an isotropic normalisation of 2D points 
-    NViewTriangulateAlgebraic<double>(x, Ps, &X_world);
-    // Creates an add the point structure to the reconstruction
-    pstructure = dynamic_cast<PointStructure *>(
-      reconstruction->GetStructure(structures_ids[t]));
-    if (pstructure) {
-      // TODO(julien) don't keep ouliers? (RMSE > threshold)
-      pstructure->set_coords(X_world.col(0));
-      number_updated_structure++;
-      VLOG(1)   << "Point structure updated ["
-                << structures_ids[t] <<"] "
-                << pstructure->coords().transpose() << " ("
-                << pstructure->coords().transpose() / pstructure->coords()[3] 
-                << ")" << std::endl;
-    }
-  }
-  return number_updated_structure;
 }
 
 // TODO(julien) put this somewhere else...
