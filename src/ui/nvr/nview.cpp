@@ -4,8 +4,11 @@
 #include <QInputDialog>
 #include <QLabel>
 #include <QMessageBox>
-#include "ui/nvr/nview.h"
 #include <QLabel>
+
+#include "ui/nvr/nview.h"
+#include "libmv/multiview/reconstruction_export_blender.h"
+#include "libmv/multiview/reconstruction_export_ply.h"
 
 int main(int argc, char *argv[]) {
     Init("", &argc, &argv);

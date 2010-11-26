@@ -25,6 +25,8 @@ ADD_LIBRARY(multiview
             reconstruction.cc
             robust_euclidean_resection.cc
             robust_resection.cc
+            reconstruction_export_blender.cc
+            reconstruction_export_ply.cc
             )
 
 TARGET_LINK_LIBRARIES(multiview numeric V3D colamd ldl)
