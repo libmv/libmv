@@ -93,6 +93,27 @@ inline Vec2 Project(const Mat34 &P, const Vec3 &X) {
   return hx.start<2>() / hx(2);
 }
 
+inline void Project(const Mat34 &P, const Vec4 &X, Vec3 *x) {
+  *x = P * X;
+}
+
+inline void Project(const Mat34 &P, const Vec4 &X, Vec2 *x) {
+  Vec3 hx = P * X;
+  *x = hx.start<2>() / hx(2);
+}
+
+inline void Project(const Mat34 &P, const Vec3 &X, Vec3 *x) {
+  Vec4 HX;
+  HX << X, 1.0;
+  Project(P, HX, x);
+}
+
+inline void Project(const Mat34 &P, const Vec3 &X, Vec2 *x) {
+  Vec3 hx;
+  Project(P, X, x);
+  *x = hx.start<2>() / hx(2);
+}
+
 inline void Project(const Mat34 &P, const Mat4X &X, Mat2X *x) {
   x->resize(2, X.cols());
   for (size_t c = 0; c < X.cols(); ++c) {

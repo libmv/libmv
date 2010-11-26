@@ -72,6 +72,12 @@ TEST(CameraModel, PinholeCameraProjection) {
       EXPECT_NEAR(0, DistanceLInfinity(point_2d_gt, 
                                        point_2d_coords),
                                        1e-4);
+      
+      cameras[i].ProjectPointStructure(point_3d, &point_2d_coords);
+      
+      EXPECT_NEAR(0, DistanceLInfinity(point_2d_gt, 
+                                       point_2d_coords),
+                                       1e-4);
     }
   }
 }

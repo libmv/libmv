@@ -75,6 +75,9 @@ class PinholeCamera : public Camera {
   // The function computes the projection of a 3D point
   virtual bool ProjectPointStructure(const PointStructure &point_structure,
                                      PointFeature *feature) const;
+  // The function computes the projection of a 3D point
+  virtual bool ProjectPointStructure(const PointStructure &point_structure,
+                                     Vec2 *q) const;
                                       
   // TODO(julien) A visibility test for a structure
                               

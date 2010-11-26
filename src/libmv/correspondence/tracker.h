@@ -45,11 +45,9 @@ struct FeaturesGraph {
   
   void Merge(const FeaturesGraph &feature_graph) {
     matches_.Merge(feature_graph.matches_);
-    std::list<FeatureSet *>::const_iterator iter =
-     feature_graph.features_sets_.begin();
-    for (; iter != feature_graph.features_sets_.end(); ++iter) {
-      features_sets_.push_back(*iter);
-    }
+    features_sets_.insert(features_sets_.begin(),
+                          feature_graph.features_sets_.begin(),
+                          feature_graph.features_sets_.end());
   }
   // Erases all the elements.  
   // Note that this function does not desallocate FeatureSets

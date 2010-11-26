@@ -84,11 +84,16 @@ void PinholeCamera::UpdateProjectionMatrix() {
 bool PinholeCamera::ProjectPointStructure(
     const PointStructure &point_structure,
     PointFeature *feature) const {
-  Mat2X vector_2d_point(2, 1);
-  Mat4X X(4, 1);
-  X << point_structure.coords();
-  Project(projection_matrix_, X, &vector_2d_point);
-  feature->coords << vector_2d_point.col(0).cast<float>();
+  Vec2 q2;
+  Project(projection_matrix_, point_structure.coords(), &q2);
+  feature->coords << q2.cast<float>();
+  return true;
+}
+// The function computes the projection of a 3D point.
+bool PinholeCamera::ProjectPointStructure(
+    const PointStructure &point_structure,
+    Vec2 *q) const {
+  Project(projection_matrix_, point_structure.coords(), q);
   return true;
 }
 
