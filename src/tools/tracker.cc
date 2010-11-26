@@ -45,6 +45,7 @@
 #include "libmv/multiview/nviewtriangulation.h"
 #include "libmv/multiview/projection.h"
 #include "libmv/multiview/reconstruction.h"
+#include "libmv/multiview/reconstruction_calibrated.h"
 #include "libmv/multiview/reconstruction_export_ply.h"
 #include "libmv/multiview/reconstruction_mapping.h"
 #include "libmv/multiview/reconstruction_optimization.h"
