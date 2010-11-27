@@ -267,6 +267,15 @@ void EssentialFromFundamental(const Mat3 &F,
   *E = K2.transpose() * F * K1;
 }
 
+// HZ 9.6 pag 257 (formula 9.12)
+// Or http://ai.stanford.edu/~birch/projective/node20.html
+void FundamentalFromEssential(const Mat3 &E,
+                              const Mat3 &K1,
+                              const Mat3 &K2,
+                              Mat3 *F)  {
+  *F = K2.inverse().transpose() * E * K1.inverse();
+}
+
 void RelativeCameraMotion(const Mat3 &R1,
                           const Vec3 &t1,
                           const Mat3 &R2,

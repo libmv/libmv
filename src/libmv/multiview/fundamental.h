@@ -90,6 +90,11 @@ void EssentialFromFundamental(const Mat3 &F,
                               const Mat3 &K2,
                               Mat3 *E);
 
+void FundamentalFromEssential(const Mat3 &E,
+                         const Mat3 &K1,
+                         const Mat3 &K2,
+                         Mat3 *F);
+
 void EssentialFromRt(const Mat3 &R1,
                      const Vec3 &t1,
                      const Mat3 &R2,

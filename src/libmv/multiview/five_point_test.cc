@@ -26,7 +26,7 @@
 #include "libmv/multiview/fundamental.h"
 #include "libmv/multiview/projection.h"
 #include "libmv/multiview/five_point.h"
-
+#include "libmv/multiview/test_data_sets.h"
 
 namespace {
 using namespace libmv;
@@ -201,6 +201,60 @@ TEST(FivePointsRelativePose, Random) {
     }
   }
   EXPECT_TRUE(solution_found);
+}
+
+TEST(FivePointsRelativePose, test_data_sets) {
+
+  //-- Setup a circular camera rig and assert that 5PT relative pose works.
+  const int iNviews = 5;
+  NViewDataSet d = NRealisticCamerasFull(iNviews, 5,
+    nViewDatasetConfigator(1,1,0,0,5,0)); // Suppose a camera with Unit matrix as K
+
+  for (int i=0; i <iNviews; ++i) {
+    vector<Mat3> Es, Rs;  // Essential, Rotation matrix.
+    vector<Vec3> ts;      // Translation matrix.
+    FivePointsRelativePose(d.x[0], d.x[1], &Es);
+    
+    // Recover rotation and translation from E.
+    Rs.resize(Es.size());
+    ts.resize(Es.size());
+    for (int s = 0; s < Es.size(); ++s) {
+      Vec2 x1Col, x2Col;
+      x1Col << d.x[0].col(i)(0), d.x[0].col((i+1)%iNviews)(1);
+      x2Col << d.x[1].col(i)(0), d.x[1].col((i+1)%iNviews)(1);
+      (
+        MotionFromEssentialAndCorrespondence(Es[s],
+        d.K[0],
+        x1Col,
+        d.K[1],
+        x2Col,
+        &Rs[s],
+        &ts[s]));
+    }
+    //-- Compute Ground Truth motion
+    Mat3 R;
+    Vec3 t, t0 = Vec3::Zero(), t1 = Vec3::Zero();
+    RelativeCameraMotion(d.R[i], d.t[i], d.R[(i+1)%iNviews], d.t[(i+1)%iNviews], &R, &t);
+
+    // Assert that found relative motion is correct for almost one model.
+    bool bsolution_found = false;
+    for (size_t nModel = 0; nModel < Es.size(); ++nModel) {
+      
+      // Check that E holds the essential matrix constraints.
+      Mat3 E = Es[nModel];
+      EXPECT_NEAR(0, E.determinant(), 1e-8);
+      Mat3 O = 2 * E * E.transpose() * E - (E * E.transpose()).trace() * E;
+      EXPECT_MATRIX_NEAR(Mat3::Zero(), O, 1e-8);
+      
+      // Check that we find the correct relative orientation.
+      if (FrobeniusDistance(R, Rs[nModel]) < 1e-3
+        && (t / t.norm() - ts[nModel] / ts[nModel].norm()).norm() < 1e-3 ) {
+          bsolution_found = true;
+      }
+    }
+    //-- Almost one solution must find the correct relative orientation
+    CHECK(bsolution_found);
+  }
 }
  
 } // namespace

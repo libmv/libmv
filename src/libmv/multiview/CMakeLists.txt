@@ -33,6 +33,7 @@ ADD_LIBRARY(multiview
             reconstruction_uncalibrated.cc
             robust_euclidean_resection.cc
             robust_resection.cc
+            essential_kernel.cc
             )
 
 TARGET_LINK_LIBRARIES(multiview numeric V3D colamd ldl)
@@ -64,6 +65,8 @@ MULTIVIEW_TEST(sixpointnview)
 MULTIVIEW_TEST(bundle)
 MULTIVIEW_TEST(autocalibration)
 MULTIVIEW_TEST(five_point)
+MULTIVIEW_TEST(five_point_kernel)
+MULTIVIEW_TEST(essential_kernel)
 MULTIVIEW_TEST(affine_2d)
 MULTIVIEW_TEST(euclidean_resection)
 MULTIVIEW_TEST(euclidean_resection_kernel)

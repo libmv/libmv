@@ -84,7 +84,7 @@ void AbsoluteOrientation(const Mat3X &X,
     Xpn.col(i) = Xp.col(i) - Cp;
   }
   
-  // Constrcuting the N matrix (pg. 635)
+  // Constructing the N matrix (pg. 635)
   double Sxx = Xn.row(0).dot(Xpn.row(0));
   double Syy = Xn.row(1).dot(Xpn.row(1));
   double Szz = Xn.row(2).dot(Xpn.row(2));
@@ -340,7 +340,7 @@ void EuclideanResectionAnsarDaniilidis(const Mat2X &x_camera,
   for (int c_point = 0; c_point < num_points; ++c_point ) {
     X_cam.col(c_point) = d(c_point) * x_camera_unit.col(c_point);
   }
-  // Recovering the camera traslation and rotation.
+  // Recovering the camera translation and rotation.
   AbsoluteOrientation(X_world, X_cam, R, t);
 }
 

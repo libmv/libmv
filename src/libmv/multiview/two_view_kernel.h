@@ -101,7 +101,7 @@ class Kernel {
     // By offering this, Kernel types can be passed to templates.
     Solver::Solve(x1, x2, models);
   }
- private:
+ protected:
   const Mat &x1_;
   const Mat &x2_;
 };
