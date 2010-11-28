@@ -18,9 +18,7 @@ ADD_LIBRARY(multiview
             robust_homography.cc
             euclidean_resection.cc
             twoviewtriangulation.cc
-            camera.cc
             structure.cc
-            lens_distortion.cc
             conditioning.cc
             robust_euclidean_resection.cc
             robust_resection.cc
@@ -63,8 +61,6 @@ MULTIVIEW_TEST(euclidean_resection)
 MULTIVIEW_TEST(euclidean_resection_kernel)
 MULTIVIEW_TEST(robust_euclidean_resection)
 MULTIVIEW_TEST(twoviewtriangulation)
-MULTIVIEW_TEST(camera)
-MULTIVIEW_TEST(lens_distortion)
 MULTIVIEW_TEST(robust_resection)
 
 # TODO(keir): Make tests that depend on generated.cc to use generated sources.

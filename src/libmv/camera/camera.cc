@@ -18,7 +18,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
-#include "libmv/multiview/camera.h"
+#include "libmv/camera/camera.h"
 #include "libmv/multiview/structure.h"
 
 namespace libmv {

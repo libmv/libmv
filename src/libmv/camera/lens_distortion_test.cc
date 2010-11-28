@@ -19,9 +19,9 @@
 // IN THE SOFTWARE.
 
 #include "libmv/base/vector.h"
+#include "libmv/camera/camera.h"
+#include "libmv/camera/lens_distortion.h"
 #include "libmv/numeric/levenberg_marquardt.h"
-#include "libmv/multiview/camera.h"
-#include "libmv/multiview/lens_distortion.h"
 #include "libmv/multiview/structure.h"
 #include "libmv/multiview/test_data_sets.h"
 #include "testing/testing.h"

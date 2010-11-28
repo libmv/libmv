@@ -18,9 +18,9 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
+#include "libmv/camera/camera.h"
+#include "libmv/camera/lens_distortion.h"
 #include "libmv/numeric/levenberg_marquardt.h"
-#include "libmv/multiview/lens_distortion.h"
-#include "libmv/multiview/camera.h"
 
 namespace libmv {
 

@@ -21,10 +21,10 @@
 #ifndef LIBMV_MULTIVIEW_CAMERA_H_
 #define LIBMV_MULTIVIEW_CAMERA_H_
 
+#include "libmv/camera/lens_distortion.h"
 #include "libmv/correspondence/feature.h"
 #include "libmv/logging/logging.h"
 #include "libmv/numeric/numeric.h"
-#include "libmv/multiview/lens_distortion.h"
 #include "libmv/multiview/projection.h"
 
 namespace libmv {

@@ -25,10 +25,10 @@
 #include <list>
 #include <map>
 
+#include "libmv/camera/camera.h"
 #include "libmv/correspondence/matches.h"
 #include "libmv/logging/logging.h"
 #include "libmv/numeric/numeric.h"
-#include "libmv/multiview/camera.h"
 #include "libmv/multiview/structure.h"
 
 namespace libmv {

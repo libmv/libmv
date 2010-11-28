@@ -20,7 +20,7 @@
 
 #include "libmv/base/vector_utils.h"
 #include "libmv/multiview/autocalibration.h"
-#include "libmv/multiview/camera.h"
+#include "libmv/camera/camera.h"
 #include "libmv/multiview/fundamental.h"
 #include "libmv/multiview/robust_fundamental.h"
 #include "libmv/multiview/robust_resection.h"
