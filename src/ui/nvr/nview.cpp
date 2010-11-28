@@ -7,13 +7,13 @@
 #include <QLabel>
 
 #include "ui/nvr/nview.h"
-#include "libmv/multiview/reconstruction_calibrated.h"
-#include "libmv/multiview/reconstruction_export_blender.h"
-#include "libmv/multiview/reconstruction_export_ply.h"
-#include "libmv/multiview/reconstruction_image_order_selection.h"
-#include "libmv/multiview/reconstruction_mapping.h"
-#include "libmv/multiview/reconstruction_optimization.h"
-#include "libmv/multiview/reconstruction_uncalibrated.h"
+#include "libmv/reconstruction/calibrated_reconstruction.h"
+#include "libmv/reconstruction/export_blender.h"
+#include "libmv/reconstruction/export_ply.h"
+#include "libmv/reconstruction/image_order_selection.h"
+#include "libmv/reconstruction/mapping.h"
+#include "libmv/reconstruction/optimization.h"
+#include "libmv/reconstruction/uncalibrated_reconstruction.h"
 
 int main(int argc, char *argv[]) {
     Init("", &argc, &argv);

@@ -22,15 +22,6 @@ ADD_LIBRARY(multiview
             structure.cc
             lens_distortion.cc
             conditioning.cc
-            reconstruction.cc
-            reconstruction_calibrated.cc
-            reconstruction_export_blender.cc
-            reconstruction_export_ply.cc
-            reconstruction_image_order_selection.cc
-            reconstruction_mapping.cc
-            reconstruction_optimization.cc
-            reconstruction_tools.cc
-            reconstruction_uncalibrated.cc
             robust_euclidean_resection.cc
             robust_resection.cc
             essential_kernel.cc
@@ -74,7 +65,6 @@ MULTIVIEW_TEST(robust_euclidean_resection)
 MULTIVIEW_TEST(twoviewtriangulation)
 MULTIVIEW_TEST(camera)
 MULTIVIEW_TEST(lens_distortion)
-MULTIVIEW_TEST(reconstruction)
 MULTIVIEW_TEST(robust_resection)
 
 # TODO(keir): Make tests that depend on generated.cc to use generated sources.

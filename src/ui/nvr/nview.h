@@ -25,7 +25,7 @@
 #include "libmv/correspondence/nRobustViewMatching.h"
 #include "libmv/logging/logging.h"
 #include "libmv/multiview/projection.h"
-#include "libmv/multiview/reconstruction.h"
+#include "libmv/reconstruction/reconstruction.h"
 #include "libmv/descriptor/descriptor_factory.h"
 #include "libmv/detector/detector_factory.h"
 

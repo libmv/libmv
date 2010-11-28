@@ -19,8 +19,8 @@
 // IN THE SOFTWARE.
 
 #include "libmv/multiview/bundle.h"
-#include "libmv/multiview/reconstruction_optimization.h"
-#include "libmv/multiview/reconstruction_tools.h"
+#include "libmv/reconstruction/optimization.h"
+#include "libmv/reconstruction/tools.h"
 
 namespace libmv {
 

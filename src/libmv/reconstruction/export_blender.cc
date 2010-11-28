@@ -21,7 +21,7 @@
 #include <stdio.h>
 #include <locale.h>
 
-#include "libmv/multiview/reconstruction_export_blender.h"
+#include "libmv/reconstruction/export_blender.h"
 
 namespace libmv {
 

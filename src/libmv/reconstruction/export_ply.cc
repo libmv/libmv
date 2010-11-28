@@ -21,7 +21,7 @@
 #include <fstream>
 #include <locale.h>
 
-#include "libmv/multiview/reconstruction_export_ply.h"
+#include "libmv/reconstruction/export_ply.h"
 
 namespace libmv {
 

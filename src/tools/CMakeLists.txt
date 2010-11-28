@@ -88,6 +88,7 @@ TARGET_LINK_LIBRARIES(tracker
                       descriptor
                       fast
                       daisy
+                      reconstruction
                       )
 LIBMV_INSTALL_EXE(tracker)
 

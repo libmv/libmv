@@ -20,7 +20,7 @@
 
 #include <map>
 
-#include "libmv/multiview/reconstruction_image_order_selection.h"
+#include "libmv/reconstruction/image_order_selection.h"
 #include "libmv/multiview/robust_homography.h"
 
 namespace libmv {

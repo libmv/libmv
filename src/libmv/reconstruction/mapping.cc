@@ -20,8 +20,8 @@
 
 #include "libmv/multiview/conditioning.h"
 #include "libmv/multiview/nviewtriangulation.h"
-#include "libmv/multiview/reconstruction_mapping.h"
-#include "libmv/multiview/reconstruction_tools.h"
+#include "libmv/reconstruction/mapping.h"
+#include "libmv/reconstruction/tools.h"
 
 namespace libmv {
 

@@ -21,14 +21,14 @@
 
 #include "libmv/logging/logging.h"
 #include "libmv/multiview/projection.h"
-#include "libmv/multiview/reconstruction.h"
-#include "libmv/multiview/reconstruction_calibrated.h"
-#include "libmv/multiview/reconstruction_mapping.h"
-#include "libmv/multiview/reconstruction_optimization.h"
-#include "libmv/multiview/reconstruction_uncalibrated.h"
+#include "libmv/multiview/random_sample.h"
 #include "libmv/multiview/test_data_sets.h"
 #include "libmv/numeric/numeric.h"
-#include "libmv/multiview/random_sample.h"
+#include "libmv/reconstruction/reconstruction.h"
+#include "libmv/reconstruction/calibrated_reconstruction.h"
+#include "libmv/reconstruction/mapping.h"
+#include "libmv/reconstruction/optimization.h"
+#include "libmv/reconstruction/uncalibrated_reconstruction.h"
 #include "testing/testing.h"
 
 namespace libmv {

@@ -21,7 +21,7 @@
 #include <stdio.h>
 #include <locale.h>
 
-#include "libmv/multiview/reconstruction_tools.h"
+#include "libmv/reconstruction/tools.h"
 
 namespace libmv {
 

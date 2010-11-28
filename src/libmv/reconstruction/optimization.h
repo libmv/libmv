@@ -18,15 +18,21 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
-#ifndef LIBMV_MULTIVIEW_RECONSTRUCTION_EXPORT_BLENDER_H_
-#define LIBMV_MULTIVIEW_RECONSTRUCTION_EXPORT_BLENDER_H_
+#ifndef LIBMV_MULTIVIEW_RECONSTRUCTION_OPTIMIZATION_H_
+#define LIBMV_MULTIVIEW_RECONSTRUCTION_OPTIMIZATION_H_
 
-#include "libmv/multiview/reconstruction.h"
+#include "libmv/reconstruction/reconstruction.h"
 
 namespace libmv {
-// Exports the reconstruction in a Blender script format file
-void ExportToBlenderScript(const Reconstruction &reconstruct, 
-                           std::string out_file_name);
+
+double EstimateRootMeanSquareError(const Matches &matches, 
+                                   Reconstruction *reconstruction);
+
+// This method performs an Euclidean Bundle Adjustment
+// and returns the root mean square error.
+double MetricBundleAdjust(const Matches &matches, 
+                          Reconstruction *reconstruction);
+
 }  // namespace libmv
 
-#endif  // LIBMV_MULTIVIEW_RECONSTRUCTION_EXPORT_BLENDER_H_
+#endif  // LIBMV_MULTIVIEW_RECONSTRUCTION_OPTIMIZATION_H_

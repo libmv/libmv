@@ -18,14 +18,21 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
-#ifndef LIBMV_MULTIVIEW_RECONSTRUCTION_EXPORT_PLY_H_
-#define LIBMV_MULTIVIEW_RECONSTRUCTION_EXPORT_PLY_H_
+#ifndef LIBMV_MULTIVIEW_RECONSTRUCTION_IMAGE_ORDER_SELECTION_H_
+#define LIBMV_MULTIVIEW_RECONSTRUCTION_IMAGE_ORDER_SELECTION_H_
 
-#include "libmv/multiview/reconstruction.h"
+#include "libmv/reconstruction/reconstruction.h"
 
 namespace libmv {
-// Exports the reconstruction in a PLY format file
-void ExportToPLY(const Reconstruction &reconstruct, std::string out_file_name);
+
+// This method selects an efficient order of images, with the first two are
+// selected because they have a good baseline.
+// The criterion is: homography error x number of common matches
+// The oupout connected_graph_list contains a list of connected graphs
+// (vectors), each vector contains the ImageID ordered by the criterion.
+void SelectEfficientImageOrder(
+  const Matches &matches, 
+  std::list<vector<Matches::ImageID> >*connected_graph_list);
 }  // namespace libmv
 
-#endif  // LIBMV_MULTIVIEW_RECONSTRUCTION_EXPORT_PLY_H_
+#endif  // LIBMV_MULTIVIEW_RECONSTRUCTION_IMAGE_ORDER_SELECTION_H_

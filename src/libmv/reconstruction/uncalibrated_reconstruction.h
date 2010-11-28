@@ -21,7 +21,7 @@
 #ifndef LIBMV_MULTIVIEW_RECONSTRUCTION_UNCALIBRATED_H_
 #define LIBMV_MULTIVIEW_RECONSTRUCTION_UNCALIBRATED_H_
 
-#include "libmv/multiview/reconstruction.h"
+#include "libmv/reconstruction/reconstruction.h"
 
 namespace libmv {
 

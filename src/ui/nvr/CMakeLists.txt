@@ -25,6 +25,7 @@ TARGET_LINK_LIBRARIES(nview
                       flann
                       descriptor
                       multiview
-                      daisy )
+                      daisy 
+                      reconstruction)
 
 LIBMV_INSTALL_EXE(nview)

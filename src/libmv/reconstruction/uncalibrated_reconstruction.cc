@@ -24,10 +24,10 @@
 #include "libmv/multiview/fundamental.h"
 #include "libmv/multiview/robust_fundamental.h"
 #include "libmv/multiview/robust_resection.h"
-#include "libmv/multiview/reconstruction_mapping.h"
-#include "libmv/multiview/reconstruction_optimization.h"
-#include "libmv/multiview/reconstruction_tools.h"
-#include "libmv/multiview/reconstruction_uncalibrated.h"
+#include "libmv/reconstruction/mapping.h"
+#include "libmv/reconstruction/optimization.h"
+#include "libmv/reconstruction/tools.h"
+#include "libmv/reconstruction/uncalibrated_reconstruction.h"
 
 namespace libmv {
 
