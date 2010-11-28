@@ -1,5 +1,6 @@
 ADD_LIBRARY(camera
             camera.cc
+            pinhole_camera.cc
             lens_distortion.cc
             )
 

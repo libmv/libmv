@@ -18,8 +18,8 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
-#ifndef LIBMV_MULTIVIEW_RECONSTRUCTION_CALIBRATED_H_
-#define LIBMV_MULTIVIEW_RECONSTRUCTION_CALIBRATED_H_
+#ifndef LIBMV_RECONSTRUCTION_RECONSTRUCTION_CALIBRATED_H_
+#define LIBMV_RECONSTRUCTION_RECONSTRUCTION_CALIBRATED_H_
 
 #include "libmv/reconstruction/reconstruction.h"
 
@@ -66,4 +66,4 @@ bool CalibratedCameraResection(const Matches &matches,
                                Reconstruction *reconstruction);
 }  // namespace libmv
 
-#endif  // LIBMV_MULTIVIEW_RECONSTRUCTION_CALIBRATED_H_
+#endif  // LIBMV_RECONSTRUCTION_RECONSTRUCTION_CALIBRATED_H_

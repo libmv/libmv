@@ -19,7 +19,7 @@
 // IN THE SOFTWARE.
 
 #include "libmv/base/vector_utils.h"
-#include "libmv/camera/camera.h"
+#include "libmv/camera/pinhole_camera.h"
 #include "libmv/multiview/five_point.h"
 #include "libmv/multiview/fundamental.h"
 #include "libmv/multiview/robust_euclidean_resection.h"

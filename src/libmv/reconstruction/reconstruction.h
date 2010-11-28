@@ -18,14 +18,14 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
-#ifndef LIBMV_MULTIVIEW_RECONSTRUCTION_H_
-#define LIBMV_MULTIVIEW_RECONSTRUCTION_H_
+#ifndef LIBMV_RECONSTRUCTION_RECONSTRUCTION_H_
+#define LIBMV_RECONSTRUCTION_RECONSTRUCTION_H_
 
 #include <cstdio>
 #include <list>
 #include <map>
 
-#include "libmv/camera/camera.h"
+#include "libmv/camera/pinhole_camera.h"
 #include "libmv/correspondence/matches.h"
 #include "libmv/logging/logging.h"
 #include "libmv/numeric/numeric.h"
@@ -201,4 +201,4 @@ class Reconstruction {
 };
 }  // namespace libmv
 
-#endif  // LIBMV_MULTIVIEW_RECONSTRUCTION_H_
+#endif  // LIBMV_RECONSTRUCTION_RECONSTRUCTION_H_

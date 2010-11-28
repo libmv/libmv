@@ -19,7 +19,7 @@
 // IN THE SOFTWARE.
 
 #include "libmv/base/vector.h"
-#include "libmv/camera/camera.h"
+#include "libmv/camera/pinhole_camera.h"
 #include "libmv/camera/lens_distortion.h"
 #include "libmv/numeric/levenberg_marquardt.h"
 #include "libmv/multiview/structure.h"

@@ -18,7 +18,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
-#include "libmv/camera/camera.h"
+#include "libmv/camera/pinhole_camera.h"
 #include "libmv/camera/lens_distortion.h"
 #include "libmv/numeric/levenberg_marquardt.h"
 

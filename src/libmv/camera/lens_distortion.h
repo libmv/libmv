@@ -18,8 +18,8 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
-#ifndef LIBMV_MULTIVIEW_LENS_DISTORTION_H_
-#define LIBMV_MULTIVIEW_LENS_DISTORTION_H_
+#ifndef LIBMV_CAMERA_LENS_DISTORTION_H_
+#define LIBMV_CAMERA_LENS_DISTORTION_H_
 
 #include "libmv/base/vector.h"
 #include "libmv/logging/logging.h"
@@ -120,4 +120,4 @@ class LensDistortionField : public LensDistortion {
 
 }
 
-#endif  // LIBMV_MULTIVIEW_LENS_DISTORTION_H_
+#endif  // LIBMV_CAMERA_LENS_DISTORTION_H_
