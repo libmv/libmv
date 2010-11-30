@@ -47,7 +47,8 @@ double EstimateRootMeanSquareError(const Matches &matches,
                                         &X_world);
       Mat2X dx =Project(pcamera->projection_matrix(), X_world) - x_image;
       VLOG(1)   << "|Err Cam "<<camera_iter->first<<"| = " 
-                << sqrt(Square(dx.norm()) / x_image.cols()) << std::endl;
+                << sqrt(Square(dx.norm()) / x_image.cols()) << " ("
+                << x_image.cols() << " pts)" << std::endl;
       // TODO(julien) use normSquare
       sum_rms2 += Square(dx.norm());
       num_features += x_image.cols();
@@ -142,5 +143,71 @@ double MetricBundleAdjust(const Matches &matches,
   //rms = EstimateRootMeanSquareError(matches, reconstruction);
   VLOG(1)   << "Final RMS = " << rms << std::endl;
   return rms;
+}
+
+uint RemoveOutliers(CameraID image_id,
+                    Matches *matches,   
+                    Reconstruction *reconstruction,
+                    double rmse_threshold) {
+  // TODO(julien) finish it !
+  // Checks that the camera is in reconstruction
+  if (!reconstruction->ImageHasCamera(image_id)) {
+    return 0;
+  }
+  vector<StructureID> structures_ids;
+  // Selects only the reconstructed structures observed in the image
+  SelectExistingPointStructures(*matches, image_id, *reconstruction,
+                                &structures_ids, NULL);
+  Vec2 q, q2; 
+  uint number_outliers = 0;
+  uint num_views = 0;
+  bool current_point_removed = false;
+  PinholeCamera *camera = NULL;
+  PointStructure *pstructure = NULL;
+  double err = 0;
+  for (size_t t = 0; t < structures_ids.size(); ++t) {
+    pstructure = dynamic_cast<PointStructure *>(
+      reconstruction->GetStructure(structures_ids[t]));
+    if (pstructure) {
+      Matches::Features<PointFeature> fp =
+       matches->InTrack<PointFeature>(structures_ids[t]);
+      current_point_removed = false;
+      while (fp) {
+        camera = dynamic_cast<PinholeCamera *>(
+          reconstruction->GetCamera(fp.image()));
+        if (camera) {
+          q << fp.feature()->x(), fp.feature()->y();
+          camera->ProjectPointStructure(*pstructure, &q2);
+          err = (q - q2).norm();
+          if (err > rmse_threshold) {
+            matches->Remove(fp.image(), structures_ids[t]);
+            if (!current_point_removed)
+              number_outliers++;
+            current_point_removed = true;
+          }
+        }
+        fp.operator++();
+      }
+      // TODO(julien) put the check into a function
+      // Check if a point has enough views (with pinhole cameras)
+      fp = matches->InTrack<PointFeature>(structures_ids[t]);
+      num_views = 0;
+      while (fp) {
+        camera = dynamic_cast<PinholeCamera *>(
+          reconstruction->GetCamera(fp.image()));
+        if (camera) {
+          num_views++;
+        }
+        fp.operator++();
+      }
+      if (num_views < 2) {
+        //Delete the point
+        reconstruction->RemoveTrack(structures_ids[t]);
+      }
+      // TODO(julien) also check if a camera has enough points (at least 2)
+    }
+  }
+  std::cout << "#outliers: " << number_outliers << std::endl;
+  return number_outliers;
 }
 } // namespace libmv

@@ -27,7 +27,7 @@
 #include "libmv/reconstruction/mapping.h"
 #include "libmv/reconstruction/optimization.h"
 #include "libmv/reconstruction/tools.h"
-#include "libmv/reconstruction/uncalibrated_reconstruction.h"
+#include "libmv/reconstruction/projective_reconstruction.h"
 
 namespace libmv {
 

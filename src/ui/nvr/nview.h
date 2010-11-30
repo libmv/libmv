@@ -1,5 +1,7 @@
 #pragma once
+#include <list>
 #include <string>
+
 #include <QList>
 #include <QImage>
 #include <QDebug>
@@ -123,19 +125,22 @@ public slots:
     void computeMetricRectification();
     void computeBA();
     
+    void UpdateGraph();
     void warningNotFunctional();
     bool SelectDetectorDescriber(eDetector *detector, eDescriber *describer);
 signals:
     void setFilter(int i);
     void clearFilter();
 private:
-    void DrawNewStructures(const libmv::vector<StructureID> &struct_ids);
-    
-    nRobustViewMatching nViewMatcher;
+    void DrawAllStructures(const Reconstruction &recons);
+    void DrawNewStructures(const libmv::vector<StructureID> &struct_ids,
+                           const Reconstruction &recons);
+    nRobustViewMatching nViewMatcher_;
     QList<ImageView*> images;
     Graph* graph;
-    Reconstruction reconstruction_;
-    Matches matches_inliers_;
+    std::list<Reconstruction *> reconstructions_;
+    Matches matches_;
+    bool is_video_sequence_;
 
     QGridLayout *grid_layout_;
     GraphView   *graph_view_;

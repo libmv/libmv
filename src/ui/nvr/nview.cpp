@@ -7,13 +7,19 @@
 #include <QLabel>
 
 #include "ui/nvr/nview.h"
-#include "libmv/reconstruction/calibrated_reconstruction.h"
+#include "libmv/correspondence/ArrayMatcher_Kdtree.h"
+#include "libmv/correspondence/robust_tracker.h"
+#include "libmv/image/image.h"
+#include "libmv/image/image_io.h"
+#include "libmv/image/image_converter.h"
+#include "libmv/reconstruction/euclidean_reconstruction.h"
 #include "libmv/reconstruction/export_blender.h"
 #include "libmv/reconstruction/export_ply.h"
 #include "libmv/reconstruction/image_order_selection.h"
 #include "libmv/reconstruction/mapping.h"
 #include "libmv/reconstruction/optimization.h"
-#include "libmv/reconstruction/uncalibrated_reconstruction.h"
+#include "libmv/reconstruction/projective_reconstruction.h"
+
 
 int main(int argc, char *argv[]) {
     Init("", &argc, &argv);
@@ -125,11 +131,18 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
     QStringList args = qApp->arguments(); args.removeFirst();
     openImages(args);
     if(!args.isEmpty()) computeMatches();
+    
+    is_video_sequence_ = false;
 }
 
 MainWindow::~MainWindow() {
-  reconstruction_.ClearCamerasMap();
-  reconstruction_.ClearStructuresMap(); 
+  std::list<Reconstruction *>::iterator iter = reconstructions_.begin();
+  for (; iter != reconstructions_.end(); ++iter) {
+    (*iter)->ClearCamerasMap();
+    (*iter)->ClearStructuresMap(); 
+    delete *iter;
+  }
+  reconstructions_.clear();
   delete gl_widget_;
   gl_widget_ = NULL;
   delete graph_view_;
@@ -152,10 +165,19 @@ void MainWindow::SaveReconstructionFile() {
                       tr("Blender Script (*.py);;PLY format (*.ply)"),
                       &selected_filter);
   if (out_file.isEmpty()) return;
-  if (selected_filter == tr("PLY format (*.ply)"))
-    ExportToPLY(reconstruction_, out_file.toStdString());
-  else
-    ExportToBlenderScript(reconstruction_, out_file.toStdString());
+  if (selected_filter == tr("PLY format (*.ply)")) {
+    std::list<Reconstruction *>::iterator iter = reconstructions_.begin();
+    for (; iter != reconstructions_.end(); ++iter) {
+      // TODO(julien) change the name
+      ExportToPLY(**iter, out_file.toStdString());
+    }
+  } else {
+    std::list<Reconstruction *>::iterator iter = reconstructions_.begin();
+    for (; iter != reconstructions_.end(); ++iter) {
+      // TODO(julien) change the name
+      ExportToBlenderScript(**iter, out_file.toStdString());
+    }
+  }
 }
 void MainWindow::openImages( QStringList files ) {
     if (files.isEmpty()) return;
@@ -234,61 +256,82 @@ void MainWindow::computeMatches() {
     // TODO(julien) create a UI to selection the detector/describer we want
     Detector * pdetector  = detectorFactory(detector);
     Describer* pdescriber = describerFactory(describer);
-    nViewMatcher = correspondence::nRobustViewMatching(pdetector, pdescriber);
+    nViewMatcher_ = correspondence::nRobustViewMatching(pdetector, pdescriber);
 
     libmv::vector<std::string> image_vector;
     foreach (ImageView* image, images) 
       image_vector.push_back(image->path().toStdString());
-    nViewMatcher.computeCrossMatch(image_vector);
+    nViewMatcher_.computeCrossMatch(image_vector);
 
-    // TODO(julien) put the following in a private function
-    graph->clear(); graph->nodes.clear(); graph->edges.clear(); //leak?
-    QVector< QVector< QVector<KeypointFeature> > > matches;
-    matches.resize(images.count());
-    for (int i=0; i < images.count(); ++i) matches[i].resize(images.count());
-    int maxWidth=0;
-    for (int i=0; i < images.count(); ++i) {
-        Node* a = new Node;
-        a->setFlag(QGraphicsItem::ItemIsMovable);
-        a->setPixmap(images[i]->image);
-        a->setScale(1.0/a->pixmap().width());
-        a->setOffset(-a->pixmap().width()/2,-a->pixmap().height()/2);
-        a->setPos( (float)qrand()/INT_MAX, (float)qrand()/INT_MAX );
-        graph->addItem(a);
-        graph->nodes << a;
-        for (int j=0; j<i; ++j)  {
-            Node* b = graph->nodes[j];
-            for(Matches::Features<KeypointFeature> features = 
-                  nViewMatcher.getMatches().InImage<KeypointFeature>(i);
-                  features;++features) {
-                Matches::TrackID id_track = features.track();
-                const KeypointFeature * ref = features.feature();
-                const KeypointFeature * f = (KeypointFeature*) 
-                //FIXME: could Get() return FeatureT ?
-                nViewMatcher.getMatches().Get(j, id_track);
-                if (f && ref) {
-                    matches[i][j].append( *ref );
-                    matches[j][i].append( *f );
-                    if(a->edges.contains(b)) {
-                        Edge* e = a->edges[b];
-                        int width = e->pen().width()+1;
-                        maxWidth = qMax(maxWidth,width);
-                        e->setPen(QPen(QBrush(Qt::SolidPattern),width));
-                    } else {
-                        Edge* e = new Edge(a,b);
-                        a->edges[b] = b->edges[a] = e;
-                        graph->edges << e;
-                        graph->addItem( e );
-                    }
-                }
-            }
-        }
-      progressCallback(progress, i);
-    }
-    foreach(Edge* e, graph->edges )
-        e->setPen(QPen(QBrush(Qt::SolidPattern),0.1*e->pen().width()/maxWidth));
-    for (int i=0; i < images.count(); ++i) images[i]->setFeatures(matches[i]);
-    graph_view_->fitInView(graph->sceneRect());
+    matches_.Merge(nViewMatcher_.getMatches());
+    UpdateGraph();
+    is_video_sequence_ = false;
+}
+
+void MainWindow::UpdateGraph() {
+  QProgressDialog progress("Updating graph view...","Abort", 0, 
+                             images.count(), this);
+  progress.setWindowModality(Qt::WindowModal);
+  graph->clear(); graph->nodes.clear(); graph->edges.clear(); //leak?
+  QVector< QVector< QVector<KeypointFeature> > > matches;
+  matches.resize(images.count());
+  for (int i=0; i < images.count(); ++i) matches[i].resize(images.count());
+  int maxWidth=0;
+  for (int i=0; i < images.count(); ++i) {
+      Node* a = new Node;
+      a->setFlag(QGraphicsItem::ItemIsMovable);
+      a->setPixmap(images[i]->image);
+      a->setScale(1.0/a->pixmap().width());
+      a->setOffset(-a->pixmap().width()/2,-a->pixmap().height()/2);
+      a->setPos( (float)qrand()/INT_MAX, (float)qrand()/INT_MAX );
+      graph->addItem(a);
+      graph->nodes << a;
+      for (int j=0; j<i; ++j)  {
+          Node* b = graph->nodes[j];
+          for(Matches::Features<KeypointFeature> features = 
+                matches_.InImage<KeypointFeature>(i);
+                features;++features) {
+              Matches::TrackID id_track = features.track();
+              const KeypointFeature * ref = features.feature();
+              const KeypointFeature * f = (KeypointFeature*) 
+              //FIXME: could Get() return FeatureT ?
+              matches_.Get(j, id_track);
+              if (f && ref) {
+                  matches[i][j].append( *ref );
+                  matches[j][i].append( *f );
+                  if(a->edges.contains(b)) {
+                      Edge* e = a->edges[b];
+                      int width = e->pen().width()+1;
+                      maxWidth = qMax(maxWidth,width);
+                      e->setPen(QPen(QBrush(Qt::SolidPattern),width));
+                  } else {
+                      Edge* e = new Edge(a,b);
+                      a->edges[b] = b->edges[a] = e;
+                      graph->edges << e;
+                      graph->addItem( e );
+                  }
+              }
+          }
+      }
+    progressCallback(progress, i);
+  }
+  foreach(Edge* e, graph->edges )
+      e->setPen(QPen(QBrush(Qt::SolidPattern),0.1*e->pen().width()/maxWidth));
+  for (int i=0; i < images.count(); ++i) images[i]->setFeatures(matches[i]);
+  graph_view_->fitInView(graph->sceneRect());
+}
+
+ByteImage * ConvertToGrayscale(const ByteImage &imageArrayBytes) {
+  ByteImage *arrayGrayBytes = NULL;
+  // Grayscale image convertion
+  if (imageArrayBytes.Depth() == 3) {
+    arrayGrayBytes = new ByteImage ();
+    Rgb2Gray<ByteImage, ByteImage>(imageArrayBytes, arrayGrayBytes);
+  } else {
+    //TODO(julien) Useless: don't copy an already grayscale image
+    arrayGrayBytes = new ByteImage (imageArrayBytes);
+  }
+  return arrayGrayBytes;
 }
 
 void MainWindow::computeRelativeMatches() {
@@ -302,68 +345,51 @@ void MainWindow::computeRelativeMatches() {
     // TODO(julien) create a UI to selection the detector/describer we want
     Detector * pdetector  = detectorFactory(detector);
     Describer* pdescriber = describerFactory(describer);
-    nViewMatcher = correspondence::nRobustViewMatching(pdetector, pdescriber);
+    correspondence::ArrayMatcher_Kdtree<float> *matcher = 
+      new correspondence::ArrayMatcher_Kdtree<float>();
 
-    libmv::vector<std::string> image_vector;
+    // Track the sequence of images
+    std::list<std::string> image_list;
     foreach (ImageView* image, images) 
-      image_vector.push_back(image->path().toStdString());
-    nViewMatcher.computeRelativeMatch(image_vector);
+      image_list.push_back(image->path().toStdString());
+    
+    libmv::tracker::FeaturesGraph all_features_graph;
+    libmv::tracker::FeaturesGraph prev_features_graph;
+    tracker::RobustTracker points_tracker(pdetector, pdescriber, matcher);
+    size_t image_index = 0;
+    std::list<std::string>::iterator image_list_iterator = image_list.begin();
+    for (; image_list_iterator != image_list.end(); ++image_list_iterator) {
+      std::string image_path = (*image_list_iterator);
 
-    // TODO(julien) put the following in a private function
-    graph->clear(); graph->nodes.clear(); graph->edges.clear(); //leak?
-    QVector< QVector< QVector<KeypointFeature> > > matches;
-    matches.resize(images.count());
-    for (int i=0; i < images.count(); ++i) matches[i].resize(images.count());
-    int maxWidth=0;
-    for (int i=0; i < images.count(); ++i) {
-        Node* a = new Node;
-        a->setFlag(QGraphicsItem::ItemIsMovable);
-        a->setPixmap(images[i]->image);
-        a->setScale(1.0/a->pixmap().width());
-        a->setOffset(-a->pixmap().width()/2,-a->pixmap().height()/2);
-        a->setPos( (float)qrand()/INT_MAX, (float)qrand()/INT_MAX );
-        graph->addItem(a);
-        graph->nodes << a;
-        for (int j=0; j<i; ++j)  {
-            Node* b = graph->nodes[j];
-            for(Matches::Features<KeypointFeature> features = 
-                  nViewMatcher.getMatches().InImage<KeypointFeature>(i);
-                  features;++features) {
-                Matches::TrackID id_track = features.track();
-                const KeypointFeature * ref = features.feature();
-                const KeypointFeature * f = (KeypointFeature*) 
-                //FIXME: could Get() return FeatureT ?
-                nViewMatcher.getMatches().Get(j, id_track);
-                if (f && ref) {
-                    matches[i][j].append( *ref );
-                    matches[j][i].append( *f );
-                    if(a->edges.contains(b)) {
-                        Edge* e = a->edges[b];
-                        int width = e->pen().width()+1;
-                        maxWidth = qMax(maxWidth,width);
-                        e->setPen(QPen(QBrush(Qt::SolidPattern),width));
-                    } else {
-                        Edge* e = new Edge(a,b);
-                        a->edges[b] = b->edges[a] = e;
-                        graph->edges << e;
-                        graph->addItem( e );
-                    }
-                }
-            }
-        }
-      progressCallback(progress, i);
+      ByteImage imageArrayBytes;
+      ReadImage (image_path.c_str(), &imageArrayBytes);
+      ByteImage *arrayGrayBytes = ConvertToGrayscale(imageArrayBytes);
+
+      Image image(arrayGrayBytes);
+      libmv::tracker::FeaturesGraph new_features_graph;
+      libmv::Matches::ImageID new_image_id = 0;
+      points_tracker.Track(image,
+                           prev_features_graph,
+                           &new_features_graph,
+                           &new_image_id,
+                           true);
+      prev_features_graph.Clear();
+      prev_features_graph.matches_.Merge(new_features_graph.matches_);
+      all_features_graph.Merge(new_features_graph);
+      image_index++;
     }
-    foreach(Edge* e, graph->edges )
-        e->setPen(QPen(QBrush(Qt::SolidPattern),0.1*e->pen().width()/maxWidth));
-    for (int i=0; i < images.count(); ++i) images[i]->setFeatures(matches[i]);
-    graph_view_->fitInView(graph->sceneRect());
+    
+    matches_.Merge(all_features_graph.matches_);
+    // TODO(julien) Delete the features graph
+    //all_features_graph.DeleteAndClear();
+    UpdateGraph();
+    is_video_sequence_ = true;
 }
 
 void MainWindow::computeUncalibratedReconstruction() {
   QProgressDialog progress("Computing uncalibrated reconstruction...","Abort",0,
                            images.count(), this);
   progress.setWindowModality(Qt::WindowModal);
-  const Matches &matches = nViewMatcher.getMatches();
   Vec2u image_size;
   PinholeCamera * camera = NULL;
   
@@ -373,25 +399,30 @@ void MainWindow::computeUncalibratedReconstruction() {
  
   progress.setLabelText("Selecting best initial images...");
   std::list<libmv::vector<Matches::ImageID> > connected_graph_list;
-  SelectEfficientImageOrder(matches,  &connected_graph_list);
+  SelectEfficientImageOrder(matches_,  &connected_graph_list);
   
+  // TODO(julien) put the following in the reconstruction lib. 
+  Matches matches_inliers;
   size_t image_id = 0;
   size_t index_image_graph = 0;
+  Reconstruction *recons = NULL;
   libmv::vector<StructureID> new_structures_ids;
   std::list<libmv::vector<Matches::ImageID> >::iterator graph_iter =
     connected_graph_list.begin();
   for (; graph_iter != connected_graph_list.end(); ++graph_iter) {
+    recons = new Reconstruction();
+    reconstructions_.push_back(recons);
     progress.setLabelText("Initial Motion Estimation");
-    LOG(INFO) << " -- Initial Motion Estimation --  " << std::endl;
-    ReconstructFromTwoUncalibratedViews(matches, 
+    std::cout << " -- Initial Motion Estimation --  " << std::endl;
+    ReconstructFromTwoUncalibratedViews(matches_, 
                                         (*graph_iter)[0], 
                                         (*graph_iter)[1], 
-                                        &matches_inliers_, 
-                                        &reconstruction_);
+                                        &matches_inliers, 
+                                        recons);
     index_image_graph = 0;
     image_id = (*graph_iter)[index_image_graph];
     camera = dynamic_cast<PinholeCamera*>(
-      reconstruction_.GetCamera(image_id));
+      recons->GetCamera(image_id));
     if (camera) {
       image_size << images[image_id]->GetImageWidth(), 
                     images[image_id]->GetImageHeight();
@@ -400,7 +431,7 @@ void MainWindow::computeUncalibratedReconstruction() {
     index_image_graph = 1;
     image_id = (*graph_iter)[index_image_graph];
     camera = dynamic_cast<PinholeCamera*>(
-      reconstruction_.GetCamera(image_id));
+      recons->GetCamera(image_id));
     if (camera) {
       image_size << images[image_id]->GetImageWidth(), 
                     images[image_id]->GetImageHeight();
@@ -409,17 +440,16 @@ void MainWindow::computeUncalibratedReconstruction() {
     progressCallback(progress, 1);
     
     progress.setLabelText("Initial Intersection");
-    LOG(INFO) << " -- Initial Intersection --  " << std::endl;
+    std::cout << " -- Initial Intersection --  " << std::endl;
     size_t minimum_num_views = 2;
-    PointStructureTriangulation(matches_inliers_, 
+    PointStructureTriangulation(matches_inliers, 
                                 image_id,
                                 minimum_num_views, 
-                                &reconstruction_,
+                                recons,
                                 &new_structures_ids);
-    DrawNewStructures(new_structures_ids);
     new_structures_ids.clear();
     // Performs projective bundle adjustment
-    //LOG(INFO) << " -- Projective Bundle Adjustment --  " << std::endl;
+    //std::cout << " -- Projective Bundle Adjustment --  " << std::endl;
     
     // Estimation of the pose of other images by resection
     minimum_num_views = 3;
@@ -427,12 +457,12 @@ void MainWindow::computeUncalibratedReconstruction() {
         ++index_image_graph) {
       image_id = (*graph_iter)[index_image_graph];
       progress.setLabelText("Incremental Resection");
-      LOG(INFO) << " -- Incremental Resection --  " << std::endl;
-      UncalibratedCameraResection(matches, image_id,
-                                  &matches_inliers_, &reconstruction_);     
+      std::cout << " -- Incremental Resection --  " << std::endl;
+      UncalibratedCameraResection(matches_, image_id,
+                                  &matches_inliers, recons);     
       
       camera = dynamic_cast<PinholeCamera*>(
-        reconstruction_.GetCamera(image_id));
+        recons->GetCamera(image_id));
       if (camera) {
         image_size << images[image_id]->GetImageWidth(),
                       images[image_id]->GetImageHeight();
@@ -440,33 +470,35 @@ void MainWindow::computeUncalibratedReconstruction() {
       }
       // TODO(julien) Avoid to retriangulate, prefer projective BA
       progress.setLabelText("Retriangulation");
-      LOG(INFO) << " -- Retriangulation --  " << std::endl;
-      PointStructureRetriangulation(matches_inliers_, 
+      std::cout << " -- Retriangulation --  " << std::endl;
+      PointStructureRetriangulation(matches_inliers, 
                                   image_id,
-                                  &reconstruction_);
+                                  recons);
       
       progress.setLabelText("Incremental Intersection");
-      LOG(INFO) << " -- Incremental Intersection --  " << std::endl;
+      std::cout << " -- Incremental Intersection --  " << std::endl;
       // TODO(julien) this do nothing (no points)...fix it
-      PointStructureTriangulation(matches_inliers_, 
+      PointStructureTriangulation(matches_inliers, 
                                   image_id,
                                   minimum_num_views, 
-                                  &reconstruction_,
+                                  recons,
                                   &new_structures_ids);
-      DrawNewStructures(new_structures_ids);
       new_structures_ids.clear();
 
       // TODO(julien) Performs projective bundle adjustment
       progressCallback(progress, index_image_graph);
     }
+    DrawAllStructures(*recons);
   }
+  matches_.Clear();
+  matches_.Merge(matches_inliers);
+  UpdateGraph();
 }
 
 void MainWindow::computeCalibratedReconstruction() {
   QProgressDialog progress("Computing calibrated reconstruction...","Abort", 0,
                            images.count(), this);
   progress.setWindowModality(Qt::WindowModal);
-  const Matches &matches = nViewMatcher.getMatches();
   Vec2u image_size;
   PinholeCamera * camera = NULL;
   
@@ -496,10 +528,14 @@ void MainWindow::computeCalibratedReconstruction() {
   K << focal, 0, cu,
        0, focal, cv,
        0,   0,   1;
- 
+       
+  // TODO(julien) put the following in the reconstruction lib. 
   progress.setLabelText("Selecting best initial images...");
   std::list<libmv::vector<Matches::ImageID> > connected_graph_list;
-  SelectEfficientImageOrder(matches,  &connected_graph_list);
+  if (is_video_sequence_)
+    SelectKeyframes(matches_,  &connected_graph_list);
+  else
+    SelectEfficientImageOrder(matches_,  &connected_graph_list);
   
   std::cout << " List order:";
   for (size_t i = 0; i < connected_graph_list.begin()->size(); ++i) {
@@ -507,24 +543,28 @@ void MainWindow::computeCalibratedReconstruction() {
   }
   std::cout << std::endl;
   
+  Matches matches_inliers;
   size_t image_id = 0;
   size_t index_image_graph = 0;
+  Reconstruction *recons = NULL;
   libmv::vector<StructureID> new_structures_ids;
   std::list<libmv::vector<Matches::ImageID> >::iterator graph_iter =
     connected_graph_list.begin();
   for (; graph_iter != connected_graph_list.end(); ++graph_iter) {
+    recons = new Reconstruction();
+    reconstructions_.push_back(recons);
     progress.setLabelText("Initial Motion Estimation");
-    LOG(INFO) << " -- Initial Motion Estimation --  " << std::endl;
-    ReconstructFromTwoCalibratedViews(matches, 
+    std::cout << " -- Initial Motion Estimation --  " << std::endl;
+    ReconstructFromTwoCalibratedViews(matches_, 
                                       (*graph_iter)[0], 
                                       (*graph_iter)[1], 
                                       K, K,
-                                      &matches_inliers_, 
-                                      &reconstruction_);
+                                      &matches_inliers, 
+                                      recons);
     index_image_graph = 0;
     image_id = (*graph_iter)[index_image_graph];
     camera = dynamic_cast<PinholeCamera*>(
-      reconstruction_.GetCamera(image_id));
+      recons->GetCamera(image_id));
     if (camera) {
       image_size << images[image_id]->GetImageWidth(), 
                     images[image_id]->GetImageHeight();
@@ -533,7 +573,7 @@ void MainWindow::computeCalibratedReconstruction() {
     index_image_graph = 1;
     image_id = (*graph_iter)[index_image_graph];
     camera = dynamic_cast<PinholeCamera*>(
-      reconstruction_.GetCamera(image_id));
+      recons->GetCamera(image_id));
     if (camera) {
       image_size << images[image_id]->GetImageWidth(), 
                     images[image_id]->GetImageHeight();
@@ -542,59 +582,83 @@ void MainWindow::computeCalibratedReconstruction() {
     progressCallback(progress, 1);
     
     progress.setLabelText("Initial Intersection");
-    LOG(INFO) << " -- Initial Intersection --  " << std::endl;
+    std::cout << " -- Initial Intersection --  " << std::endl;
     size_t minimum_num_views = 2;
-    PointStructureTriangulation(matches_inliers_, 
+    PointStructureTriangulation(matches_inliers, 
                                 image_id,
                                 minimum_num_views, 
-                                &reconstruction_,
+                                recons,
                                 &new_structures_ids);
-    DrawNewStructures(new_structures_ids);
+    
     new_structures_ids.clear();
     
     // Performs projective bundle adjustment
-    LOG(INFO) << " -- Bundle adjustment --  " << std::endl;
+    std::cout << " -- Bundle adjustment --  " << std::endl;
     progress.setLabelText("Bundle adjustment");
-    // Performs bundle adjustment
-    MetricBundleAdjust(matches_inliers_, &reconstruction_);
-   
+    MetricBundleAdjust(matches_inliers, recons);
+    /*
+    progress.setLabelText("Remove outliers");
+    RemoveOutliers(image_id, &matches_inliers, recons, 1.0);
+    progress.setLabelText("Bundle adjustment");
+    MetricBundleAdjust(matches_inliers, recons);*/
+    
+    std::string s = "out-1.py";
+    ExportToBlenderScript(*recons, s);
+    
     // Estimation of the pose of other images by resection
-    minimum_num_views = 2;
+    minimum_num_views = 3;
     for (index_image_graph = 2; index_image_graph < graph_iter->size();
         ++index_image_graph) {
       image_id = (*graph_iter)[index_image_graph];
       progress.setLabelText("Incremental Resection");
-      LOG(INFO) << " -- Incremental Resection --  " << std::endl;
-      CalibratedCameraResection(matches, image_id, K,
-                                &matches_inliers_, &reconstruction_);     
+      std::cout << " -- Incremental Resection --  " << std::endl;
+      CalibratedCameraResection(matches_, image_id, K,
+                                &matches_inliers, recons);    
+      // TODO(julien) optimize camera
       
       camera = dynamic_cast<PinholeCamera*>(
-        reconstruction_.GetCamera(image_id));
+        recons->GetCamera(image_id));
       if (camera) {
         image_size << images[image_id]->GetImageWidth(),
                       images[image_id]->GetImageHeight();
         camera->set_image_size(image_size); 
       }
       
+      std::cout << " -- Incremental Intersection --  " << std::endl;
       progress.setLabelText("Incremental Intersection");
-      LOG(INFO) << " -- Incremental Intersection --  " << std::endl;
-      // TODO(julien) this do nothing (no points)...fix it
-      PointStructureTriangulation(matches_inliers_, 
+      PointStructureTriangulation(matches_, 
                                   image_id,
                                   minimum_num_views, 
-                                  &reconstruction_,
-                                  &new_structures_ids);
-      DrawNewStructures(new_structures_ids);
-      new_structures_ids.clear();
+                                  recons,
+                                  &new_structures_ids);    
+      // TODO(julien) optimize only points
       
       // Performs bundle adjustment
-      LOG(INFO) << " -- Bundle adjustment --  " << std::endl;
+      // TODO(julien) maybe BA can be called not for every images..
+      std::cout << " -- Bundle adjustment --  " << std::endl;
       progress.setLabelText("Bundle adjustment");
-      MetricBundleAdjust(matches_inliers_, &reconstruction_);
-  
+      MetricBundleAdjust(matches_, recons);
+      /*
+      progress.setLabelText("Remove outliers");
+      std::cout << " -- RemoveOutliers --  " << std::endl;
+      //RemoveOutliers(image_id, &matches_, recons, 2.0);
+      std::cout << " -- Bundle adjustment --  " << std::endl;
+      progress.setLabelText("Bundle adjustment");
+      MetricBundleAdjust(matches_, recons);*/
+
+      //DrawNewStructures(new_structures_ids, *recons);
+      new_structures_ids.clear();
+      std::stringstream s;
+      s << "out-" << index_image_graph << ".py";
+      ExportToBlenderScript(*recons, s.str());
+      
       progressCallback(progress, index_image_graph);
     }
+    DrawAllStructures(*recons);
   }
+  matches_.Clear();
+  matches_.Merge(matches_inliers);
+  UpdateGraph();
 }
 
 void MainWindow::computeMetricRectification() {
@@ -604,7 +668,9 @@ void MainWindow::computeMetricRectification() {
   progress.setWindowModality(Qt::WindowModal);
   progress.setLabelText("Metric rectification");
   // Metric rectification
-  UpgradeToMetric(matches_inliers_, &reconstruction_);
+  std::list<Reconstruction *>::iterator iter = reconstructions_.begin();
+  for (; iter != reconstructions_.end(); ++iter)
+    UpgradeToMetric(matches_, *iter);
 }
 
 void MainWindow::computeBA() {
@@ -613,18 +679,35 @@ void MainWindow::computeBA() {
   progress.setWindowModality(Qt::WindowModal);
   progress.setLabelText("Bundle adjustment");
   // Performs bundle adjustment
-  MetricBundleAdjust(matches_inliers_, &reconstruction_);
+  std::list<Reconstruction *>::iterator iter = reconstructions_.begin();
+  for (; iter != reconstructions_.end(); ++iter)
+    MetricBundleAdjust(matches_, *iter);
   progress.setLabelText("Reconstruction done.");
 }
 
-void MainWindow::DrawNewStructures(const libmv::vector<StructureID> &struct_ids)
-{
+void MainWindow::DrawAllStructures(const Reconstruction &recons) {
+  PointStructure *ps = NULL;
+  libmv::vector<Vec3> struct_coords;
+  struct_coords.reserve(recons.GetNumberStructures());
+  std::map<StructureID, Structure *>::const_iterator it = 
+   recons.structures().begin();
+  for (; it != recons.structures().end(); ++it) {
+    ps = dynamic_cast<PointStructure *>(it->second);
+    if (ps) {
+      struct_coords.push_back(ps->coords_affine());
+    }
+  }
+  gl_widget_->AddNewStructure(struct_coords);
+}
+
+void MainWindow::DrawNewStructures(const libmv::vector<StructureID> &struct_ids,
+                                   const Reconstruction &recons) {
   PointStructure *ps = NULL;
   libmv::vector<Vec3> struct_coords;
   struct_coords.reserve(struct_ids.size());
   for (size_t s = 0; s < struct_ids.size(); ++s) {
     ps = dynamic_cast<PointStructure *>(
-     reconstruction_.GetStructure(struct_ids[s]));
+     recons.GetStructure(struct_ids[s]));
     if (ps) {
       struct_coords.push_back(ps->coords_affine());
     }

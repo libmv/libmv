@@ -1,13 +1,13 @@
 ADD_LIBRARY(reconstruction
-            reconstruction.cc
-            calibrated_reconstruction.cc
+            euclidean_reconstruction.cc
             export_blender.cc
             export_ply.cc
             image_order_selection.cc
             mapping.cc
             optimization.cc
+            projective_reconstruction.cc
+            reconstruction.cc
             tools.cc
-            uncalibrated_reconstruction.cc
             )
 
 TARGET_LINK_LIBRARIES(reconstruction camera multiview numeric V3D colamd ldl)

@@ -196,6 +196,7 @@ void EuclideanToHomogeneous(const Vec3 &X, Vec4 *H) {
   *H << X(0), X(1), X(2), 1;
 }
 
+// TODO(julien) Call conditioning.h/ApplyTransformationToPoints ?
 void EuclideanToNormalizedCamera(const Mat2X &x, const Mat3 &K, Mat2X *n) {
  Mat3X x_image_h;
  EuclideanToHomogeneous(x, &x_image_h);

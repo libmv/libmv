@@ -24,7 +24,7 @@
 #include "libmv/multiview/fundamental.h"
 #include "libmv/multiview/robust_euclidean_resection.h"
 #include "libmv/multiview/robust_fundamental.h"
-#include "libmv/reconstruction/calibrated_reconstruction.h"
+#include "libmv/reconstruction/euclidean_reconstruction.h"
 #include "libmv/reconstruction/mapping.h"
 #include "libmv/reconstruction/tools.h"
 

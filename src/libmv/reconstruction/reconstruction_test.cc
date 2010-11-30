@@ -25,10 +25,10 @@
 #include "libmv/multiview/test_data_sets.h"
 #include "libmv/numeric/numeric.h"
 #include "libmv/reconstruction/reconstruction.h"
-#include "libmv/reconstruction/calibrated_reconstruction.h"
+#include "libmv/reconstruction/euclidean_reconstruction.h"
 #include "libmv/reconstruction/mapping.h"
 #include "libmv/reconstruction/optimization.h"
-#include "libmv/reconstruction/uncalibrated_reconstruction.h"
+#include "libmv/reconstruction/projective_reconstruction.h"
 #include "testing/testing.h"
 
 namespace libmv {

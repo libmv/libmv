@@ -18,21 +18,26 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
-#ifndef LIBMV_RECONSTRUCTION_RECONSTRUCTION_IMAGE_ORDER_SELECTION_H_
-#define LIBMV_RECONSTRUCTION_RECONSTRUCTION_IMAGE_ORDER_SELECTION_H_
+#ifndef LIBMV_RECONSTRUCTION_IMAGE_ORDER_SELECTION_H_
+#define LIBMV_RECONSTRUCTION_IMAGE_ORDER_SELECTION_H_
 
 #include "libmv/reconstruction/reconstruction.h"
 
 namespace libmv {
 
-// This method selects an efficient order of images, with the first two are
-// selected because they have a good baseline.
-// The criterion is: homography error x number of common matches
-// The oupout connected_graph_list contains a list of connected graphs
+// This method selects an efficient order of images based on an image
+// criterion: median homography error x number of common matches
+// The oupout images_list contains a list of connected graphs
 // (vectors), each vector contains the ImageID ordered by the criterion.
 void SelectEfficientImageOrder(
   const Matches &matches, 
-  std::list<vector<Matches::ImageID> >*connected_graph_list);
+  std::list<vector<Matches::ImageID> >*images_list);
+
+// This method selects only keyframes [Pollefeys'03]
+// NOTE It is at least barely started
+void SelectKeyframes(
+  const Matches &matches, 
+  std::list<vector<Matches::ImageID> >*keyframes_list);
 }  // namespace libmv
 
-#endif  // LIBMV_RECONSTRUCTION_RECONSTRUCTION_IMAGE_ORDER_SELECTION_H_
+#endif  // LIBMV_RECONSTRUCTION_IMAGE_ORDER_SELECTION_H_

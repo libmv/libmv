@@ -18,8 +18,8 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
-#ifndef LIBMV_RECONSTRUCTION_RECONSTRUCTION_EXPORT_PLY_H_
-#define LIBMV_RECONSTRUCTION_RECONSTRUCTION_EXPORT_PLY_H_
+#ifndef LIBMV_RECONSTRUCTION_EXPORT_PLY_H_
+#define LIBMV_RECONSTRUCTION_EXPORT_PLY_H_
 
 #include "libmv/reconstruction/reconstruction.h"
 
@@ -28,4 +28,4 @@ namespace libmv {
 void ExportToPLY(const Reconstruction &reconstruct, std::string out_file_name);
 }  // namespace libmv
 
-#endif  // LIBMV_RECONSTRUCTION_RECONSTRUCTION_EXPORT_PLY_H_
+#endif  // LIBMV_RECONSTRUCTION_EXPORT_PLY_H_
