@@ -6,12 +6,12 @@
 #include <QMessageBox>
 #include <QLabel>
 
-#include "ui/nvr/nview.h"
 #include "libmv/correspondence/ArrayMatcher_Kdtree.h"
 #include "libmv/correspondence/robust_tracker.h"
 #include "libmv/image/image.h"
 #include "libmv/image/image_io.h"
 #include "libmv/image/image_converter.h"
+#include "libmv/logging/logging.h"
 #include "libmv/reconstruction/euclidean_reconstruction.h"
 #include "libmv/reconstruction/export_blender.h"
 #include "libmv/reconstruction/export_ply.h"
@@ -19,14 +19,19 @@
 #include "libmv/reconstruction/mapping.h"
 #include "libmv/reconstruction/optimization.h"
 #include "libmv/reconstruction/projective_reconstruction.h"
-
+#include "ui/nvr/nview.h"
 
 int main(int argc, char *argv[]) {
-    Init("", &argc, &argv);
-    QApplication app(argc, argv);
-    MainWindow window;
-    window.show();
-    return app.exec();
+  // TODO(julien) find why InitGoogleLogging prevent logging???
+  //Init("", &argc, &argv);
+  //google::InitGoogleLogging((argv)[0]);
+  google::SetUsageMessage("eee");
+  google::ParseCommandLineFlags(&argc, &argv, true);
+  
+  QApplication app(argc, argv);
+  MainWindow window;
+  window.show();
+  return app.exec();
 }
 
 /// ImageView
@@ -165,17 +170,30 @@ void MainWindow::SaveReconstructionFile() {
                       tr("Blender Script (*.py);;PLY format (*.ply)"),
                       &selected_filter);
   if (out_file.isEmpty()) return;
+  
+  QFileInfo file_info(out_file);
+  QString path_basename = file_info.path();
+  path_basename.append("/");
+  path_basename.append(file_info.baseName());
+  
+  uint i = 0;
   if (selected_filter == tr("PLY format (*.ply)")) {
     std::list<Reconstruction *>::iterator iter = reconstructions_.begin();
     for (; iter != reconstructions_.end(); ++iter) {
-      // TODO(julien) change the name
-      ExportToPLY(**iter, out_file.toStdString());
+      std::stringstream s;
+      s << path_basename.toStdString() << "-" << i << "."
+        << file_info.completeSuffix().toStdString();
+      ExportToPLY(**iter, s.str());
+      ++i;
     }
   } else {
     std::list<Reconstruction *>::iterator iter = reconstructions_.begin();
     for (; iter != reconstructions_.end(); ++iter) {
-      // TODO(julien) change the name
-      ExportToBlenderScript(**iter, out_file.toStdString());
+      std::stringstream s;
+      s << path_basename.toStdString() << "-" << i << "."
+        << file_info.completeSuffix().toStdString();
+      ExportToBlenderScript(**iter, s.str());
+      ++i;
     }
   }
 }
@@ -406,92 +424,89 @@ void MainWindow::computeUncalibratedReconstruction() {
   size_t image_id = 0;
   size_t index_image_graph = 0;
   Reconstruction *recons = NULL;
-  libmv::vector<StructureID> new_structures_ids;
   std::list<libmv::vector<Matches::ImageID> >::iterator graph_iter =
     connected_graph_list.begin();
   for (; graph_iter != connected_graph_list.end(); ++graph_iter) {
-    recons = new Reconstruction();
-    reconstructions_.push_back(recons);
-    progress.setLabelText("Initial Motion Estimation");
-    std::cout << " -- Initial Motion Estimation --  " << std::endl;
-    ReconstructFromTwoUncalibratedViews(matches_, 
-                                        (*graph_iter)[0], 
-                                        (*graph_iter)[1], 
-                                        &matches_inliers, 
-                                        recons);
-    index_image_graph = 0;
-    image_id = (*graph_iter)[index_image_graph];
-    camera = dynamic_cast<PinholeCamera*>(
-      recons->GetCamera(image_id));
-    if (camera) {
-      image_size << images[image_id]->GetImageWidth(), 
-                    images[image_id]->GetImageHeight();
-      camera->set_image_size(image_size); 
-    }
-    index_image_graph = 1;
-    image_id = (*graph_iter)[index_image_graph];
-    camera = dynamic_cast<PinholeCamera*>(
-      recons->GetCamera(image_id));
-    if (camera) {
-      image_size << images[image_id]->GetImageWidth(), 
-                    images[image_id]->GetImageHeight();
-      camera->set_image_size(image_size); 
-    }
-    progressCallback(progress, 1);
-    
-    progress.setLabelText("Initial Intersection");
-    std::cout << " -- Initial Intersection --  " << std::endl;
-    size_t minimum_num_views = 2;
-    PointStructureTriangulation(matches_inliers, 
-                                image_id,
-                                minimum_num_views, 
-                                recons,
-                                &new_structures_ids);
-    new_structures_ids.clear();
-    // Performs projective bundle adjustment
-    //std::cout << " -- Projective Bundle Adjustment --  " << std::endl;
-    
-    // Estimation of the pose of other images by resection
-    minimum_num_views = 3;
-    for (index_image_graph = 2; index_image_graph < graph_iter->size();
-        ++index_image_graph) {
+    if (graph_iter->size() >= 2) {
+      recons = new Reconstruction();
+      reconstructions_.push_back(recons);
+      progress.setLabelText("Initial Motion Estimation");
+      std::cout << " -- Initial Motion Estimation --  " << std::endl;
+      ReconstructFromTwoUncalibratedViews(matches_, 
+                                          (*graph_iter)[0], 
+                                          (*graph_iter)[1], 
+                                          &matches_inliers, 
+                                          recons);
+      index_image_graph = 0;
       image_id = (*graph_iter)[index_image_graph];
-      progress.setLabelText("Incremental Resection");
-      std::cout << " -- Incremental Resection --  " << std::endl;
-      UncalibratedCameraResection(matches_, image_id,
-                                  &matches_inliers, recons);     
-      
       camera = dynamic_cast<PinholeCamera*>(
         recons->GetCamera(image_id));
       if (camera) {
-        image_size << images[image_id]->GetImageWidth(),
+        image_size << images[image_id]->GetImageWidth(), 
                       images[image_id]->GetImageHeight();
         camera->set_image_size(image_size); 
       }
-      // TODO(julien) Avoid to retriangulate, prefer projective BA
-      progress.setLabelText("Retriangulation");
-      std::cout << " -- Retriangulation --  " << std::endl;
-      PointStructureRetriangulation(matches_inliers, 
-                                  image_id,
-                                  recons);
+      index_image_graph = 1;
+      image_id = (*graph_iter)[index_image_graph];
+      camera = dynamic_cast<PinholeCamera*>(
+        recons->GetCamera(image_id));
+      if (camera) {
+        image_size << images[image_id]->GetImageWidth(), 
+                      images[image_id]->GetImageHeight();
+        camera->set_image_size(image_size); 
+      }
+      progressCallback(progress, 1);
       
-      progress.setLabelText("Incremental Intersection");
-      std::cout << " -- Incremental Intersection --  " << std::endl;
-      // TODO(julien) this do nothing (no points)...fix it
+      progress.setLabelText("Initial Intersection");
+      std::cout << " -- Initial Intersection --  " << std::endl;
+      size_t minimum_num_views = 2;
       PointStructureTriangulation(matches_inliers, 
                                   image_id,
                                   minimum_num_views, 
-                                  recons,
-                                  &new_structures_ids);
-      new_structures_ids.clear();
+                                  recons);
+      // Performs projective bundle adjustment
+      //std::cout << " -- Projective Bundle Adjustment --  " << std::endl;
+      
+      // Estimation of the pose of other images by resection
+      minimum_num_views = 3;
+      for (index_image_graph = 2; index_image_graph < graph_iter->size();
+          ++index_image_graph) {
+        image_id = (*graph_iter)[index_image_graph];
+        progress.setLabelText("Incremental Resection");
+        std::cout << " -- Incremental Resection --  " << std::endl;
+        UncalibratedCameraResection(matches_, image_id,
+                                    &matches_inliers, recons);     
+        
+        camera = dynamic_cast<PinholeCamera*>(
+          recons->GetCamera(image_id));
+        if (camera) {
+          image_size << images[image_id]->GetImageWidth(),
+                        images[image_id]->GetImageHeight();
+          camera->set_image_size(image_size); 
+        }
+        // TODO(julien) Avoid to retriangulate, prefer projective BA
+        progress.setLabelText("Retriangulation");
+        std::cout << " -- Retriangulation --  " << std::endl;
+        PointStructureRetriangulation(matches_inliers, 
+                                    image_id,
+                                    recons);
+        
+        progress.setLabelText("Incremental Intersection");
+        std::cout << " -- Incremental Intersection --  " << std::endl;
+        // TODO(julien) this do nothing (no points)...fix it
+        PointStructureTriangulation(matches_inliers, 
+                                    image_id,
+                                    minimum_num_views, 
+                                    recons);
 
-      // TODO(julien) Performs projective bundle adjustment
-      progressCallback(progress, index_image_graph);
+        // TODO(julien) Performs projective bundle adjustment
+        progressCallback(progress, index_image_graph);
+      }
+      DrawAllStructures(*recons);
     }
-    DrawAllStructures(*recons);
   }
-  matches_.Clear();
-  matches_.Merge(matches_inliers);
+  //matches_.Clear();
+  //matches_.Merge(matches_inliers);
   UpdateGraph();
 }
 
@@ -547,117 +562,113 @@ void MainWindow::computeCalibratedReconstruction() {
   size_t image_id = 0;
   size_t index_image_graph = 0;
   Reconstruction *recons = NULL;
-  libmv::vector<StructureID> new_structures_ids;
   std::list<libmv::vector<Matches::ImageID> >::iterator graph_iter =
     connected_graph_list.begin();
   for (; graph_iter != connected_graph_list.end(); ++graph_iter) {
-    recons = new Reconstruction();
-    reconstructions_.push_back(recons);
-    progress.setLabelText("Initial Motion Estimation");
-    std::cout << " -- Initial Motion Estimation --  " << std::endl;
-    ReconstructFromTwoCalibratedViews(matches_, 
-                                      (*graph_iter)[0], 
-                                      (*graph_iter)[1], 
-                                      K, K,
-                                      &matches_inliers, 
-                                      recons);
-    index_image_graph = 0;
-    image_id = (*graph_iter)[index_image_graph];
-    camera = dynamic_cast<PinholeCamera*>(
-      recons->GetCamera(image_id));
-    if (camera) {
-      image_size << images[image_id]->GetImageWidth(), 
-                    images[image_id]->GetImageHeight();
-      camera->set_image_size(image_size); 
-    }
-    index_image_graph = 1;
-    image_id = (*graph_iter)[index_image_graph];
-    camera = dynamic_cast<PinholeCamera*>(
-      recons->GetCamera(image_id));
-    if (camera) {
-      image_size << images[image_id]->GetImageWidth(), 
-                    images[image_id]->GetImageHeight();
-      camera->set_image_size(image_size); 
-    }
-    progressCallback(progress, 1);
-    
-    progress.setLabelText("Initial Intersection");
-    std::cout << " -- Initial Intersection --  " << std::endl;
-    size_t minimum_num_views = 2;
-    PointStructureTriangulation(matches_inliers, 
-                                image_id,
-                                minimum_num_views, 
-                                recons,
-                                &new_structures_ids);
-    
-    new_structures_ids.clear();
-    
-    // Performs projective bundle adjustment
-    std::cout << " -- Bundle adjustment --  " << std::endl;
-    progress.setLabelText("Bundle adjustment");
-    MetricBundleAdjust(matches_inliers, recons);
-    /*
-    progress.setLabelText("Remove outliers");
-    RemoveOutliers(image_id, &matches_inliers, recons, 1.0);
-    progress.setLabelText("Bundle adjustment");
-    MetricBundleAdjust(matches_inliers, recons);*/
-    
-    std::string s = "out-1.py";
-    ExportToBlenderScript(*recons, s);
-    
-    // Estimation of the pose of other images by resection
-    minimum_num_views = 3;
-    for (index_image_graph = 2; index_image_graph < graph_iter->size();
-        ++index_image_graph) {
+    if (graph_iter->size() >= 2) {
+      recons = new Reconstruction();
+      reconstructions_.push_back(recons);
+      progress.setLabelText("Initial Motion Estimation");
+      std::cout << " -- Initial Motion Estimation --  " << std::endl;
+      ReconstructFromTwoCalibratedViews(matches_, 
+                                        (*graph_iter)[0], 
+                                        (*graph_iter)[1], 
+                                        K, K,
+                                        &matches_inliers, 
+                                        recons);
+      index_image_graph = 0;
       image_id = (*graph_iter)[index_image_graph];
-      progress.setLabelText("Incremental Resection");
-      std::cout << " -- Incremental Resection --  " << std::endl;
-      CalibratedCameraResection(matches_, image_id, K,
-                                &matches_inliers, recons);    
-      // TODO(julien) optimize camera
-      
       camera = dynamic_cast<PinholeCamera*>(
         recons->GetCamera(image_id));
       if (camera) {
-        image_size << images[image_id]->GetImageWidth(),
+        image_size << images[image_id]->GetImageWidth(), 
                       images[image_id]->GetImageHeight();
         camera->set_image_size(image_size); 
       }
+      index_image_graph = 1;
+      image_id = (*graph_iter)[index_image_graph];
+      camera = dynamic_cast<PinholeCamera*>(
+        recons->GetCamera(image_id));
+      if (camera) {
+        image_size << images[image_id]->GetImageWidth(), 
+                      images[image_id]->GetImageHeight();
+        camera->set_image_size(image_size); 
+      }
+      progressCallback(progress, 1);
       
-      std::cout << " -- Incremental Intersection --  " << std::endl;
-      progress.setLabelText("Incremental Intersection");
-      PointStructureTriangulation(matches_, 
+      progress.setLabelText("Initial Intersection");
+      std::cout << " -- Initial Intersection --  " << std::endl;
+      size_t minimum_num_views = 2;
+      PointStructureTriangulation(matches_inliers, 
                                   image_id,
                                   minimum_num_views, 
-                                  recons,
-                                  &new_structures_ids);    
-      // TODO(julien) optimize only points
+                                  recons);
       
-      // Performs bundle adjustment
-      // TODO(julien) maybe BA can be called not for every images..
+      // Performs projective bundle adjustment
       std::cout << " -- Bundle adjustment --  " << std::endl;
       progress.setLabelText("Bundle adjustment");
-      MetricBundleAdjust(matches_, recons);
+      MetricBundleAdjust(matches_inliers, recons);
       /*
       progress.setLabelText("Remove outliers");
-      std::cout << " -- RemoveOutliers --  " << std::endl;
-      //RemoveOutliers(image_id, &matches_, recons, 2.0);
-      std::cout << " -- Bundle adjustment --  " << std::endl;
+      RemoveOutliers(image_id, &matches_inliers, recons, 1.0);
       progress.setLabelText("Bundle adjustment");
-      MetricBundleAdjust(matches_, recons);*/
-
-      //DrawNewStructures(new_structures_ids, *recons);
-      new_structures_ids.clear();
-      std::stringstream s;
-      s << "out-" << index_image_graph << ".py";
-      ExportToBlenderScript(*recons, s.str());
+      MetricBundleAdjust(matches_inliers, recons);*/
       
-      progressCallback(progress, index_image_graph);
+      std::string s = "out-1.py";
+      ExportToBlenderScript(*recons, s);
+      
+      // Estimation of the pose of other images by resection
+      minimum_num_views = 3;
+      for (index_image_graph = 2; index_image_graph < graph_iter->size();
+          ++index_image_graph) {
+        image_id = (*graph_iter)[index_image_graph];
+        progress.setLabelText("Incremental Resection");
+        std::cout << " -- Incremental Resection --  " << std::endl;
+        CalibratedCameraResection(matches_, image_id, K,
+                                  &matches_inliers, recons);    
+        // TODO(julien) optimize camera
+        
+        camera = dynamic_cast<PinholeCamera*>(
+          recons->GetCamera(image_id));
+        if (camera) {
+          image_size << images[image_id]->GetImageWidth(),
+                        images[image_id]->GetImageHeight();
+          camera->set_image_size(image_size); 
+        }
+        
+        std::cout << " -- Incremental Intersection --  " << std::endl;
+        progress.setLabelText("Incremental Intersection");
+        PointStructureTriangulation(matches_, 
+                                    image_id,
+                                    minimum_num_views, 
+                                    recons);    
+        // TODO(julien) optimize only points
+        
+        // Performs bundle adjustment
+        // TODO(julien) maybe BA can be called not for every images..
+        std::cout << " -- Bundle adjustment --  " << std::endl;
+        progress.setLabelText("Bundle adjustment");
+        MetricBundleAdjust(matches_, recons);
+        /*
+        progress.setLabelText("Remove outliers");
+        std::cout << " -- RemoveOutliers --  " << std::endl;
+        //RemoveOutliers(image_id, &matches_, recons, 2.0);
+        std::cout << " -- Bundle adjustment --  " << std::endl;
+        progress.setLabelText("Bundle adjustment");
+        MetricBundleAdjust(matches_, recons);*/
+
+        //DrawNewStructures(new_structures_ids, *recons);
+        std::stringstream s;
+        s << "out-" << index_image_graph << ".py";
+        ExportToBlenderScript(*recons, s.str());
+        
+        progressCallback(progress, index_image_graph);
+      }
+      DrawAllStructures(*recons);
     }
-    DrawAllStructures(*recons);
   }
-  matches_.Clear();
-  matches_.Merge(matches_inliers);
+  //matches_.Clear();
+  //matches_.Merge(matches_inliers);
   UpdateGraph();
 }
 

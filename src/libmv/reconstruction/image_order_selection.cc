@@ -82,8 +82,8 @@ void FillPairwiseMatchesHomographyMatrix(const Matches &matches,
           all_errors.push_back(e.norm());
         }
         std::sort(all_errors.begin(), all_errors.end());
-        std::cout << "H median:" << all_errors[round(inliers.size()/2)] 
-                  << "px.\n";
+        VLOG(1) << "H median:" << all_errors[round(inliers.size()/2)] 
+                << "px.\n";
         (*m)(*image_iter1, *image_iter2) *= all_errors[round(inliers.size()/2)];
       }
     }
@@ -180,7 +180,7 @@ void SelectEfficientImageOrder(
     std::list<vector<Matches::ImageID> >*images_list) {
   Mat m;
   FillPairwiseMatchesHomographyMatrix(matches, &m);
-  std::cout << " M = " << m <<"\n";
+  VLOG(1) << " M = " << m <<"\n";
   RecoverOrderFromPairwiseHighScores(matches, m, images_list);
 }
 
@@ -214,20 +214,20 @@ void SelectKeyframes(
                                                          &F, &inliers, 
                                                          outliers_prob);
       f_err /= inliers.size();
-      std::cout << "H error:" << h_err << "px" << std::endl;
-      std::cout << "F error:" << f_err << "px" << std::endl;
-      std::cout << "ni:" << ni << " ne:" << ne << std::endl;
+      VLOG(1) << "H error:" << h_err << "px" << std::endl;
+      VLOG(1) << "F error:" << f_err << "px" << std::endl;
+      VLOG(1) << "ni:" << ni << " ne:" << ne << std::endl;
       // TODO(julien) no sure the ni and ne are the good ones.
       // read Pollefeys'03 and Torr98
       ne = inliers.size();
       if (f_err < h_err && ni >= 0.9 * ne) {
-        std::cout << "Keyframe detected: " << *image_iter << std::endl;
+        VLOG(1) << "Keyframe detected: " << *image_iter << std::endl;
         keyframes.push_back(*image_iter);
         prev_image_iter = image_iter;
         ni = ne;
       }
     } else {
-      std::cout << "[Warning] Tracking lost!" << std::endl;
+      VLOG(1) << "[Warning] Tracking lost!" << std::endl;
       keyframes_list->push_back(keyframes);
       keyframes.clear();
       prev_image_iter = image_iter;

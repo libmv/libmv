@@ -78,7 +78,7 @@ bool ReconstructFromTwoUncalibratedViews(const Matches &matches,
   } else {
     // TODO(julien) what should we do?
     // for now we enforce the first projection matrix to be the world reference
-    VLOG(1)   << "Warning: the first projection matrix is overwritten to be the"
+    VLOG(1) << "Warning: the first projection matrix is overwritten to be the"
             << " world reference frame.";
     pcamera->set_projection_matrix(P1);
   }
