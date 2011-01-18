@@ -177,22 +177,22 @@ void MainWindow::SaveReconstructionFile() {
   path_basename.append(file_info.baseName());
   
   uint i = 0;
+  std::stringstream s;
+  std::list<Reconstruction *>::iterator iter = reconstructions_.begin();
   if (selected_filter == tr("PLY format (*.ply)")) {
-    std::list<Reconstruction *>::iterator iter = reconstructions_.begin();
     for (; iter != reconstructions_.end(); ++iter) {
-      std::stringstream s;
       s << path_basename.toStdString() << "-" << i << "."
         << file_info.completeSuffix().toStdString();
       ExportToPLY(**iter, s.str());
+      s.str("");
       ++i;
     }
   } else {
-    std::list<Reconstruction *>::iterator iter = reconstructions_.begin();
     for (; iter != reconstructions_.end(); ++iter) {
-      std::stringstream s;
       s << path_basename.toStdString() << "-" << i << "."
         << file_info.completeSuffix().toStdString();
       ExportToBlenderScript(**iter, s.str());
+      s.str("");
       ++i;
     }
   }
@@ -431,7 +431,7 @@ void MainWindow::computeUncalibratedReconstruction() {
       recons = new Reconstruction();
       reconstructions_.push_back(recons);
       progress.setLabelText("Initial Motion Estimation");
-      std::cout << " -- Initial Motion Estimation --  " << std::endl;
+      VLOG(1) << " -- Initial Motion Estimation --  " << std::endl;
       ReconstructFromTwoUncalibratedViews(matches_, 
                                           (*graph_iter)[0], 
                                           (*graph_iter)[1], 
@@ -458,14 +458,14 @@ void MainWindow::computeUncalibratedReconstruction() {
       progressCallback(progress, 1);
       
       progress.setLabelText("Initial Intersection");
-      std::cout << " -- Initial Intersection --  " << std::endl;
+      VLOG(1) << " -- Initial Intersection --  " << std::endl;
       size_t minimum_num_views = 2;
       PointStructureTriangulation(matches_inliers, 
                                   image_id,
                                   minimum_num_views, 
                                   recons);
       // Performs projective bundle adjustment
-      //std::cout << " -- Projective Bundle Adjustment --  " << std::endl;
+      //VLOG(1) << " -- Projective Bundle Adjustment --  " << std::endl;
       
       // Estimation of the pose of other images by resection
       minimum_num_views = 3;
@@ -473,7 +473,7 @@ void MainWindow::computeUncalibratedReconstruction() {
           ++index_image_graph) {
         image_id = (*graph_iter)[index_image_graph];
         progress.setLabelText("Incremental Resection");
-        std::cout << " -- Incremental Resection --  " << std::endl;
+        VLOG(1) << " -- Incremental Resection --  " << std::endl;
         UncalibratedCameraResection(matches_, image_id,
                                     &matches_inliers, recons);     
         
@@ -486,13 +486,13 @@ void MainWindow::computeUncalibratedReconstruction() {
         }
         // TODO(julien) Avoid to retriangulate, prefer projective BA
         progress.setLabelText("Retriangulation");
-        std::cout << " -- Retriangulation --  " << std::endl;
+        VLOG(1) << " -- Retriangulation --  " << std::endl;
         PointStructureRetriangulation(matches_inliers, 
                                     image_id,
                                     recons);
         
         progress.setLabelText("Incremental Intersection");
-        std::cout << " -- Incremental Intersection --  " << std::endl;
+        VLOG(1) << " -- Incremental Intersection --  " << std::endl;
         // TODO(julien) this do nothing (no points)...fix it
         PointStructureTriangulation(matches_inliers, 
                                     image_id,
@@ -528,7 +528,7 @@ void MainWindow::computeCalibratedReconstruction() {
   //TODO(julien) create a better UI...
   focal = QInputDialog::getDouble(this, 
            tr("Set the focal length (in pixels)"),
-           tr("Focal:"), focal, 0, 10000, 4, &ok);
+           tr("Focal (px) = image width (px) * focal length (mm) / CCD width (mm):"), focal, 0, 10000, 4, &ok);
   if (!ok) return;
   cu = QInputDialog::getDouble(this, 
         tr("Set the principal point coordinate (x)"),
@@ -552,11 +552,11 @@ void MainWindow::computeCalibratedReconstruction() {
   else
     SelectEfficientImageOrder(matches_,  &connected_graph_list);
   
-  std::cout << " List order:";
+  VLOG(1) << " List order:";
   for (size_t i = 0; i < connected_graph_list.begin()->size(); ++i) {
-    std::cout << (*connected_graph_list.begin())[i] << " ";
+    VLOG(1) << (*connected_graph_list.begin())[i] << " ";
   }
-  std::cout << std::endl;
+  VLOG(1) << std::endl;
   
   Matches matches_inliers;
   size_t image_id = 0;
@@ -569,7 +569,7 @@ void MainWindow::computeCalibratedReconstruction() {
       recons = new Reconstruction();
       reconstructions_.push_back(recons);
       progress.setLabelText("Initial Motion Estimation");
-      std::cout << " -- Initial Motion Estimation --  " << std::endl;
+      VLOG(1) << " -- Initial Motion Estimation --  " << std::endl;
       ReconstructFromTwoCalibratedViews(matches_, 
                                         (*graph_iter)[0], 
                                         (*graph_iter)[1], 
@@ -597,7 +597,7 @@ void MainWindow::computeCalibratedReconstruction() {
       progressCallback(progress, 1);
       
       progress.setLabelText("Initial Intersection");
-      std::cout << " -- Initial Intersection --  " << std::endl;
+      VLOG(1) << " -- Initial Intersection --  " << std::endl;
       size_t minimum_num_views = 2;
       PointStructureTriangulation(matches_inliers, 
                                   image_id,
@@ -605,7 +605,7 @@ void MainWindow::computeCalibratedReconstruction() {
                                   recons);
       
       // Performs projective bundle adjustment
-      std::cout << " -- Bundle adjustment --  " << std::endl;
+      VLOG(1) << " -- Bundle adjustment --  " << std::endl;
       progress.setLabelText("Bundle adjustment");
       MetricBundleAdjust(matches_inliers, recons);
       /*
@@ -623,7 +623,7 @@ void MainWindow::computeCalibratedReconstruction() {
           ++index_image_graph) {
         image_id = (*graph_iter)[index_image_graph];
         progress.setLabelText("Incremental Resection");
-        std::cout << " -- Incremental Resection --  " << std::endl;
+        VLOG(1) << " -- Incremental Resection --  " << std::endl;
         CalibratedCameraResection(matches_, image_id, K,
                                   &matches_inliers, recons);    
         // TODO(julien) optimize camera
@@ -636,7 +636,7 @@ void MainWindow::computeCalibratedReconstruction() {
           camera->set_image_size(image_size); 
         }
         
-        std::cout << " -- Incremental Intersection --  " << std::endl;
+        VLOG(1) << " -- Incremental Intersection --  " << std::endl;
         progress.setLabelText("Incremental Intersection");
         PointStructureTriangulation(matches_, 
                                     image_id,
@@ -646,14 +646,14 @@ void MainWindow::computeCalibratedReconstruction() {
         
         // Performs bundle adjustment
         // TODO(julien) maybe BA can be called not for every images..
-        std::cout << " -- Bundle adjustment --  " << std::endl;
+        VLOG(1) << " -- Bundle adjustment --  " << std::endl;
         progress.setLabelText("Bundle adjustment");
         MetricBundleAdjust(matches_, recons);
         /*
         progress.setLabelText("Remove outliers");
-        std::cout << " -- RemoveOutliers --  " << std::endl;
+        VLOG(1) << " -- RemoveOutliers --  " << std::endl;
         //RemoveOutliers(image_id, &matches_, recons, 2.0);
-        std::cout << " -- Bundle adjustment --  " << std::endl;
+        VLOG(1) << " -- Bundle adjustment --  " << std::endl;
         progress.setLabelText("Bundle adjustment");
         MetricBundleAdjust(matches_, recons);*/
 

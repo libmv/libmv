@@ -44,7 +44,7 @@ uint PointStructureTriangulation(const Matches &matches,
   // Selects only the unreconstructed tracks observed in the image
   SelectUnexistingPointStructures(matches, image_id, *reconstruction,
                                   &structures_ids, &x_image);
-  VLOG(1)   << "Points structure selected:" << x_image.cols() << std::endl;
+  VLOG(2)   << "Points structure selected:" << x_image.cols() << std::endl;
   // Computes an isotropic normalization
   Mat3 precond;
   IsotropicPreconditionerFromPoints(x_image, &precond);
@@ -113,7 +113,7 @@ uint PointStructureTriangulation(const Matches &matches,
         if (new_structures_ids)
           new_structures_ids->push_back(structures_ids[t]);
         number_new_structure++;
-        VLOG(1)   << "Add Point Structure ["
+        VLOG(2)   << "Add Point Structure ["
                   << structures_ids[t] <<"] "
                   << p->coords().transpose() << " ("
                   << p->coords().transpose() / p->coords()[3] << ")"
@@ -183,7 +183,7 @@ uint PointStructureRetriangulation(const Matches &matches,
     if (is_inlier && pstructure) {
       pstructure->set_coords(X_world.col(0));
       number_updated_structure++;
-      VLOG(1)   << "Point structure updated ["
+      VLOG(2)   << "Point structure updated ["
                 << structures_ids[t] <<"] "
                 << pstructure->coords().transpose() << " ("
                 << pstructure->coords().transpose() / pstructure->coords()[3] 

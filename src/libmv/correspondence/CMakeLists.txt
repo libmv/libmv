@@ -6,7 +6,9 @@ ADD_LIBRARY(correspondence
             feature_matching_FLANN.cc
             tracker.cc
             robust_tracker.cc
-            nRobustViewMatching.cc)
+            nRobustViewMatching.cc
+            export_matches_txt.cc
+            import_matches_txt.cc)
 LIBMV_INSTALL_LIB(correspondence)
             
 LIBMV_TEST(klt "correspondence;image;numeric")

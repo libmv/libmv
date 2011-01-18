@@ -49,7 +49,7 @@ showErrorStatistics(double const f0,
     Vector2d p = cams[i].projectPoint(distortion, Xs[j]);
     meanReprojectionError += Square(norm_L2(f0 * (p - measurements[k])));
   }
-  LOG(INFO) << "mean reprojection error (in pixels): " 
+  VLOG(2) << "mean reprojection error (in pixels): " 
             << sqrt(meanReprojectionError/K) << std::endl;
   return sqrt(meanReprojectionError/K);
 }
@@ -108,7 +108,7 @@ void EuclideanBAFull(const vector<Mat2X> &x,
   distortion.p2 = 0;
 
   double const f0 = KMat[0][0];
-  LOG(INFO) << "intrinsic before bundle = "; displayMatrix(KMat);
+  VLOG(2) << "intrinsic before bundle = "; displayMatrix(KMat);
   Matrix3x3d Knorm = KMat;
   // Normalize the intrinsic to have unit focal length.
   scaleMatrixIP(1.0/f0, Knorm);
@@ -166,11 +166,11 @@ void EuclideanBAFull(const vector<Mat2X> &x,
   showErrorStatistics(f0, distortion, cams, Xs, measurements, correspondingView,
                       correspondingPoint);
 
-  V3D::optimizerVerbosenessLevel = 1;
+  V3D::optimizerVerbosenessLevel = 0;
   double const inlierThreshold = 2.0 / f0;
 
   Matrix3x3d K0 = cams[0].getIntrinsic();
-  LOG(INFO) << "K0 = "; displayMatrix(K0);
+  VLOG(2) << "K0 = "; displayMatrix(K0);
 
   CommonInternalsMetricBundleOptimizer opt(mode, inlierThreshold,
                                            K0, distortion,
@@ -179,9 +179,9 @@ void EuclideanBAFull(const vector<Mat2X> &x,
                                            correspondingPoint);
   opt.maxIterations = 50;
   opt.minimize();
-  LOG(INFO) << "optimizer status = " << opt.status << endl;
-  LOG(INFO) << "refined K = "; displayMatrix(K0);
-  LOG(INFO) << "distortion = " << distortion.k1 << " " << distortion.k2 << " "
+  VLOG(2) << "optimizer status = " << opt.status << endl;
+  VLOG(2) << "refined K = "; displayMatrix(K0);
+  VLOG(2) << "distortion = " << distortion.k1 << " " << distortion.k2 << " "
             << distortion.p1 << " " << distortion.p2 << endl;
 
   for (int i = 0; i < num_camsN; ++i) cams[i].setIntrinsic(K0);
@@ -189,7 +189,7 @@ void EuclideanBAFull(const vector<Mat2X> &x,
   Matrix3x3d Knew = K0;
   scaleMatrixIP(f0, Knew);
   Knew[2][2] = 1.0;
-  LOG(INFO) << "Knew = "; displayMatrix(Knew);
+  VLOG(2) << "Knew = "; displayMatrix(Knew);
 
   showErrorStatistics(f0, distortion, cams, Xs, measurements, correspondingView,
                       correspondingPoint);
@@ -268,7 +268,7 @@ double EuclideanBA(const vector<Mat2X> &x,
   distortion.p2 = 0;
 
   double f0 = KMat[0][0];
-  LOG(INFO) << "intrinsic before bundle = "; displayMatrix(KMat);
+  VLOG(2) << "intrinsic before bundle = "; displayMatrix(KMat);
   Matrix3x3d Knorm = KMat;
   // Normalize the intrinsic to have unit focal length.
   scaleMatrixIP(1.0/f0, Knorm);
@@ -340,11 +340,11 @@ double EuclideanBA(const vector<Mat2X> &x,
   showErrorStatistics(f0, distortion, cams, Xs, measurements, correspondingView,
                       correspondingPoint);
 
-  V3D::optimizerVerbosenessLevel = 1;
+  V3D::optimizerVerbosenessLevel = 0;
   double const inlierThreshold = 2.0 / f0;
 
   Matrix3x3d K0 = cams[0].getIntrinsic();
-  LOG(INFO) << "K0 = "; displayMatrix(K0);
+  VLOG(2) << "K0 = "; displayMatrix(K0);
 
   CommonInternalsMetricBundleOptimizer opt(mode, inlierThreshold,
                                            K0, distortion,
@@ -353,9 +353,9 @@ double EuclideanBA(const vector<Mat2X> &x,
                                            correspondingPoint);
   opt.maxIterations = 50;
   opt.minimize();
-  LOG(INFO) << "optimizer status = " << opt.status << std::endl;
-  LOG(INFO) << "refined K = "; displayMatrix(K0);
-  LOG(INFO) << "distortion = " << distortion.k1 << " " << distortion.k2 << " "
+  VLOG(2) << "optimizer status = " << opt.status << std::endl;
+  VLOG(2) << "refined K = "; displayMatrix(K0);
+  VLOG(2) << "distortion = " << distortion.k1 << " " << distortion.k2 << " "
             << distortion.p1 << " " << distortion.p2 << std::endl;
 
   for (int i = 0; i < num_camsN; ++i) cams[i].setIntrinsic(K0);
@@ -363,7 +363,7 @@ double EuclideanBA(const vector<Mat2X> &x,
   Matrix3x3d Knew = K0;
   scaleMatrixIP(f0, Knew);
   Knew[2][2] = 1.0;
-  LOG(INFO) << "Knew = "; displayMatrix(Knew);
+  VLOG(2) << "Knew = "; displayMatrix(Knew);
 
   double rms = showErrorStatistics(f0, distortion, cams, 
                                    Xs, measurements,correspondingView,

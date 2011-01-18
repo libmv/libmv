@@ -26,6 +26,8 @@
 #include "libmv/base/vector.h"
 #include "libmv/base/vector_utils.h"
 #include "libmv/correspondence/ArrayMatcher_Kdtree.h"
+#include "libmv/correspondence/export_matches_txt.h"
+#include "libmv/correspondence/import_matches_txt.h"
 #include "libmv/correspondence/feature_matching.h"
 #include "libmv/correspondence/feature_matching_FLANN.h"
 #include "libmv/correspondence/tracker.h"
@@ -314,9 +316,12 @@ int main (int argc, char *argv[]) {
   std::list<std::string> image_list;
   vector<std::pair<size_t, size_t> > image_sizes;
 
+  std::string arg_lw;
   for (int i = 1;i < argc;++i) {
-    std::string arg (argv[i]);
-    if (IsArgImage(arg)) {
+    std::string arg(argv[i]);
+    arg_lw.resize(arg.length());
+    std::transform(arg.begin(), arg.end(), arg_lw.begin(), ::tolower);
+    if (IsArgImage(arg_lw)) {
       image_list.push_back(arg);
     }
   }
@@ -467,9 +472,16 @@ int main (int argc, char *argv[]) {
     image_index++;
   }
 
-  // TODO(julien) Export matches
-  
+  // Exports all matches
+  ExportMatchesToTxt(all_features_graph.matches_, "./matches.txt");
   DisplayMatches(all_features_graph.matches_);
+  
+  // Imports matches
+//   tracker::FeaturesGraph fg;
+//   FeatureSet *fs = new FeatureSet();
+//   ImportMatchesFromTxt("./matches.txt", &fg.matches_, fs);
+//   fg.features_sets_.push_back(fs);
+  
   // Estimates the camera trajectory and 3D structure of the scene
   if (FLAGS_pose_estimation)  {
     ProceedReconstruction(all_features_graph.matches_, image_sizes);     

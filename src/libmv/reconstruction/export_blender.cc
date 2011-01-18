@@ -68,7 +68,7 @@ void ExportToBlenderScript(const Reconstruction &reconstruct,
       fprintf(fid, "c%04d.lens = %g\n", i, lens);
       fprintf(fid, "c%04d.setDrawSize(0.05)\n", i);
       fprintf(fid, "o%04d = Object.New('Camera')\n", i);
-      fprintf(fid, "o%04d.name = 'libmv_cam%04d'\n", i, i);
+      fprintf(fid, "o%04d.name = 'libmv_cam%04d'\n", i, camera_iter->first);
 
       // Camera world matrix, which is the inverse transpose of the typical
       // 'projection' matrix as generally thought of by vision researchers.

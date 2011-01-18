@@ -11,6 +11,6 @@ MACRO (CAMERA_TEST NAME)
   LIBMV_TEST(${NAME} "multiview_test_data;correspondence;camera;multiview;numeric")
 ENDMACRO (CAMERA_TEST)
 
-CAMERA_TEST(camera)
+CAMERA_TEST(pinhole_camera)
 CAMERA_TEST(lens_distortion)
 
