@@ -83,8 +83,8 @@ public:
     return ErrorArg::Error(F, this->x1_.col(sample), this->x2_.col(sample));
   }
 protected:
-  const Mat3 &K1_;
-  const Mat3 &K2_;
+  const Mat3 K1_;
+  const Mat3 K2_;
 };
 
 //-- Usable solver for the 8pt Essential Matrix Estimation
