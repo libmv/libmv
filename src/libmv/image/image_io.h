@@ -28,7 +28,7 @@
 namespace libmv {
 
 enum Format {
-  Pnm, Png, Jpg, Tga, Unknown
+  Pnm, Png, Jpg, Unknown
 };
 
 Format GetFormat(const char *c);
