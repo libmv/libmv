@@ -161,8 +161,8 @@ TEST(ReadPng, Png) {
 
 TEST(ReadPng, PngFloat) {
   FloatImage image;
-  string pgm_filename = string(THIS_SOURCE_DIR) + "/image_test/two_pixels.png";
-  EXPECT_TRUE(ReadPng(pgm_filename.c_str(), &image));
+  string png_filename = string(THIS_SOURCE_DIR) + "/image_test/two_pixels.png";
+  EXPECT_TRUE(ReadPng(png_filename.c_str(), &image));
   EXPECT_EQ(2, image.Width());
   EXPECT_EQ(1, image.Height());
   EXPECT_EQ(1, image.Depth());
@@ -194,8 +194,8 @@ TEST_F(ImageIOTest, InvalidFiles) {
 
 TEST(ReadJpg, Jpg) {
   Array3Du image;
-  string png_filename = string(THIS_SOURCE_DIR) + "/image_test/two_pixels.jpg";
-  EXPECT_TRUE(ReadJpg(png_filename.c_str(), &image));
+  string jpg_filename = string(THIS_SOURCE_DIR) + "/image_test/two_pixels.jpg";
+  EXPECT_TRUE(ReadJpg(jpg_filename.c_str(), &image));
   EXPECT_EQ(2, image.Width());
   EXPECT_EQ(1, image.Height());
   EXPECT_EQ(1, image.Depth());
@@ -205,8 +205,8 @@ TEST(ReadJpg, Jpg) {
 
 TEST(ReadJpg, JpgFloat) {
   FloatImage image;
-  string pgm_filename = string(THIS_SOURCE_DIR) + "/image_test/two_pixels.jpg";
-  EXPECT_TRUE(ReadJpg(pgm_filename.c_str(), &image));
+  string jpg_filename = string(THIS_SOURCE_DIR) + "/image_test/two_pixels.jpg";
+  EXPECT_TRUE(ReadJpg(jpg_filename.c_str(), &image));
   EXPECT_EQ(2, image.Width());
   EXPECT_EQ(1, image.Height());
   EXPECT_EQ(1, image.Depth());
