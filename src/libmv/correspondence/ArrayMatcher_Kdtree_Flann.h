@@ -63,6 +63,7 @@ class ArrayMatcher_Kdtree_Flann : public ArrayMatcher<Scalar>
     _p.branching = 32; // branching factor
     _p.iterations = 7; // max iterations to perform in one kmeans clustering (kmeans tree)
     _p.target_precision = -1.0f;
+    _p.random_seed = 1; // Initialize random seed to ensure same result every time this is run
 
     //-- Build FLANN index
     float fspeedUp;
