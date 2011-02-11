@@ -109,7 +109,7 @@ void FindCandidateMatches(const FeatureSet &left,
     }
   }
   else  {
-    LOG(INFO) << "[FindCandidateMatches] Unknow input match method.";
+    LOG(INFO) << "[FindCandidateMatches] Unknown input match method.";
   }
 }
 
