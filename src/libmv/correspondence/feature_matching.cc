@@ -96,7 +96,7 @@ void FindCandidateMatches(const FeatureSet &left,
       //TODO(pmoulon) clear previous matches.
       int max_track_number = 0;
       for (size_t i = 0; i < indices.size(); ++i) {
-        // Add the matche only if we have a symetric result.
+        // Add the match only if we have a symmetric result.
         if (i == indicesReverse[indices[i]])  {
           matches->Insert(0, max_track_number, &left.features[i]);
           matches->Insert(1, max_track_number, &right.features[indices[i]]);
