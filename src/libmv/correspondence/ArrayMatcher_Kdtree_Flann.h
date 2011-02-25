@@ -46,7 +46,7 @@ class ArrayMatcher_Kdtree_Flann : public ArrayMatcher<Scalar>
    *
    * \param[in] dataset   Input data.
    * \param[in] nbRows    The number of component.
-   * \param[in] dimension Lenght of the data contained in the each
+   * \param[in] dimension Length of the data contained in the each
    *  row of the dataset.
    *
    * \return True if success.

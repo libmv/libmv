@@ -37,7 +37,7 @@ class ArrayMatcher
    *
    * \param[in] dataset   Input data.
    * \param[in] nbRows    The number of component.
-   * \param[in] dimension Lenght of the data contained in the dataset.
+   * \param[in] dimension Length of the data contained in the dataset.
    *
    * \return True if success.
    */
