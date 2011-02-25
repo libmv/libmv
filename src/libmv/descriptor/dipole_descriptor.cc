@@ -85,10 +85,9 @@ void PickDipole(const TImage & image, float x, float y, float scale,
     dipoleF2(i) = s1;
   }
 
-  (*data).template block<8,1>(0,0) = A * dipoleF1;
-  (*data).template block<12,1>(8,0) = dipoleF2;
+  (*data).template block<8,1>(0,0) = (A * dipoleF1).normalized();
+  (*data).template block<12,1>(8,0) = dipoleF2.normalized();
   // Normalize to be affine luminance invariant (a*I(x,y)+b).
-  (*data).normalize();
 }
 
 class DipoleDescriber : public Describer {
