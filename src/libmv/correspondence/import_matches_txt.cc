@@ -30,9 +30,8 @@ void ImportMatchesFromTxt(const std::string &input_file,
   Matches::ImageID image_id = 0;
   Matches::TrackID track_id = 0;
   float x = 0, y = 0;
-  KeypointFeature * pf = NULL;
-  // Reserves 10000 features to avoid problems during the resize
-  feature_set->features.reserve(10000);
+  // Reserves 1e6 features to avoid problems during the resize
+  feature_set->features.reserve(1e6);
   std::ifstream infile;
   infile.open(input_file.c_str(), std::ios_base::in);
   while (infile.good()) {

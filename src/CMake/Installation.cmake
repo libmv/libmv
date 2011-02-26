@@ -1,0 +1,24 @@
+
+MACRO (LIBMV_INSTALL_LIB NAME)
+# TODO(julien) make it work with third_party
+  # install headers
+  INSTALL(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+          DESTINATION ${LIBMV_HEADERS_OUTPUT_DIR}
+          FILES_MATCHING PATTERN "*.h"
+                         PATTERN "*.hpp"
+                         PATTERN ".svn" EXCLUDE
+        )
+  # install libraries
+  INSTALL(TARGETS ${NAME} ${NAME}
+    LIBRARY DESTINATION ${LIBMV_LIBRARY_OUTPUT_DIR}
+    ARCHIVE DESTINATION ${LIBMV_LIBRARY_OUTPUT_DIR}
+  )
+ENDMACRO (LIBMV_INSTALL_LIB)
+
+# install rules
+MACRO (LIBMV_INSTALL_EXE NAME)
+  # install libraries
+  INSTALL(TARGETS ${NAME}
+    RUNTIME DESTINATION ${LIBMV_EXECUTABLE_OUTPUT_DIR}
+  )
+ENDMACRO (LIBMV_INSTALL_EXE)

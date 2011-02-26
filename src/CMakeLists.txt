@@ -29,6 +29,7 @@ PROJECT(LIBMV C CXX)
 
 ENABLE_TESTING()
 
+# TODO(julien) Is-it really clean to do this?
 set(LIBMV_SOURCE_DIR  ${CMAKE_CURRENT_SOURCE_DIR})
 set(LIBMV_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 SET(LIBMV_BINARY_DIR  ${CMAKE_CURRENT_SOURCE_DIR}/..)
@@ -51,32 +52,14 @@ ENDIF(MSVC)
 
 # To build shared libs
 #SET(BUILD_SHARED_LIBS ON)
+SET(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_DEBUG ${LIBMV_LIBRARY_OUTPUT_DIR})
 
-# TODO(keir): We should use consistent checking here; it may be gcc on win32.
-# Is there something like CMAKE_COMPILER_IS_CL_EXE?
-IF (WIN32)
-  SET (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /EHsc /wd4996 /wd4018 /wd4244")
-ENDIF (WIN32)
+set(CMAKE_MODULE_PATH  
+  "${LIBMV_SOURCE_DIR}/CMake"
+  "${LIBMV_SOURCE_DIR}/CMake/modules")
 
-IF(CMAKE_COMPILER_IS_GNUCXX)
-  SET(CMAKE_CXX_FLAGS "-Wall -W -Wno-sign-compare -Wno-strict-aliasing")
-  ADD_DEFINITIONS(-D_GNU_SOURCE)
-ENDIF(CMAKE_COMPILER_IS_GNUCXX)
-
-SET(CMAKE_MODULE_PATH ${LIBMV_SOURCE_DIR}/CMakeModules)
-MESSAGE("CMAKE_MODULE_PATH = ${CMAKE_MODULE_PATH}")
-IF (NOT CMAKE_MODULE_PATH)
-  MESSAGE(FATAL_ERROR
-          "ERROR: export CMAKE_MODULE_PATH as your CMakeModules repository.")
-ELSE (NOT CMAKE_MODULE_PATH)
-  # Check for one of the find scripts for sanity.
-  FIND_FILE(LIBMV_CMAKE_MODULE_PATH_OK FindJPEG.cmake ${CMAKE_MODULE_PATH}
-            DOC "testing CMAKE_MODULE_PATH")
-  IF (NOT LIBMV_CMAKE_MODULE_PATH_OK)
-    MESSAGE(FATAL_ERROR "CMAKE_MODULE_PATH=${CMAKE_MODULE_PATH} invalid: FindJPEG.cmake not found.")
-  ENDIF (NOT LIBMV_CMAKE_MODULE_PATH_OK)
-ENDIF (NOT CMAKE_MODULE_PATH)
-MARK_AS_ADVANCED(LIBMV_CMAKE_MODULE_PATH_OK)
+INCLUDE(LibmvVersion)
+INCLUDE(ConfigureBuild)
 
 INCLUDE_DIRECTORIES(
   .
@@ -113,52 +96,22 @@ IF (UNIX)
     third_party/zlib)
 ENDIF (UNIX)
 
-IF (APPLE)
-  # Tell gtest not to use mac frameworks.
-  ADD_DEFINITIONS('-DGTEST_NOT_MAC_FRAMEWORK_MODE')
-ENDIF (APPLE)
 
-MACRO (LIBMV_TEST NAME EXTRA_LIBS)
-  ADD_EXECUTABLE(${NAME}_test ${NAME}_test.cc)
-  TARGET_LINK_LIBRARIES(${NAME}_test
-                        ${EXTRA_LIBS} # Extra libs MUST be first.
-                        libmv_test_main 
-                        gtest 
-                        glog
-                        gflags
-                        pthread)
-  ADD_TEST(${NAME}_test ${NAME}_test)
-ENDMACRO (LIBMV_TEST)
-
-# install rules
-MACRO (LIBMV_INSTALL_LIB NAME)
-# TODO(julien) make it work with third_party
-  # install headers
-  INSTALL(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-          DESTINATION ${LIBMV_HEADERS_OUTPUT_DIR}
-          FILES_MATCHING PATTERN "*.h"
-                         PATTERN "*.hpp"
-                         PATTERN ".svn" EXCLUDE
-        )
-  # install libraries
-  INSTALL(TARGETS ${NAME} ${NAME}
-    LIBRARY DESTINATION ${LIBMV_LIBRARY_OUTPUT_DIR}
-    ARCHIVE DESTINATION ${LIBMV_LIBRARY_OUTPUT_DIR}
-  )
-ENDMACRO (LIBMV_INSTALL_LIB)
-
-# install rules
-MACRO (LIBMV_INSTALL_EXE NAME)
-  # install libraries
-  INSTALL(TARGETS ${NAME}
-    RUNTIME DESTINATION ${LIBMV_EXECUTABLE_OUTPUT_DIR}
-  )
-ENDMACRO (LIBMV_INSTALL_EXE)
+INCLUDE(Testing)
+INCLUDE(Installation)
+INCLUDE(Packaging)
 
 ADD_SUBDIRECTORY(libmv)
 ADD_SUBDIRECTORY(testing)
 ADD_SUBDIRECTORY(third_party)
-IF (NOT WIN32)
+
+IF (QT4_FOUND)
+  MESSAGE(STATUS "Qt4 found: GUI enabled.")
   ADD_SUBDIRECTORY(ui)
-ENDIF (NOT WIN32)
+ELSE (QT4_FOUND)
+  MESSAGE(STATUS "Qt4 not found: GUI disabled.")
+  MESSAGE(STATUS "If you have installed Qt4, check that qmake.exe is accessible\
+ from your PATH.")
+ENDIF (QT4_FOUND)
+
 ADD_SUBDIRECTORY(tools)
