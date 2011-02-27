@@ -106,3 +106,21 @@ TARGET_LINK_LIBRARIES(nViewMatching
                       daisy
                       )
 LIBMV_INSTALL_EXE(nViewMatching)
+
+
+ADD_EXECUTABLE(reconstruct_video reconstruct_video.cc)
+TARGET_LINK_LIBRARIES(reconstruct_video
+                      image
+                      correspondence
+                      numeric
+                      multiview
+                      flann
+                      glog
+                      gflags
+                      detector
+                      descriptor
+                      fast
+                      daisy
+                      reconstruction
+                      )
+LIBMV_INSTALL_EXE(reconstruct_video)
