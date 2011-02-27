@@ -82,7 +82,8 @@ DEFINE_double(principal_point_u, 0,
               "principal point u coordinate");
 DEFINE_double(principal_point_v, 0,
               "principal point v coordinate");
-DEFINE_string(patch, "", "only track this image/patch");
+
+DEFINE_string(o, "matches.txt", "Matches output file");
 
 void DrawFeatures(ByteImage &imageArrayBytes,
                   Matches::Features<PointFeature> &features,
@@ -257,17 +258,17 @@ void ProceedReconstruction(Matches &matches,
         0, FLAGS_focal,  v,
         0,  0,           1;
 
-  LOG(INFO) << " -- Initial Motion Estimation --  " << std::endl;
+  VLOG(1) << " -- Initial Motion Estimation --  " << std::endl;
   ReconstructFromTwoCalibratedViews(matches, previous_image_id, *image_iter,
                                     K1, K2,
                                     &matches_inliers, &reconstruction);
   
-  LOG(INFO) << " -- Initial Intersection --  " << std::endl;
+  VLOG(1) << " -- Initial Intersection --  " << std::endl;
   size_t minimum_num_views = 2;
   PointStructureTriangulation(matches_inliers, *image_iter, minimum_num_views, 
                               &reconstruction);
 
-  //LOG(INFO) << " -- Bundle Adjustment --  " << std::endl;
+  //VLOG(1) << " -- Bundle Adjustment --  " << std::endl;
   //TODO (julien) Perfom Bundle Adjustment (Euclidean BA)
   
   // Estimation of the pose of other images by resection
@@ -285,18 +286,18 @@ void ProceedReconstruction(Matches &matches,
           0, FLAGS_focal,  v,
           0,  0,           1;
                        
-    LOG(INFO) << " -- Incremental Resection --  " << std::endl;
+    VLOG(1) << " -- Incremental Resection --  " << std::endl;
     CalibratedCameraResection(matches, *image_iter, K1,
                              &matches_inliers, &reconstruction);     
 
-    LOG(INFO) << " -- Incremental Intersection --  " << std::endl;
+    VLOG(1) << " -- Incremental Intersection --  " << std::endl;
     size_t minimum_num_views = 3;
     PointStructureTriangulation(matches_inliers, 
                                 *image_iter,
                                 minimum_num_views, 
                                 &reconstruction);
     
-    LOG(INFO) << " -- Bundle Adjustment --  " << std::endl;
+    VLOG(1) << " -- Bundle Adjustment --  " << std::endl;
     MetricBundleAdjust(matches_inliers, &reconstruction);
   }
   
@@ -308,7 +309,9 @@ void ProceedReconstruction(Matches &matches,
 int main (int argc, char *argv[]) {
   std::string usage ="Track salient 2D points in a sequence of images.\n";
   usage += "It uses an incremental approach (an image is matched only with \
-  its 2 neighbors.";
+  its 2 neighbors.\n";
+  usage += "Usage: " + std::string(argv[0]) + " *.png -o {MATCHESFILE}.txt.\n";
+  usage += "Using libmv v" + std::string(LIBMV_VERSION) +"\n";
   //usage += argv[0] + "<detector>";
   google::SetUsageMessage(usage);
   google::ParseCommandLineFlags(&argc, &argv, true);
@@ -327,14 +330,6 @@ int main (int argc, char *argv[]) {
   }
 
   bool is_keep_new_detected_features = true;
-  bool is_patch_tracking_mode = false;
-
-  //track patch mode
-  if (!FLAGS_patch.empty()) {
-    is_keep_new_detected_features = false;
-    is_patch_tracking_mode = true;
-    LOG(INFO) << "Patch traking mode activated. "<<std::endl;
-  }
 
   // Create the tracker
   correspondence::ArrayMatcher<float> *matcher  = NULL;
@@ -369,8 +364,6 @@ int main (int argc, char *argv[]) {
   // Set the matcher
   matcher = new correspondence::ArrayMatcher_Kdtree<float>();
 
-  libmv::tracker::FeaturesGraph all_features_graph;
-  libmv::tracker::FeaturesGraph prev_features_graph;
   tracker::Tracker *points_tracker = NULL;
   if (!FLAGS_robust_tracker) {
     points_tracker = new tracker::Tracker(pDetector, pDescriber, matcher);
@@ -380,78 +373,54 @@ int main (int argc, char *argv[]) {
     r_tracker->set_rms_threshold_inlier(FLAGS_robust_tracker_threshold);
     points_tracker = r_tracker;
   }
-  
+ 
   // Track the sequence of images
-  if (is_patch_tracking_mode) {
-    std::string image_path = FLAGS_patch;
-    LOG(INFO) << "Tracking patch '"<< image_path << "'" << std::endl;
-    ByteImage imageArrayBytes;
-    ReadImage (image_path.c_str(), &imageArrayBytes);
-    ByteImage *arrayGrayBytes = ConvertToGrayscale(imageArrayBytes);
-    Image image(arrayGrayBytes);
-
-    image_sizes.push_back(std::pair<size_t,size_t>(
-     arrayGrayBytes->Height(), arrayGrayBytes->Width()));
-
-    libmv::tracker::FeaturesGraph new_features_graph;
-    libmv::Matches::ImageID new_image_id = 0;
-    points_tracker->Track(image,
-                          prev_features_graph,
-                          &new_features_graph,
-                          &new_image_id,
-                          true);
-    prev_features_graph.matches_.Merge(new_features_graph.matches_);
-    all_features_graph.Merge(new_features_graph);
-    LOG(INFO) << "#Patch Tracks "<< new_features_graph.matches_.NumTracks()
-      << std::endl;
-  }
-  // Track the sequence of images
+  libmv::tracker::FeaturesGraph all_features_graph;
+  libmv::tracker::FeaturesGraph current_previous_fg[2];
+  int i_prev = 0, i_new = 1;
   size_t image_index = 0;
   std::list<std::string>::iterator image_list_iterator = image_list.begin();
   for (; image_list_iterator != image_list.end(); ++image_list_iterator) {
     std::string image_path = (*image_list_iterator);
 
-    LOG(INFO) << "Tracking image '"<< image_path << "'" << std::endl;
+    VLOG(1) << "Tracking image '"<< image_path << "'" << std::endl;
     ByteImage imageArrayBytes;
     ReadImage (image_path.c_str(), &imageArrayBytes);
     ByteImage *arrayGrayBytes = ConvertToGrayscale(imageArrayBytes);
-
     Image image(arrayGrayBytes);
-
     image_sizes.push_back(std::pair<size_t,size_t>(
       arrayGrayBytes->Height(), arrayGrayBytes->Width()));
 
-    libmv::tracker::FeaturesGraph new_features_graph;
     libmv::Matches::ImageID new_image_id = 0;
     if (FLAGS_track_all_known_features) {
-      LOG(INFO) << "#Tracks Searched "<<
+      // TODO(julien) this case is not a simple tracker and should be moved
+      // to another tool?
+      VLOG(1) << "#Tracks Searched "<<
         all_features_graph.matches_.NumTracks() << std::endl;
       points_tracker->Track(image,
                             all_features_graph,
-                            &new_features_graph,
+                            &current_previous_fg[i_new],
                             &new_image_id,
                             is_keep_new_detected_features);
     } else {
-      LOG(INFO) << "#Tracks Searched "<<
-        prev_features_graph.matches_.NumTracks() << std::endl;
+      VLOG(1) << "#Tracks Searched "<<
+        current_previous_fg[i_prev].matches_.NumTracks() << std::endl;
       points_tracker->Track(image,
-                            prev_features_graph,
-                            &new_features_graph,
+                            current_previous_fg[i_prev],
+                            &current_previous_fg[i_new],
                             &new_image_id,
                             is_keep_new_detected_features);
-      if (!is_patch_tracking_mode) {
-        prev_features_graph.Clear();
-        prev_features_graph.matches_.Merge(new_features_graph.matches_);
-      }
+      
     }
-    all_features_graph.Merge(new_features_graph);
-    LOG(INFO) << " New Image ID "<< new_image_id << std::endl;
-    LOG(INFO) << "#New Tracks "<< new_features_graph.matches_.NumTracks()
+    current_previous_fg[i_prev].Clear();
+    all_features_graph.Merge(current_previous_fg[i_new]);
+    VLOG(1) << " New Image ID "<< new_image_id << std::endl;
+    VLOG(1) << "#New Tracks "<< current_previous_fg[i_new].matches_.NumTracks()
       << std::endl;
 
     if (FLAGS_save_features || FLAGS_save_matches) {
       Matches::Features<PointFeature> features_set =
-        new_features_graph.matches_.InImage<PointFeature>(new_image_id);
+        current_previous_fg[i_new].matches_.InImage<PointFeature>(new_image_id);
 
       if (FLAGS_save_features)
         DrawFeatures(imageArrayBytes, features_set, false);
@@ -461,26 +430,18 @@ int main (int argc, char *argv[]) {
       SaveImage(imageArrayBytes, image_path, "-features");
     }
 
-    if (!is_keep_new_detected_features) {
-      new_features_graph.Clear();
-    }
-
-    LOG(INFO) << "#All Tracks "<< all_features_graph.matches_.NumTracks()
+    VLOG(1) << "#All Tracks "<< all_features_graph.matches_.NumTracks()
       << std::endl;
-    LOG(INFO) << "#All Images "<< all_features_graph.matches_.NumImages()
+    VLOG(1) << "#All Images "<< all_features_graph.matches_.NumImages()
       << std::endl;
     image_index++;
+    i_prev = i_prev ^ 1;
+    i_new  = i_prev ^ 1;
   }
 
   // Exports all matches
-  ExportMatchesToTxt(all_features_graph.matches_, "./matches.txt");
+  ExportMatchesToTxt(all_features_graph.matches_, FLAGS_o);
   DisplayMatches(all_features_graph.matches_);
-  
-  // Imports matches
-//   tracker::FeaturesGraph fg;
-//   FeatureSet *fs = new FeatureSet();
-//   ImportMatchesFromTxt("./matches.txt", &fg.matches_, fs);
-//   fg.features_sets_.push_back(fs);
   
   // Estimates the camera trajectory and 3D structure of the scene
   if (FLAGS_pose_estimation)  {
