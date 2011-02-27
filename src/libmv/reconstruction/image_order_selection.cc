@@ -187,6 +187,7 @@ void SelectEfficientImageOrder(
 void SelectKeyframes(
     const Matches &matches, 
     std::list<vector<Matches::ImageID> >*keyframes_list) {
+  // TODO(julien) It really doesn't work: Finish this!
   Mat m;
   Mat3 F, H;
   double f_err, max_error_f = 1;

@@ -199,6 +199,23 @@ class Reconstruction {
   std::map<StructureID, Structure *>  structures_;
   Matches                             matches_;
 };
+
+// This function computes the trajectory of a camera using input matches.
+//TODO(julien) document more
+bool EuclideanReconstructionFromVideo(
+      const Matches &matches, 
+      int image_width, 
+      int image_height,
+      double focal,
+      std::list<Reconstruction *> *reconstructions);
+
+// This function computes the poses of all cameras using input matches.
+//TODO(julien) do it and document more
+bool EuclideanReconstructionFromImageSet(
+      const Matches &matches, 
+      const vector<std::pair<size_t, size_t> > &image_sizes,
+      std::list<Reconstruction *> *reconstructions);
+
 }  // namespace libmv
 
 #endif  // LIBMV_RECONSTRUCTION_RECONSTRUCTION_H_
