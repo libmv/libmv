@@ -6,6 +6,7 @@ ADD_LIBRARY(correspondence
             feature_matching_FLANN.cc
             tracker.cc
             robust_tracker.cc
+            plan_tracker.cc
             nRobustViewMatching.cc
             export_matches_txt.cc
             import_matches_txt.cc)
@@ -17,3 +18,4 @@ LIBMV_TEST(kdtree "")
 LIBMV_TEST(feature_set "correspondence;image;numeric")
 LIBMV_TEST(matches "correspondence;image;numeric")
 LIBMV_TEST(Array_Matcher "correspondence;numeric;flann")
+# LIBMV_TEST(tracker "correspondence;reconstruction;numeric;flann")
