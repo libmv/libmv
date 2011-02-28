@@ -54,6 +54,7 @@
 #include "libmv/multiview/robust_fundamental.h"
 #include "libmv/multiview/triangulation.h"
 #include "libmv/numeric/numeric.h"
+#include "libmv/tools/revision.h"
 #include "libmv/tools/tool.h"
 #include <zconf.h>
 
