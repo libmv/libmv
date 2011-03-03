@@ -1,6 +1,6 @@
 
 SET(LIBMV_VERSION_MAJOR 0)
-SET(LIBMV_VERSION_MINOR 1)
+SET(LIBMV_VERSION_MINOR 0)
 
 # The standard GNU version numbering scheme is major.minor.revision
 FIND_PACKAGE(Subversion)

@@ -18,3 +18,8 @@ ENDIF(WIN32 OR APPLE)
 IF (WIN32)
   ADD_SUBDIRECTORY(pthreads-w32)
 ENDIF (WIN32)
+
+#Installation macro for all thrid parties
+# TODO(julien) here we copy all the stuff but some files/folders
+# are not needed...
+LIBMV_INSTALL_THIRD_PARTY_HEADERS()
