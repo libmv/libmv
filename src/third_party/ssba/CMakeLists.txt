@@ -27,3 +27,5 @@ add_library(V3D
     Geometry/v3d_metricbundle.cpp)
 
 add_subdirectory(Apps)
+
+LIBMV_INSTALL_THIRD_PARTY_LIB(V3D)

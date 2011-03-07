@@ -78,3 +78,5 @@ SET(SOURCES OpenExifJpeg/OpenExif_jcapimin.cpp  OpenExifJpeg/OpenExif_jdapimin.c
 	OpenExifJpeg/OpenExif_jerror.h)
 
 ADD_LIBRARY(OpenExif STATIC ${SOURCES})
+
+LIBMV_INSTALL_THIRD_PARTY_LIB(OpenExif)

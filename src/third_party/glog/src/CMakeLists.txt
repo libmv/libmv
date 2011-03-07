@@ -52,3 +52,5 @@ GLOG_TEST(stl_logging_unittest)
 GLOG_TEST(symbolize_unittest)
 GLOG_TEST(utilities_unittest)
 ENDIF (NOT WIN32)
+
+LIBMV_INSTALL_THIRD_PARTY_LIB(glog)

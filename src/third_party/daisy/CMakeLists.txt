@@ -35,3 +35,5 @@ set(daisy_srcs
 )
 
 add_library(daisy ${daisy_srcs} )
+
+LIBMV_INSTALL_THIRD_PARTY_LIB(daisy)

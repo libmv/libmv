@@ -10,3 +10,6 @@ ADD_SUBDIRECTORY(multiview)
 ADD_SUBDIRECTORY(reconstruction)
 ADD_SUBDIRECTORY(scene_graph)
 ADD_SUBDIRECTORY(tools)
+
+#Installation macro for all headers
+LIBMV_INSTALL_ALL_HEADERS()
