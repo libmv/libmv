@@ -8,3 +8,5 @@ ADD_LIBRARY(zlib STATIC
   zutil.c      crc32.h      deflate.h    inffast.h    inffixed.h   inflate.h
   inftrees.h   trees.h      zconf.h      zconf.in.h   zlib.h       zutil.h
 )
+
+LIBMV_INSTALL_THIRD_PARTY_LIB(zlib)

@@ -11,3 +11,5 @@ SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4996")
 # normally happens via DLL import hooks).
 ADD_LIBRARY(pthread SHARED src/pthread.c)
 TARGET_LINK_LIBRARIES(pthread ws2_32)
+
+LIBMV_INSTALL_THIRD_PARTY_LIB(pthread)
