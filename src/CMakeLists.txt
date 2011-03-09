@@ -110,7 +110,7 @@ ADD_SUBDIRECTORY(third_party)
 
 IF (QT4_FOUND)
   MESSAGE(STATUS "Qt4 found: GUI enabled.")
-#   ADD_SUBDIRECTORY(ui)
+  ADD_SUBDIRECTORY(ui)
 ELSE (QT4_FOUND)
   MESSAGE(STATUS "Qt4 not found: GUI disabled.")
   MESSAGE(STATUS "If you have installed Qt4, check that qmake.exe is accessible\
