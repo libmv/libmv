@@ -55,12 +55,12 @@ void SelectExistingPointStructures(const Matches &matches,
 
 // Selects only the NOT already reconstructed tracks observed in the image
 // image_id and returns a vector of StructureID and their feature coordinates
-void SelectUnexistingPointStructures(const Matches &matches, 
-                                    CameraID image_id,
-                                    const Reconstruction &reconstruction,
-                                    vector<StructureID> *structures_ids,
-                                    Mat2X *x_image) {
-  const size_t kNumberStructuresToReserve = 1000;
+void SelectNonReconstructedPointStructures(const Matches &matches, 
+                                           CameraID image_id,
+                                           const Reconstruction &reconstruction,
+                                           vector<StructureID> *structures_ids,
+                                           Mat2X *x_image) {
+  const size_t kNumberStructuresToReserve = 10000;
   structures_ids->resize(0);
   //TODO(julien) clean this
   structures_ids->reserve(kNumberStructuresToReserve);

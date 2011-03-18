@@ -23,14 +23,14 @@
 #include "libmv/correspondence/import_matches_txt.h"
 #include "libmv/correspondence/tracker.h"
 #include "libmv/logging/logging.h"
-#include "libmv/reconstruction/reconstruction.h"
+#include "libmv/reconstruction/euclidean_reconstruction.h"
 #include "libmv/reconstruction/export_blender.h"
 #include "libmv/reconstruction/export_ply.h"
 
 using namespace libmv;
 
 DEFINE_string(i, "matches.txt", "Matches input file");
-DEFINE_string(o, "reconstruction.ply", "Reconstruction output file");
+DEFINE_string(o, "reconstruction.py", "Reconstruction output file");
 
 DEFINE_int32(w, 0, "Image width (px)");
 DEFINE_int32(h, 0, "Image height (px)");
@@ -91,7 +91,6 @@ int main (int argc, char *argv[]) {
   
   // Exports the reconstructions
   VLOG(0) << "Exporting Reconstructions..." << std::endl;
-  
   std::string file_path_name, file_ext;
   GetFilePathExtention(FLAGS_o, &file_path_name, &file_ext);
   std::transform(file_ext.begin(), file_ext.end(), file_ext.begin(), ::tolower);

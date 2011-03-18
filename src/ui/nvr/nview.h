@@ -115,18 +115,19 @@ public:
     MainWindow(QWidget *parent = 0);
     ~MainWindow();
 public slots:
-    void openImages();
-    void openImages( QStringList filenames );
+    void OpenImages();
+    void OpenImages( QStringList filenames );
     void SaveReconstructionFile();
-    void computeMatches();
-    void computeRelativeMatches();
-    void computeUncalibratedReconstruction();
-    void computeCalibratedReconstruction();
-    void computeMetricRectification();
-    void computeBA();
+    void LoadMatches();
+    void ComputeMatches();
+    void ComputeRelativeMatches();
+    void ComputeUncalibratedReconstruction();
+    void ComputeCalibratedReconstruction();
+    void ComputeMetricRectification();
+    void ComputeBA();
     
     void UpdateGraph();
-    void warningNotFunctional();
+    void WarningNotFunctional();
     bool SelectDetectorDescriber(eDetector *detector, eDescriber *describer);
 signals:
     void setFilter(int i);

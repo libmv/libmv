@@ -18,8 +18,21 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
+#ifndef LIBMV_RECONSTRUCTION_IMAGE_ORDER_SELECTION_H_
+#define LIBMV_RECONSTRUCTION_IMAGE_ORDER_SELECTION_H_
+
 #include "libmv/reconstruction/reconstruction.h"
 
 namespace libmv {
 
-} // namespace libmv
+// This method selects an efficient order of images based on an image
+// criterion: median homography error x number of common matches
+// The oupout images_list contains a list of connected graphs
+// (vectors), each vector contains the ImageID ordered by the criterion.
+void SelectEfficientImageOrder(
+  const Matches &matches, 
+  std::list<vector<Matches::ImageID> >*images_list);
+
+}  // namespace libmv
+
+#endif  // LIBMV_RECONSTRUCTION_IMAGE_ORDER_SELECTION_H_

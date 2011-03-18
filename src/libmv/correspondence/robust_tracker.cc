@@ -142,8 +142,8 @@ bool RobustTracker::Track(const Image &image,
                                                  rms_threshold_inlier_, 
                                                  &F,
                                                  &inliers);
-      LOG(INFO) << "#inliers = "<< inliers.size() << std::endl;
-      LOG(INFO) << "#outliers = "<< tracks.size()-inliers.size() << std::endl;
+      VLOG(2) << "#inliers = "<< inliers.size() << std::endl;
+      VLOG(2) << "#outliers = "<< tracks.size()-inliers.size() << std::endl;
       // We remove correspondences that are not inliers
       size_t max_num_track = 1 +
        std::max(new_features_graph->matches_.GetMaxTrackID(),

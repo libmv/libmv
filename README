@@ -52,9 +52,9 @@ Instead do this:
 
  $ ls
  AUTHORS  contrib  doc  LICENSE  Makefile  README  src
- $ mkdir alternate_build
- $ cd alternate_build
- $ cmake ../ # Your options here
+ $ mkdir build
+ $ cd build
+ $ cmake ../src # Your options here
  $ make
  $ make test
  $ ...

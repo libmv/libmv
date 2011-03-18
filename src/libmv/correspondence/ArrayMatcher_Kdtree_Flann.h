@@ -54,7 +54,7 @@ class ArrayMatcher_Kdtree_Flann : public ArrayMatcher<Scalar>
   bool build( const Scalar * dataset, int nbRows, int dimension)  {
 
     _p.log_destination = NULL;
-    _p.log_level = LOG_INFO;
+    _p.log_level = LOG_WARN;//LOG_INFO;
 
     // Force KDTREE matching
     _p.algorithm = KDTREE;

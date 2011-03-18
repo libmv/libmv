@@ -26,17 +26,17 @@
 namespace libmv {
 
 // Reconstructs unreconstructed point tracks observed in the image image_id
-// using theirs observations (matches). 
+// using theirs observations (matches) when the instrinsic parameters are known.
 // To be reconstructed, the tracks need to be viewed in more than
 // minimum_num_views images.
 // The method:
 //    selects the tracks that haven't been already reconstructed
 //    reconstructs the tracks into structures
-//    TODO(julien) only add inliers?
+//    remove outliers (points behind one camera or at infinity) 
 //    creates and add them in reconstruction
 // Returns the number of structures reconstructed and the list of triangulated
 // points
-uint PointStructureTriangulation(
+uint PointStructureTriangulationCalibrated(
    const Matches &matches, 
    CameraID image_id, 
    size_t minimum_num_views, 
@@ -44,16 +44,52 @@ uint PointStructureTriangulation(
    vector<StructureID> *new_structures_ids = NULL);
 
 // Retriangulates point tracks observed in the image image_id using theirs
-// observations (matches). To be reconstructed, the tracks need to be viewed
-// in more than minimum_num_views images.
+// observations (matches)  when the instrinsic parameters are known.
+// To be reconstructed, the tracks need to be viewed in more than 
+// minimum_num_views images.
 // The method:
 //    selects the tracks that have been already reconstructed
 //    reconstructs the tracks into structures
-//    TODO(julien) only add inliers?
+//    remove outliers (points behind one camera or at infinity) 
+//    updates the coordinates in the reconstruction
 // Returns the number of structures retriangulated
-uint PointStructureRetriangulation(const Matches &matches, 
-                                   CameraID image_id,  
-                                   Reconstruction *reconstruction);
+uint PointStructureRetriangulationCalibrated(
+   const Matches &matches, 
+   CameraID image_id,  
+   Reconstruction *reconstruction);
+
+// Reconstructs unreconstructed point tracks observed in the image image_id
+// using theirs observations (matches) when the instrinsic param. are unknown. 
+// To be reconstructed, the tracks need to be viewed in more than
+// minimum_num_views images.
+// The method:
+//    selects the tracks that haven't been already reconstructed
+//    reconstructs the tracks into structures
+//    remove outliers (contains NaN coord) TODO(julien) do other tests (rms?)
+//    creates and add them in reconstruction
+// Returns the number of structures reconstructed and the list of triangulated
+// points
+uint PointStructureTriangulationUncalibrated(
+   const Matches &matches, 
+   CameraID image_id, 
+   size_t minimum_num_views, 
+   Reconstruction *reconstruction,
+   vector<StructureID> *new_structures_ids = NULL);
+
+// Retriangulates point tracks observed in the image image_id using theirs
+// observations (matches)  when the instrinsic parameters are unknown.  
+// To be reconstructed, the tracks need to be viewed in more than 
+// minimum_num_views images.
+// The method:
+//    selects the tracks that have been already reconstructed
+//    reconstructs the tracks into structures
+//    remove outliers (contains NaN coord) TODO(julien) do other tests (rms?)
+//    updates the coordinates in the reconstruction
+// Returns the number of structures retriangulated
+uint PointStructureRetriangulationUncalibrated(
+   const Matches &matches, 
+   CameraID image_id,  
+   Reconstruction *reconstruction);
 }  // namespace libmv
 
 #endif  // LIBMV_RECONSTRUCTION_MAPPING_H_

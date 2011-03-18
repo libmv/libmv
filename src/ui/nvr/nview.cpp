@@ -7,6 +7,8 @@
 #include <QLabel>
 
 #include "libmv/correspondence/ArrayMatcher_Kdtree.h"
+#include "libmv/correspondence/export_matches_txt.h"
+#include "libmv/correspondence/import_matches_txt.h"
 #include "libmv/correspondence/robust_tracker.h"
 #include "libmv/image/image.h"
 #include "libmv/image/image_io.h"
@@ -15,7 +17,8 @@
 #include "libmv/reconstruction/euclidean_reconstruction.h"
 #include "libmv/reconstruction/export_blender.h"
 #include "libmv/reconstruction/export_ply.h"
-#include "libmv/reconstruction/image_order_selection.h"
+#include "libmv/reconstruction/image_selection.h"
+#include "libmv/reconstruction/keyframe_selection.h"
 #include "libmv/reconstruction/mapping.h"
 #include "libmv/reconstruction/optimization.h"
 #include "libmv/reconstruction/projective_reconstruction.h"
@@ -71,39 +74,44 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
     QVBoxLayout* layout = new QVBoxLayout(actionsWidget);
     {
       QPushButton* button = new QPushButton("Open Images");
-      connect(button,SIGNAL(clicked()),SLOT(openImages()));
+      connect(button,SIGNAL(clicked()),SLOT(OpenImages()));
       layout->addWidget(button);
     }
     {
       QPushButton* button = new QPushButton("Compute Matches (images)");
-      connect(button,SIGNAL(clicked()),SLOT(computeMatches()));
+      connect(button,SIGNAL(clicked()),SLOT(ComputeMatches()));
       layout->addWidget(button);
     }
     {
       QPushButton* button = new QPushButton("Compute Relative Matches (video)");
-      connect(button,SIGNAL(clicked()),SLOT(computeRelativeMatches()));
+      connect(button,SIGNAL(clicked()),SLOT(ComputeRelativeMatches()));
+      layout->addWidget(button);
+    }
+    {
+      QPushButton* button = new QPushButton("Load Matches");
+      connect(button,SIGNAL(clicked()),SLOT(LoadMatches()));
       layout->addWidget(button);
     }
     {
       QPushButton* button = new QPushButton("*Uncalibrated Reconstruction*");
       connect(button,SIGNAL(clicked()),
-        SLOT(computeUncalibratedReconstruction()));
+        SLOT(ComputeUncalibratedReconstruction()));
       layout->addWidget(button);
     }
     {
       QPushButton* button = new QPushButton("Metric Rectification");
-      connect(button,SIGNAL(clicked()),SLOT(computeMetricRectification()));
+      connect(button,SIGNAL(clicked()),SLOT(ComputeMetricRectification()));
       layout->addWidget(button);
     }
     {
       QPushButton* button = new QPushButton("*Calibrated Reconstruction*");
       connect(button,SIGNAL(clicked()),
-        SLOT(computeCalibratedReconstruction()));
+        SLOT(ComputeCalibratedReconstruction()));
       layout->addWidget(button);
     }
     {
       QPushButton* button = new QPushButton("Metric Bundle Adjustment");
-      connect(button,SIGNAL(clicked()),SLOT(computeBA()));
+      connect(button,SIGNAL(clicked()),SLOT(ComputeBA()));
       layout->addWidget(button);
     }
     {
@@ -134,8 +142,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
     setCentralWidget( tab );
 
     QStringList args = qApp->arguments(); args.removeFirst();
-    openImages(args);
-    if(!args.isEmpty()) computeMatches();
+    OpenImages(args);
+    if(!args.isEmpty()) ComputeMatches();
     
     is_video_sequence_ = false;
 }
@@ -156,8 +164,8 @@ MainWindow::~MainWindow() {
   grid_layout_ = NULL;
 }
 
-void MainWindow::openImages() {
-    openImages(QFileDialog::getOpenFileNames(
+void MainWindow::OpenImages() {
+    OpenImages(QFileDialog::getOpenFileNames(
                 this, tr("Select Images"),"",
                 "Pictures (*.png *.jpg *.jpeg *.bmp \
                 *.ppm *.pgm *.xpm *.tif *.tiff *.tga);;All Files (*.*)"));
@@ -197,7 +205,7 @@ void MainWindow::SaveReconstructionFile() {
     }
   }
 }
-void MainWindow::openImages( QStringList files ) {
+void MainWindow::OpenImages( QStringList files ) {
     if (files.isEmpty()) return;
     foreach(ImageView* w,images) {
         grid_layout_->removeWidget(w);
@@ -220,7 +228,7 @@ bool progressCallback(QProgressDialog &progress, int n) {
     progress.setValue(n);
     return progress.wasCanceled();
 }
-void MainWindow::warningNotFunctional() {     
+void MainWindow::WarningNotFunctional() {     
   QMessageBox::warning (this, "Warning", 
                         "This process is STILL in development.");
 }
@@ -264,7 +272,7 @@ bool MainWindow::SelectDetectorDescriber(eDetector *detector,
   return ok;
 }
 
-void MainWindow::computeMatches() {
+void MainWindow::ComputeMatches() {
     QProgressDialog progress("Computing matches...","Abort", 0, 
                              images.count(), this);
     progress.setWindowModality(Qt::WindowModal);
@@ -352,10 +360,10 @@ ByteImage * ConvertToGrayscale(const ByteImage &imageArrayBytes) {
   return arrayGrayBytes;
 }
 
-void MainWindow::computeRelativeMatches() {
+void MainWindow::ComputeRelativeMatches() {
     QProgressDialog progress("Computing relative matches...","Abort", 0, 
                              images.count(), this);
-    warningNotFunctional();
+    WarningNotFunctional();
     progress.setWindowModality(Qt::WindowModal);
     eDetector detector   = detector::FAST_DETECTOR;
     eDescriber describer = descriptor::DAISY_DESCRIBER;
@@ -398,13 +406,29 @@ void MainWindow::computeRelativeMatches() {
     }
     
     matches_.Merge(all_features_graph.matches_);
-    // TODO(julien) Delete the features graph
-    //all_features_graph.DeleteAndClear();
     UpdateGraph();
     is_video_sequence_ = true;
+    ExportMatchesToTxt(all_features_graph.matches_, "./matches.txt");
+    // TODO(julien) Delete the features graph
+    //all_features_graph.DeleteAndClear();
 }
 
-void MainWindow::computeUncalibratedReconstruction() {
+void MainWindow::LoadMatches() {
+  QString s = QFileDialog::getOpenFileName(
+                     this, tr("Select Matches"),"",
+                     "Text files (*.txt);;All Files (*.*)");
+  if (s.isEmpty()) return;
+ 
+  // Imports matches
+  FeatureSet *fs = new FeatureSet();
+  ImportMatchesFromTxt(s.toStdString(), &matches_, fs);
+  UpdateGraph();
+  is_video_sequence_ = true;
+  // TODO(julien) Delete the features graph
+  // delete fs
+}
+
+void MainWindow::ComputeUncalibratedReconstruction() {
   QProgressDialog progress("Computing uncalibrated reconstruction...","Abort",0,
                            images.count(), this);
   progress.setWindowModality(Qt::WindowModal);
@@ -460,10 +484,10 @@ void MainWindow::computeUncalibratedReconstruction() {
       progress.setLabelText("Initial Intersection");
       VLOG(1) << " -- Initial Intersection --  " << std::endl;
       size_t minimum_num_views = 2;
-      PointStructureTriangulation(matches_inliers, 
-                                  image_id,
-                                  minimum_num_views, 
-                                  recons);
+      PointStructureTriangulationUncalibrated(matches_inliers, 
+                                              image_id,
+                                              minimum_num_views, 
+                                              recons);
       // Performs projective bundle adjustment
       //VLOG(1) << " -- Projective Bundle Adjustment --  " << std::endl;
       
@@ -487,17 +511,17 @@ void MainWindow::computeUncalibratedReconstruction() {
         // TODO(julien) Avoid to retriangulate, prefer projective BA
         progress.setLabelText("Retriangulation");
         VLOG(1) << " -- Retriangulation --  " << std::endl;
-        PointStructureRetriangulation(matches_inliers, 
-                                    image_id,
-                                    recons);
+        PointStructureRetriangulationUncalibrated(matches_inliers, 
+                                                  image_id,
+                                                  recons);
         
         progress.setLabelText("Incremental Intersection");
         VLOG(1) << " -- Incremental Intersection --  " << std::endl;
         // TODO(julien) this do nothing (no points)...fix it
-        PointStructureTriangulation(matches_inliers, 
-                                    image_id,
-                                    minimum_num_views, 
-                                    recons);
+        PointStructureTriangulationUncalibrated(matches_inliers, 
+                                                image_id,
+                                                minimum_num_views, 
+                                                recons);
 
         // TODO(julien) Performs projective bundle adjustment
         progressCallback(progress, index_image_graph);
@@ -510,26 +534,25 @@ void MainWindow::computeUncalibratedReconstruction() {
   UpdateGraph();
 }
 
-void MainWindow::computeCalibratedReconstruction() {
+void MainWindow::ComputeCalibratedReconstruction() {
   QProgressDialog progress("Computing calibrated reconstruction...","Abort", 0,
                            images.count(), this);
   progress.setWindowModality(Qt::WindowModal);
   Vec2u image_size;
-  PinholeCamera * camera = NULL;
   
   if (images.count()<2)
     return;
   
   double focal = 1639.47;
-  double cu = images[0]->GetImageWidth()/2 - 0.5, 
-         cv = images[0]->GetImageHeight()/2 - 0.5;
   bool ok;
     
   //TODO(julien) create a better UI...
   focal = QInputDialog::getDouble(this, 
-           tr("Set the focal length (in pixels)"),
-           tr("Focal (px) = image width (px) * focal length (mm) / CCD width (mm):"), focal, 0, 10000, 4, &ok);
+          tr("Set the focal length (in pixels)"),
+          tr("Focal (px) = image width (px) * focal length (mm) / CCD width (mm):"), focal, 0, 10000, 4, &ok);
   if (!ok) return;
+  /*double cu = images[0]->GetImageWidth()/2 - 0.5, 
+         cv = images[0]->GetImageHeight()/2 - 0.5;
   cu = QInputDialog::getDouble(this, 
         tr("Set the principal point coordinate (x)"),
         tr("Principal point coordinate x:"), cu, 0, 10000, 4, &ok);
@@ -541,139 +564,53 @@ void MainWindow::computeCalibratedReconstruction() {
   
   Mat3 K;
   K << focal, 0, cu,
-       0, focal, cv,
-       0,   0,   1;
-       
-  // TODO(julien) put the following in the reconstruction lib. 
-  progress.setLabelText("Selecting best initial images...");
-  std::list<libmv::vector<Matches::ImageID> > connected_graph_list;
-  if (is_video_sequence_)
-    SelectKeyframes(matches_,  &connected_graph_list);
-  else
-    SelectEfficientImageOrder(matches_,  &connected_graph_list);
-  
-  VLOG(1) << " List order:";
-  for (size_t i = 0; i < connected_graph_list.begin()->size(); ++i) {
-    VLOG(1) << (*connected_graph_list.begin())[i] << " ";
-  }
-  VLOG(1) << std::endl;
-  
-  Matches matches_inliers;
-  size_t image_id = 0;
-  size_t index_image_graph = 0;
-  Reconstruction *recons = NULL;
-  std::list<libmv::vector<Matches::ImageID> >::iterator graph_iter =
-    connected_graph_list.begin();
-  for (; graph_iter != connected_graph_list.end(); ++graph_iter) {
-    if (graph_iter->size() >= 2) {
-      recons = new Reconstruction();
-      reconstructions_.push_back(recons);
-      progress.setLabelText("Initial Motion Estimation");
-      VLOG(1) << " -- Initial Motion Estimation --  " << std::endl;
-      ReconstructFromTwoCalibratedViews(matches_, 
-                                        (*graph_iter)[0], 
-                                        (*graph_iter)[1], 
-                                        K, K,
-                                        &matches_inliers, 
-                                        recons);
-      index_image_graph = 0;
-      image_id = (*graph_iter)[index_image_graph];
-      camera = dynamic_cast<PinholeCamera*>(
-        recons->GetCamera(image_id));
-      if (camera) {
-        image_size << images[image_id]->GetImageWidth(), 
-                      images[image_id]->GetImageHeight();
-        camera->set_image_size(image_size); 
-      }
-      index_image_graph = 1;
-      image_id = (*graph_iter)[index_image_graph];
-      camera = dynamic_cast<PinholeCamera*>(
-        recons->GetCamera(image_id));
-      if (camera) {
-        image_size << images[image_id]->GetImageWidth(), 
-                      images[image_id]->GetImageHeight();
-        camera->set_image_size(image_size); 
-      }
-      progressCallback(progress, 1);
+      0, focal, cv,
+      0,   0,   1;*/
       
-      progress.setLabelText("Initial Intersection");
-      VLOG(1) << " -- Initial Intersection --  " << std::endl;
-      size_t minimum_num_views = 2;
-      PointStructureTriangulation(matches_inliers, 
-                                  image_id,
-                                  minimum_num_views, 
-                                  recons);
-      
-      // Performs projective bundle adjustment
-      VLOG(1) << " -- Bundle adjustment --  " << std::endl;
-      progress.setLabelText("Bundle adjustment");
-      MetricBundleAdjust(matches_inliers, recons);
-      /*
-      progress.setLabelText("Remove outliers");
-      RemoveOutliers(image_id, &matches_inliers, recons, 1.0);
-      progress.setLabelText("Bundle adjustment");
-      MetricBundleAdjust(matches_inliers, recons);*/
-      
-      std::string s = "out-1.py";
-      ExportToBlenderScript(*recons, s);
-      
-      // Estimation of the pose of other images by resection
-      minimum_num_views = 3;
-      for (index_image_graph = 2; index_image_graph < graph_iter->size();
-          ++index_image_graph) {
-        image_id = (*graph_iter)[index_image_graph];
-        progress.setLabelText("Incremental Resection");
-        VLOG(1) << " -- Incremental Resection --  " << std::endl;
-        CalibratedCameraResection(matches_, image_id, K,
-                                  &matches_inliers, recons);    
-        // TODO(julien) optimize camera
-        
-        camera = dynamic_cast<PinholeCamera*>(
-          recons->GetCamera(image_id));
-        if (camera) {
-          image_size << images[image_id]->GetImageWidth(),
-                        images[image_id]->GetImageHeight();
-          camera->set_image_size(image_size); 
-        }
-        
-        VLOG(1) << " -- Incremental Intersection --  " << std::endl;
-        progress.setLabelText("Incremental Intersection");
-        PointStructureTriangulation(matches_, 
-                                    image_id,
-                                    minimum_num_views, 
-                                    recons);    
-        // TODO(julien) optimize only points
-        
-        // Performs bundle adjustment
-        // TODO(julien) maybe BA can be called not for every images..
-        VLOG(1) << " -- Bundle adjustment --  " << std::endl;
-        progress.setLabelText("Bundle adjustment");
-        MetricBundleAdjust(matches_, recons);
-        /*
-        progress.setLabelText("Remove outliers");
-        VLOG(1) << " -- RemoveOutliers --  " << std::endl;
-        //RemoveOutliers(image_id, &matches_, recons, 2.0);
-        VLOG(1) << " -- Bundle adjustment --  " << std::endl;
-        progress.setLabelText("Bundle adjustment");
-        MetricBundleAdjust(matches_, recons);*/
-
-        //DrawNewStructures(new_structures_ids, *recons);
-        std::stringstream s;
-        s << "out-" << index_image_graph << ".py";
-        ExportToBlenderScript(*recons, s.str());
-        
-        progressCallback(progress, index_image_graph);
-      }
-      DrawAllStructures(*recons);
+  if (is_video_sequence_) {
+    progress.setLabelText("Euclidean Reconstruction From Video");
+    VLOG(1) << "Euclidean Reconstruction From Video..." << std::endl;
+    EuclideanReconstructionFromVideo(matches_, 
+                                     images[0]->GetImageWidth(), 
+                                     images[0]->GetImageHeight(),
+                                     focal,
+                                     &reconstructions_);
+    VLOG(1) << "Euclidean Reconstruction From Video...[DONE]" << std::endl;
+    
+    //progress.setLabelText("Updating 2D/3D views");
+    DrawAllStructures(**reconstructions_.begin());
+    
+    progress.setLabelText("Exporting reconstructions");
+    int i = 0;
+    std::list<Reconstruction *>::iterator iter = reconstructions_.begin();
+    for (; iter != reconstructions_.end(); ++iter) {
+      std::stringstream s;
+      if (reconstructions_.size() > 1)
+        s << "./out" << "-" << i << ".py";
+      else
+        s << "./out.py";
+      ExportToBlenderScript(**iter, s.str());
     }
+    // Cleaning
+    /*progress.setLabelText("Cleaning reconstructions");
+    VLOG(2) << "Cleaning." << std::endl;
+    iter = reconstructions_.begin();
+    for (; iter != reconstructions_.end(); ++iter) {
+      (*iter)->ClearCamerasMap();
+      (*iter)->ClearStructuresMap(); 
+      delete *iter;
+    }
+    reconstructions_.clear();*/
+  } else {
+    WarningNotFunctional();
   }
   //matches_.Clear();
   //matches_.Merge(matches_inliers);
   UpdateGraph();
 }
 
-void MainWindow::computeMetricRectification() {
-  warningNotFunctional();
+void MainWindow::ComputeMetricRectification() {
+  WarningNotFunctional();
   QProgressDialog progress("Computing reconstruction...","Abort", 0,
                            images.count(),this);
   progress.setWindowModality(Qt::WindowModal);
@@ -684,7 +621,7 @@ void MainWindow::computeMetricRectification() {
     UpgradeToMetric(matches_, *iter);
 }
 
-void MainWindow::computeBA() {
+void MainWindow::ComputeBA() {
   QProgressDialog progress("Computing reconstruction...","Abort", 0,
                            images.count(),this);
   progress.setWindowModality(Qt::WindowModal);

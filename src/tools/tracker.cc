@@ -49,6 +49,7 @@
 #include "libmv/reconstruction/reconstruction.h"
 #include "libmv/reconstruction/euclidean_reconstruction.h"
 #include "libmv/reconstruction/export_ply.h"
+#include "libmv/reconstruction/export_blender.h"
 #include "libmv/reconstruction/mapping.h"
 #include "libmv/reconstruction/optimization.h"
 #include "libmv/multiview/robust_fundamental.h"
@@ -67,8 +68,8 @@ DEFINE_bool  (save_features, false,
               "save images with detected and matched features");
 DEFINE_bool  (save_matches, false,
               "save images with matches");
-DEFINE_bool  (robust_tracker, false,
-              "perform a robust tracking (with epipolar filtering)");
+DEFINE_bool  (non_robust_tracker, false,
+              "perform a non robust tracking (without epipolar filtering)");
 DEFINE_double(robust_tracker_threshold, 1.0,
               "Epipolar filtering threshold (in pixels)");
 
@@ -225,86 +226,34 @@ bool IsArgImage(const std::string & arg) {
 }
 
 void ProceedReconstruction(Matches &matches, 
-                           vector<std::pair<size_t, size_t> > &image_sizes) {
-  Reconstruction reconstruction;
-  Mat3 K1, K2;
-  size_t index_image = 0;
-  Matches matches_inliers;
-  std::set<Matches::ImageID>::const_iterator image_iter =
-    matches.get_images().begin();
-  Matches::ImageID previous_image_id = *image_iter;
-    
-  double u = image_sizes[index_image].second/2.0;
-  if (FLAGS_principal_point_u > 0)
-    u = FLAGS_principal_point_u;
-  double v = image_sizes[index_image].first/2.0;
-  if (FLAGS_principal_point_v > 0)
-    v = FLAGS_principal_point_v;
-  // The first image is fixed
-  K1 << FLAGS_focal,  0, u,
-        0, FLAGS_focal,  v, 
-        0, 0,            1;
-      
-  // Estimation of the second image
-  image_iter++;
-  index_image++;
-  
-  u = image_sizes[index_image].second/2.0;
-  if (FLAGS_principal_point_u > 0)
-    u = FLAGS_principal_point_u;
-  v = image_sizes[index_image].first/2.0;
-  if (FLAGS_principal_point_v > 0)
-    v = FLAGS_principal_point_v;
-  K2 << FLAGS_focal,  0, u,
-        0, FLAGS_focal,  v,
-        0,  0,           1;
-
-  VLOG(1) << " -- Initial Motion Estimation --  " << std::endl;
-  ReconstructFromTwoCalibratedViews(matches, previous_image_id, *image_iter,
-                                    K1, K2,
-                                    &matches_inliers, &reconstruction);
-  
-  VLOG(1) << " -- Initial Intersection --  " << std::endl;
-  size_t minimum_num_views = 2;
-  PointStructureTriangulation(matches_inliers, *image_iter, minimum_num_views, 
-                              &reconstruction);
-
-  //VLOG(1) << " -- Bundle Adjustment --  " << std::endl;
-  //TODO (julien) Perfom Bundle Adjustment (Euclidean BA)
-  
-  // Estimation of the pose of other images by resection
-  image_iter++;
-  index_image++;
-  for (; image_iter != matches.get_images().end();
-       ++image_iter, ++index_image) {
-    u = image_sizes[index_image].second/2.0;
-    if (FLAGS_principal_point_u > 0)
-      u = FLAGS_principal_point_u;
-    v = image_sizes[index_image].first/2.0;
-    if (FLAGS_principal_point_v > 0)
-      v = FLAGS_principal_point_v;
-    K1 << FLAGS_focal,  0, u,
-          0, FLAGS_focal,  v,
-          0,  0,           1;
-                       
-    VLOG(1) << " -- Incremental Resection --  " << std::endl;
-    CalibratedCameraResection(matches, *image_iter, K1,
-                             &matches_inliers, &reconstruction);     
-
-    VLOG(1) << " -- Incremental Intersection --  " << std::endl;
-    size_t minimum_num_views = 3;
-    PointStructureTriangulation(matches_inliers, 
-                                *image_iter,
-                                minimum_num_views, 
-                                &reconstruction);
-    
-    VLOG(1) << " -- Bundle Adjustment --  " << std::endl;
-    MetricBundleAdjust(matches_inliers, &reconstruction);
+                           Vec2 &image_size) {
+  VLOG(1) << "Euclidean Reconstruction From Video..." << std::endl;
+  std::list<Reconstruction *> reconstructions;
+  EuclideanReconstructionFromVideo(matches, 
+                                   image_size(0), 
+                                   image_size(1),
+                                   FLAGS_focal,
+                                   &reconstructions);
+  VLOG(1) << "Euclidean Reconstruction From Video...[DONE]" << std::endl;
+  int i = 0;
+  std::list<Reconstruction *>::iterator iter = reconstructions.begin();
+  for (; iter != reconstructions.end(); ++iter) {
+    std::stringstream s;
+    if (reconstructions.size() > 1)
+      s << "./out" << "-" << i << ".py";
+    else
+      s << "./out.py";
+    ExportToBlenderScript(**iter, s.str());
   }
-  
-  ExportToPLY(reconstruction, "./out.ply");
-  reconstruction.ClearCamerasMap();
-  reconstruction.ClearStructuresMap();
+  // Cleaning
+  VLOG(2) << "Cleaning." << std::endl;
+  iter = reconstructions.begin();
+  for (; iter != reconstructions.end(); ++iter) {
+    (*iter)->ClearCamerasMap();
+    (*iter)->ClearStructuresMap(); 
+    delete *iter;
+  }
+  reconstructions.clear();
 }
 
 int main (int argc, char *argv[]) {
@@ -366,7 +315,7 @@ int main (int argc, char *argv[]) {
   matcher = new correspondence::ArrayMatcher_Kdtree<float>();
 
   tracker::Tracker *points_tracker = NULL;
-  if (!FLAGS_robust_tracker) {
+  if (FLAGS_non_robust_tracker) {
     points_tracker = new tracker::Tracker(pDetector, pDescriber, matcher);
   } else {
     tracker::RobustTracker * r_tracker =
@@ -446,7 +395,11 @@ int main (int argc, char *argv[]) {
   
   // Estimates the camera trajectory and 3D structure of the scene
   if (FLAGS_pose_estimation)  {
-    ProceedReconstruction(all_features_graph.matches_, image_sizes);     
+    Vec2 image_size;
+    image_size << image_sizes[0].first, image_sizes[0].second;
+    // TODO(julien) all images are supposed to have the same size 
+    //              for this tracker
+    ProceedReconstruction(all_features_graph.matches_, image_size);     
   }
   
   // Delete the tracker

@@ -112,13 +112,13 @@ typename Kernel::Model Estimate(const Kernel &kernel,
 
     vector<typename Kernel::Model> models;
     kernel.Fit(sample, &models);
-    VLOG(2) << "Fitted subset; found " << models.size() << " model(s).";
+    VLOG(4) << "Fitted subset; found " << models.size() << " model(s).";
 
     // Compute costs for each fit.
     for (int i = 0; i < models.size(); ++i) {
       vector<int> inliers;
       double cost = scorer.Score(kernel, models[i], all_samples, &inliers);
-      VLOG(3) << "Fit cost: " << cost
+      VLOG(5) << "Fit cost: " << cost
               << ", number of inliers: " << inliers.size();
 
       if (cost < best_cost) {
@@ -129,7 +129,7 @@ typename Kernel::Model Estimate(const Kernel &kernel,
         if (best_inliers) {
           best_inliers->swap(inliers);
         }
-        VLOG(2) << "New best cost: " << best_cost << " with "
+        VLOG(4) << "New best cost: " << best_cost << " with "
                 << best_num_inliers << " inlying of "
                 << total_samples << " total samples.";
       }
@@ -138,7 +138,7 @@ typename Kernel::Model Estimate(const Kernel &kernel,
                                             outliers_probability,
                                             best_inlier_ratio);
 
-      VLOG(2) << "Max iterations needed given best inlier ratio: "
+      VLOG(5) << "Max iterations needed given best inlier ratio: "
         << max_iterations << "; best inlier ratio: " << best_inlier_ratio;
     }
   }

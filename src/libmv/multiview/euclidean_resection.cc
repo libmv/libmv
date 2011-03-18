@@ -442,14 +442,14 @@ void EuclideanResectionEPnP(const Mat2X &x_camera, const Mat3X &X_world,
     ui = x_camera(0, c);
     vi = x_camera(1, c);
     M.block(2*c, 0, 2, 12) << a0, 0, 
-                  a0*(-ui), a1, 0,
-                  a1*(-ui), a2, 0, 
-                  a2*(-ui), a3, 0,
-                  a3*(-ui), 0, 
-                  a0, a0*(-vi), 0,
-                  a1, a1*(-vi), 0,
-                  a2, a2*(-vi), 0,
-                  a3, a3*(-vi);
+                              a0*(-ui), a1, 0,
+                              a1*(-ui), a2, 0, 
+                              a2*(-ui), a3, 0,
+                              a3*(-ui), 0, 
+                              a0, a0*(-vi), 0,
+                              a1, a1*(-vi), 0,
+                              a2, a2*(-vi), 0,
+                              a3, a3*(-vi);
   }
   
   Eigen::SVD<Mat> MtMsvd = (M.transpose()*M).svd();
