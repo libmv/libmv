@@ -24,6 +24,12 @@ install : debug
 install-release : release
 	cd bin-opt && make install
 
+uninstall : debug
+	cd bin-dbg && make uninstall
+
+uninstall-release : release
+	cd bin-opt && make uninstall
+
 documentation :
 	doxygen Doxyfile
 

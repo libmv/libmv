@@ -1,13 +1,5 @@
 
-SET(LIBMV_MANIFEST_DIR "@CMAKE_CURRENT_BINARY_DIR@/../install_manifest.txt")
-
-if (NOT EXISTS "@CMAKE_CURRENT_BINARY_DIR@/../install_manifest.txt")
-  if (NOT EXISTS "@CMAKE_CURRENT_BINARY_DIR@/install_manifest.txt")
-    message(FATAL_ERROR "Cannot find install manifest: \"@CMAKE_CURRENT_BINARY_DIR@/../install_manifest.txt\"")
-  endif(NOT EXISTS "@CMAKE_CURRENT_BINARY_DIR@/install_manifest.txt")
-  SET(LIBMV_MANIFEST_DIR "@CMAKE_CURRENT_BINARY_DIR@/install_manifest.txt")
-endif(NOT EXISTS "@CMAKE_CURRENT_BINARY_DIR@/../install_manifest.txt")
-
+SET(LIBMV_MANIFEST_DIR "@CMAKE_CURRENT_BINARY_DIR@/install_manifest.txt")
 file(READ ${LIBMV_MANIFEST_DIR} files)
 string(REGEX REPLACE "\n" ";" files "${files}")
 foreach (file ${files})
