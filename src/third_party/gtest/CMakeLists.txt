@@ -8,3 +8,4 @@ ADD_LIBRARY( gtest
              src/gtest-typed-test.cc
 )
 
+LIBMV_INSTALL_THIRD_PARTY_LIB(gtest)
