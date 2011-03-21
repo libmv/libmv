@@ -18,9 +18,7 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 # IN THE SOFTWARE.
 
-# TODO(julien) make it work!!!
-
-OPTION(BUILD_DOC "Build or not the documentation. (Doxygen needed)" OFF)
+OPTION(BUILD_DOC "Build the documentation. (Doxygen needed)" OFF)
 
 # check if doxygen is even installed
 FIND_PACKAGE(Doxygen)
