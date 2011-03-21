@@ -294,7 +294,8 @@ bool ReconstructionNonKeyframes(const Matches &matches,
   bool do_bundle_adjustment = false;
   bool is_frame_in_current_recons = false;
   bool is_frame_in_next_recons = false;
-  std::set<Matches::ImageID>::iterator img_iter = matches.get_images().begin();
+  std::set<Matches::ImageID>::const_iterator img_iter = 
+    matches.get_images().begin();
   std::list<Reconstruction *>::iterator recons_iter = reconstructions->begin();
   std::list<Reconstruction *>::iterator recons_iter_next = recons_iter;
   recons_iter_next++;
