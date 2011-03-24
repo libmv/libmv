@@ -1,0 +1,303 @@
+2009-02-12 [r1-386]  Libmv team <libmv-devel@googlegroups.com>
+
+	* numeric: Make LM parameters settable. The API is fairly usable now; probably
+	  dogleg is next.
+	* numeric: First round of making LM code nicer to use. Next up is to expose the
+	  optimizer parameters.
+	* image: Formatting.
+	* correspondence: Added best axis computation for kdtree split.
+	* correspondence: Add first kdtree draft, with little testing.
+	* numeric: Added rodrigues rotation formula. This can be used to parametrise
+	  rotations during BA.
+	* image: Two tiny fixes to make the project buildable. One test in
+	  blob_response_test is failing.
+	* tools: Formatting.
+	* image: Implement upright SURF descriptor, but without any tests (ducks!)
+	* image: Add minor optimization to BlobResponse() by removing bounds checking in
+	  IntegralImage. Minor logging fixes.
+	* image: Fix gaussian scale computation. Add more criteria to reject surf interest
+	  points when solving hessian fails. Start renaming magic values to variables
+	  parameter_XXXXX so that parameters can be found with grep.
+	* image: Add multiscale SURF interest point detection. Refactor
+	  non-maximal-suppression. The interest points are a bit suspect however, which
+	  bears more investigation.
+	* numeric: Formatting.
+	* numeric: Make LM code into an object. Make numeric jacobian evaluation into a
+	  class as well.
+	* image: Fix an embarrasing bug in non-maximal-suppression.
+	* numeric: Add a simple implementation of Levenberg-Marquardt. Add a function to
+	  numerically approximate derivatives.
+	* numeric: Add more typedefs.
+	* correspondence: Todos for KLT to use Eigen primitives.
+	* multiview: Add link to relevant discussion about PickSubset().
+	* numeric: Fix naming.
+	* numeric: More todos.
+	* image: More image IO TODOs.
+	* cmake: Remove Fortran from needed languages in CMake.
+	* tools: Fix logging init.
+	* tools: Add interest point utility.
+	* image: Start of SURF interest point detection; much work remains.
+	* numeric: More typedefs.
+	* third_party: Fix minor eigen bug (also mailed patch upstream).
+	* image: Add a test for scaled blob response.
+	* image: Cleanups.
+	* image: Cleanups.
+	* image: Functions for approximating derivatives of a 3D function stored in an
+	  array.
+	* image: Add blob response filter and integral image filter, towards a SURF
+	  implementation.
+	* multiview: Relax bounds on six point n view test.
+	* image: Add 2D version of IsLocalMax.
+	* image: Pad extra dimensions with 1s when resizing Array3D's.
+	* image: Simple 3D non-maximal suppression support.
+	* image: Minor formatting and API expansions for array class.
+	* multiview: Six point n view code works now.
+	* multiview: Add (failing) test for six point n view reconstruction.
+	* tools: Add simple tool to print out n view data set for inspection.
+	* multiview: Add n view realistic synthetic data set generation.
+	* multiview: Update fundamental code to use raw eigen.
+	* multiview: Update fundamental test to use raw eigen.
+	* numeric: Add more functionality to the numeric module.
+	* multiview: Add easier to use projection functions.
+	* Add more matrix testing helpers.
+	* numeric: Integrate sixpointnview code and polynomial code into the build. Add
+	  some functions to numeric.h
+	* multiview: Add six point N view code ported from libmv1. No tests yet.
+	* numeric: Add a cubic polynomial solver.
+	* multiview: Enable robust fundamental tests; they now pass (dances a jig).
+	* multiview: Add more logging to the RANSAC code; comments.
+	* cmake: Reorder linking; cleanups.
+	* third_party: Make sure logging is initialized for tests.
+	* Add helpers for comparing matrices in unittests.
+	* multiview: Make robust_estimation.h use new logging framework.
+	* third_party: Make gtest use third_party's gflags. Minor cleanups.
+	* third_party: Integrate some of the logging unittests into the libmv testing
+	  framework.
+	* third_party: Integrated glog into cmake build system and made minor changes to
+	  logging library to get it to compile.
+	* third_party: Initial checkin of Google Logging library. Not yet integrated into
+	  build system.
+	* numeric: Simple robust estimation framework in place. Robust fundamental code
+	  added, but tests don't yet pass.
+	* numeric: Comment out some broken code so that the build works; prep for hacking
+	  on airplane.
+	* numeric: Add new ExtractColumns function and extra typedefs.
+	* multiview: Formatting.
+	* multiview: Add an incomplete, broken, and littered with debug statements robust
+	  fitting framework.
+	* tools: Fix track compilation.
+	* multiview: More simplifying
+	* multiview: Simplify some code thanks to eigen.
+	* numeric: Add another test for Nullspace, checked against numpy. Fix a typo.
+	* ui: Add a missed file. Fix build.
+	* third_party: Remove FLENS from third_party.
+	* numeric: Add missed file.
+	* ui: Switch libmv to use Eigen2 instead of FLENS.
+	* third_party: Add eigen2 to third_party
+	* third_party: Use macros for the tests (much shorter). Use FindBLAS and
+	  FindLAPACK to more intelligently select lapack and blas libraries, though they
+	  are still not perfect.
+	* multiview: Switched EssentialFromRt to use general matrices. It was giving nans
+	  on the mac.
+	* multiview: Finished TwoViewReconstruction test. Found a very misterious and
+	  difficult to reproduce bug in RelativeCameraMotion, and switched it to general
+	  matrix.
+	* multiview: Finish motion from essential matrix. The right solution is choosen by
+	  requiring a triangulated feature to be in front of the cameras.
+	* multiview: Add triangulation using DLT from libmv1.
+	* multiview: Fix and test MotionFromEssential.
+	* multiview: Added untested motion computation from the essential matrix.
+	* numeric: Added two FLENS feature requests.
+	* numeric: Added Essential matrix computation.
+	* numeric: TwoViewReconstruction test working! Motion and structure computation
+	  still missing.
+	* multiview: Separated data sets from tests.
+	* third_party: Implement tiny vector scaling. Implement operator== for tiny
+	  matrices.
+	* third_party: Make matrix multiplication between tiny and general matrices work.
+	  The implementation is nasty; patches to improve it welcome.
+	* third_party: Add operator== for general FLENS matrices, for easier tests like
+	  EXPECT_EQ(A, B) where A and B are flens matrices.
+	* numeric: Added a "realistic" test for FundamentalFromCorrespondences. 8 points
+	  in a cube was a degenarted configuration.
+	* numeric: Minor fixes and FLENS feature request.
+	* numeric: Arranging.
+	* numeric: Fix a subtle unitialized memory issue that GCC correctly found, but
+	  only in opt
+	* image: simplify Resize a wee bit.
+	* image: Add N-dimensional array element-wise multiply.
+	* multiview: Unfinished two view reconstruction test.
+	* multiview: Implemented focal_from_fundamental. Failure checking should be added
+	  as well as more tests.
+	* multiview: Added a function to shift the principal points of a fundamental
+	  matrix.
+	* numeric: Added a FLENS feature request.
+	* numeric: Fix one-column flens list initialization problem.
+	* third_party: Quiet compiler warnings in opt mode.
+	* numeric: Implemented various prerequisites for the multiview code. Found 3 flens
+	  "bugs" which are commented at the bottom of numeric_test.h. Implemented
+	  ultra-ineficient matrix determinant and inverse.
+	* numeric: Added stacking functions and a FLENS crashing example.
+	* multiview: Switched the meaning of x1 and x2 to match the one of vgg's matlab
+	  functions, and the one in HZ. Now the fundamental matrix is such that x2 * F *
+	  x1 = 0.
+	* cmake: Fixed .cc generation for cmake 2.4.
+	* multiview: Added an example of how to generate .cc files with python scripts.
+	  The example will have to be removed when real examples will be implemented.
+	  Right now the .cc files are generated in the build directory rather than in the
+	  source. This makes sense since the generated .cc are not real sources but just
+	  temporal build files. It is however extrange to include files that are not in
+	  the source tree. This behaviour can easily be changed.
+	* numeric: Moved mean and variance computation to numeric.
+	* multiview: Changed std::vector<Vec2> to Mat.
+	* numeric: Moved Diag to numeric.h.
+	* third_party: Moved tiny matrix product implementation to flens directory.
+	* multiview: Added preconditioning to the 8 point algorithm. Some nasty copy
+	  pasting was required to make the product of tiny matrices work.
+	* multiview: Wrote the 8 point algorithm. Preconditioning is not finished.
+	* third_party: Update to build on gcc 4.3.1 / x86_64
+	* image: Added a simpler version of pyramid_sequence using an ImagePyramid cache.
+	  Added MemorySizeInBytes to ArrayND and ImagePyramid.
+	* correspondence: Switch track to use the new correspondences structure.
+	* image: Cleanups and comments for pyramid sequence header.
+	* tools: Minor cleanups to track.cc.
+	* correspondence: Add tracking failures to klt, such that failed tracks are
+	  dropped. Also switch to row, column notation. Clean up tests.
+	* image: Add a test for multichannel downsample.
+	* image: Downsampling derivatives by box filters doesn't. Switch image pyramid
+	  creation back to how Pau, wisely, did it, where each level is blurred and
+	  differentiated independently.
+	* image: Switch downsampling to row, column notation.
+	* image: Add SplitChannels() and PrintArray() functions.
+	* image: Start switching to row, column notation.
+	* correspondence: Add debug printing to KLT.
+	* image: Make "track" work again.
+	* image: Add lazy pyramid sequence code.
+	* image: Implement lazy image processing with unified caching. Temporarily disable
+	  track utility.
+	* image: Add a TODO
+	* image: Add preliminary image sequence.
+	* correspondence: Switch ordering of insert in bipartite graph code.
+	* correspondence: Fixed Lenna test.
+	* multiview: Add unfinished code for computing the fundamental matrix from two
+	  semicalibrated images.
+	* ui: Rearrange image to be a 3D array. Change KLT tracking to use 3-channel
+	  images
+	* image: Add function to take image derivatives into three channels of a single
+	  image.
+	* correspondence: Add support for deleting edges while iterating over a bipartite
+	  graph.
+	* correspondence: Initial correspondences data structures and views.
+	* correspondence: Cleanups for the bipartite graph code.
+	* correspondence: Revamped bipartite graph iterator and fleshed out support.
+	* tools: Display tracking information.
+	* numeric: Add fixed size integer vectors.
+	* correspondence: Implemented a very simple track.cc application.
+	* correspondence: Applied some corrections.
+	* numeric: Minor KLT tidyings. Some unfinished bipartite code.
+	* tools: Played with gflags.
+	* numeric: Implemented pyramidal KLT.
+	* image: Added derivatives to image pyramid.
+	* third_party: Add forgotten CMakeList change.
+	* third_party: Make necessary changes to gflags so that it will compile. Added
+	  simple example in the tools/ directory.
+	* third_party: Initial checkin of third party Google gflags
+	* third_party: Fix compiler warnings in release mode.
+	* Cleaned Makefile.
+	* correspondence: Fixed a possible uninitialized variable.
+	* Added a Makefile to build both debug and release on a single command.
+	* third_party: Update FLENS info.
+	* third_party: Switch new FLENS back to 1-based indexing
+	* third_party: Fix scalar initialization in new FLENS version.
+	* third_party: Update to new FLENS; currently some tests fail because this change
+	  undoes the 0-based indexing change.
+	* correspondence: Use an integer compatible rounding function.
+	* ui: Remove scons build files.
+	* correspondence: Added image pre-smoothing on KLT tests, which greatly improves
+	  precission.
+	* correspondence: Added simple output to Lenna's test. This will have to be
+	  removed latter.
+	* ui: Added missing files, and added color PNM support.
+	* ui: Put image i/o stuff in image_io.h.
+	* correspondence: Add edge iterator to bipartite graph class. Add some constness.
+	* correspondence: Implemented per feature KLT tracking.
+	* correspondence: Add start of tracker base classes; not there yet though.
+	* correspondence: Fix accidental hard tabs.
+	* correspondence: Add the start of a bipartite graph container, useful for storing
+	  correspondences.
+	* cmake: It builds now on Mac OS X, ui included.
+	* correspondence: Added a brief note on KLT to facilitate implementation.
+	* correspondence: Cleaned cmake files.
+	* correspondence: Implemented BoxFilterHorizontal.
+	* numeric: Fixed tests. numeric_test was failling because of 0 indexing.
+	  image_test was failling because of wrong image paths.
+	* correspondence: Added cmake build and testing system.
+	* image: Rework good features to track implementation to use existing gradient
+	  code.
+	* correspondence: Remove hard tabs. Misc formatting.
+	* correspondence: Formating.
+	* numeric: Changed scons to use relative paths.
+	* image: Added basic Good Features To Track detection.
+	* image: Move sampling into a separate file.
+	* image: Added support for Mac OS X. Builds on Leopard ui excluded.
+	* image: Added a basic image pyramid.
+	* image: Changed ArrayND to always own data, and added ConvolveGaussian.
+	* ui: Implement convolution. Add messy code to ui/ which can display convolutions.
+	* image: Add calculation of gaussian and derivative-of-gaussian kernels. Move
+	  image.tcc into a cc file for faster compilation.
+	* third_party: Initialize firstIndex always for arrays.
+	* ui: Add PGM reading via libmv::Image to the UI experimentation code.
+	* numeric: Add L1 and L2 normalize functions to numeric. Make other functions
+	  inline to avoid double-definition problems.
+	* third_party: Switch FLENS to use 0-based indexing by default.
+	* third_party: Add lastIndex() to tinyvector.
+	* ui: Experiment with libmv::Image to QImage bridge.
+	* Switch tests to use gtest.
+	* third_party: Get gtest to build inside libmv.
+	* third_party: Initial import of GTest, Google's C++ testing framework.
+	* third_party: Add GEMM function for tiny matrices.
+	* image: Formating.
+	* numeric: Add a tiny vector transpose.
+	* numeric: Add support for SVD of tiny matrices.
+	* numeric: Add ability to take the nullspace of a tiny matrix.
+	* third_party: Add scalar and list initialization to tiny vectors and matrices.
+	* image: Added pgm writing.
+	* image: Added linear and nearest neighbor interpolation.
+	* image: Splited move implementation from image.h to image.tcc. Added test data.
+	* image: Added ReadPgm function. Currently read only 8 bits PGMs.
+	* image: Replaced image* and move old contents to image_old*.
+	* image: Implemented single ownership for ArrayND and added tests.
+	* image: Formating.
+	* image: Fixed initial ArrayND test.
+	* cleanup of DNA_libmv_types.h
+	* image: Added the ArrayND class. Tests are missing and failing.
+	* image: Added a fixed size tuple class.
+	* Added lapack dependence to README.
+	* numeric: Formatting.
+	* image: Add LICENSE file. Update the other files with new MIT boilerplate.
+	* Remove accidental trailing whitespace from ignore.
+	* Recursively set ignore patterns
+	* Remove obsoleted public dir.
+	* numeric: Add numeric directory, along with Nullspace() function and test.
+	* third_party: Fix more compile warnings in FLENS
+	* third_party: Add support to copying between tiny and dense vectors and matrices
+	  to FLENS.
+	* third_party: Add sconscript for FLENS and make necessary modifications to FLENS
+	  for building.
+	* third_party: Import FLENS into third_party.
+	* Start third_party directoyr.
+	* image: Rearrangement complete.
+	* Cleaning up test directory.
+	* image: Moving furniture around (stay tuned).
+	* Add AUTHORS file.
+	* added installation instruction
+	* updated create_patches.sh to reflect current status
+	* first import of the blender sources
+	* Add a note about opencv and editing the sconstruct to the README
+	* Fix the debug and optimization build flags in the sconstruct; previously it
+	  incorrectly using the same flags for both.
+	* Remove VXL test code I left in by accident.
+	* Set up ignores. Trivial sconstript fix.
+	* Preliminary project scaffolding.
+	* Initial directory structure.
+

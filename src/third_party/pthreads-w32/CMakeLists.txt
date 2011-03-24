@@ -6,7 +6,7 @@ INCLUDE_DIRECTORIES(include)
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4996")
 
 # This will build pthread.dll, which you probably want to put in
-# C:\Windows\System. Unfortunately, statically linking doesn't work well
+# $ENV{SystemRoot}\system. Unfortunately, statically linking doesn't work well
 # because then you have to manually initialize the pthreads library (which
 # normally happens via DLL import hooks).
 ADD_LIBRARY(pthread SHARED src/pthread.c)
