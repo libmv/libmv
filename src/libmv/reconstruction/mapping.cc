@@ -40,7 +40,6 @@ uint PointStructureTriangulationCalibrated(
   vector<StructureID> structures_ids;
   Mat2X x_image;
   vector<Mat34> Ps; // Contains the projection matrices
-  vector<Mat34> Rt; // Contains the pose matrices
   vector<Vec2> xs; 
   Vec2 x;
   // Selects only the unreconstructed tracks observed in the image
@@ -53,7 +52,6 @@ uint PointStructureTriangulationCalibrated(
   // Selects the point structures that are observed at least in
   // minimum_num_views images (images that have an already localized camera) 
   Mat41 X_world;
-  Vec3 X_camera;
   uint number_new_structure = 0;
   if (new_structures_ids)
     new_structures_ids->reserve(structures_ids.size());
@@ -62,14 +60,12 @@ uint PointStructureTriangulationCalibrated(
     Matches::Features<PointFeature> fp =
       matches.InTrack<PointFeature>(structures_ids[t]);
     Ps.clear();
-    Rt.clear();
     xs.clear();
     while (fp) {
       camera = dynamic_cast<PinholeCamera *>(
         reconstruction->GetCamera(fp.image()));
       if (camera) {
         Ps.push_back(precond * camera->projection_matrix()); 
-        Rt.push_back(camera->GetPoseMatrix()); 
         x << fp.feature()->x(), fp.feature()->y();
         xs.push_back(x);
       }
@@ -90,12 +86,9 @@ uint PointStructureTriangulationCalibrated(
       // Let's remove the point if it is at infinity
       if (X_world(3,0) == 0)
         is_inlier = false;   
-
-      X_world = X_world / X_world(3, 0);
       // Let's remove the point if it is reconstructed behind one camera
-      for (int cam = 0; cam < Rt.size(); ++cam) {
-        X_camera = (Rt[0] * X_world).col(0);
-        if (X_camera(2, 0) < 0) {
+      for (int cam = 0; cam < Ps.size(); ++cam) {
+        if (!isInFrontOfCamera(Ps[cam], X_world)) {
           is_inlier = false;   
           break;
         }
@@ -142,7 +135,6 @@ uint PointStructureRetriangulationCalibrated(
   vector<StructureID> structures_ids;
   Mat2X x_image;
   vector<Mat34> Ps; // Contains the projection matrices
-  vector<Mat34> Rt; // Contains the pose matrices
   vector<Vec2> xs; 
   Vec2 x;
   // Selects only the reconstructed structures observed in the image
@@ -152,7 +144,6 @@ uint PointStructureRetriangulationCalibrated(
   Mat3 precond;
   IsotropicPreconditionerFromPoints(x_image, &precond);
   Mat41 X_world;
-  Vec3 X_camera;
   uint number_updated_structure = 0;
   PinholeCamera *camera = NULL;
   PointStructure *pstructure = NULL;
@@ -160,7 +151,6 @@ uint PointStructureRetriangulationCalibrated(
     Matches::Features<PointFeature> fp =
       matches.InTrack<PointFeature>(structures_ids[t]);
     Ps.clear();
-    Rt.clear();
     xs.clear();
     while (fp) {
       camera = dynamic_cast<PinholeCamera *>(
@@ -184,12 +174,9 @@ uint PointStructureRetriangulationCalibrated(
       is_inlier = false;
     if (X_world(3,0) == 0)
       is_inlier = false;
-    
-    X_world = X_world / X_world(3, 0);
     // Let's remove the point if it is reconstructed behind one camera
-    for (int cam = 0; cam < Rt.size(); ++cam) {
-      X_camera = (Rt[0] * X_world).col(0);
-      if (X_camera(2, 0) < 0) {
+    for (int cam = 0; cam < Ps.size(); ++cam) {
+      if (!isInFrontOfCamera(Ps[cam], X_world)) {
         is_inlier = false;   
         break;
       }
@@ -277,6 +264,12 @@ uint PointStructureTriangulationUncalibrated(
       // Let's remove the point if it has NaN values
       if (isnan(X_world.sum()))
         is_inlier = false;
+      for (int cam = 0; cam < Ps.size(); ++cam) {
+        if (!isInFrontOfCamera(Ps[cam], X_world)) {
+          is_inlier = false;   
+          break;
+        }
+      }
       if (is_inlier) {
         // Creates an add the point structure to the reconstruction
         PointStructure * p = new PointStructure();
@@ -346,6 +339,12 @@ uint PointStructureRetriangulationUncalibrated(
     bool is_inlier = true;
     if (isnan(X_world.sum()))
       is_inlier = false;
+    for (int cam = 0; cam < Ps.size(); ++cam) {
+      if (!isInFrontOfCamera(Ps[cam], X_world)) {
+        is_inlier = false;   
+        break;
+      }
+    }
     // Creates an add the point structure to the reconstruction
     pstructure = dynamic_cast<PointStructure *>(
       reconstruction->GetStructure(structures_ids[t]));

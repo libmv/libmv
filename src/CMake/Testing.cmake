@@ -20,15 +20,16 @@
 
 OPTION(BUILD_TESTS "Build the unit tests." ON)
 MACRO (LIBMV_TEST NAME EXTRA_LIBS)
-IF (BUILD_TESTS STREQUAL ON)
-  ADD_EXECUTABLE(${NAME}_test ${NAME}_test.cc)
-  TARGET_LINK_LIBRARIES(${NAME}_test
-                        ${EXTRA_LIBS} # Extra libs MUST be first.
-                        libmv_test_main 
-                        gtest 
-                        glog
-                        gflags
-                        pthread)
-  ADD_TEST(${NAME}_test ${NAME}_test)
-ENDIF (BUILD_TESTS STREQUAL ON)
+  IF (BUILD_TESTS STREQUAL ON)
+    ADD_EXECUTABLE(${NAME}_test ${NAME}_test.cc)
+    TARGET_LINK_LIBRARIES(${NAME}_test
+                          ${EXTRA_LIBS} # Extra libs MUST be first.
+                          libmv_test_main 
+                          gtest 
+                          glog
+                          gflags
+                          pthread)
+     SET_TARGET_PROPERTIES(${NAME}_test PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${LIBMV_TESTS_OUTPUT_DIR})
+    ADD_TEST(${NAME}_test ${LIBMV_TESTS_OUTPUT_DIR}/${NAME}_test)
+  ENDIF (BUILD_TESTS STREQUAL ON)
 ENDMACRO (LIBMV_TEST)
