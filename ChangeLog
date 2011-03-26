@@ -1,4 +1,758 @@
-2009-02-12 [r1-386]  Libmv team <libmv-devel@googlegroups.com>
+2011-03-26 [r386-1102]  Libmv Team <libmv-devel@googlegroups.com>
+
+  * tag:Tagging the 0.1 release of libmv.
+  * third_party: Updated packaging rules for linux/windows and improved outliers
+	  detection during the reconstruction.
+	* cmake: Updated installation of doc, src, contrib and extras files on linux.
+	* cmake: Added an initial ChangeLog and updated packaging rules for windows.
+	* cmake: Updated options.
+	* third_party: Added cmake options (optional activation of building tests, tools,
+	  GUIs or documentation), and updated the output directories on windows.
+	* reconstruction: Correct an issue that prevent compilation in windows.
+	* cmake: Updates the installation rules and adds two uninstallation targets in the
+	  root Makefile.
+	* reconstruction: Remove obsolete files.
+	* reconstruction: Add various video reconstruction improvements.
+	* cmake: Fix debug compilation issue.
+	* cmake: Activate the ui tools compilation when Qt4 is found.
+	* third_party: Add an installation rules in the cmake files for third parties.
+	* third_party: Add a FindLibmv CMake file and installation rules for third party
+	  libraries.
+	* cmake: Patch in order to compile when no there is no .svn.
+	* cmake: Fix bugs in the installation and packaging rules.
+	* tools: Correct a bug that forces to recompile all libraries for every new
+	  revision (from svn update).
+	* cmake: Update the packaging cmake file and add a Documentation cmake file for
+	  generating doxygen and man pages.
+	* correspondence: Add a plan tracker in order to track points that are in the same
+	  plan.
+	* tools: Add a command line tool that takes a input file of matches and gives an
+	  estimated 3D reconstruction.
+	* reconstruction: Start to define a general function for video reconstruction.
+	* tools: Update the tracker tool (add an output flag and clean the tracking
+	  variables).
+	* correspondence: Clean CMake files and add a packaging system using CPack.
+	* correspondence: Fix typo error.
+	* descriptor: Fix misunderstanding about the normalization of the descriptor.
+	* correspondence: Fix typo error.
+	* correspondence: Initialized the random seed for consistent number of matches
+	  each time
+	* correspondence: Fixed a small logging typo
+	* third_party: Fix to build on windows 64 bits.
+	* image: Fix variable naming.
+	* image: Remove unused Tga "Targa" image target.
+	* multiview: Remove reference that could cause infinite loop in the unit test.
+	* correspondence: Add import/export matches functions, change loggin types and
+	  rename the camera_test (pinhole).
+	* reconstruction: Fix issue 22, and activate the logging of nview.
+	* reconstruction: Correct preprocessor names in reconstruction headers.
+	* reconstruction: Rename (un|)calibrated reconstruction to (euclidean|projective)
+	  among other.
+	* camera: Move the pinhole camera class into a new pinhole_camera file.
+	* camera: Move the camera files into a new camera library.
+	* reconstruction: Move reconstruction files in a new Reconstruction library.
+	* multiview: Add 8pt Essential matrix estimation.
+	* multiview: Add a image order selection method based on a max score selection.
+	* multiview: Add an isotropic normalization before the point triangulation.
+	* multiview: Move the calibrated and uncalibrated reconstruction functions into
+	  separates files.
+	* multiview: Move the image order selection function into a separate file.
+	* multiview: Move bundle adjustment into an 'optimization' file
+	* tools: Includes mapping file in the tracker/nview
+	* multiview: Move triangulation functions into a 'mapping' file and common
+	  functions into a 'tools' one.
+	* multiview: Move the reconstruction export functions into new files
+	* multiview: Add use of libmv::isnan
+	* correspondence: Add projections functions and clean code
+	* correspondence: Correct a bug in the merge of matches and set the tracker tool
+	  as an incremental image tracker.
+	* numeric: Add an isotropic point preconditioner, a isnan() function and Clear()
+	  functions to the graph and matches classes.
+	* multiview: Correct a bug in the selection image function (the first image is now
+	  selected).
+	* multiview: Fix comments and use fixed sized matrix if possible.
+	* multiview: Add the use of some const keywords.
+	* multiview: Correct a bug in Euclidean Resection, add a Blender script export
+	  function in nview.
+	* numeric: Fix typo error.
+	* multiview: Add a new point triangulation algorithm based on the algebraic
+	  distance approximation.
+	* ui: Make it compiles on windows.
+	* multiview: Add a basic opengl based 3D viewer to nview.
+	* multiview: Correct bug in PLY export, adds a 'Save Reconstruction' button.
+	* multiview: Correct a bug in the detector/describer selection function.
+	* multiview: Correct bugs in reconstruction and nview, and adds new features
+	* multiview: Add reference to HZ and remove died code.
+	* multiview: Fix in order to compile on Windows.
+	* multiview: This commit mainly defines functions for euclidean reconstructions in
+	  the reconstruction class and nview program.
+	* ui: Adds two install macros LIBMV_INSTALL_LIB and LIBMV_INSTALL_EXE in
+	  CMakeList.txt
+	* ui: Adds an uncalibrated projective reconstruction with metric rectification in
+	  nview.
+	* multiview: Adds a robust resection function and some functions in order to
+	  localize uncalibrated images (except radially) and
+	* multiview: Fix compilation on windows.
+	* multiview: Initial implementation of functions in order to localize calibrated
+	  images and reconstruct the points structure of the scene.
+	* Add Julien and Pierre as authors.
+	* multiview: Add a robust euclidean resection function (and test).
+	* multiview: Add missing files (kernel, kernel_test)
+	* multiview: Add a robust euclidean resection method
+	* multiview: Correct bug in RMSE estimation.
+	* multiview: Add the EPnP method in order to do euclidean resection.
+	* tools: Fix compilation error on Windows.
+	* tools: Add a map for the detector and describer names conversion from string to
+	  enum
+	* multiview: Correct 2 bugs (wrong edge in InTrack function, wrong type of
+	  absolute value)
+	* ui: normalize edges, fix keypoints, fit in view
+	* ui: NView: new match filter, new elastic graph
+	* image: Add constructor by copy and some definition for INT and SHORT image type.
+	* multiview: Set back the 1000 for really_max_iteration.
+	* ui: Make nView sample use the new nRobustViewMatching interface.
+	* descriptor: Make the nViewRobustMatching interface use a general detector,
+	  describer.
+	* multiview: Make desired_certainty a parameter. Make really_max_iterations
+	  variable related to the number of sample. Changing the certainty to 0.01 give
+	  better inliers set (at a given cost (more iteration than before)).
+	* tools: Initial import of the detectorFactory. It simplify the detector handles
+	  in the code by keeping a generic code.
+	* correspondence: Fix compilation errors on windows.
+	* correspondence: Initial files for nViewMatchingInterface and
+	  nRobustViewMatchingInterface.
+	* multiview: Make camera parameters configurable for NRealisticCameras(...).
+	* tools: Add a WIP prototype to perform NViewImageMatching.
+	* tools: Add mser as option.
+	* multiview: Fix warning.
+	* image: SImplify code by using a function that allow to draw a pixel in a safe
+	  way. (Only draw if inside the image).
+	* third_party: Minor fix.
+	* tools: Fix bug : IsArgImage("true") return true instead of false.
+	* third_party: Fix compile for linux platform.
+	* detector: Add MSER detector to libmv. Code based on modified OpenCV code. It
+	  extract MSER+ and MSER-. Affine parameter are exported from the cvMserDetector
+	  so one day we could add support of an affineKeypoint to libmv.
+	* third_party: Initial import of mser detector from Opencv.
+	* image: Add correct line drawing if one point of the line to draw is outside the
+	  image.
+	* image: Add preprocessor ifndef to avoid multiple definition if the file is
+	  included many times.
+	* correspondence: Adds missing files and remove the 'edge' parameter in the
+	  bipartite_graph::remove function
+	* correspondence: Update the tracker tool (draw functions, robust parameters).
+	* image: Add DrawEllipse function (Bresenhan based code + rotation).
+	* image: Fix Issue 18: bug colored image read (PNG in fact)
+	* third_party: Fix : Issue 19: Recent change in makefiles make image_io test
+	  failed.
+	* tools: Use a more classic way to display tracks. (Use \t rather than multiple "
+	  " spaces).
+	* correspondence: Introduce a FeaturesGraph that store a matches graph and a list
+	  of FeatureSet.
+	* correspondence: Add a robust tracker (a tracker with an epipolar filtering).
+	* correspondence: Fix for windows compilation. It's possible to use max_elements
+	  instead.
+	* cmake: Added libpng and zlib to the unix build so that they do not need to be
+	  installed on linux.
+	* tools: Add a command line generic tracker.
+	* correspondence: Add a generic tracker class. Add an insert and merge matches
+	  functions.
+	* descriptor: Move conditioning into new files. Update the code according this
+	  change. Compile and use the dipole_descriptor in the Nview application (and add
+	  geometrical filtering of the matches). Fix code style or spaces issues.
+	* multiview: Fix for visual 10 release mode.
+	* detector: Add test for GradientRotEstimator.
+	* detector: Use M_PI -> more precise that manual defined value.
+	* multiview: Avoid infinite loop in UniformSample(...).
+	* multiview: Remove unused file.
+	* ui: Remove TODO and useless comments.
+	* multiview: Fix comment.
+	* descriptor: Fix code style.
+	* correspondence: Add FindCandidateMatches_Ratio. (David Lowe like ratio). Allow
+	  to keep only distinctivness between feature.
+	* detector: Change detection scale from 1.0 to 3.0. (FAST circle ring radius).
+	* descriptor: Initial revision of a local descriptor based on dissociated dipoles.
+	* multiview: typo fix.
+	* multiview: Added two view triangulation routines for calibrated cameras and a
+	  function checking if a 3D point is infront of the camera
+	* descriptor: Fix typo issue.
+	* multiview: Fix typo error.
+	* image: Fix type issue.
+	* correspondence: Make FindCandidateMatches more generic. We could now configure
+	  the matching method using enum eLibmvMatchMethod{eMATCH_LINEAR, eMATCH_KDTREE,
+	  eMATCH_KDTREE_FLANN}.
+	* base: fix style issue.
+	* multiview: use internal vector class to avoid alignment issue on windows.
+	* multiview: Add vector(Size,T) constructor.
+	* multiview: Remove the Vec(0) that make the test crash on Fedora. Use the default
+	  implementation of LensDistortion constructor with Vec().
+	* multiview: Add the LensDistortion, PinholeCamera, PinholeCameraDistortion
+	  classes.
+	* detector: Add comments.
+	* scene_graph: Simplify iterator mechanism.
+	* detector: Add comments for the FAST detector interface.
+	* ui: Minor fix to compile on windows.
+	* ui: Reduce number of pair matches test.
+	* tools: Add usage of scoped_ptr.
+	* ui: Re-format source code.
+	* ui: Fix for windows compilation.
+	* ui: initial implementation of N-view reconstruction GUI
+	* tools: Add licence.
+	* tools: Add first version of Jpeg Exif reader.
+	* third_party: Fix library building with the CMakeBuild System.
+	* third_party: Initial revision of OpenExif. Will be used to read Jpeg Exif value
+	  such as Focal, image Width and Height.
+	* image: Fix compilation. Add Gaussian2D function.
+	* descriptor: Add the MSURFDescriptor. A Surf descriptor with overlapping of
+	  sampling boxes and two pass weighting scheme.
+	* descriptor: Make surf_descriptor compiles and works (USURF64).
+	* third_party: Remove the macro to export function as DLL. We use flann as a
+	  static library.
+	* detector: Move the Star_detector implementation in a cc file.
+	* descriptor: FeatureSet do not contain any longer a KDtree.
+	* detector: Minor code style fix and add comments.
+	* image: change LinearInitAxis to inline.
+	* third_party: Typing fix.
+	* correspondence: Add a class that perform Arrays matches.
+	* multiview: Add Robust Affine 2D estimator.
+	* multiview: Make UniformSample static to avoid multiple definition.
+	* multiview: Handle degenerate case ( aka no solution found via LU solving).
+	* multiview: Change IterationsRequired to static function to avoid multiple
+	  definition.
+	* multiview: Fix comment.
+	* third_party: Fix typo issue
+	* third_party: Fix crash issue with small images.
+	* detector: Add comments and fix code style.
+	* third_party: Fix : Issue 16: Build fails on Ubuntu
+	* third_party: Fix flann logging issue. (It created invalid file name on disk at
+	  logging time).
+	* ui: Fix orientation display. Libmv internal feature orientation are in radian.
+	* descriptor: Add rotation invariance as an option of Fast corner detector.
+	* detector: Initial revision of rotation estimator for feature detector.
+	* descriptor: Fix coding style issues.
+	* descriptor: BugFix : Compute daisy descriptor crash.
+	* ui: Fix a bug when loading pure gray image as texture (Jpeg 1 gray channel).
+	* tools: Initial revision of detector_repeatability.cc. Allow to test
+	  repeatability of the libmv keypoints detector along image sequence with known
+	  ground truth transforms.
+	* multiview: Update panography test "PrintSomeSharedFocalEstimationValues" with
+	  not ill conditioned data.
+	* multiview: Fix alignement.
+	* multiview: Add xcas source code to obtain panography shared Focal polynomial
+	  solver.
+	* image: Fix Image:: typing error.
+	* image: Add operator = to class Image.
+	* base: add begin() and end() as non const return value.
+	* multiview: Correct a typing error.
+	* multiview: Added euclidean linear camera resectioning algorithm and an absolute
+	  oriantation algorithm.
+	* tools: Add the possibility to test the star_detector.
+	* third_party: Add star_detector keypoint detector to libmv feature detection
+	  engine.
+	* image: Add short and int image type for feature detector purpose.
+	* third_party: Initial revision of StarDetector extrated from OpenCV 2.0
+	  implementation.
+	* correspondence: change EXPECT_EQ(features.size(), 1u); to
+	  EXPECT_EQ(features.size(), 1);
+	* ui: Display matches with colored line. Color is dependent of the feature
+	  position to be constant across zoom, translation of the 2D view.
+	* image: Simplify the declaration of FloatImage a Array3D<float>,
+	* third_party: Add FLANN CMakeLists files.
+	* tools: Make homography_warping export the entire reference and warped image.
+	* ui: Add comments to use FLANN prototyped ANN functions.
+	* correspondence: Add ANN matching via FLANN third party library :
+	* correspondence: - Fix #endif //UI_TVR_FEATURES_H_ to the good expected one.
+	* third_party: - add FLANN to the compilation of third_party.
+	* third_party: - minor fix.
+	* third_party: Initial revision of flann library.
+	* detector: Make the FAST test style conformant.
+	* ui: fix compile on linux.
+	* tools: Add initial review of homography_warping (allow to warp imageB on imageA
+	  under robust estimated homography).
+	* ui: Use KeypointFeature type defined in correspondence.
+	* base: Add DestroyDynamicDataArray function.
+	* correspondence: Add feature_matching file. (feature matching detected with
+	  detector and described with descriptor).
+	* multiview: Remove homography.cc .h test and replace it by robust_homography.
+	* detector: Add first test for FAST corner detector.
+	* ui: Change include order for fast module in CMakeLists.txt. (Build on linux).
+	* multiview: Add robust_homography files (4point and 2point).
+	* ui: Update TVR to use the new detector/descriptor framework.
+	* Add OpenCV-based utility to undistort images given distortion parameters.
+	* tools: Add unused flag to interest points tool.
+	* third_party: Fix daisy compile problems.
+	* Add calibration grid.
+	* multiview: cosmetic, change 2DAffine include to affine_2d.
+	* multiview: remove old 2DAffine files.
+	* multiview: change 2DAffine to affine_2d to follow libmv naming convention.
+	* multiview: Reduce precision requirement in fundamental parameterization test.
+	* third_party: - make fast library compile on VS2005 (windows).
+	* correspondence: - Add default constructor.
+	* multiview: Add comments and better constraint matrix.
+	* multiview: - Fix for windows. Some matrix value are not initialized to 0.0.
+	* multiview: Add 2D estimation (rotation/translation).
+	* base: - remove unused include.
+	* tools: - fix windows compilation. Sqrt require double or float (not int).
+	* descriptor: - fix angle to double to support radian value.
+	* detector: - Prepare to add valid test.
+	* descriptor: - Add simpliest_descriptor to the build.
+	* tools: - Export descriptor as patches on disk if the user want it.
+	* descriptor: - "Initial revision" of naive keypoint image descriptor. It's a 8*8
+	  local image patch. Support rotation, scale parameter.
+	* descriptor: - Add virtual destructor.
+	* multiview: Fix a sign error in the 1 factor of P.
+	* multiview: Rework panography code to follow libmv guidelines. Remove commented
+	  out code.
+	* detector: remove unused variable.
+	* detector: - Initial revision of surf_detector implementation. Rely on the surf
+	  code from libmv::image (the surf core code must be in 'src/libmv/detector/ at
+	  term).
+	* third_party: - Fix for windows platform.
+	* tools: Add new tools to visualize points positions extracted from libvm new
+	  feature detector framework. It support only FAST for the moment.
+	* detector: Fix memory leak
+	* third_party: make fast library compatible with C++ linkage.
+	* detector: Add correspondence library to detector CMakeLists.txt
+	* detector: Fix virtual destructor function body.
+	* image: Add unfinished and non-compiling surf_descriptor.cc/h which will
+	  superceed the existing surf descriptor code eventually.
+	* descriptor: Daisy descriptor binding compiles but is still untested.
+	* descriptor: Add totally unfinished DAISY descriptor wrapper.
+	* third_party: Add untested binding to FAST feature detector. Add FAST to the
+	  build by default.
+	* descriptor: Add feature descriptor interface.
+	* detector: Add feature detector interface.
+	* base: Add simple scoped pointer class.
+	* correspondence: Fix feature set compilation on linux gcc 4.3.3.
+	* multiview: Start adding stuff to the reconstruction class.
+	* third_party: Fix naming of README.libmv.
+	* third_party: Mac fixes.
+	* base: Add another missing file :(
+	* correspondence: Add the missing test.
+	* correspondence: Add a container to store a set of features.
+	* correspondence: Cosmetics.
+	* correspondence: Cosmetics.
+	* third_party: Add CMakeLists.txt and perform minimal change over the code to
+	  compile without errors.
+	* third_party: Initial revision of DAISY (A Fast Local Descriptor for Dense
+	  Matching) from Engin Tola source code.
+	* third_party: Initial revision of CMake instruction for building Fast library.
+	* third_party: Initial revision of Fast Corner detector source code from Edward
+	  Rosten.
+	* correspondence: - Fix crash in kdtree_test.exe.
+	* multiview: - typing error fix.
+	* ui: - Cosmetic to follow the code style.
+	* ui: - Bug fix. Fix images display if second image have a width inferior to the
+	  first. (They were displayed overlapped).
+	* multiview: Add a test case that make SVD fall into an infinite loop. This test
+	  is not activated to make the test pass. The matrix that make the problem will be
+	  send to the Eigen team to investigation.
+	* multiview: - Add minimalPanoramic_kernel.h.
+	* multiview: - Add an implementation of 2 point solution to estimate a homography
+	  from 2 points correspondences. (panography camera case: rotational camera, no
+	  translation -> the camera share the same central point). It's an implementation
+	  base on : 'Minimal solutions for panoramic stitching' (M. Brown, R. Hartley and
+	  D. Nister.)
+	* multiview: - Make SevenPointSolver::Solve be estimable from 7 to N
+	  correspondences. (Fix the assert test).
+	* multiview: - Make SevenPointSolver::Solve be estimable from 7 to N
+	  correspondences.
+	* ui: - Add test to ensure the OpenglSupport.
+	* ui: - Set the bool MatchViewer::TexturesInited() function more restrictive.
+	* correspondence: Changes in the kd-tree implementation.
+	* multiview: Avoid copying inlier vectors in RANSAC.
+	* ui: Add tif as an image file format in tvr.
+	* image: Useless code compression.
+	* Add doxyfile and a Makefile entry to build documentation.
+	* image: Initial revision of ColorConversion (RGB2GRAY) of images.
+	* image: cosmetic
+	* image: - fix on windows with sqrt (expect float or double or long double but no
+	  integer).
+	* tools: - Add usage function and add ability to configure the output image via
+	  command line.
+	* image: - Correction of styles issues and use EXPECT_EQ instead of ASSERT_EQ.
+	* image: - set the integral image as const reference instead of copy void
+	  DetectFeatures(const TImage &integral_image,...)
+	* image: - remove useless comment
+	* image: - Add support for .jpeg images in GetFormat(...)
+	* Add resection kernel and robust resection test.
+	* multiview: Use asDiagonal() instead of constructing a matrix explicitly.
+	* numeric: Add another vector typedef.
+	* multiview: Formatting
+	* image: Deleted image view.
+	* image: Add a stub for the ImageView class. Not tested and not even compiled.
+	* image: Add image_drawing tests for lines and circles.
+	* image: Inputs before outputs. Outputs as pointers.
+	* image: Formating image_drawing.
+	* tools: correction of variable name
+	* tools: Add surf reprensentation in a image (scale represented as a circle and
+	  orientation as a segment
+	* image: Initial revision. Image drawing tools
+	* multiview: - Cosmetic ( Style compliant ).
+	* multiview: - Update the FundamentalFromCorrespondences7PointRobust test. (Due to
+	  the misunderstanding of 8 and 7 point algorithm the precision must be better)
+	* multiview: - The Eight and Seven Kernel have been exchanged. I prefer use the
+	  NormalizedSevenPointKernel instead of default fundamental::kernel::Kernel for
+	  readibility.
+	* base: - Add begin and end to vector class. So we can use std::find algorithm on
+	  it.
+	* multiview: - correct typo error over the word constraints
+	* correspondence: Restore tvr to its former glory.
+	* ui: TVR compiles again, but something is wrong with the correspondences
+	  handling.
+	* correspondence: Remove obsolete TODO.
+	* correspondence: Add function to extract correspondence matrices from a matches
+	  object.
+	* ui: Refactor correspondences / matches code. May have broken TVR.
+	* multiview: Compile fix.
+	* multiview: Add helper function to the two view kernel; makes it easier to call
+	  the solver directly.
+	* multiview: Add five point kernel.
+	* base: Fix self-assignment for vector class.
+	* third_party: Add end of line at the end of some files to fix compilation with
+	  gcc. Remove some hard tabs.
+	* multiview: Alignment
+	* multiview: Spelling.
+	* multiview: Remove computation of R, t from five point solver. Factored code to
+	  encode fundamental constraint into fundamental_kernel.h, and reused it in the
+	  five point solver.
+	* multiview: Fix homography_test.
+	* multiview: Refactor the robust fitting system.
+	* base: Add copy constructor and assignment to vector.
+	* multiview: Formatting fixes for fivepoint code.
+	* correspondence: Add untested, uncompiled simplified version of the bipartite
+	  graph supporting only integers.
+	* multiview: Small change to fundamental_test_utils.h to compile with gcc.
+	* scene_graph: - Fix srange behaviour on windows (Visual studio 2008 express). If
+	  we delete something pointed by an iterator the iterator become useless. So we
+	  have to store iterators and increment them for the next element...
+	* multiview: - Add a file to add the fundamental test util function.
+	* correspondence: Fix for windows : On windows the STL depends on the microsoft
+	  implementation and we cannot call a function over an iterator that equal to end.
+	* scene_graph: Fixed hanging ptrs in scene_graph_simple and added unit test.
+	* scene_graph: Fix for windows. Call the function SetParent modify the iterator
+	  and it crash on windows and have the same effect as calling delete it->second.
+	  So the second line is enough and make it runnable on cross platform.
+	* numeric: Expand Eigen typedefs. Fix argument to ExtractColumns.
+	* multiview: Remove dead code.
+	* multiview: Add unfinished code for new robust estimation concepts.
+	* multiview: More fundamental_test cleanups.
+	* multiview: Fix some style issues in fundamental_test in preparation for minimal
+	  solver refactoring.
+	* numeric: Simplify the 7 point algorithm further by leveraging Eigen to convert
+	  from 9 vector f to 3x3 matrix F.
+	* multiview: Rename i, j in 7 point code so that there is no variable shadowing.
+	* multiview: Fix a comment in the 7 point code.
+	* multiview: Eradicate tabs.
+	* numeric: Simplify the 7 point code, and add sympy code for computing the
+	  coefficients. Also fix some style violations.
+	* multiview: - Fix compilation error on windows with SolveCubicPolynomial (pow
+	  require double as first parameter)
+	* multiview: Use the CHECK_FUNDAMENTAL_PROPERTIES macro and fix the precision
+	  ration for the 7 points Fmatrix cases.
+	* multiview: Add CHECK_FUNDAMENTAL_PROPERTIES macro to test the fundamental matrix
+	  determinant and inliers residuals. Fix minor issues 'const keyword', 'syntax'.
+	  In the future we must define better way to test the geometric constraint we are
+	  computing.
+	* multiview: Make the FundamentalFrom7CorrespondencesLinear working correctly
+	  (det(F) = 0), remove FindCubicRoots (a temporary function used for development).
+	* correspondence: make it compile on windows.
+	* image: Added unit tests for SetQueue
+	* multiview: - repair syntax over comments and improve some of them.
+	* image: misc style corrections in image_io.cc
+	* correspondence: Minor changes to adapt KLTPointFeature to PointFeature interface
+	* multiview: - Added FundamentalFromCorrespondences7PointRobust
+	* multiview: - Added FundamentalFrom7Points.
+	* multiview: - NormalizeFundamental use now a const reference (const Mat3 &F).
+	* multiview: - Use const reference instead of TMat copy. Consequence : Minor
+	  speedup.
+	* multiview: - Use const reference instead of matrix, vector copy. Consequence :
+	  Minor speedup.
+	* numeric: - Remove Identity method (unused for the moment). You must call
+	  directly Mat::Identity(n,n), or setIdentity()
+	* third_party: - Update the README.libmv to mention the last fix (remove the
+	  unused variable Vector3d np)
+	* correspondence: Windows warning fix. Change struct to class. It's strange that a
+	  struct can inherit from another basis class. The inheritance scheme was made for
+	  class.
+	* third_party: Remove useless variable np.
+	* third_party: Fix unused variable warning in GCC for Eigen placement delete.
+	* image: Fix image_sequence_io_test on Windows.
+	* third_party: Turn off message box errors for libjpeg on Windows.
+	* image: Fix image_io_test on windows. Breakage was due to omitting the "b" flag
+	  for fopen().
+	* scene_graph: Make all non-Qt libmv targets build on Windows, including tests and
+	  tools. Most but not all tests pass.
+	* third_party: Add missing pthread link dependency to gflags CMakeLists.txt.
+	* third_party: Add pthreads-w32 to the build on windows.
+	* third_party: Fix CMakeLists.txt for gflags on Windows to use the appropriate
+	  pthreads-w32 headers.
+	* third_party: Fix building glog on Windows. This involved redirecting the
+	  includes to the windows/ directory, and some other small fixes.
+	* third_party: Add source for pthreads-w32, and corresponding CMakeLists.txt.
+	  Sadly, linking statically doesn't work so the DLL must be put somewhere in the
+	  DLL search path for Windows.
+	* third_party: Formatting.
+	* third_party: Clean up zlib CMakeLists.txt. Suppress deprecation warnings on
+	  windows.
+	* third_party: Fix PNG build on Windows.
+	* third_party: Tweak third party jpeg to behave better on windows by switching
+	  around the platform specific config files.
+	* third_party: Add missing placement operator delete to Eigen.
+	* multiview: - Fix in order to compile under Visual C++ Express 2008
+	* multiview: Remove some logs in the F matrix parameterization. Better comments.
+	* multiview: Fix F parameterization by forcing U and V to be SO(3) matrices.
+	* multiview: Typo.
+	* multiview: Add five point calibrated relative pose solver.
+	* third_party: Port glog's config.h to the mac.
+	* third_party: Quick fix to make compilation work for gcc version <= 4.2. The
+	  options "-Wno-type-limits -Wno-empty-body" do not seem to exist in such gcc
+	  versions.
+	* third_party: Fix a bug in glog, which was preventing compilation in release
+	  mode.
+	* multiview: Add unfinished to/from methods for a rank-2 parameterization of the
+	  fundamental matrix.
+	* third_party: Fix compilation with new gtest. This also adds a testing_main.cc
+	  which replaces the old use of a modified gtest_main.cc. Reordered linking for
+	  tests to reflect dependence of glog on gflags.
+	* third_party: Upgrade gtest to 1.3.0, breaking the build.
+	* third_party: Update glog version and license.
+	* third_party: Fix glog 0.2.1 to compile. Everything builds and the tests pass.
+	  The Mac port remains.
+	* third_party: Update glog to 0.2.1, breaking all builds. Merge of our pre-0.2.1
+	  glog changes to restore build coming soon.
+	* ui: Apply cgv9999's patch. This fixes Issue 13.
+	* numeric: Make it work on the mac (Leopard).
+	* image: Fix some type problems in SURF. When using unsigned int type for the
+	  integral image, many internal types became unsigned int which was causing
+	  problems. Internal computations such as BlobResponse or HarrX need floating
+	  point scalars regardless of the type of the integral image.
+	* base: Size of vector - unsigned, MSVC complains about signed > unsigned
+	  comparison in reserve()
+	* multiview: Fix AutocalibrationLinear. There was an error when computing the
+	  transformation from the absolute quadric. Also, the code for computing
+	  constraints is now more clear an concise, although slower.
+	* third_party: Revert of readme edit (too early in)
+	* numeric: MSVC doesn't know what uint is
+	* ui: JPEG/PNG/ZLIB static build enabled on Win32 + minor fixes
+	* third_party: minor comment
+	* image: formatting 80 cols
+	* third_party: jpeglib.h path, ssba fix
+	* third_party: jpeg + cmake initial import (jconfig.* file for Windows only)
+	* third_party: png + cmake initial import
+	* third_party: zlib + cmake initial import
+	* ui: H/VStack + nominmax win macro
+	* image: Add a bunch of casts in the SURF templates to fix warnings. We need to
+	  review all the types in the surf implementation since some integer types are
+	  being used to store real numbers.
+	* correspondence: MSVC log of int
+	* numeric: MSVC doesn't have round/lround
+	* numeric: MSVC doesn't have sincos
+	* correspondence: bipartite graph const iterator fix
+	* cmake: tests include path fix
+	* third_party: gflags compatibility and compiler flags
+	* third_party: msinttypes import
+	* third_party: Readme file for pthreads got lost
+	* third_party: pthreads-w32 import
+	* numeric: Switch SURF to use an unsigned ints rather than floats for the integral
+	  image.
+	* third_party: Add support for unsined ints in eigen matrices.
+	* image: Switch SURF to use libmv::vector rather than std::vector. Fixes crash in
+	  tvr due to alignment problems when computing features.
+	* Add explicit warning about building inside the source tree.
+	* Add building instructions to README.
+	* third_party: Apply Amael's patch to fix compilation warnings in gcc 4.3.2.
+	* multiview: Formating
+	* third_party: Fix a warning in Eigen.
+	* base: Fix tabs introduced by vim.
+	* third_party: Remove unused eigen2 from third_party.
+	* ui: Switch to use Eigen 2.0.3. Also add a custom libmv vector class which
+	* multiview: Add a tiny bit of documentation to autocalibration.
+	* multiview: Modify implementation of PickSubset and add a test.
+	* third_party: Small ssba fix to avoid a warning (missing virtual destructor).
+	* third_party: Check version 2.0.1 of Eigen into a new third_party directory.
+	* third_party: Switch SSBA to use internal LDL and COLAMD. Cleaned CMakeLists.txt
+	  and removed obsolete CMake files.
+	* third_party: Add CMakeLists.txt for LDL.
+	* third_party: Add CMakeLists.txt for colamd.
+	* third_party: Initial checkin of minimal UFconfig 3.4.0
+	* third_party: Initial checkin of minimal COLAMD matrix reordering library,
+	  version 2.7.1.
+	* third_party: Initial checkin of minimal LDL 2.0.1 from Tim Davis.
+	* image: Remove temp files created by image_io_test.
+	* cmake: Remove obsoleted cmake modules.
+	* image: Don't ignore fread return value.
+	* third_party: Some fixes for compiling on Ubuntu 9.04. In particular, fix glog to
+	  not "ignore" some return values.
+	* multiview: Formatting and comments.
+	* multiview: Switch comment style.
+	* image: Comments.
+	* third_party: Changes based on comments.
+	* third_party: Changes based on comments.
+	* scene_graph: Fixed the changing scene_graph_simple node name causes SegFault
+	  bug. Parents' map key value is now updated upon name change.
+	* third_party: Removed sba, and set LICENSE to MIT as before.
+	* third_party: Switched the precarious bundle adjustment functions to use SSBA
+	  instead of SBA. Actually added the multiview/bundle* files which i forgot to
+	  upload before.
+	* Add a comment on the current license issue.
+	* ui: Add precarious bundle adjustment functions calling sba. This will probably
+	  disapear, or severely evolve, when we start using some reconstruction data
+	  structure, but I wanted to try something fast. The main, and important,
+	  limitation of the current functions is that all points have to be visible in all
+	  images. Additionally, in practice it does not work in presence of outliers.
+	* multiview: Make tvr use the exhaustive search method for focal estimation, since
+	  it is more stable.
+	* multiview: Add function for estimating a common focal lenght of an image pair by
+	  minimizing the reprojection error as suggested by Peter Sturm. The minimum is
+	  found by a first exhaustive search, and then a golden ratio search.
+	* multiview: Add functions for estimating homographies using DLT and RANSAC.
+	* ui: Add SceneCamera to the graph. Mixed SceneImage with SceneCamera so that
+	  images are rendered in the base of the camera pyramid.
+	* ui: Implemented a simple trackball. Mouse rotation is now more intuitive in the
+	  3d viewer, but should be improved by setting the revolve point to a suitable
+	  position. Translation and zoom also need improvements.
+	* ui: Removed global transform matrix from scene_graph_simple, uses OpenGL's
+	  transform stack instead. Added a test for SetName which fails. Fixed memory leak
+	  in LRUCache, and documented complexity (to the best of my ability). Removed
+	  redundant code from 3DViewer.
+	* ui: Add ViewerCamera no facilitate the implementation of the trackball.
+	* optimize: Add simple automatic differentiation module.
+	* third_party: Fix ignore properties.
+	* third_party: Expand SBA README.
+	* third_party: Add sba to the build process. Add hack to work around a problem in
+	  debians f2c. Thanks to CMake, this was the easiest build integration I've ever
+	  done.
+	* third_party: First checkin of upstream sba 1.5. No local modifications yet; just
+	  the tarball contents.
+	* ui: Changed Tvr to use the simpler scene graph and now transformation works [=
+	* scene_graph: Bug Fixes to scene_graph_simple.
+	* ui: The 3d viewer show the point cloud now, but orbiting using the mouse does no
+	  work.
+	* ui: Added 3D viewer drawing code, navigation doesn't work yet.
+	* scene_graph: Add an even simpler scene graph; closer to a transform graph.
+	* scene_graph: Formatting
+	* multiview: Skeleton for reconstruction; use cases identified.
+	* ui: TVR no longer uses the same image positions for each 2D subwindow and fixed
+	  the updategl hack with signals.
+	* ui: Viewers now use the same openGL rendering context.
+	* ui: Add a QMdiArea to tvr, so that many widgets can be shown simultaneously.
+	* ui: Fix warnings in release mode.
+	* ui: Changes to tvr.
+	* ui: Fixed segfault on changing view in tvr.
+	* ui: Added a Viewer3D class to tvr.
+	* ui: Made changes to tvr, added a basis for 3D code.
+	* ui: Made changes to the UI.
+	* scene_graph: Misc changes to SceneGraph.
+	* scene_graph: Style corrections.
+	* scene_graph: SceneGraph bug fixes.
+	* image: Made changes based on comments.
+	* scene_graph: Added a test for SceneGraph + Bugfixes.
+	* scene_graph: Added the beginings of a scene graph.
+	* image: The CachedImageSequence's cache should now work.
+	* image: LRUCache should now work without memory leaks
+	* cmake: Made changes based on comments for r471.
+	* cmake: added JPEG support to the image library.
+	* image: Add support for PNG read/write, by Daniel Waterworth.
+	* multiview: Fixed computation of the center of the image.
+	* correspondence: Fix comments.
+	* multiview: added include to fix compilation error
+	* correspondence: Add support for iterating over the features for a track that
+	  appears in all of a set of images, and has a specific type.
+	* ui: Fixed camera placement in Blender script. I re-copy--pasted an important
+	  line that I had deleted before.
+	* ui: Add save to blender script. The code is a copy--paste from libmv1 branch.
+	  The cameras are not yet correctly placed, but we get a nice 3D point cloud XD
+	* multiview: Add action for compting metric reconstruction in tvr. Nothing to
+	  display it or save it yet.
+	* correspondence: Undo unwanted changes.
+	* ui: Fix typo. Much less nans now :P
+	* multiview: Added action to compute focal from fundamental matrix using Hartley's
+	  method to tvr.
+	* correspondence: Highlighted a trick to be fixed.
+	* multiview: Removed linear constraints enforcing calibration constantness, since
+	  they where wrong. The image of the absolute quadric is constant between frames,
+	  but only up to scale. This gives quadratic equations on the DAQ and not the
+	  linear ones I naively introduced :-(
+	* multiview: Add draft for linear autocalibration. It is working for 3 noiseless
+	  projection matrices.
+	* correspondence: Add support for iterating over tracks which appear in all of a
+	  given set of images.
+	* correspondence: Formatting.
+	* multiview: Fix compilation mode in release mode.
+	* correspondence: Add new bipartite graph class and Matches class, to replace the
+	  Correspondences
+	* ui: Added robust matching to tvr.
+	* Added a target to the Makefile so that it can build a Kdevelop project.
+	* image: Include libmv/logging instead of third_party/glog.
+	* multiview: Fixed robust_fundamental tests. There was a cast (in
+	  robust_estamation.h) from double to int, that was giving negative numbers of
+	  iterations out of huge possitive doubles. This was stopping RANSAC too soon.
+	* multiview: Fixed first robust_fundamental test.
+	* multiview: Added SymmetricEpipolarDistance (mainly to test SampsonDistance).
+	* multiview: Moved and fixed Sampson Distance. Robust fundamental test is still
+	  failing.
+	* correspondence: Fixed kd-tree test in release mode.
+	* ui: Rearrange feature.h/cc to be more useful, and push it into the tvr program.
+	* third_party: Fix stl_logging_unittest when built in opt mode by adding google::
+	  namespace to parts of CHECK_EQ macro.
+	* correspondence: Comments.
+	* Remove lapack stuff from README.
+	* multiview: Add N-view triangulation.
+	* multiview: Change how max iterations are calculated in robust estimation.
+	* numeric: Fix uninitialized variable in dogleg.
+	* Add David Roberts and James MacLean to AUTHORS.
+	* multiview: Added an optional parameter to RANSAC Estimate, so that it can return
+	  the list of inliers. Now, a test in robust_fundamental is failing because some
+	  inliers are not included in the list.
+	* third_party: Fix a minor warning in Eigen. A variable was only used in and
+	  assert statement and unused in release mode.
+	* image: Fixed uninitialized variable in surf_descriptor. Surf matching works now!
+	* ui: TVR computes now matches between the two images using the kd-tree. Some of
+	  the code will have to move to libmv/correspondence.
+	* ui: Link UI against OpenGL libraries to fix compile error
+	* correspondence: Added single nearest neighbor search function.
+	* multiview: Created autocalibration.* and moved K_From_AbsoluteConic there.
+	* ui: TVR can now compute and display USURF features.
+	* ui: In MatchViewer, images can now be dragged using the shift key.
+	* ui: Add starting files for the two view reconstruction gui app. For now it
+	  enables to load 2 images, display them side by side, scroling and zooming. It
+	  has been ported from pau's branch.
+	* ui: Removed old scons file.
+	* correspondence: Added a stoping criteria to knn search.
+	* multiview: Added function for computing K from the image of the absolute conic.
+	* multiview: Make resection test more robust.
+	* multiview: Add camera resection support.
+	* numeric: Formatting.
+	* numeric: Add reshape function.
+	* multiview: Add reference to Schaffalitzky paper to six point N view code.
+	* numeric: Add enums to chose type of numeric derivative. Thanks to Timothy Hunter
+	  for the suggestion.
+	* third_party: Fix failing image_sequence_io_test. Add FLAGS_test_tmpdir flag
+	  which is
+	* numeric: Disable tricky dogleg test case until support for singular normal
+	  equations is added.
+	* image: Fix blob_response_test failure.
+	* third_party: More fixes to make thing compile on Ubuntu 8.10.
+	* third_party: Small changes to (hopefully) fix compiles on other platforms.
+	* correspondence: Added best bin first approximate nearest neighbor search. The
+	  stopping condition to end the search is missing.
+	* numeric: Fix a units error in dogleg; now for the simple test case, dogleg
+	  converges faster than LM. Still need to add support for singular normal
+	  equations to pass the second test.
+	* numeric: Dogleg code compiles and passes a simple test but fails on a harder
+	  one.
+	* image: Modified image_io.cc to handle comments in PGM/PPM images.
+	* numeric: Add unfinished dogleg nonlinear minimizer (not in build system yet).
+	* numeric: Minor LM change.
+	* correspondence: Minor reformatting in correspondence module.
+	* logging: Logging header.
+	* tools: Make tools use libmv::Init().
+	* tools (lib): Add a logging header.
+	* numeric: Make LM parameters settable. The API is fairly usable now; probably
+	  dogleg is next.
+
+2009-02-12 [r1-386]  Libmv Team <libmv-devel@googlegroups.com>
 
 	* numeric: Make LM parameters settable. The API is fairly usable now; probably
 	  dogleg is next.

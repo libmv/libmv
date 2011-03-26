@@ -19,8 +19,8 @@
 # IN THE SOFTWARE.
 
 SET(LIBMV_VERSION_MAJOR 0)
-SET(LIBMV_VERSION_MINOR 0)
-SET(LIBMV_VERSION_PATCH 9) #or the svn revision
+SET(LIBMV_VERSION_MINOR 1)
+SET(LIBMV_VERSION_PATCH 0) #or the svn revision
 
 # The standard GNU version numbering scheme is major.minor.revision
 IF (EXISTS ${LIBMV_SOURCE_DIR}/.svn)
