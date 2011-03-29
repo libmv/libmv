@@ -18,13 +18,13 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
-#include "plan_tracker.h"
+#include "planar_tracker.h"
 #include "libmv/multiview/robust_homography.h"
 
 using namespace libmv;
 using namespace tracker;
  
-bool PlanTracker::Track(const Image &image1,
+bool PlanarTracker::Track(const Image &image1,
                         const Image &image2, 
                         FeaturesGraph *new_features_graph,
                         bool keep_single_feature) {
@@ -79,7 +79,7 @@ bool PlanTracker::Track(const Image &image1,
   return is_track_ok;
 }
 
-bool PlanTracker::Track(const Image &image, 
+bool PlanarTracker::Track(const Image &image, 
                         const FeaturesGraph &known_features_graph, 
                         FeaturesGraph *new_features_graph,
                         Matches::ImageID *image_id,

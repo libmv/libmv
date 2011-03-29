@@ -18,8 +18,8 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
-#ifndef LIBMV_CORRESPONDENCE_PLAN_TRACKER_H_
-#define LIBMV_CORRESPONDENCE_PLAN_TRACKER_H_
+#ifndef LIBMV_CORRESPONDENCE_PLANAR_TRACKER_H_
+#define LIBMV_CORRESPONDENCE_PLANAR_TRACKER_H_
 
 #include "libmv/correspondence/tracker.h"
 
@@ -27,9 +27,9 @@ namespace libmv {
 namespace tracker {
 
 // This class robustly tracks points that are in a plan.
-class PlanTracker : public Tracker {
+class PlanarTracker : public Tracker {
  public:
-  PlanTracker(detector::Detector *detector, 
+  PlanarTracker(detector::Detector *detector, 
               descriptor::Describer *describer,
               correspondence::ArrayMatcher<float> *matcher) : 
                Tracker(detector, describer, matcher) {
@@ -37,7 +37,7 @@ class PlanTracker : public Tracker {
     rms_threshold_inlier_   = 0.3;
   }
   
-  virtual ~PlanTracker() {}
+  virtual ~PlanarTracker() {}
    
   // Tracks new features between two images.
   bool Track(const Image &image1, 
@@ -64,4 +64,4 @@ class PlanTracker : public Tracker {
 } // using namespace tracker
 } // using namespace libmv
 
-#endif  // LIBMV_CORRESPONDENCE_PLAN_TRACKER_H_
+#endif  // LIBMV_CORRESPONDENCE_PLANAR_TRACKER_H_

@@ -23,8 +23,12 @@ OPTION(BUILD_DOC "Build the documentation. (Doxygen needed)" OFF)
 # check if doxygen is even installed
 FIND_PACKAGE(Doxygen)
 IF (NOT DOXYGEN_FOUND STREQUAL "NO" AND BUILD_DOC STREQUAL ON)
+
+  CONFIGURE_FILE(${LIBMV_SOURCE_DIR}/CMake/Doxyfile.cmake
+                 ${PROJECT_BINARY_DIR}/Doxyfile
+                 )
   # add doxygen as target
-  ADD_CUSTOM_TARGET(doxygen ${DOXYGEN_EXECUTABLE} ${LIBMV_SOURCE_DIR}/../Doxyfile)
+  ADD_CUSTOM_TARGET(doxygen ${DOXYGEN_EXECUTABLE} ${PROJECT_BINARY_DIR}/Doxyfile)
 
   # cleanup $build/api-doc on "make clean"
   SET_PROPERTY(DIRECTORY APPEND PROPERTY
@@ -37,15 +41,19 @@ IF (NOT DOXYGEN_FOUND STREQUAL "NO" AND BUILD_DOC STREQUAL ON)
   ENDIF()
   ADD_DEPENDENCIES(doc doxygen)
 
-  # install HTML API documentation and manual pages
-  SET(DOC_PATH "share/doc/${CPACK_PACKAGE_NAME}-${VERSION}")
+  OPTION(INSTALL_DOCUMENTATION "Install the documentation" OFF)
+  IF (INSTALL_DOCUMENTATION STREQUAL ON)
+    # install HTML API documentation and manual pages
+    SET(DOC_PATH "${LIBMV_SHARE_OUTPUT_DIR}/../doc/libmv-${LIBMV_VERSION}")
+    INSTALL(DIRECTORY ${LIBMV_SOURCE_DIR}/../doc/doxygen/html
+            DESTINATION ${DOC_PATH}
+            COMPONENT documentation)
+    # install man pages into packages, scope is now project root..
+    #IF (UNIX)
+    #  INSTALL(DIRECTORY ${LIBMV_SOURCE_DIR}/../doc/man/man3
+    #          DESTINATION ${LIBMV_SHARE_OUTPUT_DIR}/../man/man3/
+    #          COMPONENT documentation)
+    #ENDIF (UNIX)
+  ENDIF (INSTALL_DOCUMENTATION STREQUAL ON)
 
-  INSTALL(DIRECTORY ${LIBMV_SOURCE_DIR}/../doc/html
-           DESTINATION ${DOC_PATH}
-         )
-
-  # install man pages into packages, scope is now project root..
-  INSTALL(DIRECTORY ${LIBMV_SOURCE_DIR}/../doc/man/man3
-           DESTINATION share/man/man3/
-         )
 ENDIF(NOT DOXYGEN_FOUND STREQUAL "NO"  AND BUILD_DOC STREQUAL ON)

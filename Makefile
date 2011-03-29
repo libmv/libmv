@@ -31,7 +31,10 @@ uninstall-release : release
 	cd bin-opt && make uninstall
 
 documentation :
-	doxygen Doxyfile
+	cd bin-dbg && make doc
+
+documentation-release :
+	cd bin-opt && make doc
 
 kdevelop :
 	mkdir -p kdevelop-pro

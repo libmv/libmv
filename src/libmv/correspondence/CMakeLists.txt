@@ -6,7 +6,7 @@ ADD_LIBRARY(correspondence
             feature_matching_FLANN.cc
             tracker.cc
             robust_tracker.cc
-            plan_tracker.cc
+            planar_tracker.cc
             nRobustViewMatching.cc
             export_matches_txt.cc
             import_matches_txt.cc)

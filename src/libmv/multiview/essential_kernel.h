@@ -30,8 +30,6 @@ namespace libmv {
 namespace essential {
 namespace kernel {
 
-using namespace std;
-
 /**
  * Eight-point algorithm for solving for the essential matrix from normalized
  * image coordinates of point correspondences.
