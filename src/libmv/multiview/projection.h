@@ -51,15 +51,15 @@ void HomogeneousToEuclidean(const Mat4X &h, Mat3X *e);
 void HomogeneousToEuclidean(const Vec3 &H, Vec2 *X);
 void HomogeneousToEuclidean(const Vec4 &H, Vec3 *X);
 inline Vec2 HomogeneousToEuclidean(const Vec3 &h) {
-  return h.start<2>() / h(2);
+  return h.head<2>() / h(2);
 }
 inline Vec3 HomogeneousToEuclidean(const Vec4 &h) {
-  return h.start<3>() / h(3);
+  return h.head<3>() / h(3);
 }
 inline Mat2X HomogeneousToEuclidean(const Mat3X &h) {
   Mat2X e(2, h.cols());
-  e.row(0) = h.row(0).cwise() / h.row(2);
-  e.row(1) = h.row(1).cwise() / h.row(2);
+  e.row(0) = h.row(0).array() / h.row(2).array();
+  e.row(1) = h.row(1).array() / h.row(2).array();
   return e;
 }
 
@@ -90,7 +90,7 @@ inline Vec2 Project(const Mat34 &P, const Vec3 &X) {
   Vec4 HX;
   HX << X, 1.0;
   Vec3 hx = P * HX;
-  return hx.start<2>() / hx(2);
+  return hx.head<2>() / hx(2);
 }
 
 inline void Project(const Mat34 &P, const Vec4 &X, Vec3 *x) {
@@ -99,7 +99,7 @@ inline void Project(const Mat34 &P, const Vec4 &X, Vec3 *x) {
 
 inline void Project(const Mat34 &P, const Vec4 &X, Vec2 *x) {
   Vec3 hx = P * X;
-  *x = hx.start<2>() / hx(2);
+  *x = hx.head<2>() / hx(2);
 }
 
 inline void Project(const Mat34 &P, const Vec3 &X, Vec3 *x) {
@@ -111,14 +111,14 @@ inline void Project(const Mat34 &P, const Vec3 &X, Vec3 *x) {
 inline void Project(const Mat34 &P, const Vec3 &X, Vec2 *x) {
   Vec3 hx;
   Project(P, X, x);
-  *x = hx.start<2>() / hx(2);
+  *x = hx.head<2>() / hx(2);
 }
 
 inline void Project(const Mat34 &P, const Mat4X &X, Mat2X *x) {
   x->resize(2, X.cols());
   for (size_t c = 0; c < X.cols(); ++c) {
     Vec3 hx = P * X.col(c);
-    x->col(c) = hx.start<2>() / hx(2);
+    x->col(c) = hx.head<2>() / hx(2);
   }
 }
 
@@ -134,7 +134,7 @@ inline void Project(const Mat34 &P, const Mat3X &X, Mat2X *x) {
     Vec4 HX;
     HX << X.col(c), 1.0;
     Vec3 hx = P * HX;
-    x->col(c) = hx.start<2>() / hx(2);
+    x->col(c) = hx.head<2>() / hx(2);
   }
 }
 
@@ -145,7 +145,7 @@ inline void Project(const Mat34 &P, const Mat3X &X, const Vecu &ids, Mat2X *x) {
   for (size_t c = 0; c < ids.size(); ++c) {
     HX << X.col(ids[c]), 1.0;
     hx = P * HX;
-    x->col(c) = hx.start<2>() / hx(2);
+    x->col(c) = hx.head<2>() / hx(2);
   }
 }
 

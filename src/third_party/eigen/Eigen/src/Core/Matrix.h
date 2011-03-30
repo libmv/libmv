@@ -1,7 +1,8 @@
 // This file is part of Eigen, a lightweight C++ template library
-// for linear algebra. Eigen itself is part of the KDE project.
+// for linear algebra.
 //
-// Copyright (C) 2006-2008 Benoit Jacob <jacob.benoit.1@gmail.com>
+// Copyright (C) 2006-2010 Benoit Jacob <jacob.benoit.1@gmail.com>
+// Copyright (C) 2008-2009 Gael Guennebaud <gael.guennebaud@inria.fr>
 //
 // Eigen is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -25,8 +26,8 @@
 #ifndef EIGEN_MATRIX_H
 #define EIGEN_MATRIX_H
 
-
 /** \class Matrix
+  * \ingroup Core_Module
   *
   * \brief The matrix class, also used for vectors and row-vectors
   *
@@ -36,17 +37,18 @@
   * The %Matrix class encompasses \em both fixed-size and dynamic-size objects (\ref fixedsize "note").
   *
   * The first three template parameters are required:
-  * \param _Scalar Numeric type, i.e. float, double, int
-  * \param _Rows Number of rows, or \b Dynamic
-  * \param _Cols Number of columns, or \b Dynamic
+  * \tparam _Scalar \anchor matrix_tparam_scalar Numeric type, e.g. float, double, int or std::complex<float>.
+  *                 User defined sclar types are supported as well (see \ref user_defined_scalars "here").
+  * \tparam _Rows Number of rows, or \b Dynamic
+  * \tparam _Cols Number of columns, or \b Dynamic
   *
   * The remaining template parameters are optional -- in most cases you don't have to worry about them.
-  * \param _Options A combination of either \b RowMajor or \b ColMajor, and of either
+  * \tparam _Options \anchor matrix_tparam_options A combination of either \b RowMajor or \b ColMajor, and of either
   *                 \b AutoAlign or \b DontAlign.
-  *                 The former controls storage order, and defaults to column-major. The latter controls alignment, which is required
+  *                 The former controls \ref TopicStorageOrders "storage order", and defaults to column-major. The latter controls alignment, which is required
   *                 for vectorization. It defaults to aligning matrices except for fixed sizes that aren't a multiple of the packet size.
-  * \param _MaxRows Maximum number of rows. Defaults to \a _Rows (\ref maxrows "note").
-  * \param _MaxCols Maximum number of columns. Defaults to \a _Cols (\ref maxrows "note").
+  * \tparam _MaxRows Maximum number of rows. Defaults to \a _Rows (\ref maxrows "note").
+  * \tparam _MaxCols Maximum number of columns. Defaults to \a _Cols (\ref maxrows "note").
   *
   * Eigen provides a number of typedefs covering the usual cases. Here are some examples:
   *
@@ -56,6 +58,9 @@
   *
   * \li \c MatrixXf is a dynamic-size matrix of floats (\c Matrix<float, Dynamic, Dynamic>)
   * \li \c VectorXf is a dynamic-size vector of floats (\c Matrix<float, Dynamic, 1>)
+  *
+  * \li \c Matrix2Xf is a partially fixed-size (dynamic-size) matrix of floats (\c Matrix<float, 2, Dynamic>)
+  * \li \c MatrixX3d is a partially dynamic-size (fixed-size) matrix of double (\c Matrix<double, Dynamic, 3>)
   *
   * See \link matrixtypedefs this page \endlink for a complete list of predefined \em %Matrix and \em Vector typedefs.
   *
@@ -73,6 +78,9 @@
   * m(0, 2) = 2;
   * m(0, 3) = 3;
   * \endcode
+  *
+  * This class can be extended with the help of the plugin mechanism described on the page
+  * \ref TopicCustomizingEigen by defining the preprocessor symbol \c EIGEN_MATRIX_PLUGIN.
   *
   * <i><b>Some notes:</b></i>
   *
@@ -102,151 +110,71 @@
   * are the dimensions of the original matrix, while _Rows and _Cols are Dynamic.</dd>
   * </dl>
   *
-  * \see MatrixBase for the majority of the API methods for matrices
+  * \see MatrixBase for the majority of the API methods for matrices, \ref TopicClassHierarchy, 
+  * \ref TopicStorageOrders 
   */
+
+namespace internal {
 template<typename _Scalar, int _Rows, int _Cols, int _Options, int _MaxRows, int _MaxCols>
-struct ei_traits<Matrix<_Scalar, _Rows, _Cols, _Options, _MaxRows, _MaxCols> >
+struct traits<Matrix<_Scalar, _Rows, _Cols, _Options, _MaxRows, _MaxCols> >
 {
   typedef _Scalar Scalar;
+  typedef Dense StorageKind;
+  typedef DenseIndex Index;
+  typedef MatrixXpr XprKind;
   enum {
     RowsAtCompileTime = _Rows,
     ColsAtCompileTime = _Cols,
     MaxRowsAtCompileTime = _MaxRows,
     MaxColsAtCompileTime = _MaxCols,
-    Flags = ei_compute_matrix_flags<_Scalar, _Rows, _Cols, _Options, _MaxRows, _MaxCols>::ret,
-    CoeffReadCost = NumTraits<Scalar>::ReadCost
+    Flags = compute_matrix_flags<_Scalar, _Rows, _Cols, _Options, _MaxRows, _MaxCols>::ret,
+    CoeffReadCost = NumTraits<Scalar>::ReadCost,
+    Options = _Options,
+    InnerStrideAtCompileTime = 1,
+    OuterStrideAtCompileTime = (Options&RowMajor) ? ColsAtCompileTime : RowsAtCompileTime
   };
 };
+}
 
 template<typename _Scalar, int _Rows, int _Cols, int _Options, int _MaxRows, int _MaxCols>
 class Matrix
-  : public MatrixBase<Matrix<_Scalar, _Rows, _Cols, _Options, _MaxRows, _MaxCols> >
+  : public PlainObjectBase<Matrix<_Scalar, _Rows, _Cols, _Options, _MaxRows, _MaxCols> >
 {
   public:
-    EIGEN_GENERIC_PUBLIC_INTERFACE(Matrix)
+
+    /** \brief Base class typedef.
+      * \sa PlainObjectBase
+      */
+    typedef PlainObjectBase<Matrix> Base;
+
     enum { Options = _Options };
-    friend class Eigen::Map<Matrix, Unaligned>;
-    typedef class Eigen::Map<Matrix, Unaligned> UnalignedMapType;
-    friend class Eigen::Map<Matrix, Aligned>;
-    typedef class Eigen::Map<Matrix, Aligned> AlignedMapType;
 
-  protected:
-    ei_matrix_storage<Scalar, MaxSizeAtCompileTime, RowsAtCompileTime, ColsAtCompileTime, Options> m_storage;
+    EIGEN_DENSE_PUBLIC_INTERFACE(Matrix)
 
-  public:
-    enum { NeedsToAlign = (Options&AutoAlign) == AutoAlign
-                          && SizeAtCompileTime!=Dynamic && ((sizeof(Scalar)*SizeAtCompileTime)%16)==0 };
+    typedef typename Base::PlainObject PlainObject;
+
+    enum { NeedsToAlign = (!(Options&DontAlign))
+                          && SizeAtCompileTime!=Dynamic && ((static_cast<int>(sizeof(Scalar))*SizeAtCompileTime)%16)==0 };
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW_IF(NeedsToAlign)
 
-    EIGEN_STRONG_INLINE int rows() const { return m_storage.rows(); }
-    EIGEN_STRONG_INLINE int cols() const { return m_storage.cols(); }
+    using Base::base;
+    using Base::coeffRef;
 
-    EIGEN_STRONG_INLINE int stride(void) const
-    {
-      if(Flags & RowMajorBit)
-        return m_storage.cols();
-      else
-        return m_storage.rows();
-    }
-
-    EIGEN_STRONG_INLINE const Scalar& coeff(int row, int col) const
-    {
-      if(Flags & RowMajorBit)
-        return m_storage.data()[col + row * m_storage.cols()];
-      else // column-major
-        return m_storage.data()[row + col * m_storage.rows()];
-    }
-
-    EIGEN_STRONG_INLINE const Scalar& coeff(int index) const
-    {
-      return m_storage.data()[index];
-    }
-
-    EIGEN_STRONG_INLINE Scalar& coeffRef(int row, int col)
-    {
-      if(Flags & RowMajorBit)
-        return m_storage.data()[col + row * m_storage.cols()];
-      else // column-major
-        return m_storage.data()[row + col * m_storage.rows()];
-    }
-
-    EIGEN_STRONG_INLINE Scalar& coeffRef(int index)
-    {
-      return m_storage.data()[index];
-    }
-
-    template<int LoadMode>
-    EIGEN_STRONG_INLINE PacketScalar packet(int row, int col) const
-    {
-      return ei_ploadt<Scalar, LoadMode>
-               (m_storage.data() + (Flags & RowMajorBit
-                                   ? col + row * m_storage.cols()
-                                   : row + col * m_storage.rows()));
-    }
-
-    template<int LoadMode>
-    EIGEN_STRONG_INLINE PacketScalar packet(int index) const
-    {
-      return ei_ploadt<Scalar, LoadMode>(m_storage.data() + index);
-    }
-
-    template<int StoreMode>
-    EIGEN_STRONG_INLINE void writePacket(int row, int col, const PacketScalar& x)
-    {
-      ei_pstoret<Scalar, PacketScalar, StoreMode>
-              (m_storage.data() + (Flags & RowMajorBit
-                                   ? col + row * m_storage.cols()
-                                   : row + col * m_storage.rows()), x);
-    }
-
-    template<int StoreMode>
-    EIGEN_STRONG_INLINE void writePacket(int index, const PacketScalar& x)
-    {
-      ei_pstoret<Scalar, PacketScalar, StoreMode>(m_storage.data() + index, x);
-    }
-
-    /** \returns a const pointer to the data array of this matrix */
-    EIGEN_STRONG_INLINE const Scalar *data() const
-    { return m_storage.data(); }
-
-    /** \returns a pointer to the data array of this matrix */
-    EIGEN_STRONG_INLINE Scalar *data()
-    { return m_storage.data(); }
-
-    /** Resizes \c *this to a \a rows x \a cols matrix.
+    /**
+      * \brief Assigns matrices to each other.
       *
-      * Makes sense for dynamic-size matrices only.
+      * \note This is a special case of the templated operator=. Its purpose is
+      * to prevent a default operator= from hiding the templated operator=.
       *
-      * If the current number of coefficients of \c *this exactly matches the
-      * product \a rows * \a cols, then no memory allocation is performed and
-      * the current values are left unchanged. In all other cases, including
-      * shrinking, the data is reallocated and all previous values are lost.
-      *
-      * \sa resize(int) for vectors.
+      * \callgraph
       */
-    inline void resize(int rows, int cols)
+    EIGEN_STRONG_INLINE Matrix& operator=(const Matrix& other)
     {
-      ei_assert((MaxRowsAtCompileTime == Dynamic || MaxRowsAtCompileTime >= rows)
-             && (RowsAtCompileTime == Dynamic || RowsAtCompileTime == rows)
-             && (MaxColsAtCompileTime == Dynamic || MaxColsAtCompileTime >= cols)
-             && (ColsAtCompileTime == Dynamic || ColsAtCompileTime == cols));
-      m_storage.resize(rows * cols, rows, cols);
+      return Base::_set(other);
     }
 
-    /** Resizes \c *this to a vector of length \a size
-      *
-      * \sa resize(int,int) for the details.
-      */
-    inline void resize(int size)
-    {
-      EIGEN_STATIC_ASSERT_VECTOR_ONLY(Matrix)
-      if(RowsAtCompileTime == 1)
-        m_storage.resize(size, 1, size);
-      else
-        m_storage.resize(size, size, 1);
-    }
-
-    /** Copies the value of the expression \a other into \c *this with automatic resizing.
+    /** \internal
+      * \brief Copies the value of the expression \a other into \c *this with automatic resizing.
       *
       * *this might be resized to match the dimensions of \a other. If *this was a null matrix (not already initialized),
       * it will be initialized.
@@ -258,23 +186,28 @@ class Matrix
     template<typename OtherDerived>
     EIGEN_STRONG_INLINE Matrix& operator=(const MatrixBase<OtherDerived>& other)
     {
-      return _set(other);
+      return Base::_set(other);
     }
 
-    /** This is a special case of the templated operator=. Its purpose is to
-      * prevent a default operator= from hiding the templated operator=.
+    /* Here, doxygen failed to copy the brief information when using \copydoc */
+
+    /**
+      * \brief Copies the generic expression \a other into *this.
+      * \copydetails DenseBase::operator=(const EigenBase<OtherDerived> &other)
       */
-    EIGEN_STRONG_INLINE Matrix& operator=(const Matrix& other)
+    template<typename OtherDerived>
+    EIGEN_STRONG_INLINE Matrix& operator=(const EigenBase<OtherDerived> &other)
     {
-      return _set(other);
+      return Base::operator=(other);
     }
 
-    EIGEN_INHERIT_ASSIGNMENT_OPERATOR(Matrix, +=)
-    EIGEN_INHERIT_ASSIGNMENT_OPERATOR(Matrix, -=)
-    EIGEN_INHERIT_SCALAR_ASSIGNMENT_OPERATOR(Matrix, *=)
-    EIGEN_INHERIT_SCALAR_ASSIGNMENT_OPERATOR(Matrix, /=)
+    template<typename OtherDerived>
+    EIGEN_STRONG_INLINE Matrix& operator=(const ReturnByValue<OtherDerived>& func)
+    {
+      return Base::operator=(func);
+    }
 
-    /** Default constructor.
+    /** \brief Default constructor.
       *
       * For fixed-size matrices, does nothing.
       *
@@ -282,89 +215,66 @@ class Matrix
       * is called a null matrix. This constructor is the unique way to create null matrices: resizing
       * a matrix to 0 is not supported.
       *
-      * \sa resize(int,int)
+      * \sa resize(Index,Index)
       */
-    EIGEN_STRONG_INLINE explicit Matrix() : m_storage()
+    EIGEN_STRONG_INLINE explicit Matrix() : Base()
     {
-      _check_template_params();
+      Base::_check_template_params();
+      EIGEN_INITIALIZE_BY_ZERO_IF_THAT_OPTION_IS_ENABLED
     }
 
-#ifndef EIGEN_PARSED_BY_DOXYGEN
-    /** \internal */
-    Matrix(ei_constructor_without_unaligned_array_assert)
-      : m_storage(ei_constructor_without_unaligned_array_assert())
-    {}
-#endif
+    // FIXME is it still needed
+    Matrix(internal::constructor_without_unaligned_array_assert)
+      : Base(internal::constructor_without_unaligned_array_assert())
+    { Base::_check_template_params(); EIGEN_INITIALIZE_BY_ZERO_IF_THAT_OPTION_IS_ENABLED }
 
-    /** Constructs a vector or row-vector with given dimension. \only_for_vectors
+    /** \brief Constructs a vector or row-vector with given dimension. \only_for_vectors
       *
       * Note that this is only useful for dynamic-size vectors. For fixed-size vectors,
       * it is redundant to pass the dimension here, so it makes more sense to use the default
       * constructor Matrix() instead.
       */
-    EIGEN_STRONG_INLINE explicit Matrix(int dim)
-      : m_storage(dim, RowsAtCompileTime == 1 ? 1 : dim, ColsAtCompileTime == 1 ? 1 : dim)
+    EIGEN_STRONG_INLINE explicit Matrix(Index dim)
+      : Base(dim, RowsAtCompileTime == 1 ? 1 : dim, ColsAtCompileTime == 1 ? 1 : dim)
     {
-      _check_template_params();
+      Base::_check_template_params();
       EIGEN_STATIC_ASSERT_VECTOR_ONLY(Matrix)
-      ei_assert(dim > 0);
-      ei_assert(SizeAtCompileTime == Dynamic || SizeAtCompileTime == dim);
+      eigen_assert(dim >= 0);
+      eigen_assert(SizeAtCompileTime == Dynamic || SizeAtCompileTime == dim);
+      EIGEN_INITIALIZE_BY_ZERO_IF_THAT_OPTION_IS_ENABLED
     }
 
-    /** This constructor has two very different behaviors, depending on the type of *this.
+    #ifndef EIGEN_PARSED_BY_DOXYGEN
+    template<typename T0, typename T1>
+    EIGEN_STRONG_INLINE Matrix(const T0& x, const T1& y)
+    {
+      Base::_check_template_params();
+      Base::template _init2<T0,T1>(x, y);
+    }
+    #else
+    /** \brief Constructs an uninitialized matrix with \a rows rows and \a cols columns.
       *
-      * \li When Matrix is a fixed-size vector type of size 2, this constructor constructs
-      *     an initialized vector. The parameters \a x, \a y are copied into the first and second
-      *     coords of the vector respectively.
-      * \li Otherwise, this constructor constructs an uninitialized matrix with \a x rows and
-      *     \a y columns. This is useful for dynamic-size matrices. For fixed-size matrices,
-      *     it is redundant to pass these parameters, so one should use the default constructor
-      *     Matrix() instead.
-      */
-    EIGEN_STRONG_INLINE Matrix(int x, int y) : m_storage(x*y, x, y)
-    {
-      _check_template_params();
-      if((RowsAtCompileTime == 1 && ColsAtCompileTime == 2)
-      || (RowsAtCompileTime == 2 && ColsAtCompileTime == 1))
-      {
-        m_storage.data()[0] = Scalar(x);
-        m_storage.data()[1] = Scalar(y);
-      }
-      else
-      {
-        ei_assert(x > 0 && (RowsAtCompileTime == Dynamic || RowsAtCompileTime == x)
-               && y > 0 && (ColsAtCompileTime == Dynamic || ColsAtCompileTime == y));
-      }
-    }
-    /** constructs an initialized 2D vector with given coefficients */
-    EIGEN_STRONG_INLINE Matrix(const float& x, const float& y)
-    {
-      _check_template_params();
-      EIGEN_STATIC_ASSERT_VECTOR_SPECIFIC_SIZE(Matrix, 2)
-      m_storage.data()[0] = x;
-      m_storage.data()[1] = y;
-    }
-    /** constructs an initialized 2D vector with given coefficients */
-    EIGEN_STRONG_INLINE Matrix(const double& x, const double& y)
-    {
-      _check_template_params();
-      EIGEN_STATIC_ASSERT_VECTOR_SPECIFIC_SIZE(Matrix, 2)
-      m_storage.data()[0] = x;
-      m_storage.data()[1] = y;
-    }
-    /** constructs an initialized 3D vector with given coefficients */
+      * This is useful for dynamic-size matrices. For fixed-size matrices,
+      * it is redundant to pass these parameters, so one should use the default constructor
+      * Matrix() instead. */
+    Matrix(Index rows, Index cols);
+    /** \brief Constructs an initialized 2D vector with given coefficients */
+    Matrix(const Scalar& x, const Scalar& y);
+    #endif
+
+    /** \brief Constructs an initialized 3D vector with given coefficients */
     EIGEN_STRONG_INLINE Matrix(const Scalar& x, const Scalar& y, const Scalar& z)
     {
-      _check_template_params();
+      Base::_check_template_params();
       EIGEN_STATIC_ASSERT_VECTOR_SPECIFIC_SIZE(Matrix, 3)
       m_storage.data()[0] = x;
       m_storage.data()[1] = y;
       m_storage.data()[2] = z;
     }
-    /** constructs an initialized 4D vector with given coefficients */
+    /** \brief Constructs an initialized 4D vector with given coefficients */
     EIGEN_STRONG_INLINE Matrix(const Scalar& x, const Scalar& y, const Scalar& z, const Scalar& w)
     {
-      _check_template_params();
+      Base::_check_template_params();
       EIGEN_STATIC_ASSERT_VECTOR_SPECIFIC_SIZE(Matrix, 4)
       m_storage.data()[0] = x;
       m_storage.data()[1] = y;
@@ -374,166 +284,84 @@ class Matrix
 
     explicit Matrix(const Scalar *data);
 
-    /** Constructor copying the value of the expression \a other */
+    /** \brief Constructor copying the value of the expression \a other */
     template<typename OtherDerived>
     EIGEN_STRONG_INLINE Matrix(const MatrixBase<OtherDerived>& other)
-             : m_storage(other.rows() * other.cols(), other.rows(), other.cols())
+             : Base(other.rows() * other.cols(), other.rows(), other.cols())
     {
-      _check_template_params();
-      _set_noalias(other);
+      // This test resides here, to bring the error messages closer to the user. Normally, these checks
+      // are performed deeply within the library, thus causing long and scary error traces.
+      EIGEN_STATIC_ASSERT((internal::is_same<Scalar, typename OtherDerived::Scalar>::value),
+        YOU_MIXED_DIFFERENT_NUMERIC_TYPES__YOU_NEED_TO_USE_THE_CAST_METHOD_OF_MATRIXBASE_TO_CAST_NUMERIC_TYPES_EXPLICITLY)
+
+      Base::_check_template_params();
+      Base::_set_noalias(other);
     }
-    /** Copy constructor */
+    /** \brief Copy constructor */
     EIGEN_STRONG_INLINE Matrix(const Matrix& other)
-            : Base(), m_storage(other.rows() * other.cols(), other.rows(), other.cols())
+            : Base(other.rows() * other.cols(), other.rows(), other.cols())
     {
-      _check_template_params();
-      _set_noalias(other);
+      Base::_check_template_params();
+      Base::_set_noalias(other);
     }
-    /** Destructor */
-    inline ~Matrix() {}
-
-    /** Override MatrixBase::swap() since for dynamic-sized matrices of same type it is enough to swap the
-      * data pointers.
-      */
-    inline void swap(Matrix& other)
+    /** \brief Copy constructor with in-place evaluation */
+    template<typename OtherDerived>
+    EIGEN_STRONG_INLINE Matrix(const ReturnByValue<OtherDerived>& other)
     {
-      if (Base::SizeAtCompileTime==Dynamic)
-        m_storage.swap(other.m_storage);
-      else
-        this->Base::swap(other);
+      Base::_check_template_params();
+      Base::resize(other.rows(), other.cols());
+      other.evalTo(*this);
     }
 
-    /** \name Map
-      * These are convenience functions returning Map objects. The Map() static functions return unaligned Map objects,
-      * while the AlignedMap() functions return aligned Map objects and thus should be called only with 16-byte-aligned
-      * \a data pointers.
-      *
-      * \see class Map
+    /** \brief Copy constructor for generic expressions.
+      * \sa MatrixBase::operator=(const EigenBase<OtherDerived>&)
       */
-    //@{
-    inline static const UnalignedMapType Map(const Scalar* data)
-    { return UnalignedMapType(data); }
-    inline static UnalignedMapType Map(Scalar* data)
-    { return UnalignedMapType(data); }
-    inline static const UnalignedMapType Map(const Scalar* data, int size)
-    { return UnalignedMapType(data, size); }
-    inline static UnalignedMapType Map(Scalar* data, int size)
-    { return UnalignedMapType(data, size); }
-    inline static const UnalignedMapType Map(const Scalar* data, int rows, int cols)
-    { return UnalignedMapType(data, rows, cols); }
-    inline static UnalignedMapType Map(Scalar* data, int rows, int cols)
-    { return UnalignedMapType(data, rows, cols); }
+    template<typename OtherDerived>
+    EIGEN_STRONG_INLINE Matrix(const EigenBase<OtherDerived> &other)
+      : Base(other.derived().rows() * other.derived().cols(), other.derived().rows(), other.derived().cols())
+    {
+      Base::_check_template_params();
+      Base::resize(other.rows(), other.cols());
+      // FIXME/CHECK: isn't *this = other.derived() more efficient. it allows to
+      //              go for pure _set() implementations, right?
+      *this = other;
+    }
 
-    inline static const AlignedMapType MapAligned(const Scalar* data)
-    { return AlignedMapType(data); }
-    inline static AlignedMapType MapAligned(Scalar* data)
-    { return AlignedMapType(data); }
-    inline static const AlignedMapType MapAligned(const Scalar* data, int size)
-    { return AlignedMapType(data, size); }
-    inline static AlignedMapType MapAligned(Scalar* data, int size)
-    { return AlignedMapType(data, size); }
-    inline static const AlignedMapType MapAligned(const Scalar* data, int rows, int cols)
-    { return AlignedMapType(data, rows, cols); }
-    inline static AlignedMapType MapAligned(Scalar* data, int rows, int cols)
-    { return AlignedMapType(data, rows, cols); }
-    //@}
+    /** \internal
+      * \brief Override MatrixBase::swap() since for dynamic-sized matrices
+      * of same type it is enough to swap the data pointers.
+      */
+    template<typename OtherDerived>
+    void swap(MatrixBase<OtherDerived> const & other)
+    { this->_swap(other.derived()); }
 
-    using Base::setConstant;
-    Matrix& setConstant(int size, const Scalar& value);
-    Matrix& setConstant(int rows, int cols, const Scalar& value);
+    inline Index innerStride() const { return 1; }
+    inline Index outerStride() const { return this->innerSize(); }
 
-    using Base::setZero;
-    Matrix& setZero(int size);
-    Matrix& setZero(int rows, int cols);
-
-    using Base::setOnes;
-    Matrix& setOnes(int size);
-    Matrix& setOnes(int rows, int cols);
-
-    using Base::setRandom;
-    Matrix& setRandom(int size);
-    Matrix& setRandom(int rows, int cols);
-
-    using Base::setIdentity;
-    Matrix& setIdentity(int rows, int cols);
-
-/////////// Geometry module ///////////
+    /////////// Geometry module ///////////
 
     template<typename OtherDerived>
     explicit Matrix(const RotationBase<OtherDerived,ColsAtCompileTime>& r);
     template<typename OtherDerived>
     Matrix& operator=(const RotationBase<OtherDerived,ColsAtCompileTime>& r);
 
+    #ifdef EIGEN2_SUPPORT
+    template<typename OtherDerived>
+    explicit Matrix(const eigen2_RotationBase<OtherDerived,ColsAtCompileTime>& r);
+    template<typename OtherDerived>
+    Matrix& operator=(const eigen2_RotationBase<OtherDerived,ColsAtCompileTime>& r);
+    #endif
+
     // allow to extend Matrix outside Eigen
     #ifdef EIGEN_MATRIX_PLUGIN
     #include EIGEN_MATRIX_PLUGIN
     #endif
 
-  private:
-    /** \internal Resizes *this in preparation for assigning \a other to it.
-      * Takes care of doing all the checking that's needed.
-      *
-      * Note that copying a row-vector into a vector (and conversely) is allowed.
-      * The resizing, if any, is then done in the appropriate way so that row-vectors
-      * remain row-vectors and vectors remain vectors.
-      */
-    template<typename OtherDerived>
-    EIGEN_STRONG_INLINE void _resize_to_match(const MatrixBase<OtherDerived>& other)
-    {
-      if(RowsAtCompileTime == 1)
-      {
-        ei_assert(other.isVector());
-        resize(1, other.size());
-      }
-      else if(ColsAtCompileTime == 1)
-      {
-        ei_assert(other.isVector());
-        resize(other.size(), 1);
-      }
-      else resize(other.rows(), other.cols());
-    }
+  protected:
+    template <typename Derived, typename OtherDerived, bool IsVector>
+    friend struct internal::conservative_resize_like_impl;
 
-    /** \internal Copies the value of the expression \a other into \c *this with automatic resizing.
-      *
-      * *this might be resized to match the dimensions of \a other. If *this was a null matrix (not already initialized),
-      * it will be initialized.
-      *
-      * Note that copying a row-vector into a vector (and conversely) is allowed.
-      * The resizing, if any, is then done in the appropriate way so that row-vectors
-      * remain row-vectors and vectors remain vectors.
-      *
-      * \sa operator=(const MatrixBase<OtherDerived>&), _set_noalias()
-      */
-    template<typename OtherDerived>
-    EIGEN_STRONG_INLINE Matrix& _set(const MatrixBase<OtherDerived>& other)
-    {
-      _resize_to_match(other);
-      return Base::operator=(other);
-    }
-
-    /** \internal Like _set() but additionally makes the assumption that no aliasing effect can happen (which
-      * is the case when creating a new matrix) so one can enforce lazy evaluation.
-      *
-      * \sa operator=(const MatrixBase<OtherDerived>&), _set()
-      */
-    template<typename OtherDerived>
-    EIGEN_STRONG_INLINE Matrix& _set_noalias(const MatrixBase<OtherDerived>& other)
-    {
-      _resize_to_match(other);
-      // the 'false' below means to enforce lazy evaluation. We don't use lazyAssign() because
-      // it wouldn't allow to copy a row-vector into a column-vector.
-      return ei_assign_selector<Matrix,OtherDerived,false>::run(*this, other.derived());
-    }
-
-    static EIGEN_STRONG_INLINE void _check_template_params()
-    {
-        EIGEN_STATIC_ASSERT((_Rows > 0
-                        && _Cols > 0
-                        && _MaxRows <= _Rows
-                        && _MaxCols <= _Cols
-                        && (_Options & (AutoAlign|RowMajor)) == _Options),
-          INVALID_MATRIX_TEMPLATE_PARAMETERS)
-    }
+    using Base::m_storage;
 };
 
 /** \defgroup matrixtypedefs Global matrix typedefs
@@ -564,11 +392,20 @@ typedef Matrix<Type, Size, 1>    Vector##SizeSuffix##TypeSuffix;  \
 /** \ingroup matrixtypedefs */                                    \
 typedef Matrix<Type, 1, Size>    RowVector##SizeSuffix##TypeSuffix;
 
+#define EIGEN_MAKE_FIXED_TYPEDEFS(Type, TypeSuffix, Size)         \
+/** \ingroup matrixtypedefs */                                    \
+typedef Matrix<Type, Size, Dynamic> Matrix##Size##X##TypeSuffix;  \
+/** \ingroup matrixtypedefs */                                    \
+typedef Matrix<Type, Dynamic, Size> Matrix##X##Size##TypeSuffix;
+
 #define EIGEN_MAKE_TYPEDEFS_ALL_SIZES(Type, TypeSuffix) \
 EIGEN_MAKE_TYPEDEFS(Type, TypeSuffix, 2, 2) \
 EIGEN_MAKE_TYPEDEFS(Type, TypeSuffix, 3, 3) \
 EIGEN_MAKE_TYPEDEFS(Type, TypeSuffix, 4, 4) \
-EIGEN_MAKE_TYPEDEFS(Type, TypeSuffix, Dynamic, X)
+EIGEN_MAKE_TYPEDEFS(Type, TypeSuffix, Dynamic, X) \
+EIGEN_MAKE_FIXED_TYPEDEFS(Type, TypeSuffix, 2) \
+EIGEN_MAKE_FIXED_TYPEDEFS(Type, TypeSuffix, 3) \
+EIGEN_MAKE_FIXED_TYPEDEFS(Type, TypeSuffix, 4)
 
 EIGEN_MAKE_TYPEDEFS_ALL_SIZES(int,                  i)
 EIGEN_MAKE_TYPEDEFS_ALL_SIZES(float,                f)

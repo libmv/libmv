@@ -139,7 +139,7 @@ void ViewerCamera::SetUpGlCamera() {
                revolve_point_in_cam_coords_(1),
                revolve_point_in_cam_coords_(2)); 
   // (2) Rotate.
-  Eigen::AngleAxisf aa = orientation_;
+  Eigen::AngleAxisf aa = Eigen::AngleAxisf(orientation_);
   glRotatef(aa.angle() * 180. / M_PI, aa.axis()(0), aa.axis()(1), aa.axis()(2));
   // (3) Translate axis to world origin.
   glTranslatef(-revolve_point_(0), -revolve_point_(1), -revolve_point_(2));
@@ -201,7 +201,7 @@ Viewer3D::Viewer3D(QGLWidget *share, GLTexture *textures, QWidget *parent) :
   
   scene_graph_ = Node<SceneObject>("root node", NULL);
   
-  Transform3d transform;
+  Transform< double, 3, Projective > transform;
   transform.matrix() = scene_graph_.GetTransform();
   transform = Translation3d(0,0,-1) * transform;
   scene_graph_.SetTransform(transform.matrix());

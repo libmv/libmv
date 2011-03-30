@@ -43,9 +43,9 @@ struct TestData {
 TestData SomeTestData() {
   TestData d;
   d.X = Mat3X::Random(3,5);
-  d.X.row(0).cwise() -= .5;
-  d.X.row(1).cwise() -= .5;
-  d.X.row(2).cwise() += 3;
+  d.X.row(0).array() -= .5;
+  d.X.row(1).array() -= .5;
+  d.X.row(2).array() += 3;
   d.R = RotationAroundZ(0.3) * RotationAroundX(0.1) * RotationAroundY(0.2);
   d.t = Vec3::Random();
   

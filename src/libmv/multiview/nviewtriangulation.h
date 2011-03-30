@@ -52,7 +52,7 @@ void NViewTriangulate(const Matrix<T, 2, Dynamic> &x,
   Matrix<T, Dynamic, 1>  X_and_alphas;
   Nullspace(&design, &X_and_alphas);
   X->resize(4);
-  *X = X_and_alphas.start(4);
+  *X = X_and_alphas.head(4);
 }
 
 // x's are 2D coordinates (x,y,1) in each image; Ps are projective cameras. The

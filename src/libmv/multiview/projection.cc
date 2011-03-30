@@ -160,14 +160,14 @@ void HomogeneousToEuclidean(const Mat &H, Mat *X) {
 
 void HomogeneousToEuclidean(const Mat3X &h, Mat2X *e) {
   e->resize(2, h.cols());
-  e->row(0) = h.row(0).cwise() / h.row(2);
-  e->row(1) = h.row(1).cwise() / h.row(2);
+  e->row(0) = h.row(0).array() / h.row(2).array();
+  e->row(1) = h.row(1).array() / h.row(2).array();
 }
 void HomogeneousToEuclidean(const Mat4X &h, Mat3X *e) {
   e->resize(3, h.cols());
-  e->row(0) = h.row(0).cwise() / h.row(3);
-  e->row(1) = h.row(1).cwise() / h.row(3);
-  e->row(2) = h.row(2).cwise() / h.row(3);
+  e->row(0) = h.row(0).array() / h.row(3).array();
+  e->row(1) = h.row(1).array() / h.row(3).array();
+  e->row(2) = h.row(2).array() / h.row(3).array();
 }
 
 void HomogeneousToEuclidean(const Vec3 &H, Vec2 *X) {
@@ -214,7 +214,7 @@ double Depth(const Mat3 &R, const Vec3 &t, const Vec3 &X) {
 }
 
 double Depth(const Mat3 &R, const Vec3 &t, const Vec4 &X) {
-  Vec3 Xe = X.start<3>() / X(3);
+  Vec3 Xe = X.head<3>() / X(3);
   return Depth(R, t, Xe);
 }
 

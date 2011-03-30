@@ -25,15 +25,13 @@
 #ifndef LIBMV_NUMERIC_NUMERIC_H
 #define LIBMV_NUMERIC_NUMERIC_H
 
-#include <Eigen/Array>
 #include <Eigen/Cholesky>
 #include <Eigen/Core>
+#include <Eigen/Eigenvalues> 
 #include <Eigen/Geometry>
 #include <Eigen/LU>
 #include <Eigen/QR>
 #include <Eigen/SVD>
-
-
 
 #if _WIN32 || __APPLE__
   void static sincos (double x, double *sinx, double *cosx) {
@@ -60,7 +58,6 @@ typedef Eigen::VectorXd Vec;
 typedef Eigen::MatrixXf Matf;
 typedef Eigen::VectorXf Vecf;
 
-typedef Eigen::Matrix<bool, Eigen::Dynamic, Eigen::Dynamic> Matb;
 typedef Eigen::Matrix<unsigned int, Eigen::Dynamic, Eigen::Dynamic> Matu;
 typedef Eigen::Matrix<unsigned int, Eigen::Dynamic, 1> Vecu;
 typedef Eigen::Matrix<unsigned int, 2, 1> Vec2u;
@@ -138,17 +135,12 @@ inline void SVD(TMat *A, Vec *s, Mat *U, Mat *VT) {
 // TODO(maclean): Take the SVD of the transpose instead of this zero padding.
 template <typename TMat, typename TVec>
 double Nullspace(TMat *A, TVec *nullspace) {
-  if (A->rows() >= A->cols()) {
-    Eigen::SVD<TMat> svd(*A);
-    (*nullspace) = svd.matrixV().col(A->cols()-1);
+  Eigen::JacobiSVD<TMat> svd(*A, Eigen::ComputeFullV);
+  (*nullspace) = svd.matrixV().col(A->cols()-1);
+  if (A->rows() >= A->cols())
     return svd.singularValues()(A->cols()-1);
-  }
-  // Extend A with rows of zeros to make it square. It's a hack, but is
-  // necessary until Eigen supports SVD with more columns than rows.
-  Mat A_extended(A->cols(), A->cols());
-  A_extended.block(A->rows(), 0, A->cols() - A->rows(), A->cols()).setZero();
-  A_extended.block(0,0, A->rows(), A->cols()) = (*A);
-  return Nullspace(&A_extended, nullspace);
+  else
+    return 0.0;
 }
 
 // Solve the linear system Ax = 0 via SVD. Finds two solutions, x1 and x2, such
@@ -158,19 +150,13 @@ double Nullspace(TMat *A, TVec *nullspace) {
 // x if necessary.
 template <typename TMat, typename TVec1, typename TVec2>
 double Nullspace2(TMat *A, TVec1 *x1, TVec2 *x2) {
-  if (A->rows() >= A->cols()) {
-    Eigen::SVD<TMat> svd(*A);
-    Mat V = svd.matrixV();
-    *x1 = V.col(A->cols() - 1);
-    *x2 = V.col(A->cols() - 2);
+  Eigen::JacobiSVD<TMat> svd(*A, Eigen::ComputeFullV);
+  *x1 = svd.matrixV().col(A->cols() - 1);
+  *x2 = svd.matrixV().col(A->cols() - 2);
+  if (A->rows() >= A->cols())
     return svd.singularValues()(A->cols()-1);
-  }
-  // Extend A with rows of zeros to make it square. It's a hack, but is
-  // necessary until Eigen supports SVD with more columns than rows.
-  Mat A_extended(A->cols(), A->cols());
-  A_extended.block(A->rows(), 0, A->cols() - A->rows(), A->cols()).setZero();
-  A_extended.block(0,0, A->rows(), A->cols()) = (*A);
-  return Nullspace2(&A_extended, x1, x2);
+  else
+    return 0.0;
 }
 
 // In place transpose for square matrices.
@@ -181,7 +167,7 @@ inline void TransposeInPlace(TA *A) {
 
 template<typename TVec>
 inline double NormL1(const TVec &x) {
-  return x.cwise().abs().sum();
+  return x.array().abs().sum();
 }
 
 template<typename TVec>
@@ -191,12 +177,12 @@ inline double NormL2(const TVec &x) {
 
 template<typename TVec>
 inline double NormLInfinity(const TVec &x) {
-  return x.cwise().abs().maxCoeff();
+  return x.array().abs().maxCoeff();
 }
 
 template<typename TVec>
 inline double DistanceL1(const TVec &x, const TVec &y) {
-  return (x - y).cwise().abs().sum();
+  return (x - y).array().abs().sum();
 }
 
 template<typename TVec>
@@ -205,7 +191,7 @@ inline double DistanceL2(const TVec &x, const TVec &y) {
 }
 template<typename TVec>
 inline double DistanceLInfinity(const TVec &x, const TVec &y) {
-  return (x - y).cwise().abs().maxCoeff();
+  return (x - y).array().abs().maxCoeff();
 }
 
 // Normalize a vector with the L1 norm, and return the norm before it was
@@ -262,7 +248,7 @@ inline Mat Diag(const TVec &x) {
 
 template<typename TMat>
 inline double FrobeniusNorm(const TMat &A) {
-  return sqrt(A.cwise().abs2().sum());
+  return sqrt(A.array().abs2().sum());
 }
 
 template<typename TMat>
@@ -444,8 +430,7 @@ inline bool isnan(double i) {
 #else
   return std::isnan(i);
 #endif
-} 
-
-}  // namespace libmv
+}
+} // namespace libmv
 
 #endif  // LIBMV_NUMERIC_NUMERIC_H

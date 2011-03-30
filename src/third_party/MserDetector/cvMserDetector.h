@@ -1,19 +1,17 @@
-
-
 // Modified by Pierre Moulon
 // for libmv purpose
 
 #ifndef OPENCV_MSER_DETECTOR_H
 #define OPENCV_MSER_DETECTOR_H
 
+#include <cmath>
+#include <iostream>
+#include <iterator>
+
 #include "libmv/base/vector.h"
 #include "libmv/image/image.h"
 #include "libmv/image/image_drawing.h"
 #include "libmv/numeric/numeric.h"
-
-#include <cmath>
-#include <iostream>
-#include <iterator>
 
 //-------------------------------------------
 // -- MSER From OpenCV
@@ -545,9 +543,9 @@ void FitEllipse( const vector<CvPoint> & contour,
   tensor(1,0) = i12; tensor(1,1) = i22;
 
   Eigen::EigenSolver<Mat> es(tensor);
-  typedef Eigen::EigenSolver<Mat>::EigenvectorType Matc;
+  typedef Eigen::EigenSolver<Mat>::EigenvectorsType Matc;
   Matc eigvec = es.eigenvectors();
-  typedef Eigen::EigenSolver<Mat>::EigenvectorType Matd;
+  typedef Eigen::EigenSolver<Mat>::EigenvalueType Matd;
   Matd eigval = es.eigenvalues();
 
   width   = sqrt( std::real(eigval(0)) ) *2.0;

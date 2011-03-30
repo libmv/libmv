@@ -50,7 +50,7 @@ TEST(ResectionKernel, RobustResection) {
     Mat34 P = Estimate(kernel, MLEScorer<Kernel>(1), &inliers);
 
     Mat34 P_expected = d.P(i);
-    EXPECT_MATRIX_PROP(P_expected, P, 1.5e-8);
+    EXPECT_MATRIX_PROP(P_expected, P, 1e-7);
 
     // Make sure inliers were classified properly.
     for (int i = 0; i < inliers.size(); ++i) {

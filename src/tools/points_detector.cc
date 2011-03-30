@@ -19,6 +19,7 @@
 // IN THE SOFTWARE.
 
 #include <algorithm>
+#include <iostream>
 #include <string>
 #include <time.h>
 

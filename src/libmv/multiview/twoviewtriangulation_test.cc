@@ -41,14 +41,15 @@ TEST(Triangulation, TriangulateByPlanes) {
   Mat3 K1_inverse = d.K1.inverse();
   Mat3 K2_inverse = d.K2.inverse();
   //Transform the system so that camera 1 is in its canonical form [I|0]
-  Eigen::Transform< double, 3 > Hcanonical = Eigen::Translation3d(d.t1)*d.R1;
+  Eigen::Transform< double, 3, Eigen::Affine > Hcanonical =
+    Eigen::Translation3d(d.t1)*d.R1;
   Hcanonical = Hcanonical.inverse();
 
   Mat34 P2;
   P2.block<3,3>(0,0) = d.R2;
   P2.block<3,1>(0,3) = d.t2;
 
-  P2 = P2*Hcanonical;
+  P2 = P2*Hcanonical.matrix();
 
   srand ( time(NULL) );
 
@@ -91,14 +92,15 @@ TEST(Triangulation, TwoViewTriangulationIdeal) {
   Mat3 K2_inverse = d.K2.inverse();
 
   //Transform the system so that camera 1 is in its canonical form [I|0]
-  Eigen::Transform< double, 3 > Hcanonical = Eigen::Translation3d(d.t1)*d.R1;
+  Eigen::Transform< double, 3, Eigen::Affine > Hcanonical =
+    Eigen::Translation3d(d.t1)*d.R1;
   Hcanonical = Hcanonical.inverse();
 
   Mat34 P2;
   P2.block<3,3>(0,0) = d.R2;
   P2.block<3,1>(0,3) = d.t2;
 
-  P2 = P2*Hcanonical;
+  P2 = P2*Hcanonical.matrix();
 
   for (int i = 0; i < d.X.cols(); ++i) {
 

@@ -18,6 +18,9 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
+#include <fstream>
+#include <iostream>
+
 #include "libmv/base/scoped_ptr.h"
 #include "libmv/base/vector.h"
 #include "libmv/base/vector_utils.h"
@@ -32,7 +35,6 @@
 #include "libmv/image/image_io.h"
 #include "libmv/tools/tool.h"
 
-#include <fstream>
 using namespace libmv;
 using namespace std;
 

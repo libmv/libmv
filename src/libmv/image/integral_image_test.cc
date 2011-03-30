@@ -41,7 +41,7 @@ TEST(IntegralImage, SimpleCase) {
   EXPECT_MATRIX_NEAR_ZERO(resid, 1e-15);
   resid = integral_image.block<5,10>(0, 10);
   EXPECT_MATRIX_NEAR_ZERO(resid, 1e-15);
-  resid = integral_image.block<5,10>(5, 10).cwise() - 1.0;
+  resid = integral_image.block<5,10>(5, 10).array() - 1.0;
   EXPECT_MATRIX_NEAR_ZERO(resid, 1e-15);
 }
 

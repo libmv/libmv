@@ -81,8 +81,8 @@ void USURFDescriptor(const TImage &integral_image,
           dxy << HarrX(integral_image, sample_row, sample_col, int_scale),
                  HarrY(integral_image, sample_row, sample_col, int_scale);
           dxy *= weight;
-          components.start<2>() += dxy;
-          components.end<2>() += dxy.cwise().abs();
+          components.head<2>() += dxy;
+          components.tail<2>() += dxy.array().abs();
         }
       }
       (*descriptor).segment<4>(done_dims) = components;
@@ -141,8 +141,8 @@ void MSURFDescriptor(const TImage &integral_image,
           dxy << (co*rry - si*rrx),
                  (si*rry + co*rrx);
           dxy *= weight;
-          components.start<2>() += dxy;
-          components.end<2>() += dxy.cwise().abs();
+          components.head<2>() += dxy;
+          components.tail<2>().array() += dxy.array().abs();
         }
       }
       float gauss_BigBox = Gaussian2D(row/half_region,col/half_region,1.0f);

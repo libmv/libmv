@@ -1,7 +1,7 @@
 // This file is part of Eigen, a lightweight C++ template library
-// for linear algebra. Eigen itself is part of the KDE project.
+// for linear algebra.
 //
-// Copyright (C) 2008 Gael Guennebaud <g.gael@free.fr>
+// Copyright (C) 2008 Gael Guennebaud <gael.guennebaud@inria.fr>
 //
 // Eigen is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -32,8 +32,8 @@
 //   typename NumTraits<Scalar>::Real prec
 // ) const
 // {
-//   const typename ei_nested<Derived,2>::type nested(derived());
-//   const typename ei_nested<OtherDerived,2>::type otherNested(other.derived());
+//   const typename internal::nested<Derived,2>::type nested(derived());
+//   const typename internal::nested<OtherDerived,2>::type otherNested(other.derived());
 //   return    (nested - otherNested).cwise().abs2().sum()
 //          <= prec * prec * std::min(nested.cwise().abs2().sum(), otherNested.cwise().abs2().sum());
 // }

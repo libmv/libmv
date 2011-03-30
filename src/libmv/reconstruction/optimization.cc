@@ -207,7 +207,7 @@ uint RemoveOutliers(CameraID image_id,
       // TODO(julien) also check if a camera has enough points (at least 2)
     }
   }
-  std::cout << "#outliers: " << number_outliers << std::endl;
+  VLOG(1) << "#outliers: " << number_outliers << std::endl;
   return number_outliers;
 }
 } // namespace libmv

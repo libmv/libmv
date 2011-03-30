@@ -1,7 +1,7 @@
 // This file is part of Eigen, a lightweight C++ template library
-// for linear algebra. Eigen itself is part of the KDE project.
+// for linear algebra.
 //
-// Copyright (C) 2008 Gael Guennebaud <g.gael@free.fr>
+// Copyright (C) 2008-2010 Gael Guennebaud <gael.guennebaud@inria.fr>
 //
 // Eigen is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -35,13 +35,16 @@
   */
 
 // generic version for dense matrix and expressions
-template<typename Derived> class MatrixBase<Derived>::InnerIterator
+template<typename Derived> class DenseBase<Derived>::InnerIterator
 {
+  protected:
     typedef typename Derived::Scalar Scalar;
+    typedef typename Derived::Index Index;
+
     enum { IsRowMajor = (Derived::Flags&RowMajorBit)==RowMajorBit };
   public:
-    EIGEN_STRONG_INLINE InnerIterator(const Derived& expr, int outer)
-      : m_expression(expr), m_inner(0), m_outer(outer), m_end(expr.rows())
+    EIGEN_STRONG_INLINE InnerIterator(const Derived& expr, Index outer)
+      : m_expression(expr), m_inner(0), m_outer(outer), m_end(expr.innerSize())
     {}
 
     EIGEN_STRONG_INLINE Scalar value() const
@@ -52,17 +55,17 @@ template<typename Derived> class MatrixBase<Derived>::InnerIterator
 
     EIGEN_STRONG_INLINE InnerIterator& operator++() { m_inner++; return *this; }
 
-    EIGEN_STRONG_INLINE int index() const { return m_inner; }
-    inline int row() const { return IsRowMajor ? m_outer : index(); }
-    inline int col() const { return IsRowMajor ? index() : m_outer; }
+    EIGEN_STRONG_INLINE Index index() const { return m_inner; }
+    inline Index row() const { return IsRowMajor ? m_outer : index(); }
+    inline Index col() const { return IsRowMajor ? index() : m_outer; }
 
     EIGEN_STRONG_INLINE operator bool() const { return m_inner < m_end && m_inner>=0; }
 
   protected:
     const Derived& m_expression;
-    int m_inner;
-    const int m_outer;
-    const int m_end;
+    Index m_inner;
+    const Index m_outer;
+    const Index m_end;
 };
 
 #endif // EIGEN_COREITERATORS_H

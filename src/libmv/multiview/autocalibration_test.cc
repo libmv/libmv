@@ -88,7 +88,7 @@ TEST(AutoCalibrationLinear, MetricTransformation_MetricInput) {
   EXPECT_MATRIX_PROP(Id, RRt, 1e-2);
 
   // The plane at infinity should be 0,0,0,1.
-  Vec3 p = H.row(3).start<3>();
+  Vec3 p = H.row(3).head<3>();
   EXPECT_NEAR(0, p.norm(), 1e-2);
 }
 

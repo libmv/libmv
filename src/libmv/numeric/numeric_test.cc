@@ -61,9 +61,9 @@ TEST(Numeric, NullspaceMatchesLapackSVD) {
   EXPECT_NEAR(0.206694992663, s, 1e-9);
   EXPECT_NEAR(0.206694992663, (A * x).norm(), 1e-9);
 
-  EXPECT_NEAR(0.64999717, x(0), 1e-8);
-  EXPECT_NEAR(0.18452646, x(1), 1e-8);
-  EXPECT_NEAR(-0.7371931, x(2), 1e-8);
+  EXPECT_NEAR(-0.64999717, x(0), 1e-8);
+  EXPECT_NEAR(-0.18452646, x(1), 1e-8);
+  EXPECT_NEAR( 0.7371931, x(2), 1e-8);
 }
 
 TEST(Numeric, Nullspace2) {
@@ -78,9 +78,9 @@ TEST(Numeric, Nullspace2) {
   EXPECT_NEAR(0.206694992663, s, 1e-9);
   EXPECT_NEAR(0.206694992663, (A * x1).norm(), 1e-9);
 
-  EXPECT_NEAR( 0.64999717, x1(0), 1e-8);
-  EXPECT_NEAR( 0.18452646, x1(1), 1e-8);
-  EXPECT_NEAR(-0.7371931,  x1(2), 1e-8);
+  EXPECT_NEAR(-0.64999717, x1(0), 1e-8);
+  EXPECT_NEAR(-0.18452646, x1(1), 1e-8);
+  EXPECT_NEAR( 0.7371931,  x1(2), 1e-8);
 
   if (x2(0) < 0) {
     x2 *= -1;

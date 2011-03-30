@@ -63,8 +63,7 @@ struct LineKernel {
     X.col(1) = sampled_xs.row(0).transpose();
     Mat A(X.transpose() * X);
     Vec b(X.transpose() * sampled_xs.row(1).transpose());
-    Vec2 ba;
-    A.svd().solve(b, &ba);
+    Vec2 ba = A.jacobiSvd(Eigen::ComputeFullU | Eigen::ComputeFullV).solve(b);
     lines->push_back(ba);
   }
 

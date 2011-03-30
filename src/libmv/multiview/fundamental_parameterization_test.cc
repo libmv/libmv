@@ -31,8 +31,8 @@ TEST(FundamentalParameterization, Roundtripping) {
   Vec9 p; p << 1, 2, 3, 4,  // u
                0.,          // s
                5, 6, 7, 1;  // vt
-  p.start<4>().normalize();
-  p.end<4>().normalize();
+  p.head<4>().normalize();
+  p.tail<4>().normalize();
   Vec9 p_roundtrip;
 
   // Use tha parameterization to get some arbitrary F matrix which satisfies

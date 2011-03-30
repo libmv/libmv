@@ -92,7 +92,7 @@ double EightPointSolver(const Mat &x1, const Mat &x2, Mat3 *F) {
 
 // HZ 11.1.1 pag.280
 void EnforceFundamentalRank2Constraint(Mat3 *F) {
-  Eigen::SVD<Mat3> USV(*F);
+  Eigen::JacobiSVD<Mat3> USV(*F);
   Vec3 d = USV.singularValues();
   d(2) = 0.0;
   *F = USV.matrixU() * d.asDiagonal() * USV.matrixV().transpose();
@@ -239,8 +239,8 @@ double SampsonDistance2(const Mat &F, const Vec2 &x1, const Vec2 &x2) {
   Vec3 Ft_y = F.transpose() * y;
   double y_F_x = y.dot(F_x);
 
-  return Square(y_F_x) / (  F_x.start<2>().squaredNorm()
-                          + Ft_y.start<2>().squaredNorm());
+  return Square(y_F_x) / (  F_x.head<2>().squaredNorm()
+                          + Ft_y.head<2>().squaredNorm());
 }
 
 // Sum of the squared distances from the points to the epipolar lines; page 288
@@ -255,8 +255,8 @@ double SymmetricEpipolarDistance2(const Mat &F,
   Vec3 Ft_y = F.transpose() * y;
   double y_F_x = y.dot(F_x);
 
-  return Square(y_F_x) * (  1 / F_x.start<2>().squaredNorm()
-                          + 1 / Ft_y.start<2>().squaredNorm());
+  return Square(y_F_x) * (  1 / F_x.head<2>().squaredNorm()
+                          + 1 / Ft_y.head<2>().squaredNorm());
 }
 
 // HZ 9.6 pag 257 (formula 9.12)
@@ -303,7 +303,7 @@ void EssentialFromRt(const Mat3 &R1,
 void MotionFromEssential(const Mat3 &E,
                          std::vector<Mat3> *Rs,
                          std::vector<Vec3> *ts) {
-  Eigen::SVD<Mat3> USV(E);
+  Eigen::JacobiSVD<Mat3> USV(E, Eigen::ComputeFullU | Eigen::ComputeFullV);
   Mat3 U =  USV.matrixU();
   Vec3 d =  USV.singularValues();
   Mat3 Vt = USV.matrixV().transpose();

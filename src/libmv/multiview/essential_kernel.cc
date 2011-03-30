@@ -28,7 +28,9 @@ namespace kernel {
 
 using namespace std;
 
-void EightPointRelativePoseSolver::Solve(const Mat &x1, const Mat &x2, vector<Mat3> *Es) {
+void EightPointRelativePoseSolver::Solve(const Mat &x1, 
+                                         const Mat &x2, 
+                                         vector<Mat3> *Es) {
   assert(2 == x1.rows());
   assert(8 <= x1.cols());
   assert(x1.rows() == x2.rows());
@@ -44,7 +46,7 @@ void EightPointRelativePoseSolver::Solve(const Mat &x1, const Mat &x2, vector<Ma
   // Find the closest essential matrix to E in frobenius norm
   // E = UD'VT
   if (x1.cols() > 8) {
-    Eigen::SVD<Mat3> USV(E);
+    Eigen::JacobiSVD<Mat3> USV(E, Eigen::ComputeFullU | Eigen::ComputeFullV);
     Vec3 d = USV.singularValues();
     double a = d[0];
     double b = d[1];

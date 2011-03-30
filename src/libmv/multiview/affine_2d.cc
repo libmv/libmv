@@ -60,8 +60,8 @@ bool Affine2D_FromCorrespondencesLinear(const Mat &x1, const Mat &x2,
     b(j+1,0) = x2(1,i);
   }
   // Solve Ax=B
-  Vec4 x;
-  if (A.lu().solve(b, &x))  {
+  Vec x = A.fullPivLu().solve(b);
+  if ((A * x).isApprox(b))  {
     // Configure output matrix :
     (*M)<<x(1), x(0), x(2), // cos sin tx
          -x(0), x(1), x(3), // sin cos ty

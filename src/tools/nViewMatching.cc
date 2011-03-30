@@ -20,6 +20,7 @@
 
 #include <algorithm>
 #include <fstream>
+#include <iostream>
 #include <iterator>
 #include <map>
 #include <string>

@@ -122,7 +122,7 @@ Mat4 AutoCalibrationLinear::MetricTransformation() {
   // paragraph of page 3 in
   //   "Autocalibration and the absolute quadric" by B. Triggs.
   eigenvalues(3) = 1;
-  eigenvalues = eigenvalues.cwise().sqrt();
+  eigenvalues = eigenvalues.array().sqrt();
   Mat H = eigenvectors * eigenvalues.asDiagonal();
   return H;
 }

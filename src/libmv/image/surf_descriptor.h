@@ -79,7 +79,7 @@ void USURFDescriptor(const TImage &integral_image,
           dxy << HarrX(integral_image, sample_row, sample_col, int_scale),
                  HarrY(integral_image, sample_row, sample_col, int_scale);
           dxy *= weight;
-          components.start<2>() += dxy;
+          components.head<2>() += dxy;
           components(2) += fabs(dxy(0));
           components(3) += fabs(dxy(1));
           // TODO(keir): There is a problem with this in the old eigen version

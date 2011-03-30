@@ -54,8 +54,8 @@ class FundamentalRank2Parameterization {
     // TODO(keir): This is fantastically inefficient. Multiply through by the
     // zeros of S symbolically to speed this up.
     Eigen::Quaternion<T> u, vt;
-    u  = p.template start<4>();
-    vt = p.template end  <4>();
+    u  = p.template head<4>();
+    vt = p.template tail<4>();
 
     // Use 1 / (1.0 + s^2) to prevent negative singular values. Use the inverse
     // so that the singular value ordering remains consistent.
@@ -76,7 +76,9 @@ class FundamentalRank2Parameterization {
     // matrix. If F is rank 3 rather than 2, the assumption that the third
     // singular value is zero produces the closest valid F matrix in the
     // Frobenius sense.
-    Eigen::SVD<Parameterized> svd(f);
+    Eigen::JacobiSVD<Parameterized> svd(f,
+                                        Eigen::ComputeFullU |
+                                        Eigen::ComputeFullV);
 
     // U and V are either rotations or reflections. Since the fundamental
     // matrix is invariant to scale changes, force U and V to rotations by

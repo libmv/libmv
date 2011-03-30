@@ -47,8 +47,8 @@ TEST(Resection, ThreeViews) {
 
     // Because the P matrices are homogeneous, it is necessary to be tricky
     // about the scale factor to make them match.
-    P_expected *= 1/P_expected.cwise().abs().sum();
-    P *= 1/P.cwise().abs().sum();
+    P_expected *= 1/P_expected.array().abs().sum();
+    P *= 1/P.array().abs().sum();
     if (!((P(0, 0) > 0 && P_expected(0, 0) > 0) ||
           (P(0, 0) < 0 && P_expected(0, 0) < 0))) {
       P *= -1;

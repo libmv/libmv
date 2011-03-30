@@ -97,7 +97,7 @@ void EightPointSolver::Solve(const Mat &x1, const Mat &x2, vector<Mat3> *Fs) {
 
   // Force the fundamental property if the A matrix has full rank.
   if (x1.cols() > 8) {
-    Eigen::SVD<Mat3> USV(F);
+    Eigen::JacobiSVD<Mat3> USV(F, Eigen::ComputeFullU | Eigen::ComputeFullV);
     Vec3 d = USV.singularValues();
     d[2] = 0.0;
     F = USV.matrixU() * d.asDiagonal() * USV.matrixV().transpose();

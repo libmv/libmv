@@ -1,11 +1,18 @@
 #ifndef EIGEN_REGRESSION_MODULE_H
 #define EIGEN_REGRESSION_MODULE_H
 
+#ifndef EIGEN2_SUPPORT
+#error LeastSquares is only available in Eigen2 support mode (define EIGEN2_SUPPORT)
+#endif
+
+// exclude from normal eigen3-only documentation
+#ifdef EIGEN2_SUPPORT
+
 #include "Core"
 
-#include "src/Core/util/DisableMSVCWarnings.h"
+#include "src/Core/util/DisableStupidWarnings.h"
 
-#include "QR"
+#include "Eigenvalues"
 #include "Geometry"
 
 namespace Eigen {
@@ -18,10 +25,12 @@ namespace Eigen {
   * \endcode
   */
 
-#include "src/LeastSquares/LeastSquares.h"
+#include "src/Eigen2Support/LeastSquares.h"
 
 } // namespace Eigen
 
-#include "src/Core/util/EnableMSVCWarnings.h"
+#include "src/Core/util/ReenableStupidWarnings.h"
+
+#endif // EIGEN2_SUPPORT
 
 #endif // EIGEN_REGRESSION_MODULE_H

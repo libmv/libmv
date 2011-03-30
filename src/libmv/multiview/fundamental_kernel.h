@@ -41,8 +41,8 @@ struct SampsonError {
     // See page 287 equation (11.9) of HZ.
     Vec3 F_x = F * x;
     Vec3 Ft_y = F.transpose() * y;
-    return Square(y.dot(F_x)) / (  F_x.start<2>().squaredNorm()
-                                + Ft_y.start<2>().squaredNorm());
+    return Square(y.dot(F_x)) / (  F_x.head<2>().squaredNorm()
+                                + Ft_y.head<2>().squaredNorm());
   }
 };
 
@@ -53,8 +53,8 @@ struct SymmetricEpipolarDistanceError {
     // See page 288 equation (11.10) of HZ.
     Vec3 F_x = F * x;
     Vec3 Ft_y = F.transpose() * y;
-    return Square(y.dot(F_x)) * ( 1 / F_x.start<2>().squaredNorm()
-                                + 1 / Ft_y.start<2>().squaredNorm())
+    return Square(y.dot(F_x)) * ( 1 / F_x.head<2>().squaredNorm()
+                                + 1 / Ft_y.head<2>().squaredNorm())
       / 4.0;  // The divide by 4 is to make this match the sampson distance.
   }
 };

@@ -40,7 +40,7 @@ namespace libmv {
 
 template<typename Function,
          typename Jacobian = NumericJacobian<Function>,
-         typename Solver = Eigen::LU<
+         typename Solver = Eigen::PartialPivLU<
            Matrix<typename Function::FMatrixType::RealScalar, 
                   Function::XMatrixType::RowsAtCompileTime,
                   Function::XMatrixType::RowsAtCompileTime> > >
@@ -102,9 +102,9 @@ class Dogleg {
     *A = (*J).transpose() * (*J);
     *error = f_(x);
     *g = (*J).transpose() * *error;
-    if (g->cwise().abs().maxCoeff() < params.gradient_threshold) {
+    if (g->array().abs().maxCoeff() < params.gradient_threshold) {
       return GRADIENT_TOO_SMALL;
-    } else if (error->cwise().abs().maxCoeff() < params.error_threshold) {
+    } else if (error->array().abs().maxCoeff() < params.error_threshold) {
       return ERROR_TOO_SMALL;
     }
     return RUNNING;
@@ -171,14 +171,14 @@ class Dogleg {
     int i = 0;
     for (; results.status == RUNNING && i < params.max_iterations; ++i) {
       printf("%9d %12g %12g %12g",
-          i, f_(x).norm(), g.cwise().abs().maxCoeff(), radius);
+          i, f_(x).norm(), g.array().abs().maxCoeff(), radius);
 
       //LG << "iteration: " << i;
       //LG << "||f(x)||: " << f_(x).norm();
       //LG << "max(g): " << g.cwise().abs().maxCoeff();
       //LG << "radius: " << radius;
       // Eqn 3.19 from [1]
-      Scalar alpha = g.squaredNorm() / (J*g).lazy().squaredNorm();
+      Scalar alpha = g.squaredNorm() / (J*g).squaredNorm();
 
       // Solve for steepest descent direction dx_sd.
       dx_sd = -g;
@@ -189,7 +189,8 @@ class Dogleg {
         // singular and there are many solutions. Solving that involves the SVD
         // and is slower, but should still work.
         Solver solver(A);
-        if (!solver.solve(-g, &dx_gn)) {
+        dx_gn = solver.solve(-g);
+        if (!(A * dx_gn).isApprox(-g)) {
           LOG(ERROR) << "Failed to solve normal eqns. TODO: Solve via SVD.";
           return results;
         }

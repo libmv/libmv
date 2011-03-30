@@ -320,7 +320,7 @@ class KdTree {
     int num_points = end - begin;
     mean /= num_points;
     mean2 /= num_points;
-    Vec variance = mean2 - mean.cwise().square();
+    Vec variance = mean2.array() - mean.array().square();
 
     // Find the largest.
     int more_variant_axis;

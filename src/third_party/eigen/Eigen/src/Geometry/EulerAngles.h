@@ -1,7 +1,7 @@
 // This file is part of Eigen, a lightweight C++ template library
-// for linear algebra. Eigen itself is part of the KDE project.
+// for linear algebra.
 //
-// Copyright (C) 2008 Gael Guennebaud <g.gael@free.fr>
+// Copyright (C) 2008 Gael Guennebaud <gael.guennebaud@inria.fr>
 //
 // Eigen is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -26,7 +26,7 @@
 #define EIGEN_EULERANGLES_H
 
 /** \geometry_module \ingroup Geometry_Module
-  * \nonstableyet
+  *
   *
   * \returns the Euler-angles of the rotation matrix \c *this using the convention defined by the triplet (\a a0,\a a1,\a a2)
   *
@@ -43,48 +43,48 @@
   */
 template<typename Derived>
 inline Matrix<typename MatrixBase<Derived>::Scalar,3,1>
-MatrixBase<Derived>::eulerAngles(int a0, int a1, int a2) const
+MatrixBase<Derived>::eulerAngles(Index a0, Index a1, Index a2) const
 {
   /* Implemented from Graphics Gems IV */
   EIGEN_STATIC_ASSERT_MATRIX_SPECIFIC_SIZE(Derived,3,3)
 
   Matrix<Scalar,3,1> res;
   typedef Matrix<typename Derived::Scalar,2,1> Vector2;
-  const Scalar epsilon = precision<Scalar>();
+  const Scalar epsilon = NumTraits<Scalar>::dummy_precision();
 
-  const int odd = ((a0+1)%3 == a1) ? 0 : 1;
-  const int i = a0;
-  const int j = (a0 + 1 + odd)%3;
-  const int k = (a0 + 2 - odd)%3;
+  const Index odd = ((a0+1)%3 == a1) ? 0 : 1;
+  const Index i = a0;
+  const Index j = (a0 + 1 + odd)%3;
+  const Index k = (a0 + 2 - odd)%3;
 
   if (a0==a2)
   {
     Scalar s = Vector2(coeff(j,i) , coeff(k,i)).norm();
-    res[1] = std::atan2(s, coeff(i,i));
+    res[1] = internal::atan2(s, coeff(i,i));
     if (s > epsilon)
     {
-      res[0] = std::atan2(coeff(j,i), coeff(k,i));
-      res[2] = std::atan2(coeff(i,j),-coeff(i,k));
+      res[0] = internal::atan2(coeff(j,i), coeff(k,i));
+      res[2] = internal::atan2(coeff(i,j),-coeff(i,k));
     }
     else
     {
       res[0] = Scalar(0);
-      res[2] = (coeff(i,i)>0?1:-1)*std::atan2(-coeff(k,j), coeff(j,j));
+      res[2] = (coeff(i,i)>0?1:-1)*internal::atan2(-coeff(k,j), coeff(j,j));
     }
   }
   else
   {
     Scalar c = Vector2(coeff(i,i) , coeff(i,j)).norm();
-    res[1] = std::atan2(-coeff(i,k), c);
+    res[1] = internal::atan2(-coeff(i,k), c);
     if (c > epsilon)
     {
-      res[0] = std::atan2(coeff(j,k), coeff(k,k));
-      res[2] = std::atan2(coeff(i,j), coeff(i,i));
+      res[0] = internal::atan2(coeff(j,k), coeff(k,k));
+      res[2] = internal::atan2(coeff(i,j), coeff(i,i));
     }
     else
     {
       res[0] = Scalar(0);
-      res[2] = (coeff(i,k)>0?1:-1)*std::atan2(-coeff(k,j), coeff(j,j));
+      res[2] = (coeff(i,k)>0?1:-1)*internal::atan2(-coeff(k,j), coeff(j,j));
     }
   }
   if (!odd)

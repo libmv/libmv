@@ -137,7 +137,7 @@ NViewDataSet NRealisticCamerasSparse(int nviews, int npoints,
   visibility.setZero();
   Mat randoms(nviews, npoints);
   randoms.setRandom();
-  randoms = (randoms.cwise() + 1)/2.0;
+  randoms = (randoms.array() + 1)/2.0;
   uint num_visibles = 0;
   for (size_t i = 0; i < nviews; ++i) {
     num_visibles = 0;

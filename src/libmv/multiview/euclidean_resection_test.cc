@@ -121,7 +121,7 @@ TEST(EuclideanResection, Points4KnownImagePointsRandomTranslationRotation) {
   // Normalized camera coordinates to be used as an input to the PnP function.
   Mat2X x_cam;
   Vec X_distances(num_points); // a vector of the 4 distances to the 3D points
-  X_distances << 100 * Vec::Random(num_points).cwise().abs();
+  X_distances << 100 * Vec::Random(num_points).array().abs();
   // Transformation variables
   Mat3 R_input;
   R_input = Eigen::AngleAxisd(rand(), Eigen::Vector3d::UnitZ())
@@ -174,16 +174,16 @@ TEST(EuclideanResection, Points6AllRandomInput) {
 
   Mat3X x_image(3, num_points);
   // Randomly create the image points.
-  x_image.row(0) = image_dimensions(0) * Vec::Random(num_points).cwise().abs()
-                        + Vec::Random(num_points);
-  x_image.row(1) = image_dimensions(1) * Vec::Random(num_points).cwise().abs()
-                        + Vec::Random(num_points);
+  x_image.row(0) = image_dimensions(0) * Vec::Random(num_points).array().abs()
+                        + Vec::Random(num_points).array();
+  x_image.row(1) = image_dimensions(1) * Vec::Random(num_points).array().abs()
+                        + Vec::Random(num_points).array();
   x_image.row(2).setOnes();
 
   // Normalized camera coordinates to be used as an input to the PnP function.
   Mat2X x_cam;
   Vec X_distances(num_points); // a vector of the 4 distances to the 3D points
-  X_distances << 100 * Vec::Random(num_points).cwise().abs();
+  X_distances << 100 * Vec::Random(num_points).array().abs();
   // Transformation variables.
   Mat3 R_input;
   R_input = Eigen::AngleAxisd(rand(), Eigen::Vector3d::UnitZ())

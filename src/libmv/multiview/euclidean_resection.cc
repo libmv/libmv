@@ -19,10 +19,12 @@
 // IN THE SOFTWARE.
 
 #include <cmath>
+
+#include <Eigen/SVD>
 #include <Eigen/Geometry>
 
-#include "libmv/logging/logging.h"
 #include "libmv/base/vector.h"
+#include "libmv/logging/logging.h"
 #include "libmv/multiview/euclidean_resection.h"
 #include "libmv/multiview/projection.h"
 
@@ -103,9 +105,9 @@ void AbsoluteOrientation(const Mat3X &X,
            
   // Find the nit quaternion q that maximizes qNq. It is the eigenvector
   // corresponding to the lagest eigenvalue.
-  Vec4 q = N.svd().matrixU().col(0);
+  Vec4 q = N.jacobiSvd(Eigen::ComputeFullU).matrixU().col(0);
   // Retrieve the 3x3 rotation matrix.
-  Vec4 qq = q.cwise() * q;
+  Vec4 qq = q.array() * q.array();
   double q0q1 = q(0) * q(1);
   double q0q2 = q(0) * q(2);
   double q0q3 = q(0) * q(3);
@@ -239,7 +241,10 @@ void EuclideanResectionAnsarDaniilidis(const Mat2X &x_camera,
   }
 
   int num_lambda = num_points + 1; // Dimension of the null space of M.
-  Mat V = M.svd().matrixV().block(0, num_m_rows, num_m_columns, num_lambda);
+  Mat V = M.jacobiSvd(Eigen::ComputeFullV).matrixV().block(0, 
+                                                           num_m_rows,
+                                                           num_m_columns,
+                                                           num_lambda);
 
   // TODO(Vess): The number of constrain equations in K (nKRows) must be
   // (nPoints + 1) * (nPoints + 2)/2. This creates a performance issue for
@@ -294,7 +299,7 @@ void EuclideanResectionAnsarDaniilidis(const Mat2X &x_camera,
       ++counter_k_row;
     }
   }
-  Vec L_sq = K.svd().matrixV().col(num_k_columns - 1);
+  Vec L_sq = K.jacobiSvd(Eigen::ComputeFullV).matrixV().col(num_k_columns - 1);
 
   // Pivot on the largest element, for numerical stability. Afterwards
   // recover the sign of the lambda solution.
@@ -358,7 +363,7 @@ void SelectControlPoints(const Mat3X &X_world,
   for (size_t c = 0; c < num_points; c++)
     X_centered->col (c) = X_world.col (c) - mean;
   Mat3 X_centered_sq = (*X_centered) * X_centered->transpose();
-  Eigen::SVD<Mat3> X_centered_sq_svd = X_centered_sq.svd();
+  Eigen::JacobiSVD<Mat3> X_centered_sq_svd(X_centered_sq, Eigen::ComputeFullU);
   Vec3 w = X_centered_sq_svd.singularValues();
   Mat3 u = X_centered_sq_svd.matrixU();
   for (size_t c = 0; c < 3; c++) {
@@ -452,7 +457,7 @@ void EuclideanResectionEPnP(const Mat2X &x_camera, const Mat3X &X_world,
                               a3, a3*(-vi);
   }
   
-  Eigen::SVD<Mat> MtMsvd = (M.transpose()*M).svd();
+  Eigen::JacobiSVD<Mat> MtMsvd(M.transpose()*M, Eigen::ComputeFullU);
   // TODO(julien) avoid to transpose: rewrite the u2.block() calls
   Eigen::Matrix<double, 12, 12> u2 = MtMsvd.matrixU().transpose();
   // Estimates the L matrix
@@ -520,12 +525,13 @@ void EuclideanResectionEPnP(const Mat2X &x_camera, const Mat3X &X_world,
   // Betas_approx_1 = [b00 b01     b02         b03]
   Vec4 betas; betas.setZero();
   Eigen::Matrix<double, 6, 4> l_6x4;
-  Vec4 b4;
   for (size_t r = 0; r < 6; r++) {
     l_6x4.row(r) << L(r, 0), L(r, 1), L(r, 3), L(r, 6); 
   }
-  Eigen::SVD<Mat> svdOfL4(l_6x4);
-  if (svdOfL4.solve(rho, &b4)) {
+  Eigen::JacobiSVD<Mat> svdOfL4(l_6x4, 
+                                Eigen::ComputeFullU | Eigen::ComputeFullV);
+  Vec4 b4 = svdOfL4.solve(rho);
+  if ((l_6x4 * b4).isApprox(rho, 1e-3)) {
     if (b4(0) < 0) {
       b4 = -b4;
     } 
@@ -545,10 +551,13 @@ void EuclideanResectionEPnP(const Mat2X &x_camera, const Mat3X &X_world,
   // Betas_approx_2 = [b00 b01 b11]
   betas.setZero();
   Eigen::Matrix<double, 6, 3> l_6x3;
-  Vec3 b3;
   l_6x3 = L.block(0, 0, 6, 3);
-  Eigen::SVD<Mat> svdOfL3(l_6x3);
-  if (svdOfL3.solve(rho, &b3)) {
+  Eigen::JacobiSVD<Mat> svdOfL3(l_6x3, 
+                                Eigen::ComputeFullU | Eigen::ComputeFullV);
+  Vec3 b3 = svdOfL3.solve(rho);
+  LOG(ERROR) << " rho = " << rho << std::endl;
+  LOG(ERROR) << " l_6x3 * b3 = " << l_6x3 * b3 << std::endl;
+  if ((l_6x3 * b3).isApprox(rho, 1e-3)) {
     if (b3(0) < 0) {
       betas(0) = std::sqrt(-b3(0));
       if (b3(2) < 0)
@@ -580,10 +589,11 @@ void EuclideanResectionEPnP(const Mat2X &x_camera, const Mat3X &X_world,
   // Betas_approx_3 = [b00 b01 b11 b02 b12]
   betas.setZero();
   Eigen::Matrix<double, 6, 5> l_6x5;
-  Vec5 b5;
   l_6x5 = L.block(0, 0, 6, 5);
-  Eigen::SVD<Mat> svdOfL5(l_6x5);
-  if (svdOfL5.solve(rho, &b5)) {
+  Eigen::JacobiSVD<Mat> svdOfL5(l_6x5, 
+                                Eigen::ComputeFullU | Eigen::ComputeFullV);
+  Vec5 b5 = svdOfL5.solve(rho);
+  if ((l_6x5 * b5).isApprox(rho, 1e-3)) {
     if (b5(0) < 0) {
       betas(0) = std::sqrt(-b5(0));
       if (b5(2) < 0)

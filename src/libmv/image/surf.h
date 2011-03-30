@@ -74,7 +74,10 @@ void MakeSURFOctave(const TImage &integral_image,
 // Do a single newton step toward the maximum.
 template<typename TArray>
 inline bool RefineMaxima3D(const TArray &f, int x, int y, int z, Vec3 *xp) {
-  return Hessian3D(f, x, y, z).lu().solve(-Gradient3D(f, x, y, z), xp);
+  Mat3 m = Hessian3D(f, x, y, z);
+  Vec3 g = -Gradient3D(f, x, y, z);
+  *xp = m.lu().solve(g);
+  return (m * *xp).isApprox(g);
 }
 
 inline float GaussianScaleForInterval(float interval,

@@ -54,8 +54,8 @@ static void FivePointCameraPencil(const TMatP &points, TMatA *A, TMatB *B) {
   Mat34 tmpB = five_points;
   for (int r = 0; r < 3; ++r) {
     // The last component of v1 and v2 is ignored, because it is a scale factor.
-    tmpA.row(r) = five_points.row(r).cwise() * v1.start(4).transpose();
-    tmpB.row(r) = five_points.row(r).cwise() * v2.start(4).transpose();
+    tmpA.row(r) = five_points.row(r).array() * v1.head(4).transpose().array();
+    tmpB.row(r) = five_points.row(r).array() * v2.head(4).transpose().array();
   }
   Mat3 Hinv = H.inverse();
   *A = Hinv * tmpA;

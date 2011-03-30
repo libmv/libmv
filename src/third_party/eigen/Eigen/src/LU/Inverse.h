@@ -1,7 +1,7 @@
 // This file is part of Eigen, a lightweight C++ template library
-// for linear algebra. Eigen itself is part of the KDE project.
+// for linear algebra.
 //
-// Copyright (C) 2008 Benoit Jacob <jacob.benoit.1@gmail.com>
+// Copyright (C) 2008-2010 Benoit Jacob <jacob.benoit.1@gmail.com>
 //
 // Eigen is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -25,234 +25,383 @@
 #ifndef EIGEN_INVERSE_H
 #define EIGEN_INVERSE_H
 
-/********************************************************************
-*** Part 1 : optimized implementations for fixed-size 2,3,4 cases ***
-********************************************************************/
+namespace internal {
 
-template<typename MatrixType>
-void ei_compute_inverse_in_size2_case(const MatrixType& matrix, MatrixType* result)
-{
-  typedef typename MatrixType::Scalar Scalar;
-  const Scalar invdet = Scalar(1) / matrix.determinant();
-  result->coeffRef(0,0) = matrix.coeff(1,1) * invdet;
-  result->coeffRef(1,0) = -matrix.coeff(1,0) * invdet;
-  result->coeffRef(0,1) = -matrix.coeff(0,1) * invdet;
-  result->coeffRef(1,1) = matrix.coeff(0,0) * invdet;
-}
+/**********************************
+*** General case implementation ***
+**********************************/
 
-template<typename XprType, typename MatrixType>
-bool ei_compute_inverse_in_size2_case_with_check(const XprType& matrix, MatrixType* result)
+template<typename MatrixType, typename ResultType, int Size = MatrixType::RowsAtCompileTime>
+struct compute_inverse
 {
-  typedef typename MatrixType::Scalar Scalar;
-  const Scalar det = matrix.determinant();
-  if(ei_isMuchSmallerThan(det, matrix.cwise().abs().maxCoeff())) return false;
-  const Scalar invdet = Scalar(1) / det;
-  result->coeffRef(0,0) = matrix.coeff(1,1) * invdet;
-  result->coeffRef(1,0) = -matrix.coeff(1,0) * invdet;
-  result->coeffRef(0,1) = -matrix.coeff(0,1) * invdet;
-  result->coeffRef(1,1) = matrix.coeff(0,0) * invdet;
-  return true;
-}
-
-template<typename MatrixType>
-void ei_compute_inverse_in_size3_case(const MatrixType& matrix, MatrixType* result)
-{
-  typedef typename MatrixType::Scalar Scalar;
-  const Scalar det_minor00 = matrix.minor(0,0).determinant();
-  const Scalar det_minor10 = matrix.minor(1,0).determinant();
-  const Scalar det_minor20 = matrix.minor(2,0).determinant();
-  const Scalar invdet = Scalar(1) / ( det_minor00 * matrix.coeff(0,0)
-                                    - det_minor10 * matrix.coeff(1,0)
-                                    + det_minor20 * matrix.coeff(2,0) );
-  result->coeffRef(0, 0) = det_minor00 * invdet;
-  result->coeffRef(0, 1) = -det_minor10 * invdet;
-  result->coeffRef(0, 2) = det_minor20 * invdet;
-  result->coeffRef(1, 0) = -matrix.minor(0,1).determinant() * invdet;
-  result->coeffRef(1, 1) = matrix.minor(1,1).determinant() * invdet;
-  result->coeffRef(1, 2) = -matrix.minor(2,1).determinant() * invdet;
-  result->coeffRef(2, 0) = matrix.minor(0,2).determinant() * invdet;
-  result->coeffRef(2, 1) = -matrix.minor(1,2).determinant() * invdet;
-  result->coeffRef(2, 2) = matrix.minor(2,2).determinant() * invdet;
-}
-
-template<typename MatrixType>
-bool ei_compute_inverse_in_size4_case_helper(const MatrixType& matrix, MatrixType* result)
-{
-  /* Let's split M into four 2x2 blocks:
-    * (P Q)
-    * (R S)
-    * If P is invertible, with inverse denoted by P_inverse, and if
-    * (S - R*P_inverse*Q) is also invertible, then the inverse of M is
-    * (P' Q')
-    * (R' S')
-    * where
-    * S' = (S - R*P_inverse*Q)^(-1)
-    * P' = P1 + (P1*Q) * S' *(R*P_inverse)
-    * Q' = -(P_inverse*Q) * S'
-    * R' = -S' * (R*P_inverse)
-    */
-  typedef Block<MatrixType,2,2> XprBlock22;
-  typedef typename MatrixBase<XprBlock22>::PlainMatrixType Block22;
-  Block22 P_inverse;
-  if(ei_compute_inverse_in_size2_case_with_check(matrix.template block<2,2>(0,0), &P_inverse))
+  static inline void run(const MatrixType& matrix, ResultType& result)
   {
-    const Block22 Q = matrix.template block<2,2>(0,2);
-    const Block22 P_inverse_times_Q = P_inverse * Q;
-    const XprBlock22 R = matrix.template block<2,2>(2,0);
-    const Block22 R_times_P_inverse = R * P_inverse;
-    const Block22 R_times_P_inverse_times_Q = R_times_P_inverse * Q;
-    const XprBlock22 S = matrix.template block<2,2>(2,2);
-    const Block22 X = S - R_times_P_inverse_times_Q;
-    Block22 Y;
-    ei_compute_inverse_in_size2_case(X, &Y);
-    result->template block<2,2>(2,2) = Y;
-    result->template block<2,2>(2,0) = - Y * R_times_P_inverse;
-    const Block22 Z = P_inverse_times_Q * Y;
-    result->template block<2,2>(0,2) = - Z;
-    result->template block<2,2>(0,0) = P_inverse + Z * R_times_P_inverse;
-    return true;
-  }
-  else
-  {
-    return false;
-  }
-}
-
-template<typename MatrixType>
-void ei_compute_inverse_in_size4_case(const MatrixType& matrix, MatrixType* result)
-{
-  if(ei_compute_inverse_in_size4_case_helper(matrix, result))
-  {
-    // good ! The topleft 2x2 block was invertible, so the 2x2 blocks approach is successful.
-    return;
-  }
-  else
-  {
-    // rare case: the topleft 2x2 block is not invertible (but the matrix itself is assumed to be).
-    // since this is a rare case, we don't need to optimize it. We just want to handle it with little
-    // additional code.
-    MatrixType m(matrix);
-    m.row(0).swap(m.row(2));
-    m.row(1).swap(m.row(3));
-    if(ei_compute_inverse_in_size4_case_helper(m, result))
-    {
-      // good, the topleft 2x2 block of m is invertible. Since m is different from matrix in that some
-      // rows were permuted, the actual inverse of matrix is derived from the inverse of m by permuting
-      // the corresponding columns.
-      result->col(0).swap(result->col(2));
-      result->col(1).swap(result->col(3));
-    }
-    else
-    {
-      // last possible case. Since matrix is assumed to be invertible, this last case has to work.
-      // first, undo the swaps previously made
-      m.row(0).swap(m.row(2));
-      m.row(1).swap(m.row(3));
-      // swap row 0 with the the row among 0 and 1 that has the biggest 2 first coeffs
-      int swap0with = ei_abs(m.coeff(0,0))+ei_abs(m.coeff(0,1))>ei_abs(m.coeff(1,0))+ei_abs(m.coeff(1,1)) ? 0 : 1;
-      m.row(0).swap(m.row(swap0with));
-      // swap row 1 with the the row among 2 and 3 that has the biggest 2 first coeffs
-      int swap1with = ei_abs(m.coeff(2,0))+ei_abs(m.coeff(2,1))>ei_abs(m.coeff(3,0))+ei_abs(m.coeff(3,1)) ? 2 : 3;
-      m.row(1).swap(m.row(swap1with));
-      ei_compute_inverse_in_size4_case_helper(m, result);
-      result->col(1).swap(result->col(swap1with));
-      result->col(0).swap(result->col(swap0with));
-    }
-  }
-}
-
-/***********************************************
-*** Part 2 : selector and MatrixBase methods ***
-***********************************************/
-
-template<typename MatrixType, int Size = MatrixType::RowsAtCompileTime>
-struct ei_compute_inverse
-{
-  static inline void run(const MatrixType& matrix, MatrixType* result)
-  {
-    LU<MatrixType> lu(matrix);
-    lu.computeInverse(result);
+    result = matrix.partialPivLu().inverse();
   }
 };
 
-template<typename MatrixType>
-struct ei_compute_inverse<MatrixType, 1>
+template<typename MatrixType, typename ResultType, int Size = MatrixType::RowsAtCompileTime>
+struct compute_inverse_and_det_with_check { /* nothing! general case not supported. */ };
+
+/****************************
+*** Size 1 implementation ***
+****************************/
+
+template<typename MatrixType, typename ResultType>
+struct compute_inverse<MatrixType, ResultType, 1>
 {
-  static inline void run(const MatrixType& matrix, MatrixType* result)
+  static inline void run(const MatrixType& matrix, ResultType& result)
   {
     typedef typename MatrixType::Scalar Scalar;
-    result->coeffRef(0,0) = Scalar(1) / matrix.coeff(0,0);
+    result.coeffRef(0,0) = Scalar(1) / matrix.coeff(0,0);
   }
 };
 
-template<typename MatrixType>
-struct ei_compute_inverse<MatrixType, 2>
+template<typename MatrixType, typename ResultType>
+struct compute_inverse_and_det_with_check<MatrixType, ResultType, 1>
 {
-  static inline void run(const MatrixType& matrix, MatrixType* result)
+  static inline void run(
+    const MatrixType& matrix,
+    const typename MatrixType::RealScalar& absDeterminantThreshold,
+    ResultType& result,
+    typename ResultType::Scalar& determinant,
+    bool& invertible
+  )
   {
-    ei_compute_inverse_in_size2_case(matrix, result);
+    determinant = matrix.coeff(0,0);
+    invertible = abs(determinant) > absDeterminantThreshold;
+    if(invertible) result.coeffRef(0,0) = typename ResultType::Scalar(1) / determinant;
   }
 };
 
-template<typename MatrixType>
-struct ei_compute_inverse<MatrixType, 3>
-{
-  static inline void run(const MatrixType& matrix, MatrixType* result)
-  {
-    ei_compute_inverse_in_size3_case(matrix, result);
-  }
-};
+/****************************
+*** Size 2 implementation ***
+****************************/
 
-template<typename MatrixType>
-struct ei_compute_inverse<MatrixType, 4>
+template<typename MatrixType, typename ResultType>
+inline void compute_inverse_size2_helper(
+    const MatrixType& matrix, const typename ResultType::Scalar& invdet,
+    ResultType& result)
 {
-  static inline void run(const MatrixType& matrix, MatrixType* result)
-  {
-    ei_compute_inverse_in_size4_case(matrix, result);
-  }
-};
-
-/** \lu_module
-  *
-  * Computes the matrix inverse of this matrix.
-  *
-  * \note This matrix must be invertible, otherwise the result is undefined.
-  *
-  * \param result Pointer to the matrix in which to store the result.
-  *
-  * Example: \include MatrixBase_computeInverse.cpp
-  * Output: \verbinclude MatrixBase_computeInverse.out
-  *
-  * \sa inverse()
-  */
-template<typename Derived>
-inline void MatrixBase<Derived>::computeInverse(PlainMatrixType *result) const
-{
-  ei_assert(rows() == cols());
-  EIGEN_STATIC_ASSERT(NumTraits<Scalar>::HasFloatingPoint,NUMERIC_TYPE_MUST_BE_FLOATING_POINT)
-  ei_compute_inverse<PlainMatrixType>::run(eval(), result);
+  result.coeffRef(0,0) = matrix.coeff(1,1) * invdet;
+  result.coeffRef(1,0) = -matrix.coeff(1,0) * invdet;
+  result.coeffRef(0,1) = -matrix.coeff(0,1) * invdet;
+  result.coeffRef(1,1) = matrix.coeff(0,0) * invdet;
 }
+
+template<typename MatrixType, typename ResultType>
+struct compute_inverse<MatrixType, ResultType, 2>
+{
+  static inline void run(const MatrixType& matrix, ResultType& result)
+  {
+    typedef typename ResultType::Scalar Scalar;
+    const Scalar invdet = typename MatrixType::Scalar(1) / matrix.determinant();
+    compute_inverse_size2_helper(matrix, invdet, result);
+  }
+};
+
+template<typename MatrixType, typename ResultType>
+struct compute_inverse_and_det_with_check<MatrixType, ResultType, 2>
+{
+  static inline void run(
+    const MatrixType& matrix,
+    const typename MatrixType::RealScalar& absDeterminantThreshold,
+    ResultType& inverse,
+    typename ResultType::Scalar& determinant,
+    bool& invertible
+  )
+  {
+    typedef typename ResultType::Scalar Scalar;
+    determinant = matrix.determinant();
+    invertible = abs(determinant) > absDeterminantThreshold;
+    if(!invertible) return;
+    const Scalar invdet = Scalar(1) / determinant;
+    compute_inverse_size2_helper(matrix, invdet, inverse);
+  }
+};
+
+/****************************
+*** Size 3 implementation ***
+****************************/
+
+template<typename MatrixType, int i, int j>
+inline typename MatrixType::Scalar cofactor_3x3(const MatrixType& m)
+{
+  enum {
+    i1 = (i+1) % 3,
+    i2 = (i+2) % 3,
+    j1 = (j+1) % 3,
+    j2 = (j+2) % 3
+  };
+  return m.coeff(i1, j1) * m.coeff(i2, j2)
+       - m.coeff(i1, j2) * m.coeff(i2, j1);
+}
+
+template<typename MatrixType, typename ResultType>
+inline void compute_inverse_size3_helper(
+    const MatrixType& matrix,
+    const typename ResultType::Scalar& invdet,
+    const Matrix<typename ResultType::Scalar,3,1>& cofactors_col0,
+    ResultType& result)
+{
+  result.row(0) = cofactors_col0 * invdet;
+  result.coeffRef(1,0) =  cofactor_3x3<MatrixType,0,1>(matrix) * invdet;
+  result.coeffRef(1,1) =  cofactor_3x3<MatrixType,1,1>(matrix) * invdet;
+  result.coeffRef(1,2) =  cofactor_3x3<MatrixType,2,1>(matrix) * invdet;
+  result.coeffRef(2,0) =  cofactor_3x3<MatrixType,0,2>(matrix) * invdet;
+  result.coeffRef(2,1) =  cofactor_3x3<MatrixType,1,2>(matrix) * invdet;
+  result.coeffRef(2,2) =  cofactor_3x3<MatrixType,2,2>(matrix) * invdet;
+}
+
+template<typename MatrixType, typename ResultType>
+struct compute_inverse<MatrixType, ResultType, 3>
+{
+  static inline void run(const MatrixType& matrix, ResultType& result)
+  {
+    typedef typename ResultType::Scalar Scalar;
+    Matrix<typename MatrixType::Scalar,3,1> cofactors_col0;
+    cofactors_col0.coeffRef(0) =  cofactor_3x3<MatrixType,0,0>(matrix);
+    cofactors_col0.coeffRef(1) =  cofactor_3x3<MatrixType,1,0>(matrix);
+    cofactors_col0.coeffRef(2) =  cofactor_3x3<MatrixType,2,0>(matrix);
+    const Scalar det = (cofactors_col0.cwiseProduct(matrix.col(0))).sum();
+    const Scalar invdet = Scalar(1) / det;
+    compute_inverse_size3_helper(matrix, invdet, cofactors_col0, result);
+  }
+};
+
+template<typename MatrixType, typename ResultType>
+struct compute_inverse_and_det_with_check<MatrixType, ResultType, 3>
+{
+  static inline void run(
+    const MatrixType& matrix,
+    const typename MatrixType::RealScalar& absDeterminantThreshold,
+    ResultType& inverse,
+    typename ResultType::Scalar& determinant,
+    bool& invertible
+  )
+  {
+    typedef typename ResultType::Scalar Scalar;
+    Matrix<Scalar,3,1> cofactors_col0;
+    cofactors_col0.coeffRef(0) =  cofactor_3x3<MatrixType,0,0>(matrix);
+    cofactors_col0.coeffRef(1) =  cofactor_3x3<MatrixType,1,0>(matrix);
+    cofactors_col0.coeffRef(2) =  cofactor_3x3<MatrixType,2,0>(matrix);
+    determinant = (cofactors_col0.cwiseProduct(matrix.col(0))).sum();
+    invertible = abs(determinant) > absDeterminantThreshold;
+    if(!invertible) return;
+    const Scalar invdet = Scalar(1) / determinant;
+    compute_inverse_size3_helper(matrix, invdet, cofactors_col0, inverse);
+  }
+};
+
+/****************************
+*** Size 4 implementation ***
+****************************/
+
+template<typename Derived>
+inline const typename Derived::Scalar general_det3_helper
+(const MatrixBase<Derived>& matrix, int i1, int i2, int i3, int j1, int j2, int j3)
+{
+  return matrix.coeff(i1,j1)
+         * (matrix.coeff(i2,j2) * matrix.coeff(i3,j3) - matrix.coeff(i2,j3) * matrix.coeff(i3,j2));
+}
+
+template<typename MatrixType, int i, int j>
+inline typename MatrixType::Scalar cofactor_4x4(const MatrixType& matrix)
+{
+  enum {
+    i1 = (i+1) % 4,
+    i2 = (i+2) % 4,
+    i3 = (i+3) % 4,
+    j1 = (j+1) % 4,
+    j2 = (j+2) % 4,
+    j3 = (j+3) % 4
+  };
+  return general_det3_helper(matrix, i1, i2, i3, j1, j2, j3)
+       + general_det3_helper(matrix, i2, i3, i1, j1, j2, j3)
+       + general_det3_helper(matrix, i3, i1, i2, j1, j2, j3);
+}
+
+template<int Arch, typename Scalar, typename MatrixType, typename ResultType>
+struct compute_inverse_size4
+{
+  static void run(const MatrixType& matrix, ResultType& result)
+  {
+    result.coeffRef(0,0) =  cofactor_4x4<MatrixType,0,0>(matrix);
+    result.coeffRef(1,0) = -cofactor_4x4<MatrixType,0,1>(matrix);
+    result.coeffRef(2,0) =  cofactor_4x4<MatrixType,0,2>(matrix);
+    result.coeffRef(3,0) = -cofactor_4x4<MatrixType,0,3>(matrix);
+    result.coeffRef(0,2) =  cofactor_4x4<MatrixType,2,0>(matrix);
+    result.coeffRef(1,2) = -cofactor_4x4<MatrixType,2,1>(matrix);
+    result.coeffRef(2,2) =  cofactor_4x4<MatrixType,2,2>(matrix);
+    result.coeffRef(3,2) = -cofactor_4x4<MatrixType,2,3>(matrix);
+    result.coeffRef(0,1) = -cofactor_4x4<MatrixType,1,0>(matrix);
+    result.coeffRef(1,1) =  cofactor_4x4<MatrixType,1,1>(matrix);
+    result.coeffRef(2,1) = -cofactor_4x4<MatrixType,1,2>(matrix);
+    result.coeffRef(3,1) =  cofactor_4x4<MatrixType,1,3>(matrix);
+    result.coeffRef(0,3) = -cofactor_4x4<MatrixType,3,0>(matrix);
+    result.coeffRef(1,3) =  cofactor_4x4<MatrixType,3,1>(matrix);
+    result.coeffRef(2,3) = -cofactor_4x4<MatrixType,3,2>(matrix);
+    result.coeffRef(3,3) =  cofactor_4x4<MatrixType,3,3>(matrix);
+    result /= (matrix.col(0).cwiseProduct(result.row(0).transpose())).sum();
+  }
+};
+
+template<typename MatrixType, typename ResultType>
+struct compute_inverse<MatrixType, ResultType, 4>
+ : compute_inverse_size4<Architecture::Target, typename MatrixType::Scalar,
+                            MatrixType, ResultType>
+{
+};
+
+template<typename MatrixType, typename ResultType>
+struct compute_inverse_and_det_with_check<MatrixType, ResultType, 4>
+{
+  static inline void run(
+    const MatrixType& matrix,
+    const typename MatrixType::RealScalar& absDeterminantThreshold,
+    ResultType& inverse,
+    typename ResultType::Scalar& determinant,
+    bool& invertible
+  )
+  {
+    determinant = matrix.determinant();
+    invertible = abs(determinant) > absDeterminantThreshold;
+    if(invertible) compute_inverse<MatrixType, ResultType>::run(matrix, inverse);
+  }
+};
+
+/*************************
+*** MatrixBase methods ***
+*************************/
+
+template<typename MatrixType>
+struct traits<inverse_impl<MatrixType> >
+{
+  typedef typename MatrixType::PlainObject ReturnType;
+};
+
+template<typename MatrixType>
+struct inverse_impl : public ReturnByValue<inverse_impl<MatrixType> >
+{
+  typedef typename MatrixType::Index Index;
+  typedef typename internal::eval<MatrixType>::type MatrixTypeNested;
+  typedef typename remove_all<MatrixTypeNested>::type MatrixTypeNestedCleaned;
+  const MatrixTypeNested m_matrix;
+
+  inverse_impl(const MatrixType& matrix)
+    : m_matrix(matrix)
+  {}
+
+  inline Index rows() const { return m_matrix.rows(); }
+  inline Index cols() const { return m_matrix.cols(); }
+
+  template<typename Dest> inline void evalTo(Dest& dst) const
+  {
+    const int Size = EIGEN_PLAIN_ENUM_MIN(MatrixType::ColsAtCompileTime,Dest::ColsAtCompileTime);
+    EIGEN_ONLY_USED_FOR_DEBUG(Size);
+    eigen_assert(( (Size<=1) || (Size>4) || (extract_data(m_matrix)!=extract_data(dst)))
+              && "Aliasing problem detected in inverse(), you need to do inverse().eval() here.");
+
+    compute_inverse<MatrixTypeNestedCleaned, Dest>::run(m_matrix, dst);
+  }
+};
+
+} // end namespace internal
 
 /** \lu_module
   *
   * \returns the matrix inverse of this matrix.
   *
-  * \note This matrix must be invertible, otherwise the result is undefined.
+  * For small fixed sizes up to 4x4, this method uses cofactors.
+  * In the general case, this method uses class PartialPivLU.
   *
-  * \note This method returns a matrix by value, which can be inefficient. To avoid that overhead,
-  * use computeInverse() instead.
+  * \note This matrix must be invertible, otherwise the result is undefined. If you need an
+  * invertibility check, do the following:
+  * \li for fixed sizes up to 4x4, use computeInverseAndDetWithCheck().
+  * \li for the general case, use class FullPivLU.
   *
   * Example: \include MatrixBase_inverse.cpp
   * Output: \verbinclude MatrixBase_inverse.out
   *
-  * \sa computeInverse()
+  * \sa computeInverseAndDetWithCheck()
   */
 template<typename Derived>
-inline const typename MatrixBase<Derived>::PlainMatrixType MatrixBase<Derived>::inverse() const
+inline const internal::inverse_impl<Derived> MatrixBase<Derived>::inverse() const
 {
-  PlainMatrixType result(rows(), cols());
-  computeInverse(&result);
-  return result;
+  EIGEN_STATIC_ASSERT(!NumTraits<Scalar>::IsInteger,THIS_FUNCTION_IS_NOT_FOR_INTEGER_NUMERIC_TYPES)
+  eigen_assert(rows() == cols());
+  return internal::inverse_impl<Derived>(derived());
+}
+
+/** \lu_module
+  *
+  * Computation of matrix inverse and determinant, with invertibility check.
+  *
+  * This is only for fixed-size square matrices of size up to 4x4.
+  *
+  * \param inverse Reference to the matrix in which to store the inverse.
+  * \param determinant Reference to the variable in which to store the inverse.
+  * \param invertible Reference to the bool variable in which to store whether the matrix is invertible.
+  * \param absDeterminantThreshold Optional parameter controlling the invertibility check.
+  *                                The matrix will be declared invertible if the absolute value of its
+  *                                determinant is greater than this threshold.
+  *
+  * Example: \include MatrixBase_computeInverseAndDetWithCheck.cpp
+  * Output: \verbinclude MatrixBase_computeInverseAndDetWithCheck.out
+  *
+  * \sa inverse(), computeInverseWithCheck()
+  */
+template<typename Derived>
+template<typename ResultType>
+inline void MatrixBase<Derived>::computeInverseAndDetWithCheck(
+    ResultType& inverse,
+    typename ResultType::Scalar& determinant,
+    bool& invertible,
+    const RealScalar& absDeterminantThreshold
+  ) const
+{
+  // i'd love to put some static assertions there, but SFINAE means that they have no effect...
+  eigen_assert(rows() == cols());
+  // for 2x2, it's worth giving a chance to avoid evaluating.
+  // for larger sizes, evaluating has negligible cost and limits code size.
+  typedef typename internal::conditional<
+    RowsAtCompileTime == 2,
+    typename internal::remove_all<typename internal::nested<Derived, 2>::type>::type,
+    PlainObject
+  >::type MatrixType;
+  internal::compute_inverse_and_det_with_check<MatrixType, ResultType>::run
+    (derived(), absDeterminantThreshold, inverse, determinant, invertible);
+}
+
+/** \lu_module
+  *
+  * Computation of matrix inverse, with invertibility check.
+  *
+  * This is only for fixed-size square matrices of size up to 4x4.
+  *
+  * \param inverse Reference to the matrix in which to store the inverse.
+  * \param invertible Reference to the bool variable in which to store whether the matrix is invertible.
+  * \param absDeterminantThreshold Optional parameter controlling the invertibility check.
+  *                                The matrix will be declared invertible if the absolute value of its
+  *                                determinant is greater than this threshold.
+  *
+  * Example: \include MatrixBase_computeInverseWithCheck.cpp
+  * Output: \verbinclude MatrixBase_computeInverseWithCheck.out
+  *
+  * \sa inverse(), computeInverseAndDetWithCheck()
+  */
+template<typename Derived>
+template<typename ResultType>
+inline void MatrixBase<Derived>::computeInverseWithCheck(
+    ResultType& inverse,
+    bool& invertible,
+    const RealScalar& absDeterminantThreshold
+  ) const
+{
+  RealScalar determinant;
+  // i'd love to put some static assertions there, but SFINAE means that they have no effect...
+  eigen_assert(rows() == cols());
+  computeInverseAndDetWithCheck(inverse,determinant,invertible,absDeterminantThreshold);
 }
 
 #endif // EIGEN_INVERSE_H

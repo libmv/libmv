@@ -39,7 +39,7 @@ namespace libmv {
 
 template<typename Function,
          typename Jacobian = NumericJacobian<Function>,
-         typename Solver = Eigen::SVD<
+         typename Solver = Eigen::PartialPivLU<
            Matrix<typename Function::FMatrixType::RealScalar, 
                   Function::XMatrixType::RowsAtCompileTime,
                   Function::XMatrixType::RowsAtCompileTime> > >
@@ -95,7 +95,7 @@ class LevenbergMarquardt {
     *A = (*J).transpose() * (*J);
     *error = -f_(x);
     *g = (*J).transpose() * *error;
-    if (g->cwise().abs().maxCoeff() < params.gradient_threshold) {
+    if (g->array().abs().maxCoeff() < params.gradient_threshold) {
       return GRADIENT_TOO_SMALL;
     } else if (error->norm() < params.error_threshold) {
       return ERROR_TOO_SMALL;
@@ -126,13 +126,14 @@ class LevenbergMarquardt {
     for (i = 0; results.status == RUNNING && i < params.max_iterations; ++i) {
       LOG(INFO) << "iteration: " << i;
       LOG(INFO) << "||f(x)||: " << f_(x).norm();
-      LOG(INFO) << "max(g): " << g.cwise().abs().maxCoeff();
+      LOG(INFO) << "max(g): " << g.array().abs().maxCoeff();
       LOG(INFO) << "u: " << u;
       LOG(INFO) << "v: " << v;
 
       AMatrixType A_augmented = A + u*AMatrixType::Identity(J.cols(), J.cols());
       Solver solver(A_augmented);
-      bool solved = solver.solve(g, &dx);
+      dx = solver.solve(g);
+      bool solved = (A_augmented * dx).isApprox(g);
       if (!solved) LOG(ERROR) << "Failed to solve";
       if (solved && dx.norm() <= params.relative_step_threshold * x.norm()) {
           results.status = RELATIVE_STEP_SIZE_TOO_SMALL;

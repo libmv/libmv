@@ -1,7 +1,7 @@
 // This file is part of Eigen, a lightweight C++ template library
-// for linear algebra. Eigen itself is part of the KDE project.
+// for linear algebra.
 //
-// Copyright (C) 2008 Gael Guennebaud <g.gael@free.fr>
+// Copyright (C) 2008-2009 Gael Guennebaud <gael.guennebaud@inria.fr>
 //
 // Eigen is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -25,61 +25,44 @@
 #ifndef EIGEN_SPARSETRANSPOSE_H
 #define EIGEN_SPARSETRANSPOSE_H
 
-template<typename MatrixType>
-struct ei_traits<SparseTranspose<MatrixType> > : ei_traits<Transpose<MatrixType> >
-{};
-
-template<typename MatrixType> class SparseTranspose
-  : public SparseMatrixBase<SparseTranspose<MatrixType> >
+template<typename MatrixType> class TransposeImpl<MatrixType,Sparse>
+  : public SparseMatrixBase<Transpose<MatrixType> >
 {
+    typedef typename internal::remove_all<typename MatrixType::Nested>::type _MatrixTypeNested;
   public:
 
-    EIGEN_GENERIC_PUBLIC_INTERFACE(SparseTranspose)
+    EIGEN_SPARSE_PUBLIC_INTERFACE(Transpose<MatrixType>)
 
     class InnerIterator;
     class ReverseInnerIterator;
 
-    inline SparseTranspose(const MatrixType& matrix) : m_matrix(matrix) {}
-
-    //EIGEN_INHERIT_ASSIGNMENT_OPERATORS(SparseTranspose)
-
-    inline int rows() const { return m_matrix.cols(); }
-    inline int cols() const { return m_matrix.rows(); }
-    inline int nonZeros() const { return m_matrix.nonZeros(); }
-
-    // FIXME should be keep them ?
-    inline Scalar& coeffRef(int row, int col)
-    { return m_matrix.const_cast_derived().coeffRef(col, row); }
-
-    inline const Scalar coeff(int row, int col) const
-    { return m_matrix.coeff(col, row); }
-
-    inline const Scalar coeff(int index) const
-    { return m_matrix.coeff(index); }
-
-    inline Scalar& coeffRef(int index)
-    { return m_matrix.const_cast_derived().coeffRef(index); }
-
-  protected:
-    const typename MatrixType::Nested m_matrix;
+    inline Index nonZeros() const { return derived().nestedExpression().nonZeros(); }
 };
 
-template<typename MatrixType> class SparseTranspose<MatrixType>::InnerIterator : public MatrixType::InnerIterator
+template<typename MatrixType> class TransposeImpl<MatrixType,Sparse>::InnerIterator
+  : public _MatrixTypeNested::InnerIterator
 {
+    typedef typename _MatrixTypeNested::InnerIterator Base;
   public:
 
-    EIGEN_STRONG_INLINE InnerIterator(const SparseTranspose& trans, int outer)
-      : MatrixType::InnerIterator(trans.m_matrix, outer)
+    EIGEN_STRONG_INLINE InnerIterator(const TransposeImpl& trans, Index outer)
+      : Base(trans.derived().nestedExpression(), outer)
     {}
+    inline Index row() const { return Base::col(); }
+    inline Index col() const { return Base::row(); }
 };
 
-template<typename MatrixType> class SparseTranspose<MatrixType>::ReverseInnerIterator : public MatrixType::ReverseInnerIterator
+template<typename MatrixType> class TransposeImpl<MatrixType,Sparse>::ReverseInnerIterator
+  : public _MatrixTypeNested::ReverseInnerIterator
 {
+    typedef typename _MatrixTypeNested::ReverseInnerIterator Base;
   public:
 
-    EIGEN_STRONG_INLINE ReverseInnerIterator(const SparseTranspose& xpr, int outer)
-      : MatrixType::ReverseInnerIterator(xpr.m_matrix, outer)
+    EIGEN_STRONG_INLINE ReverseInnerIterator(const TransposeImpl& xpr, Index outer)
+      : Base(xpr.derived().nestedExpression(), outer)
     {}
+    inline Index row() const { return Base::col(); }
+    inline Index col() const { return Base::row(); }
 };
 
 #endif // EIGEN_SPARSETRANSPOSE_H

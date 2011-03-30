@@ -167,7 +167,7 @@ static void GetR_FixedCameraCenter(const Mat &x1, const Mat &x2,
   }
 
   // Solve for rotation. Equations (24) and (25) in [1].
-  Eigen::SVD<Mat> svd(C);
+  Eigen::JacobiSVD<Mat> svd(C, Eigen::ComputeThinU | Eigen::ComputeThinV);
   Mat3 scale = Mat3::Identity();
   scale(2,2) = ((svd.matrixU() * svd.matrixV().transpose()).determinant() > 0.0)
              ?  1.0

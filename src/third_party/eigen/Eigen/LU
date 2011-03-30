@@ -3,7 +3,7 @@
 
 #include "Core"
 
-#include "src/Core/util/DisableMSVCWarnings.h"
+#include "src/Core/util/DisableStupidWarnings.h"
 
 namespace Eigen {
 
@@ -18,12 +18,25 @@ namespace Eigen {
   * \endcode
   */
 
-#include "src/LU/LU.h"
+#include "src/misc/Solve.h"
+#include "src/misc/Kernel.h"
+#include "src/misc/Image.h"
+#include "src/LU/FullPivLU.h"
+#include "src/LU/PartialPivLU.h"
 #include "src/LU/Determinant.h"
 #include "src/LU/Inverse.h"
 
+#if defined EIGEN_VECTORIZE_SSE
+  #include "src/LU/arch/Inverse_SSE.h"
+#endif
+
+#ifdef EIGEN2_SUPPORT
+  #include "src/Eigen2Support/LU.h"
+#endif
+
 } // namespace Eigen
 
-#include "src/Core/util/EnableMSVCWarnings.h"
+#include "src/Core/util/ReenableStupidWarnings.h"
 
 #endif // EIGEN_LU_MODULE_H
+/* vim: set filetype=cpp et sw=2 ts=2 ai: */

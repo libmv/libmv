@@ -52,7 +52,7 @@ class NumericJacobian {
   // TODO(keir): Perhaps passing the jacobian back by value is not a good idea.
   JMatrixType operator()(const Parameters &x) {
     // Empirically determined constant.
-    Parameters eps = x.cwise().abs() * XScalar(1e-5);
+    Parameters eps = x.array().abs() * XScalar(1e-5);
     // To handle cases where a paremeter is exactly zero, instead use the mean
     // eps for the other dimensions.
     XScalar mean_eps = eps.sum() / eps.rows();

@@ -19,6 +19,7 @@
 // IN THE SOFTWARE.
 
 #include <Eigen/QR>
+ 
 #include "libmv/multiview/fundamental.h"
 #include "libmv/multiview/fundamental_kernel.h"
 #include "libmv/multiview/five_point.h"
@@ -29,7 +30,8 @@ Mat FivePointsNullspaceBasis(const Mat2X &x1, const Mat2X &x2) {
   Matrix<double, 9, 9> A;
   A.setZero();  // Make A square until Eigen supports rectangular SVD.
   fundamental::kernel::EncodeEpipolarEquation(x1, x2, &A);
-  return A.svd().matrixV().corner<9,4>(Eigen::TopRight);
+  Eigen::JacobiSVD<Matrix<double, 9, 9> > svd;
+  return svd.compute(A, Eigen::ComputeFullV).matrixV().topRightCorner<9,4>();
 }
 
 Vec o1(const Vec &a, const Vec &b) {
@@ -193,7 +195,7 @@ void FivePointsRelativePose(const Mat2X &x1,
   // For next steps we follow the matlab code given in Stewenius et al [1].
 
   // Build action matrix.
-  Mat B = M.corner<10,10>(Eigen::TopRight);
+  Mat B = M.topRightCorner<10,10>();
   Mat At = Mat::Zero(10,10);
   At.row(0) = -B.row(0);
   At.row(1) = -B.row(1);
@@ -208,12 +210,12 @@ void FivePointsRelativePose(const Mat2X &x1,
 
   // Compute solutions from action matrix's eigenvectors.
   Eigen::EigenSolver<Mat> es(At);
-  typedef Eigen::EigenSolver<Mat>::EigenvectorType Matc;
+  typedef Eigen::EigenSolver<Mat>::EigenvectorsType Matc;
   Matc V = es.eigenvectors();
   Matc SOLS(4, 10);
-  SOLS.row(0) = V.row(6).cwise() / V.row(9);
-  SOLS.row(1) = V.row(7).cwise() / V.row(9);
-  SOLS.row(2) = V.row(8).cwise() / V.row(9);
+  SOLS.row(0) = V.row(6).array() / V.row(9).array();
+  SOLS.row(1) = V.row(7).array() / V.row(9).array();
+  SOLS.row(2) = V.row(8).array() / V.row(9).array();
   SOLS.row(3).setOnes();
 
   // Get the ten candidate E matrices in vector form.
