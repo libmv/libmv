@@ -31,9 +31,8 @@ LIBMV_INSTALL_LIB(multiview)
 ADD_LIBRARY(multiview_test_data
             test_data_sets.cc)
 
-
 MACRO (MULTIVIEW_TEST NAME)
-  LIBMV_TEST(${NAME} "multiview_test_data;correspondence;multiview;numeric")
+  LIBMV_TEST(${NAME} "multiview_test_data;multiview;numeric")
 ENDMACRO (MULTIVIEW_TEST)
 
 MULTIVIEW_TEST(projection)

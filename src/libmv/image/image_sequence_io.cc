@@ -40,8 +40,7 @@ class LazyImageSequenceFromFiles : public CachedImageSequence {
 
   virtual Image *LoadImage(int i) {
     Array3Df *image = new Array3Df;
-    // TODO(keir): Make this handle png, jpg, etc.
-    if (!ReadPnm(filenames_[i].c_str(), image)) {
+    if (!ReadImage(filenames_[i].c_str(), image)) {
       delete image;
       // TODO(keir): Better error reporting?
       fprintf(stderr, "Failed loading image %d: %s\n",

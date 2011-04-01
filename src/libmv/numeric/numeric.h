@@ -426,7 +426,7 @@ void reshape(const TMat &a, int rows, int cols, TDest *b) {
 
 inline bool isnan(double i) {
 #ifdef WIN32
-  return _isnan(i);
+  return _isnan(i) > 0;
 #else
   return std::isnan(i);
 #endif
