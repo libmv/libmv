@@ -431,6 +431,14 @@ inline bool isnan(double i) {
   return std::isnan(i);
 #endif
 }
+
+/// Ceil function that has the same behaviour for positive 
+/// and negative values
+template <typename FloatType>
+FloatType ceil0(const FloatType& value) {
+    FloatType result = std::ceil( std::fabs( value ) );
+    return (value < 0.0) ? -result : result;
+}
 } // namespace libmv
 
 #endif  // LIBMV_NUMERIC_NUMERIC_H

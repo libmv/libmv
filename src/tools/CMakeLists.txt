@@ -107,7 +107,6 @@ TARGET_LINK_LIBRARIES(nViewMatching
                       )
 LIBMV_INSTALL_EXE(nViewMatching)
 
-
 ADD_EXECUTABLE(reconstruct_video reconstruct_video.cc)
 TARGET_LINK_LIBRARIES(reconstruct_video
                       image
@@ -124,3 +123,27 @@ TARGET_LINK_LIBRARIES(reconstruct_video
                       reconstruction
                       )
 LIBMV_INSTALL_EXE(reconstruct_video)
+
+ADD_EXECUTABLE(undistort undistort.cc)
+TARGET_LINK_LIBRARIES(undistort
+                      image
+                      correspondence
+                      numeric
+                      multiview
+                      camera
+                      glog
+                      gflags
+                      )
+LIBMV_INSTALL_EXE(reconstruct_video)
+
+ADD_EXECUTABLE(mosaicing_video mosaicing_video.cc)
+TARGET_LINK_LIBRARIES(mosaicing_video
+                      image
+                      correspondence
+                      numeric
+                      multiview
+                      camera
+                      glog
+                      gflags
+                      )
+LIBMV_INSTALL_EXE(mosaicing_video)
