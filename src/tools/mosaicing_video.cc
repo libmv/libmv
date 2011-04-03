@@ -51,15 +51,15 @@
 #include "libmv/logging/logging.h"
 
 enum eGEOMETRIC_CONSTRAINT  {
-  // TODO(julien) add here EUCLIDEAN (3 dof: 2 translations (x, y) + 1 rotation)
+  EUCLIDEAN = 0,  // EUCLIDEAN (3 dof: 2 translations (x, y) + 1 rotation)
   // TODO(julien) add here SIMILARITY (4 dof: EUCLIDEAN + scale)
-  AFFINE = 0,     // Affine (6 dof)
+  // TODO(julien) add here AFFINE (6 dof)
   HOMOGRAPHY = 1,// Homography (8 dof: general planar case)
 };
 
 DEFINE_string(m, "matches.txt", "Matches input file");
 DEFINE_string(o, "mosaic.jpg", "Mosaic output file");
-DEFINE_int32(constraint, AFFINE, "Constraint type:\n\t 0: Affine\n\t 1:Homography");
+DEFINE_int32(constraint, EUCLIDEAN, "Constraint type:\n\t 0: Euclidean\n\t 1:Homography");
 DEFINE_double(blending_ratio, 0.7, "Blending ratio");
 DEFINE_bool(draw_lines, false, "Draw image bounds");
              
@@ -285,7 +285,7 @@ int main(int argc, char **argv) {
   VLOG(0) << "Estimating relative matrices..." << std::endl;
   switch (FLAGS_constraint) {
     // TODO(julien) add custom degree of freedom selection (e.g. x, y, x & y, ...)
-    case AFFINE:
+    case EUCLIDEAN:
       ComputeRelativeAffineMatrices(fg.matches_, &Hs);
     break;
     case HOMOGRAPHY:

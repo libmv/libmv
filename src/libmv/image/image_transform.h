@@ -22,6 +22,12 @@
 #include "libmv/numeric/numeric.h"
 
 namespace libmv {
+  
+// TODO(julien) ReflectHoriImage
+// TODO(julien) ReflectVertImage
+// TODO(julien) ScaleImage
+// TODO(julien) ShearHoriImage
+// TODO(julien) SquezeImage
 
 /**
  * Computes the bounding box of a image warp.
@@ -120,6 +126,7 @@ void WarpImage(const FloatImage &image_in,
  *
  * \note image_out SHOULD NOT be the image_in! (no local copy)
  * \note image_out is not resized.
+ * TODO(julien) put this in image_blending
  */
 void WarpImageBlend(const FloatImage &image_in,
                     const Mat3 &H,

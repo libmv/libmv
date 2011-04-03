@@ -74,9 +74,39 @@ DEFINE_double(u0, 0,  "Principal Point u0 (in px, default: width/2)");
 DEFINE_double(v0, 0,  "Principal Point v0 (in px, default: height/2)");
 DEFINE_double(sk, 0,  "Skew factor");
 
-DEFINE_string(s, "_undist",  "Output file suffix.");
+DEFINE_string(of, "",         "Output folder.");
+DEFINE_string(os, "_undist",  "Output file suffix.");
 
 using namespace libmv;
+
+/// TODO(julien) Put this somewhere else...
+std::string ReplaceFolder(const std::string &s,
+                          const std::string &new_folder) {
+  std::string so = s;
+  std::string nf = new_folder;
+  if (new_folder == "")
+    return so;
+  
+#ifdef WIN32
+  size_t n = so.rfind("\\");
+  if (n == std::string::npos)
+    n = so.rfind("/");
+  if (nf.rfind("\\") != nf.size()-1)
+    nf.append("\\");
+#else
+  size_t n = so.rfind("/");
+  if (nf.rfind("/") != nf.size()-1)
+    nf.append("/");
+#endif
+    
+  if (n != std::string::npos) {
+    so.replace(0, n+1, nf);
+  } else {
+    so = nf; 
+    so.append(s);
+  }
+  return so;
+}
 
 int main(int argc, char **argv) {
   std::string usage ="Undistort images using know distortion parameters.\n";
@@ -150,7 +180,7 @@ int main(int argc, char **argv) {
     image = source->GetFloatImage(i);
     if (image) {
       if (qs_x.cols() == 0) {
-        VLOG(0) << "Estimating distortion map..." << std::endl;
+        VLOG(0) << "Estimating undistortion map..." << std::endl;
         size_image << image->Width(), image->Height();
         image_out = new FloatImage(image->Height(),
                                    image->Width(),
@@ -186,7 +216,7 @@ int main(int argc, char **argv) {
               (*image_out)(y, x, d) = SampleLinear(*image, q(1), q(0), d);
             }
           }
-        VLOG(0) << "Estimating distortion map...[DONE]." << std::endl;
+        VLOG(0) << "Estimating undistortion map...[DONE]." << std::endl;
         VLOG(1) << "qs_x : \n" << qs_x << std::endl;
         VLOG(1) << "qs_y : \n" << qs_y << std::endl;
       } else {
@@ -211,8 +241,8 @@ int main(int argc, char **argv) {
     // Write the output image
     VLOG(0) << "Saving undistorted image." << std::endl;
     std::stringstream s;
-    s << files[i].substr(0, files[i].rfind("."));
-    s << FLAGS_s;
+    s << ReplaceFolder(files[i].substr(0, files[i].rfind(".")), FLAGS_of);
+    s << FLAGS_os;
     s << files[i].substr(files[i].rfind("."), files[i].size());
     WriteImage(*image_out, s.str().c_str());
   }
