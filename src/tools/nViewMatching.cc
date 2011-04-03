@@ -29,6 +29,7 @@
 #include "libmv/base/vector.h"
 #include "libmv/base/vector_utils.h"
 #include "libmv/base/scoped_ptr.h"
+#include "libmv/correspondence/export_matches_txt.h"
 #include "libmv/correspondence/feature.h"
 #include "libmv/correspondence/feature_matching.h"
 #include "libmv/correspondence/nRobustViewMatching.h"
@@ -46,8 +47,11 @@ using namespace std;
 DEFINE_string(detector, "FAST", "select the detector (FAST,STAR,SURF,MSER)");
 DEFINE_string(describer, "DIPOLE",
               "select the descriptor (SIMPLIEST,SURF,DIPOLE,DAISY)");
-DEFINE_bool(save_matches, true,
+DEFINE_bool(save_matches_results, true,
             "save images with detected and matched features");
+DEFINE_bool(save_matches_file, false,
+            "save the matches in a file");
+DEFINE_string(matches_out, "matches.txt", "Matches output file");
 DEFINE_bool(save_hugin, true,
             "save Hugin point matches (ready to minimize Hugin project)");
 //TODO(pmoulon) this parameter must set the homography as geometric constraint
@@ -163,9 +167,14 @@ int main(int argc, char **argv) {
 
   // Show Cross Matches
   DisplayMatches(nViewMatcher.getMatches());
+  
+  //-- Export the matches
+  if (FLAGS_save_matches_file) {
+    ExportMatchesToTxt(nViewMatcher.getMatches(), FLAGS_matches_out);
+  }
 
   //-- Export and visualize data (show matches between the images)
-  if (FLAGS_save_matches) {
+  if (FLAGS_save_matches_results) {
     for (size_t i=0; i< nViewMatcher.getMatches().NumImages(); ++i) {
       Array3Du imageA;
       ReadImage( image_vector[i].c_str() , &imageA);

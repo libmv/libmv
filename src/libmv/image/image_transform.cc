@@ -199,10 +199,10 @@ void WarpImageBlend(const FloatImage &image_in,
         const int xImage = static_cast<int>(qi(0));
         const int yImage = static_cast<int>(qi(1));
         if (image_in.Contains(yImage, xImage)) {
-          bOutContrib = true;
+          bOutContrib = false;
           for (int d = 0; d < image_out->Depth(); ++d) 
             if ((*image_out)(j, i, d) > 0) {
-              bOutContrib = false;
+              bOutContrib = true;
               break;
             }
           if(bOutContrib) { //mean blending between image_out and image_in

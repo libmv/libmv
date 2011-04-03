@@ -60,7 +60,7 @@ enum eGEOMETRIC_CONSTRAINT  {
 DEFINE_string(m, "matches.txt", "Matches input file");
 DEFINE_string(o, "mosaic.jpg", "Mosaic output file");
 DEFINE_int32(constraint, AFFINE, "Constraint type:\n\t 0: Affine\n\t 1:Homography");
-DEFINE_int32(blending_ratio, 0.7, "Blending ratio");
+DEFINE_double(blending_ratio, 0.7, "Blending ratio");
 DEFINE_bool(draw_lines, false, "Draw image bounds");
              
 using namespace libmv;
@@ -224,8 +224,8 @@ void BuildMosaic(const std::vector<std::string> &image_files,
   const unsigned int h = bbox(3) - bbox(2);
   mosaic->Resize(h, w, depth);
   VLOG(0) << "Image size: h=" << mosaic->Height() << " "
-          << "w=" << mosaic->Width() << " "
-          << "d=" << mosaic->Depth() << std::endl;
+          << "w="             << mosaic->Width() << " "
+          << "d="             << mosaic->Depth() << std::endl;
   mosaic->Fill(0);
   // Register everyone so that the min (x, y) are (0, 0)
   Mat3 Hreg;
@@ -240,6 +240,7 @@ void BuildMosaic(const std::vector<std::string> &image_files,
       H = Hs[i - 1] * H;
     image = source->GetFloatImage(i);
     if (image) {
+      //VLOG(1) << "H = \n" << H << "\n";
       if (draw_lines) {
         DrawLine(0, 0, 0, images_size(1) - 1, 1, image);
         DrawLine(0, 0, images_size(0) - 1, 0, 1, image);
