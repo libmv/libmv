@@ -147,3 +147,15 @@ TARGET_LINK_LIBRARIES(mosaicing_video
                       gflags
                       )
 LIBMV_INSTALL_EXE(mosaicing_video)
+
+ADD_EXECUTABLE(stabilize stabilize.cc)
+TARGET_LINK_LIBRARIES(stabilize
+                      image
+                      correspondence
+                      numeric
+                      multiview
+                      camera
+                      glog
+                      gflags
+                      )
+LIBMV_INSTALL_EXE(stabilize)

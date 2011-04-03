@@ -18,17 +18,17 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 /**
- * Mosaicing_video is a tool for making a mosaic from a video (list of images).
+ * Stabilize is a tool for stabilizing a video.
  * It uses the following simple approach:
  * From the given features matches, the chained relatives matrices are estimated
- * (euclidean or homography) and images are warpped and written in a global 
- * mosaic image. The overlapping zones are blended and the last image takes 50% 
- * of the blend.
- * The mozaic is then saved into a file.
+ * (euclidean or homography) and images are warpped so that the features keep 
+ * the same position for every images.
  * 
- * TODO(julien) Mosaicing of an image set = same as this but without the 
- *              recursive $qi = Ai-1 * ...* A1 q1$!
- *              Use the same graph traversal as in image_selection.
+ * \note It first supports only fixed camera.
+ * \note The colors are not smoothed
+ * \note The empty spaces are filled with the images stabilized images and not
+ *       blended/smoothed.
+ * TODO(julien) Support a moving camera (using a "mean" H)
  */
 #include <algorithm>
 #include <string>
@@ -58,14 +58,44 @@ enum eGEOMETRIC_CONSTRAINT  {
 };
 
 DEFINE_string(m, "matches.txt", "Matches input file");
-DEFINE_string(o, "mosaic.jpg", "Mosaic output file");
-DEFINE_int32(constraint, EUCLIDEAN, "Constraint type:\n\t 0: Euclidean\n\t 1:Homography");
-DEFINE_double(blending_ratio, 0.7, "Blending ratio");
+DEFINE_int32(constraint, HOMOGRAPHY, 
+             "Constraint type:\n\t 0: Euclidean\n\t 1:Homography");
 DEFINE_bool(draw_lines, false, "Draw image bounds");
              
+DEFINE_string(of, "",         "Output folder.");
+DEFINE_string(os, "_stab",  "Output file suffix.");
+
 using namespace libmv;
 
-// TODO(julien) put this in numeric
+/// TODO(julien) Put this somewhere else...
+std::string ReplaceFolder(const std::string &s,
+                          const std::string &new_folder) {
+  std::string so = s;
+  std::string nf = new_folder;
+  if (new_folder == "")
+    return so;
+  
+#ifdef WIN32
+  size_t n = so.rfind("\\");
+  if (n == std::string::npos)
+    n = so.rfind("/");
+  if (nf.rfind("\\") != nf.size()-1)
+    nf.append("\\");
+#else
+  size_t n = so.rfind("/");
+  if (nf.rfind("/") != nf.size()-1)
+    nf.append("/");
+#endif
+    
+  if (n != std::string::npos) {
+    so.replace(0, n+1, nf);
+  } else {
+    so = nf; 
+    so.append(s);
+  }
+  return so;
+}
+
 /**
  * Computes relative affine matrices
  *
@@ -184,23 +214,18 @@ void ComputeGlobalBoundingBox(const Vec2u &images_size,
 }
 
 /**
- * Builds a mosaic of a list of image files.
+ * Stabilize a list of images.
  * 
  * \param image_files The input image files
  * \param Hs The 2D relative warp matrices
- * \param blending_ratio The blending ratio for overlapping zones, 
- *        a typical value is 0.5
  * \param draw_lines If true, the images bounds are drawn
- * \param mosaic The ouput mosaic image
  * 
- * TODO(julien) This rendering doesn't scale well?
+ * \note this is only for a fixed camera.
+ * TODO(julien) propose a way for a moving camera ("mean" H)
  */
-void BuildMosaic(const std::vector<std::string> &image_files,
-                 const vector<Mat3> &Hs,
-                 float blending_ratio,
-                 bool draw_lines,
-                 FloatImage *mosaic) {
-  assert(mosaic != NULL);
+void Stabilize(const std::vector<std::string> &image_files,
+               const vector<Mat3> &Hs,
+               bool draw_lines) {
   assert(image_files.size() == Hs.size() - 1);
   
   // Get the size of the first image
@@ -208,30 +233,13 @@ void BuildMosaic(const std::vector<std::string> &image_files,
   ByteImage imageArrayBytes;
   ReadImage (image_files[0].c_str(), &imageArrayBytes);
   images_size << imageArrayBytes.Width(), imageArrayBytes.Height();
-  unsigned int depth = imageArrayBytes.Depth();
-
-  Vec4i bbox;
-  VLOG(0) << "Computing global bounding box..." << std::endl;
-  ComputeGlobalBoundingBox(images_size, Hs, &bbox);
-  VLOG(0) << "Computing global bounding box...[DONE]." << std::endl;
-  VLOG(0) << "bbox: " << bbox.transpose() << std::endl;
-  assert(bbox(1) < bbox(0));
-  assert(bbox(3) < bbox(2));
   
   Mat3 H;
   H.setIdentity(); 
-  const unsigned int w = bbox(1) - bbox(0);
-  const unsigned int h = bbox(3) - bbox(2);
-  mosaic->Resize(h, w, depth);
-  VLOG(0) << "Image size: h=" << mosaic->Height() << " "
-          << "w="             << mosaic->Width() << " "
-          << "d="             << mosaic->Depth() << std::endl;
-  mosaic->Fill(0);
-  // Register everyone so that the min (x, y) are (0, 0)
-  Mat3 Hreg;
-  Hreg << 1, 0, -bbox(0),
-          0, 1, -bbox(2),
-          0, 0, 1;
+  FloatImage image_stab(imageArrayBytes.Height(),
+                        imageArrayBytes.Width(), 
+                        imageArrayBytes.Depth());
+  image_stab.Fill(0);
   FloatImage *image = NULL;
   ImageCache cache;
   scoped_ptr<ImageSequence> source(ImageSequenceFromFiles(image_files, &cache));
@@ -244,10 +252,21 @@ void BuildMosaic(const std::vector<std::string> &image_files,
       if (draw_lines) {
         DrawLine(0, 0, 0, images_size(1) - 1, 1, image);
         DrawLine(0, 0, images_size(0) - 1, 0, 1, image);
-        DrawLine(0, images_size(1)-1, images_size(0)-1, images_size(1)-1, 1, image);
-        DrawLine(images_size(0)-1, 0, images_size(0)-1, images_size(1)-1, 1, image);
+        DrawLine(0, images_size(1)-1, images_size(0)-1, 
+                 images_size(1)-1, 1, image);
+        DrawLine(images_size(0)-1, 0, images_size(0)-1, 
+                 images_size(1)-1, 1, image);
       }        
-      WarpImageBlend(*image, Hreg * H, mosaic, blending_ratio);
+      WarpImage(*image, H.inverse(), &image_stab);
+      
+      // Saves the stabilized image
+      std::stringstream s;
+      s << ReplaceFolder(image_files[i].substr(0, image_files[i].rfind(".")), 
+                         FLAGS_of);
+      s << FLAGS_os;
+      s << image_files[i].substr(image_files[i].rfind("."), 
+                                 image_files[i].size());
+      WriteImage(image_stab, s.str().c_str());
     }
     source->Unpin(i);
   }
@@ -255,11 +274,10 @@ void BuildMosaic(const std::vector<std::string> &image_files,
 
 int main(int argc, char **argv) {
 
-  std::string usage ="Creates a mosaic from a video.\n";
+  std::string usage ="Stabilize a video.\n";
   usage += "Usage: " + std::string(argv[0]) + " IMAGE1 [IMAGE2 ... IMAGEN] ";
-  usage += "-m MATCHES.txt [-o MOSAIC_IMAGE]";
+  usage += "-m MATCHES.txt [-of OUT_FOLDER] [-os OUT_FILE_SUFFIX]";
   usage += "\t - IMAGEX is an input image {PNG, PNM, JPEG}\n";
-  usage += "\t - MOSAIC_IMAGE is the output image {PNG, PNM, JPEG}\n";
   google::SetUsageMessage(usage);
   google::ParseCommandLineFlags(&argc, &argv, true);
 
@@ -270,10 +288,6 @@ int main(int argc, char **argv) {
     files.push_back(argv[i]);
   }
   //std::sort(files.begin(), files.end());
-  if (files.size() < 2) {
-    VLOG(0) << "Not enough files." << std::endl;
-    return 1;
-  }
   // Imports matches
   tracker::FeaturesGraph fg;
   FeatureSet *fs = fg.CreateNewFeatureSet();
@@ -294,17 +308,9 @@ int main(int argc, char **argv) {
   }
   VLOG(0) << "Estimating relative matrices...[DONE]." << std::endl;
 
-  Image mosaic(new FloatImage());
-  VLOG(0) << "Building mosaic..." << std::endl;
-  BuildMosaic(files, Hs, 
-              FLAGS_blending_ratio, 
-              FLAGS_draw_lines,
-              mosaic.AsArray3Df());
-  VLOG(0) << "Building mosaic...[DONE]." << std::endl;
-  
-  // Write the mosaic
-  VLOG(0) << "Saving mosaic image." << std::endl;
-  WriteImage(*mosaic.AsArray3Df(), FLAGS_o.c_str());
+  VLOG(0) << "Stabilizing images..." << std::endl;
+  Stabilize(files, Hs, FLAGS_draw_lines);
+  VLOG(0) << "Stabilizing images...[DONE]." << std::endl;
   // Delete the features graph
   fg.DeleteAndClear();
   return 0;
