@@ -388,11 +388,17 @@ void SplitChannels(const Array3Df &input,
 
 void PrintArray(const Array3Df &array);
 
-// Convert a float array into a byte array by scaling values by 255* (max-min).
+/** Convert a float array into a byte array by scaling values by 255* (max-min).
+ *  where max and min are automatically detected 
+ *  (if automatic_range_detection = true)
+ * \note and TODO this automatic detection only works when the image contains
+ *  at least one pixel of both bounds.
+ **/
 void FloatArrayToScaledByteArray(const Array3Df &float_array,
-                                 Array3Du *byte_array);
+                                 Array3Du *byte_array,
+                                 bool automatic_range_detection = false);
 
-// Convert a byte array into a float array by dividing values by 255.
+//! Convert a byte array into a float array by dividing values by 255.
 void ByteArrayToScaledFloatArray(const Array3Du &byte_array,
                                  Array3Df *float_array);
 

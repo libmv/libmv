@@ -25,17 +25,24 @@
 namespace libmv {
 
 void FloatArrayToScaledByteArray(const Array3Df &float_array,
-                                 Array3Du *byte_array) {
+                                 Array3Du *byte_array,
+                                 bool automatic_range_detection
+                                ) {
   byte_array->ResizeLike(float_array);
   float minval =  HUGE_VAL;
   float maxval = -HUGE_VAL;
-  for (int i = 0; i < float_array.Height(); ++i) {
-    for (int j = 0; j < float_array.Width(); ++j) {
-      for (int k = 0; k < float_array.Depth(); ++k) {
-        minval = std::min(minval, float_array(i,j,k));
-        maxval = std::max(maxval, float_array(i,j,k));
+  if (automatic_range_detection) {
+    for (int i = 0; i < float_array.Height(); ++i) {
+      for (int j = 0; j < float_array.Width(); ++j) {
+        for (int k = 0; k < float_array.Depth(); ++k) {
+          minval = std::min(minval, float_array(i,j,k));
+          maxval = std::max(maxval, float_array(i,j,k));
+        }
       }
     }
+  } else {
+    minval = 0;
+    maxval = 1;
   }
   for (int i = 0; i < float_array.Height(); ++i) {
     for (int j = 0; j < float_array.Width(); ++j) {

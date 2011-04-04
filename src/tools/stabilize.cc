@@ -21,14 +21,15 @@
  * Stabilize is a tool for stabilizing a video.
  * It uses the following simple approach:
  * From the given features matches, the chained relatives matrices are estimated
- * (euclidean or homography) and images are warpped so that the features keep 
- * the same position for every images.
+ * (euclidean or homography) and images are warped so that the features keep 
+ * the same position in all images.
  * 
- * \note It first supports only fixed camera.
+ * \note This version supports only fixed camera.
  * \note The colors are not smoothed
- * \note The empty spaces are filled with the images stabilized images and not
- *       blended/smoothed.
- * TODO(julien) Support a moving camera (using a "mean" H)
+ * \note The empty spaces are filled with the images stabilized images and are 
+ *       not  blended/smoothed.
+ * 
+ * TODO(julien) Support moving camera (using a "mean" H)
  */
 #include <algorithm>
 #include <string>

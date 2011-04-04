@@ -21,7 +21,7 @@
  * Mosaicing_video is a tool for making a mosaic from a video (list of images).
  * It uses the following simple approach:
  * From the given features matches, the chained relatives matrices are estimated
- * (euclidean or homography) and images are warpped and written in a global 
+ * (euclidean or homography) and images are warped and written in a global 
  * mosaic image. The overlapping zones are blended and the last image takes 50% 
  * of the blend.
  * The mozaic is then saved into a file.
