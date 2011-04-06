@@ -23,7 +23,7 @@
 
 #include "libmv/image/image_drawing.h"
 #include "libmv/image/image_io.h"
-#include "libmv/image/image_transform.h"
+#include "libmv/image/image_transform_linear.h"
 #include "libmv/logging/logging.h"
 #include "testing/testing.h"
 
@@ -33,12 +33,10 @@ using namespace libmv;
  * Methods to test:
  * 
  * - ComputeBoundingBox TODO(julien) Add a unit test
- * - ResizeImage        TODO(julien) Add a unit test
- * - TranslateImage
  * - RotateImage        TODO(julien) Correct bug that fails the unit test
  * - WarpImage          TODO(julien) Add a unit test
  * - WarpImageBlend     TODO(julien) Add a unit test
- * */
+ */
 
 // Assert that pixels was drawn at the good place
 TEST(ImageTransform, RotateImage90) {
@@ -143,3 +141,34 @@ TEST(ImageTransform, RotateImage45) {
     EXPECT_EQ(image_rot(i,i), 255);
 }
 
+// Assert that the image size is good
+TEST(ImageTransform, RescaleImageTranslation) {
+
+  const int w = 10, h = 10;
+  FloatImage image(h,w);
+  Vec2u image_size;
+  image_size << w, h;
+  
+  FloatImage image_rs(h,w);
+  Mat3 H;
+  Mat3 Hreg;
+  Vec4i bbox;
+  
+  int dx = std::rand(), dy = std::rand();
+  H << 1, 0, dx,
+       0, 1, dy,
+       0, 0, 1;
+  // TODO(julien) Test with random affine transformations
+  ResizeImage(image_size, H, &image_rs, &Hreg, &bbox);
+  
+  EXPECT_EQ(image_rs.Width(),  w + dx);
+  EXPECT_EQ(image_rs.Height(), h + dy);
+  EXPECT_EQ(image_rs.Depth(), 1);
+  
+  EXPECT_EQ(bbox(0), 0);
+  EXPECT_EQ(bbox(1), w + dx);
+  EXPECT_EQ(bbox(2), 0);
+  EXPECT_EQ(bbox(3), h + dy);
+  
+  EXPECT_MATRIX_EQ(Hreg, H);
+}

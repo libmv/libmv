@@ -44,7 +44,7 @@
 #include "libmv/image/image_drawing.h"
 #include "libmv/image/image_io.h"
 #include "libmv/image/image_sequence_io.h"
-#include "libmv/image/image_transform.h"
+#include "libmv/image/image_transform_linear.h"
 #include "libmv/image/cached_image_sequence.h"
 #include "libmv/image/sample.h"
 #include "libmv/multiview/robust_affine_2d.h"
@@ -170,47 +170,6 @@ void ComputeRelativeHomographyMatrices(const Matches &matches,
         VLOG(2) << "H = " << std::endl << H << std::endl;
       } // TODO(julien) what to do when no enough points?
     ++prev_image_iter;
-  }
-}
-
-/**
- * Computes the global bounding box of a set of image warps.
- *
- * \param Hs The 2D relative warp matrices
- * \param images_size The common image size (width, height)
- * \param bbox The global bounding box (xmin, xmax, ymin, ymax)
- *
- * TODO(julien) put this in image/image_warp? 
- */
-void ComputeGlobalBoundingBox(const Vec2u &images_size,
-                              const vector<Mat3> &Hs,
-                              Vec4i *bbox) {
-  Mat3 H;
-  H.setIdentity(); 
-  Mat34 q_bounds;  
-  q_bounds << 0, 0,              images_size(0), images_size(0),
-              0, images_size(1), images_size(1), 0,
-              1, 1,              1,              1;
-                    
-  (*bbox) << images_size(0), 0, images_size(1), 0;
-  Vec3 q;
-  for (size_t i = 0; i < Hs.size(); ++i) {
-    H = Hs[i] * H;
-	VLOG(1) << "H = " << std::endl << H << std::endl;
-    for (int i = 0; i < 4; ++i) {
-      q = H * q_bounds.col(i);
-      q /= q(2);
-      q(0) = ceil0<double>(q(0));
-      q(1) = ceil0<double>(q(1));
-      if (q(0) < (*bbox)(0))
-        (*bbox)(0) = q(0);
-      else if (q(0) > (*bbox)(1))
-        (*bbox)(1) = q(0);
-      if (q(1) < (*bbox)(2))
-        (*bbox)(2) = q(1);
-      else if (q(1) > (*bbox)(3))
-        (*bbox)(3) = q(1);
-    }
   }
 }
 

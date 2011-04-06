@@ -18,7 +18,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
-#include "libmv/image/image_transform.h"
+#include "libmv/image/image_transform_linear.h"
 
 #include "libmv/image/image_drawing.h"
 #include "libmv/image/sample.h"

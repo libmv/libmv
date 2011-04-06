@@ -43,7 +43,7 @@
 #include "libmv/image/image_drawing.h"
 #include "libmv/image/image_io.h"
 #include "libmv/image/image_sequence_io.h"
-#include "libmv/image/image_transform.h"
+#include "libmv/image/image_transform_linear.h"
 #include "libmv/image/cached_image_sequence.h"
 #include "libmv/image/sample.h"
 #include "libmv/multiview/robust_affine_2d.h"
