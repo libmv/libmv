@@ -28,8 +28,10 @@ ADD_LIBRARY(multiview
 TARGET_LINK_LIBRARIES(multiview numeric V3D colamd ldl)
 LIBMV_INSTALL_LIB(multiview)
 
+IF (BUILD_TESTS)
 ADD_LIBRARY(multiview_test_data
             test_data_sets.cc)
+ENDIF (BUILD_TESTS)
 
 MACRO (MULTIVIEW_TEST NAME)
   LIBMV_TEST(${NAME} "multiview_test_data;multiview;numeric")

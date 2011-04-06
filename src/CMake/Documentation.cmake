@@ -22,7 +22,7 @@ OPTION(BUILD_DOC "Build the documentation. (Doxygen needed)" OFF)
 
 # check if doxygen is even installed
 FIND_PACKAGE(Doxygen)
-IF (NOT DOXYGEN_FOUND STREQUAL "NO" AND BUILD_DOC STREQUAL ON)
+IF (DOXYGEN_FOUND AND BUILD_DOC)
 
   CONFIGURE_FILE(${LIBMV_SOURCE_DIR}/CMake/Doxyfile.cmake
                  ${PROJECT_BINARY_DIR}/Doxyfile
@@ -40,20 +40,19 @@ IF (NOT DOXYGEN_FOUND STREQUAL "NO" AND BUILD_DOC STREQUAL ON)
     ADD_CUSTOM_TARGET(doc)
   ENDIF()
   ADD_DEPENDENCIES(doc doxygen)
+ENDIF(DOXYGEN_FOUND AND BUILD_DOC)
 
-  OPTION(INSTALL_DOCUMENTATION "Install the documentation" OFF)
-  IF (INSTALL_DOCUMENTATION STREQUAL ON)
-    # install HTML API documentation and manual pages
-    SET(DOC_PATH "${LIBMV_SHARE_OUTPUT_DIR}/../doc/libmv-${LIBMV_VERSION}")
-    INSTALL(DIRECTORY ${LIBMV_SOURCE_DIR}/../doc/doxygen/html
-            DESTINATION ${DOC_PATH}
-            COMPONENT documentation)
-    # install man pages into packages, scope is now project root..
-    #IF (UNIX)
-    #  INSTALL(DIRECTORY ${LIBMV_SOURCE_DIR}/../doc/man/man3
-    #          DESTINATION ${LIBMV_SHARE_OUTPUT_DIR}/../man/man3/
-    #          COMPONENT documentation)
-    #ENDIF (UNIX)
-  ENDIF (INSTALL_DOCUMENTATION STREQUAL ON)
-
-ENDIF(NOT DOXYGEN_FOUND STREQUAL "NO"  AND BUILD_DOC STREQUAL ON)
+OPTION(INSTALL_DOCUMENTATION "Install the documentation" OFF)
+IF (INSTALL_DOCUMENTATION)
+# install HTML API documentation and manual pages
+SET(DOC_PATH "${LIBMV_SHARE_OUTPUT_DIR}/../doc/libmv-${LIBMV_VERSION}")
+INSTALL(DIRECTORY ${LIBMV_SOURCE_DIR}/../doc/doxygen/html
+		DESTINATION ${DOC_PATH}
+		COMPONENT documentation)
+# install man pages into packages, scope is now project root..
+#IF (UNIX)
+#  INSTALL(DIRECTORY ${LIBMV_SOURCE_DIR}/../doc/man/man3
+#          DESTINATION ${LIBMV_SHARE_OUTPUT_DIR}/../man/man3/
+#          COMPONENT documentation)
+#ENDIF (UNIX)
+ENDIF (INSTALL_DOCUMENTATION)

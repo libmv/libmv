@@ -1,7 +1,7 @@
 2011-03-26 [r386-1102]  Libmv Team <libmv-devel@googlegroups.com>
 
-  * tag:Tagging the 0.1 release of libmv.
-  * third_party: Updated packaging rules for linux/windows and improved outliers
+	* tag:Tagging the 0.1 release of libmv.
+	* third_party: Updated packaging rules for linux/windows and improved outliers
 	  detection during the reconstruction.
 	* cmake: Updated installation of doc, src, contrib and extras files on linux.
 	* cmake: Added an initial ChangeLog and updated packaging rules for windows.
