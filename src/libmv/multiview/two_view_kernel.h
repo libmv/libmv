@@ -53,6 +53,28 @@ struct NormalizedSolver {
   }
 };
 
+template<typename Solver, typename Unnormalizer>
+struct IsotropicNormalizedSolver {
+  enum { MINIMUM_SAMPLES = Solver::MINIMUM_SAMPLES };
+  static void Solve(const Mat &x1, const Mat &x2, vector<Mat3> *models) {
+    assert(2 == x1.rows());
+    assert(MINIMUM_SAMPLES <= x1.cols());
+    assert(x1.rows() == x2.rows());
+    assert(x1.cols() == x2.cols());
+
+    // Normalize the data.
+    Mat3 T1, T2;
+    Mat x1_normalized, x2_normalized;
+    NormalizeIsotropicPoints(x1, &x1_normalized, &T1);
+    NormalizeIsotropicPoints(x2, &x2_normalized, &T2);
+
+    Solver::Solve(x1_normalized, x2_normalized, models);
+
+    for (int i = 0; i < models->size(); ++i) {
+      Unnormalizer::Unnormalize(T1, T2, &(*models)[i]);
+    }
+  }
+};
 // This is one example (targeted at solvers that operate on correspondences
 // between two views) that shows the "kernel" part of a robust fitting
 // problem:

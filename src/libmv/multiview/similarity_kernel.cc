@@ -1,4 +1,4 @@
-// Copyright (c) 2010 libmv authors.
+// Copyright (c) 2011 libmv authors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
@@ -18,21 +18,22 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
-#include "libmv/multiview/affine_2d_kernel.h"
-#include "libmv/multiview/affine_2d.h"
+#include "libmv/multiview/similarity_kernel.h"
+#include "libmv/multiview/similarity.h"
 
 namespace libmv {
-namespace affine2D {
+namespace similarity {
+namespace similarity2D {
 namespace kernel {
 
-void TwoPointSolver::Solve(const Mat &x, const Mat &y, vector<Mat3> *Hs) {
+void TwoPointSolver::Solve(const Mat &x1, const Mat &x2, vector<Mat3> *Hs) {
   Mat3 M;
-  if (Affine2D_FromCorrespondencesLinear(x,y, &M))
-  {
+  if (Similarity2DFromCorrespondencesLinear(x1,x2, &M)) {
     Hs->push_back(M);
   }
 }
 
 }  // namespace kernel
-}  // namespace affine2D
+}  // namespace similarity2D
+}  // namespace similarity
 }  // namespace libmv

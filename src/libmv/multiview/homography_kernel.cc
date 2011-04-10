@@ -18,45 +18,24 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
-#include "libmv/logging/logging.h"
 #include "libmv/multiview/homography_kernel.h"
+
+#include "libmv/logging/logging.h"
+#include "libmv/multiview/homography.h"
 
 namespace libmv {
 namespace homography {
+namespace homography2D {
 namespace kernel {
 
 void FourPointSolver::Solve(const Mat &x, const Mat &y, vector<Mat3> *Hs) {
-  assert(2 == x.rows());
-  assert(4 <= x.cols());
-  assert(x.rows() == y.rows());
-  assert(x.cols() == y.cols());
-
-  int n = x.cols();
-  MatX9 L = Mat::Zero(n * 2, 9);
-  for (int i = 0; i < n; ++i) {
-    int j = 2 * i;
-    L(j, 0) = x(0, i);
-    L(j, 1) = x(1, i);
-    L(j, 2) = 1.0;
-    L(j, 6) = -y(0, i) * x(0, i);
-    L(j, 7) = -y(0, i) * x(1, i);
-    L(j, 8) = -y(0, i);
-
-    ++j;
-    L(j, 3) = x(0, i);
-    L(j, 4) = x(1, i);
-    L(j, 5) = 1.0;
-    L(j, 6) = -y(1, i) * x(0, i);
-    L(j, 7) = -y(1, i) * x(1, i);
-    L(j, 8) = -y(1, i);
+  Mat3 M;
+  if (Homography2DFromCorrespondencesLinear(x,y, &M)) {
+    Hs->push_back(M);
   }
-
-  Vec h;
-  Nullspace(&L, &h);
-  Mat3 H = Map<RMat3>(h.data());
-  Hs->push_back(H);
 }
 
 }  // namespace kernel
+}  // namespace homography2D
 }  // namespace homography
 }  // namespace libmv

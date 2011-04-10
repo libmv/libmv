@@ -1,4 +1,4 @@
-// Copyright (c) 2010 libmv authors.
+// Copyright (c) 2011 libmv authors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
@@ -18,8 +18,8 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
-#ifndef LIBMV_MULTIVIEW_AFFINE_2D_KERNEL_H
-#define LIBMV_MULTIVIEW_AFFINE_2D_KERNEL_H
+#ifndef LIBMV_MULTIVIEW_SIMILARITY_KERNEL_H
+#define LIBMV_MULTIVIEW_SIMILARITY_KERNEL_H
 
 #include "libmv/base/vector.h"
 #include "libmv/multiview/two_view_kernel.h"
@@ -27,7 +27,8 @@
 #include "libmv/numeric/numeric.h"
 
 namespace libmv {
-namespace affine2D {
+namespace similarity {
+namespace similarity2D {
 namespace kernel {
 
 struct TwoPointSolver {
@@ -36,18 +37,21 @@ struct TwoPointSolver {
 };
 
 typedef two_view::kernel::Kernel<
-    affine2D::kernel::TwoPointSolver, homography::kernel::AsymmetricError, Mat3>
+    similarity2D::kernel::TwoPointSolver, 
+	  homography::homography2D::kernel::AsymmetricError, Mat3>
   UnnormalizedKernel;
 
 typedef two_view::kernel::Kernel<
-        two_view::kernel::NormalizedSolver<affine2D::kernel::TwoPointSolver,
-        UnnormalizerI>,
-        homography::kernel::AsymmetricError,
-        Mat3>
+    two_view::kernel::IsotropicNormalizedSolver<
+      similarity2D::kernel::TwoPointSolver,
+      UnnormalizerI>,
+    homography::homography2D::kernel::AsymmetricError,
+    Mat3>
   Kernel;
 
 }  // namespace kernel
-}  // namespace affine2D
+}  // namespace similarity2D
+}  // namespace similarity
 }  // namespace libmv
 
-#endif  // LIBMV_MULTIVIEW_AFFINE_2D_KERNEL_H
+#endif  // LIBMV_MULTIVIEW_SIMILARITY_KERNEL_H

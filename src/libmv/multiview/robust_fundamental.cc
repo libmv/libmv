@@ -40,7 +40,10 @@ double FundamentalFromCorrespondences8PointRobust(const Mat &x1,
   Kernel kernel(x1, x2);
   *F = Estimate(kernel, MLEScorer<Kernel>(threshold), inliers, 
                 &best_score, outliers_probability);
-  return best_score;
+  if (best_score == HUGE_VAL)
+    return HUGE_VAL;
+  else
+    return std::sqrt(best_score / 2.0);  
 }
 
 double FundamentalFromCorrespondences7PointRobust(const Mat &x1,
@@ -57,7 +60,10 @@ double FundamentalFromCorrespondences7PointRobust(const Mat &x1,
   Kernel kernel(x1, x2);
   *F = Estimate(kernel, MLEScorer<Kernel>(threshold), inliers, 
                 &best_score, outliers_probability);
-  return best_score; 
+  if (best_score == HUGE_VAL)
+    return HUGE_VAL;
+  else
+    return std::sqrt(best_score / 2.0);  
 }
 
 }  // namespace libmv

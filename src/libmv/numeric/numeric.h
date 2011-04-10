@@ -115,6 +115,8 @@ typedef Eigen::Matrix<float,
                       Eigen::Dynamic,
                       Eigen::Dynamic,
                       Eigen::RowMajor> RMatf;
+                      
+typedef Eigen::NumTraits<double> EigenDouble;
 
 using Eigen::Map;
 using Eigen::Dynamic;

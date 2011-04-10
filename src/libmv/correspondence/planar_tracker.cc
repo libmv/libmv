@@ -49,9 +49,9 @@ bool PlanarTracker::Track(const Image &image1,
   
   vector<int> inliers;
   Mat3 H;
-  HomographyFromCorrespondences4PointRobust(x[0], x[1], 
-                                            rms_threshold_inlier_,
-                                            &H, &inliers);
+  Homography2DFromCorrespondences4PointRobust(x[0], x[1], 
+                                              rms_threshold_inlier_,
+                                              &H, &inliers);
 
   // We remove correspondences that are not inliers
   size_t max_num_track = new_features_graph->matches_.GetMaxTrackID()+1;
@@ -134,9 +134,9 @@ bool PlanarTracker::Track(const Image &image,
       }
       vector<int> inliers;
       Mat3 H;
-      HomographyFromCorrespondences4PointRobust(x[0], x[1], 
-                                                rms_threshold_inlier_, 
-                                                &H, &inliers);
+      Homography2DFromCorrespondences4PointRobust(x[0], x[1], 
+                                                  rms_threshold_inlier_, 
+                                                  &H, &inliers);
       LOG(INFO) << "#inliers = "<< inliers.size() << std::endl;
       LOG(INFO) << "#outliers = "<< tracks.size()-inliers.size() << std::endl;
       // We remove correspondences that are not inliers

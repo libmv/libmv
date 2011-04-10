@@ -1,4 +1,4 @@
-// Copyright (c) 2009 libmv authors.
+// Copyright (c) 2010 libmv authors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
@@ -18,32 +18,29 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
-#ifndef LIBMV_MULTIVIEW_ROBUST_HOMOGRAPHY_H_
-#define LIBMV_MULTIVIEW_ROBUST_HOMOGRAPHY_H_
+#ifndef LIBMV_MULTIVIEW_ROBUST_SIMILARITY_H_
+#define LIBMV_MULTIVIEW_ROBUST_SIMILARITY_H_
 
 #include "libmv/base/vector.h"
 #include "libmv/numeric/numeric.h"
 
 namespace libmv {
 
-/** Robust 2D homography transformation estimation
+
+/** Robust 2D similarity transformation estimation
  * 
- * This function estimates robustly the 2d homography matrix between two dataset 
- * of 2D point (image coords space). The 2d homography solver relies on the 4 
- * points solution. It can be used in order to estimate the homography
- * transformation from a list of 2D correspondences which represents either
- * - 3D points on a plane (+ general moving camera)
- * - 3D points + rotating camera (pure rotation)
- * - 3D points + differents focal lengths (or plan projection)
+ * This function estimates robustly the 2d similarity matrix between two dataset 
+ * of 2D point (image coords space). The 2d similarity solver relies on the 2 
+ * points solution. 
  * 
  * \param[in] x1 The first 2xN matrix of euclidean points
  * \param[in] x2 The second 2xN matrix of euclidean points
  * \param[in] max_error maximum error (in pixels)
- * \param[out] H The 3x3 homography transformation matrix  (8 dof)
+ * \param[out] H The 3x3 similarity transformation matrix  (4 dof)
  *          with the following parametrization
- *              |a b c|
- *          H = |d f g|
- *              |h i 1|
+ *              |s*cos -s*sin  tx|
+ *          H = |s*sin  s*cos  ty|
+ *              |0      0      1 |
  *          such that  x2 = H * x1
  * \param[out] inliers the indexes list of the detected inliers
  * \param[in] outliers_probability outliers probability (in ]0,1[).
@@ -53,10 +50,10 @@ namespace libmv {
  * 
  * \return the best error found (in pixels), associated to the solution H
  * 
- * \note The function needs at least 4 points 
+ * \note The function needs at least 2 points 
  * \note The overall iteration limit is 1000
  */
-double Homography2DFromCorrespondences4PointRobust(
+double Similarity2DFromCorrespondences2PointRobust(
     const Mat &x1,
     const Mat &x2,
     double max_error,
@@ -66,4 +63,4 @@ double Homography2DFromCorrespondences4PointRobust(
 
 } // namespace libmv
 
-#endif  // LIBMV_MULTIVIEW_ROBUST_HOMOGRAPHY_H_
+#endif  // LIBMV_MULTIVIEW_ROBUST_SIMILARITY_H_

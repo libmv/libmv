@@ -47,20 +47,22 @@
 #include "libmv/image/image_transform_linear.h"
 #include "libmv/image/cached_image_sequence.h"
 #include "libmv/image/sample.h"
-#include "libmv/multiview/robust_affine_2d.h"
+#include "libmv/multiview/robust_affine.h"
+#include "libmv/multiview/robust_euclidean.h"
 #include "libmv/multiview/robust_homography.h"
+#include "libmv/multiview/robust_similarity.h"
 #include "libmv/logging/logging.h"
 
-enum eGEOMETRIC_CONSTRAINT  {
-  EUCLIDEAN = 0,  // EUCLIDEAN (3 dof: 2 translations (x, y) + 1 rotation)
-  // TODO(julien) add here SIMILARITY (4 dof: EUCLIDEAN + scale)
-  // TODO(julien) add here AFFINE (6 dof)
-  HOMOGRAPHY = 1,// Homography (8 dof: general planar case)
+enum eGEOMETRIC_TRANSFORMATION  {
+  EUCLIDEAN = 0,// Euclidean 2D (3 dof: 2 translations (x, y) + 1 rotation)
+  SIMILARITY ,  // Similarity 2D (4 dof: EUCLIDEAN + scale)
+  AFFINE,       // Affinity 2D (6 dof)
+  HOMOGRAPHY,   // Homography 2D (8 dof: general planar case)
 };
 
 DEFINE_string(m, "matches.txt", "Matches input file");
-DEFINE_int32(constraint, HOMOGRAPHY, 
-             "Constraint type:\n\t 0: Euclidean\n\t 1:Homography");
+DEFINE_int32(transformation, HOMOGRAPHY, "Transformation type:\n\t 0: \
+Similarity\n\t 1:Affinity\n\t 2:Homography");
 DEFINE_bool(draw_lines, false, "Draw image bounds");
              
 DEFINE_string(of, "",         "Output folder.");
@@ -98,6 +100,82 @@ std::string ReplaceFolder(const std::string &s,
 }
 
 /**
+ * Computes relative euclidean matrices
+ *
+ * \param matches The 2D features matches
+ * \param Ss Vector of relative similarity matrices such that 
+ *        $q2 = S1 q1$ and $qi = Si-1 * ...* S1 q1$
+ *        where qi is a point in the image i
+ *        and q1 is its position in the image 1
+ * \param outliers_prob The outliers probability [0, 1[
+ * \param max_error_2d The maximun 2D error in pixel
+ *
+ * TODO(julien) put this in reconstruction
+ */
+void ComputeRelativeEuclideanMatrices(const Matches &matches,
+                                      vector<Mat3> *Ss,
+                                      double outliers_prob = 1e-2,
+                                      double max_error_2d = 1) {
+  Ss->reserve(matches.NumImages() - 1);
+  Mat3 S;
+  vector<Mat> xs2;
+  std::set<Matches::ImageID>::const_iterator image_iter =
+    matches.get_images().begin();
+  std::set<Matches::ImageID>::const_iterator prev_image_iter = image_iter;
+  image_iter++;
+  for (;image_iter != matches.get_images().end(); ++image_iter) {
+    TwoViewPointMatchMatrices(matches, *prev_image_iter, *image_iter, &xs2);
+      if (xs2[0].cols() >= 2) {
+        Euclidean2DFromCorrespondences2PointRobust(xs2[0], xs2[1], 
+                                                   max_error_2d , 
+                                                   &S, NULL, 
+                                                   outliers_prob);
+        Ss->push_back(S);
+        VLOG(2) << "S = " << std::endl << S << std::endl;
+      } // TODO(julien) what to do when no enough points?
+    ++prev_image_iter;
+  }
+}
+
+/**
+ * Computes relative similarity matrices
+ *
+ * \param matches The 2D features matches
+ * \param Ss Vector of relative similarity matrices such that 
+ *        $q2 = S1 q1$ and $qi = Si-1 * ...* S1 q1$
+ *        where qi is a point in the image i
+ *        and q1 is its position in the image 1
+ * \param outliers_prob The outliers probability [0, 1[
+ * \param max_error_2d The maximun 2D error in pixel
+ *
+ * TODO(julien) put this in reconstruction
+ */
+void ComputeRelativeSimilarityMatrices(const Matches &matches,
+                                       vector<Mat3> *Ss,
+                                       double outliers_prob = 1e-2,
+                                       double max_error_2d = 1) {
+  Ss->reserve(matches.NumImages() - 1);
+  Mat3 S;
+  vector<Mat> xs2;
+  std::set<Matches::ImageID>::const_iterator image_iter =
+    matches.get_images().begin();
+  std::set<Matches::ImageID>::const_iterator prev_image_iter = image_iter;
+  image_iter++;
+  for (;image_iter != matches.get_images().end(); ++image_iter) {
+    TwoViewPointMatchMatrices(matches, *prev_image_iter, *image_iter, &xs2);
+      if (xs2[0].cols() >= 2) {
+        Similarity2DFromCorrespondences2PointRobust(xs2[0], xs2[1], 
+                                                    max_error_2d , 
+                                                    &S, NULL, 
+                                                    outliers_prob);
+        Ss->push_back(S);
+        VLOG(2) << "S = " << std::endl << S << std::endl;
+      } // TODO(julien) what to do when no enough points?
+    ++prev_image_iter;
+  }
+}
+
+/**
  * Computes relative affine matrices
  *
  * \param matches The 2D features matches
@@ -108,7 +186,7 @@ std::string ReplaceFolder(const std::string &s,
  * \param outliers_prob The outliers probability [0, 1[
  * \param max_error_2d The maximun 2D error in pixel
  *
- * TODO(julien) put this in reconstruction?
+ * TODO(julien) put this in reconstruction
  */
 void ComputeRelativeAffineMatrices(const Matches &matches,
                                    vector<Mat3> *As,
@@ -123,11 +201,11 @@ void ComputeRelativeAffineMatrices(const Matches &matches,
   image_iter++;
   for (;image_iter != matches.get_images().end(); ++image_iter) {
     TwoViewPointMatchMatrices(matches, *prev_image_iter, *image_iter, &xs2);
-      if (xs2[0].cols() >= 2) {
-        AffineFromCorrespondences2PointRobust(xs2[0], xs2[1], 
-                                              max_error_2d , 
-                                              &A, NULL, 
-                                              outliers_prob);
+      if (xs2[0].cols() >= 3) {
+        Affine2DFromCorrespondences3PointRobust(xs2[0], xs2[1], 
+                                                max_error_2d , 
+                                                &A, NULL, 
+                                                outliers_prob);
         As->push_back(A);
         VLOG(2) << "A = " << std::endl << A << std::endl;
       } // TODO(julien) what to do when no enough points?
@@ -146,7 +224,7 @@ void ComputeRelativeAffineMatrices(const Matches &matches,
  * \param outliers_prob The outliers probability [0, 1[
  * \param max_error_2d The maximun 2D error in pixel
  *
- * TODO(julien) Put this in reconstruction?
+ * TODO(julien) Put this in reconstruction
  */
 void ComputeRelativeHomographyMatrices(const Matches &matches,
                                        vector<Mat3> *Hs,
@@ -162,10 +240,10 @@ void ComputeRelativeHomographyMatrices(const Matches &matches,
   for (;image_iter != matches.get_images().end(); ++image_iter) {
     TwoViewPointMatchMatrices(matches, *prev_image_iter, *image_iter, &xs2);
       if (xs2[0].cols() >= 4) {
-        HomographyFromCorrespondences4PointRobust(xs2[0], xs2[1], 
-                                                  max_error_2d, 
-                                                  &H, NULL, 
-                                                  outliers_prob);
+        Homography2DFromCorrespondences4PointRobust(xs2[0], xs2[1], 
+                                                    max_error_2d, 
+                                                    &H, NULL, 
+                                                    outliers_prob);
         Hs->push_back(H);
         VLOG(2) << "H = " << std::endl << H << std::endl;
       } // TODO(julien) what to do when no enough points?
@@ -257,10 +335,16 @@ int main(int argc, char **argv) {
     
   vector<Mat3> Hs;
   VLOG(0) << "Estimating relative matrices..." << std::endl;
-  switch (FLAGS_constraint) {
+  switch (FLAGS_transformation) {
     // TODO(julien) add custom degree of freedom selection (e.g. x, y, x & y, ...)
     case EUCLIDEAN:
-      ComputeRelativeAffineMatrices(fg.matches_, &Hs);
+      ComputeRelativeEuclideanMatrices(fg.matches_, &Hs);
+    break;
+    case SIMILARITY:
+      ComputeRelativeSimilarityMatrices(fg.matches_, &Hs);
+    break;
+    case AFFINE:
+      ComputeRelativeHomographyMatrices(fg.matches_, &Hs);
     break;
     case HOMOGRAPHY:
       ComputeRelativeHomographyMatrices(fg.matches_, &Hs);

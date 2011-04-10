@@ -18,37 +18,36 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
-#ifndef LIBMV_MULTIVIEW_PANOGRAPHY_KERNEL_H
-#define LIBMV_MULTIVIEW_PANOGRAPHY_KERNEL_H
+#ifndef LIBMV_MULTIVIEW_AFFINE_H_
+#define LIBMV_MULTIVIEW_AFFINE_H_
 
-#include "libmv/base/vector.h"
-#include "libmv/multiview/conditioning.h"
-#include "libmv/multiview/projection.h"
-#include "libmv/multiview/two_view_kernel.h"
-#include "libmv/multiview/homography_kernel.h"
 #include "libmv/numeric/numeric.h"
 
 namespace libmv {
-namespace panography {
-namespace kernel {
 
-struct TwoPointSolver {
-  enum { MINIMUM_SAMPLES = 2 };
-  static void Solve(const Mat &x1, const Mat &x2, vector<Mat3> *Hs);
-};
+/** 2D Affine transformation estimation
+ * 
+ * \param[in] x1 The first 2xN matrix of euclidean points
+ * \param[in] x2 The second 2xN matrix of euclidean points
+ * \param[out] M The 3x3 affine transformation matrix (6 dof)
+ *          with the following parametrization
+ *              |a b tx|
+ *          M = |c d ty|
+ *              |0 0 1 |
+ *          such that    x2 = M * x1
+ * \param[in] expected_precision The expected precision in order for instance 
+ *        to accept almost affine matrices.
+ * 
+ * \return true if the transformation estimation has succeeded
+ * 
+ * \note Need at least 3 points 
+ * \note Points coordinates must be normalized (euclidean)
+ */
+bool Affine2DFromCorrespondencesLinear(const Mat &x1,
+                                       const Mat &x2,
+                                       Mat3 *M,
+                                       double expected_precision = 
+                                         EigenDouble::dummy_precision());
+} // namespace libmv
 
-typedef two_view::kernel::Kernel<
-    TwoPointSolver, homography::homography2D::kernel::AsymmetricError, Mat3>
-  UnnormalizedKernel;
-
-typedef two_view::kernel::Kernel<
-        two_view::kernel::NormalizedSolver<TwoPointSolver, UnnormalizerI>,
-        homography::homography2D::kernel::AsymmetricError,
-        Mat3>
-  Kernel;
-
-}  // namespace kernel
-}  // namespace panography
-}  // namespace libmv
-
-#endif  // LIBMV_MULTIVIEW_PANOGRAPHY_KERNEL_H
+#endif  // LIBMV_MULTIVIEW_AFFINE_H_

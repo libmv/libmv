@@ -38,11 +38,12 @@
 #include "libmv/image/image_drawing.h"
 #include "libmv/image/image_io.h"
 #include "libmv/image/sample.h"
-#include "libmv/multiview/affine_2d_kernel.h"
+#include "libmv/multiview/affine_kernel.h"
 #include "libmv/multiview/homography_kernel.h"
 #include "libmv/multiview/panography_kernel.h"
+#include "libmv/multiview/robust_affine.h"
 #include "libmv/multiview/robust_homography.h"
-#include "libmv/multiview/robust_affine_2d.h"
+#include "libmv/multiview/robust_similarity.h"
 #include "libmv/multiview/two_view_kernel.h"
 #include "libmv/tools/tool.h"
 
@@ -178,13 +179,13 @@ int main(int argc, char **argv) {
   switch( eGeometricConstraint )
   {
     case AFFINE :
-      AffineFromCorrespondences2PointRobust(x[0], x[1], 1, &H, &inliers);
+      Affine2DFromCorrespondences3PointRobust(x[0], x[1], 1, &H, &inliers);
     break;
     case HOMOGRAPHY :
-      HomographyFromCorrespondences4PointRobust(x[0], x[1], 1, &H, &inliers);
+      Homography2DFromCorrespondences4PointRobust(x[0], x[1], 1, &H, &inliers);
     break;
     case MINIMAL_PANORAMIC_CASE:
-      HomographyFromCorrespondences2PointRobust(x[0], x[1], 1, &H, &inliers);
+      Similarity2DFromCorrespondences2PointRobust(x[0], x[1], 1, &H, &inliers);
     break;
 
   }
@@ -211,14 +212,14 @@ int main(int argc, char **argv) {
   switch( eGeometricConstraint )
   {
     case AFFINE :
-      affine2D::kernel::TwoPointSolver::Solve(x[0], x[1], &Hs);
+		affine::affine2D::kernel::ThreePointSolver::Solve(x[0], x[1], &Hs);
       if (Hs.size() == 0) {
         // Todo(pmoulon) call the normalized solver
         Hs.push_back(H); // Use old solution
       }
     break;
     case HOMOGRAPHY :
-      homography::kernel::FourPointSolver::Solve(x[0], x[1], &Hs);
+      homography::homography2D::kernel::FourPointSolver::Solve(x[0], x[1], &Hs);
     break;
     case MINIMAL_PANORAMIC_CASE:
       Hs.push_back(H);

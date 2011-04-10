@@ -27,37 +27,23 @@
 
 namespace libmv {
 
-double HomographyFromCorrespondences4PointRobust(const Mat &x1,
-                                                 const Mat &x2,
-                                                 double max_error,
-                                                 Mat3 *H,
-                                                 vector<int> *inliers,
-                                                 double outliers_probability) {
+double Homography2DFromCorrespondences4PointRobust(const Mat &x1,
+                                                   const Mat &x2,
+                                                   double max_error,
+                                                   Mat3 *H,
+                                                   vector<int> *inliers,
+                                                   double outliers_probability) {
   // The threshold is on the sum of the squared errors in the two images.
   double threshold = 2 * Square(max_error);
   double best_score = HUGE_VAL;
-  typedef homography::kernel::Kernel KernelH;
+  typedef homography::homography2D::kernel::Kernel KernelH;
   KernelH kernel(x1, x2);
   *H = Estimate(kernel, MLEScorer<KernelH>(threshold), inliers, 
                 &best_score, outliers_probability);
-  return best_score; 
-}
-
-double HomographyFromCorrespondences2PointRobust(const Mat &x1,
-                                                  const Mat &x2,
-                                                  double max_error,
-                                                  Mat3 * H,
-                                                  vector<int> *inliers,
-                                                  double outliers_probability) {
-  // The threshold is on the sum of the squared errors in the two images.
-  // Actually, Sampson's approximation of this error.
-  double threshold = 2 * Square(max_error);
-  double best_score = HUGE_VAL;
-  typedef panography::kernel::Kernel Kernel;
-  Kernel kernel(x1, x2);
-  *H = Estimate(kernel, MLEScorer<Kernel>(threshold), inliers, 
-                &best_score, outliers_probability);
-  return best_score;  
+  if (best_score == HUGE_VAL)
+    return HUGE_VAL;
+  else
+    return std::sqrt(best_score / 2.0);  
 }
 
 }  // namespace libmv

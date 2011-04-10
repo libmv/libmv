@@ -99,10 +99,10 @@ void SelectKeyframesBasedOnFAndH(
   for (;image_iter != matches.get_images().end(); ++image_iter) {
     TwoViewPointMatchMatrices(matches, *prev_image_iter, *image_iter, &xs2);
     if (xs2[0].cols() >= 7) {
-      h_err = HomographyFromCorrespondences4PointRobust(xs2[0], xs2[1], 
-                                                        max_error_h, 
-                                                        &H, &inliers, 
-                                                        outliers_prob);
+      h_err = Homography2DFromCorrespondences4PointRobust(xs2[0], xs2[1], 
+                                                          max_error_h, 
+                                                          &H, &inliers, 
+                                                          outliers_prob);
       h_err /= inliers.size();
       f_err = FundamentalFromCorrespondences7PointRobust(xs2[0], xs2[1], 
                                                          max_error_f, 

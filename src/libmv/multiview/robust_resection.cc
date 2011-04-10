@@ -39,7 +39,10 @@ double ResectionRobust(const Mat2X &x_image,
   Kernel kernel(x_image, X_world);
   *P = Estimate(kernel, MLEScorer<Kernel>(threshold), inliers, 
                 &best_score, outliers_probability);
-  return best_score;
+  if (best_score == HUGE_VAL)
+    return HUGE_VAL;
+  else
+    return std::sqrt(best_score / 2.0);  
 }
 
 }  // namespace libmv

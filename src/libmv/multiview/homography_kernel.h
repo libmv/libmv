@@ -29,6 +29,7 @@
 
 namespace libmv {
 namespace homography {
+namespace homography2D {
 namespace kernel {
 
 struct FourPointSolver {
@@ -74,6 +75,13 @@ struct SymmetricError {
 typedef two_view::kernel::Kernel<FourPointSolver, AsymmetricError, Mat3>
   UnnormalizedKernel;
 
+//! Isotopic normalized solver
+typedef two_view::kernel::Kernel<
+    two_view::kernel::IsotropicNormalizedSolver<FourPointSolver, UnnormalizerI>,
+    AsymmetricError,
+    Mat3>
+  IsotropicNormalizedKernel;
+  
 // By default use the normalized version for increased robustness.
 typedef two_view::kernel::Kernel<
     two_view::kernel::NormalizedSolver<FourPointSolver, UnnormalizerI>,
@@ -82,6 +90,7 @@ typedef two_view::kernel::Kernel<
   Kernel;
 
 }  // namespace kernel
+}  // namespace homography2D
 }  // namespace homography
 }  // namespace libmv
 

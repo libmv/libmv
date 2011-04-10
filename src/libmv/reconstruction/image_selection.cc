@@ -66,9 +66,9 @@ void FillPairwiseMatchesHomographyMatrix(const Matches &matches,
       TwoViewPointMatchMatrices(matches, *image_iter1, *image_iter2, &xs2);
       (*m)(*image_iter1, *image_iter2) = xs2[0].cols();
       if (xs2[0].cols() >= 4) {
-        HomographyFromCorrespondences4PointRobust(xs2[0], xs2[1], 
-                                                  max_error_h, 
-                                                  &H, &inliers, 1e-2);
+        Homography2DFromCorrespondences4PointRobust(xs2[0], xs2[1], 
+                                                    max_error_h, 
+                                                    &H, &inliers, 1e-2);
         // TODO(julien) Put this in a function
         Vec3 p1;
         Vec2 e;

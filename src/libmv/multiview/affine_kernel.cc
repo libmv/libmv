@@ -1,4 +1,4 @@
-// Copyright (c) 2009 libmv authors.
+// Copyright (c) 2010 libmv authors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
@@ -18,37 +18,22 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
-#ifndef LIBMV_MULTIVIEW_PANOGRAPHY_KERNEL_H
-#define LIBMV_MULTIVIEW_PANOGRAPHY_KERNEL_H
-
-#include "libmv/base/vector.h"
-#include "libmv/multiview/conditioning.h"
-#include "libmv/multiview/projection.h"
-#include "libmv/multiview/two_view_kernel.h"
-#include "libmv/multiview/homography_kernel.h"
-#include "libmv/numeric/numeric.h"
+#include "libmv/multiview/affine_kernel.h"
+#include "libmv/multiview/affine.h"
 
 namespace libmv {
-namespace panography {
+namespace affine {
+namespace affine2D {
 namespace kernel {
 
-struct TwoPointSolver {
-  enum { MINIMUM_SAMPLES = 2 };
-  static void Solve(const Mat &x1, const Mat &x2, vector<Mat3> *Hs);
-};
-
-typedef two_view::kernel::Kernel<
-    TwoPointSolver, homography::homography2D::kernel::AsymmetricError, Mat3>
-  UnnormalizedKernel;
-
-typedef two_view::kernel::Kernel<
-        two_view::kernel::NormalizedSolver<TwoPointSolver, UnnormalizerI>,
-        homography::homography2D::kernel::AsymmetricError,
-        Mat3>
-  Kernel;
+void ThreePointSolver::Solve(const Mat &x1, const Mat &x2, vector<Mat3> *Hs) {
+  Mat3 M;
+  if (Affine2DFromCorrespondencesLinear(x1, x2, &M)) {
+    Hs->push_back(M);
+  }
+}
 
 }  // namespace kernel
-}  // namespace panography
+}  // namespace affine2D
+}  // namespace affine
 }  // namespace libmv
-
-#endif  // LIBMV_MULTIVIEW_PANOGRAPHY_KERNEL_H

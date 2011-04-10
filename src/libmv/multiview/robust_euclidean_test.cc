@@ -1,4 +1,4 @@
-// Copyright (c) 2007, 2008, 2009 libmv authors.
+// Copyright (c) 2011 libmv authors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
@@ -20,7 +20,7 @@
 
 #include "libmv/base/vector.h"
 #include "libmv/logging/logging.h"
-#include "libmv/multiview/robust_homography.h"
+#include "libmv/multiview/robust_euclidean.h"
 #include "libmv/multiview/test_data_sets.h"
 #include "libmv/numeric/numeric.h"
 #include "testing/testing.h"
@@ -29,18 +29,22 @@ namespace {
 
 using namespace libmv;
 
-TEST(RobustHomography, Homography2DFromCorrespondences4PointRobust) {
-  // Define a few homographies.
+TEST(RobustEuclidean, Euclidean2DFromCorrespondences2PointRobust) {
+  // Define a few euclidean trnsformations.
   const int num_h = 3;
   Mat3 H_gt[num_h];
-  H_gt[0] = Mat3::Identity();
-  H_gt[1] << 1, 0, -4,
-             0, 1,  5,
-             0, 0,  1;
-  H_gt[2] << 1, -2,  3,
-             4,  5, -6,
-            -7,  8,  1;
 
+  H_gt[0] = Mat3::Identity();
+  
+  double angle = 0.3;
+  H_gt[1] << cos(angle), -sin(angle), -4,
+             sin(angle),  cos(angle),  5,
+             0,  0,  1;
+  angle = 2.3;
+  H_gt[2] << cos(angle), -sin(angle), 3,
+             sin(angle),  cos(angle),  -6,
+             0,  0,  1;
+ 
   // Define a set of points.
   int n = 20;
   Mat x(2, n), xh;
@@ -50,7 +54,7 @@ TEST(RobustHomography, Homography2DFromCorrespondences4PointRobust) {
 
   Mat3 H[num_h];
   for (int i = 0; i < num_h; ++i) {
-    // Transform points by the ground truth homography.
+    // Transform points by the ground truth similarity.
     Mat yh = H_gt[i] * xh;
     Mat y;
     HomogeneousToEuclidean(yh, &y);
@@ -61,9 +65,9 @@ TEST(RobustHomography, Homography2DFromCorrespondences4PointRobust) {
       x(1,j) = x(1,j) + 7.8;
     }
 
-    // Estimate homography from points.
+    // Estimate similarity from points.
     vector<int> inliers;
-    Homography2DFromCorrespondences4PointRobust(x, y, 0.1, &H[i], &inliers);
+    Euclidean2DFromCorrespondences2PointRobust(x, y, 0.1, &H[i], &inliers);
     H[i] /= H[i](2,2);
   }
 

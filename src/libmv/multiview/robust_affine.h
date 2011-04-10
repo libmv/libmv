@@ -18,18 +18,41 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
-#ifndef LIBMV_MULTIVIEW_ROBUST_AFFINE_2D_H_
-#define LIBMV_MULTIVIEW_ROBUST_AFFINE_2D_H_
+#ifndef LIBMV_MULTIVIEW_ROBUST_AFFINE_H_
+#define LIBMV_MULTIVIEW_ROBUST_AFFINE_H_
 
 #include "libmv/base/vector.h"
 #include "libmv/numeric/numeric.h"
 
 namespace libmv {
 
-// Estimate robustly the 2d affine matrix between two dataset of 2D point
-// (image coords space). The 2d affine solver relies on the 2 points solution.
-// Returns the score associated to the solution H
-double AffineFromCorrespondences2PointRobust(
+/** Robust 2D affine transformation estimation
+ * 
+ * This function estimates robustly the 2d affine matrix between two dataset 
+ * of 2D point (image coords space). The 2d affine solver relies on the 3 
+ * points solution. 
+ * 
+ * \param[in] x1 The first 2xN matrix of euclidean points
+ * \param[in] x2 The second 2xN matrix of euclidean points
+ * \param[in] max_error maximum error (in pixels)
+ * \param[out] H The 3x3 affine transformation matrix  (6 dof)
+ *          with the following parametrization
+ *              |a b tx|
+ *          H = |c d ty|
+ *              |0 0 1 |
+ *          such that  x2 = H * x1
+ * \param[out] inliers the indexes list of the detected inliers
+ * \param[in] outliers_probability outliers probability (in ]0,1[).
+ * The number of iterations is controlled using the following equation:
+ *    n_iter = log(outliers_prob) / log(1.0 - pow(inlier_ratio, min_samples)))
+ * The more this value is high, the less the function selects ramdom samples.
+ * 
+ * \return the best error found (in pixels), associated to the solution H
+ * 
+ * \note The function needs at least 3 points 
+ * \note The overall iteration limit is 1000
+ */
+double Affine2DFromCorrespondences3PointRobust(
     const Mat &x1,
     const Mat &x2,
     double max_error,
@@ -39,4 +62,4 @@ double AffineFromCorrespondences2PointRobust(
 
 } // namespace libmv
 
-#endif  // LIBMV_MULTIVIEW_ROBUST_AFFINE_2D_H_
+#endif  // LIBMV_MULTIVIEW_ROBUST_AFFINE_H_

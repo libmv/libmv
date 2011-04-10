@@ -43,7 +43,10 @@ double EuclideanResectionEPnPRobust(const Mat2X &x_image,
                      inliers, &best_score, outliers_probability);
   Mat3 K_unused;
   KRt_From_P(P, &K_unused, R, t);
-  return best_score;
+  if (best_score == HUGE_VAL)
+    return HUGE_VAL;
+  else
+    return std::sqrt(best_score / 2.0);  
 }
 
 }  // namespace libmv

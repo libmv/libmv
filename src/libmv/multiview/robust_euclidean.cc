@@ -1,4 +1,4 @@
-// Copyright (c) 2009 libmv authors.
+// Copyright (c) 2011 libmv authors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
@@ -18,37 +18,35 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
-#ifndef LIBMV_MULTIVIEW_PANOGRAPHY_KERNEL_H
-#define LIBMV_MULTIVIEW_PANOGRAPHY_KERNEL_H
-
 #include "libmv/base/vector.h"
-#include "libmv/multiview/conditioning.h"
-#include "libmv/multiview/projection.h"
-#include "libmv/multiview/two_view_kernel.h"
-#include "libmv/multiview/homography_kernel.h"
+#include "libmv/multiview/euclidean_kernel.h"
+#include "libmv/multiview/robust_euclidean.h"
+#include "libmv/multiview/robust_estimation.h"
 #include "libmv/numeric/numeric.h"
 
 namespace libmv {
-namespace panography {
-namespace kernel {
 
-struct TwoPointSolver {
-  enum { MINIMUM_SAMPLES = 2 };
-  static void Solve(const Mat &x1, const Mat &x2, vector<Mat3> *Hs);
-};
+// Estimate robustly the 2d euclidean matrix between two dataset of 2D point
+// (image coords space). The 2d euclidean solver relies on the 2 points solution.
+double Euclidean2DFromCorrespondences2PointRobust(
+    const Mat &x1,
+    const Mat &x2,
+    double max_error,
+    Mat3 *H,
+    vector<int> *inliers,
+    double outliers_probability)
+{
+  // The threshold is on the sum of the squared errors in the two images.
+  double threshold = 2 * Square(max_error);
+  double best_score = HUGE_VAL;
+  typedef euclidean::euclidean2D::kernel::Kernel KernelH;
+  KernelH kernel(x1, x2);
+  *H = Estimate(kernel, MLEScorer<KernelH>(threshold), inliers, 
+                &best_score, outliers_probability);
+  if (best_score == HUGE_VAL)
+    return HUGE_VAL;
+  else
+    return std::sqrt(best_score / 2.0);  
+}
 
-typedef two_view::kernel::Kernel<
-    TwoPointSolver, homography::homography2D::kernel::AsymmetricError, Mat3>
-  UnnormalizedKernel;
-
-typedef two_view::kernel::Kernel<
-        two_view::kernel::NormalizedSolver<TwoPointSolver, UnnormalizerI>,
-        homography::homography2D::kernel::AsymmetricError,
-        Mat3>
-  Kernel;
-
-}  // namespace kernel
-}  // namespace panography
-}  // namespace libmv
-
-#endif  // LIBMV_MULTIVIEW_PANOGRAPHY_KERNEL_H
+} // namespace libmv

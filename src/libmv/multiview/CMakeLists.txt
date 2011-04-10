@@ -4,6 +4,7 @@ ADD_LIBRARY(multiview
             fundamental_kernel.cc
             panography_kernel.cc
             robust_fundamental.cc
+            homography.cc
             homography_kernel.cc
             robust_estimation.cc
             focal_from_fundamental.cc
@@ -12,17 +13,23 @@ ADD_LIBRARY(multiview
             bundle.cc
             autocalibration.cc
             five_point.cc
-            affine_2d.cc
-            affine_2d_kernel.cc
-            robust_affine_2d.cc
+            affine.cc
+            affine_kernel.cc
+            robust_affine.cc
             robust_homography.cc
+            robust_similarity.cc
+            robust_resection.cc
+            robust_euclidean_resection.cc
             euclidean_resection.cc
             twoviewtriangulation.cc
             structure.cc
             conditioning.cc
-            robust_euclidean_resection.cc
-            robust_resection.cc
             essential_kernel.cc
+            similarity.cc
+            similarity_kernel.cc
+            euclidean.cc
+            euclidean_kernel.cc
+            robust_euclidean.cc
             )
 
 TARGET_LINK_LIBRARIES(multiview numeric V3D colamd ldl)
@@ -57,12 +64,20 @@ MULTIVIEW_TEST(autocalibration)
 MULTIVIEW_TEST(five_point)
 MULTIVIEW_TEST(five_point_kernel)
 MULTIVIEW_TEST(essential_kernel)
-MULTIVIEW_TEST(affine_2d)
+MULTIVIEW_TEST(affine)
+MULTIVIEW_TEST(affine_kernel)
+MULTIVIEW_TEST(robust_affine)
 MULTIVIEW_TEST(euclidean_resection)
 MULTIVIEW_TEST(euclidean_resection_kernel)
 MULTIVIEW_TEST(robust_euclidean_resection)
 MULTIVIEW_TEST(twoviewtriangulation)
 MULTIVIEW_TEST(robust_resection)
+MULTIVIEW_TEST(similarity)
+MULTIVIEW_TEST(similarity_kernel)
+MULTIVIEW_TEST(robust_similarity)
+MULTIVIEW_TEST(euclidean)
+MULTIVIEW_TEST(euclidean_kernel)
+MULTIVIEW_TEST(robust_euclidean)
 
 # TODO(keir): Make tests that depend on generated.cc to use generated sources.
 #ADD_GENERATED_SOURCE(generated.cc generator.py)
