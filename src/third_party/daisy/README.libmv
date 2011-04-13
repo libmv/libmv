@@ -16,4 +16,5 @@ Local modifications:
 * Change to add use of unused parameter.
 * make convolution code better : convolution.h use template<class T> inline void convolve_sym
 * fix layer issue un daisy.cpp (memory error in valgrind)
+* Make it compile on platforms without large file support (mmap64, open64 and friends).
 
