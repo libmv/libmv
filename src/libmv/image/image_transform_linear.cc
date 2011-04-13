@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2011 libmv authors.
+// Copyright (c) 2011 libmv authors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
@@ -60,7 +60,7 @@ void ComputeBoundingBox(const Vec2u &image_size,
  */
 void ResizeImage(const Vec2u &image_size,
                  const Mat3 &H,
-                 FloatImage *image,
+                 FloatImage *image_out,
                  Mat3  *Hreg,
                  Vec4i *bbox) {
   assert(image_out != NULL);
@@ -75,7 +75,7 @@ void ResizeImage(const Vec2u &image_size,
   
   const unsigned int w = (*bbox_ptr)(1) - (*bbox_ptr)(0);
   const unsigned int h = (*bbox_ptr)(3) - (*bbox_ptr)(2);
-  image->Resize(h, w, image->Depth());
+  image_out->Resize(h, w, image_out->Depth());
   // Register the image so that the min (x, y) are (0, 0)
   if (Hreg) {
     (*Hreg) << 1, 0, -(*bbox_ptr)(0),

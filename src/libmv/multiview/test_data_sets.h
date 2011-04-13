@@ -97,7 +97,7 @@ NViewDataSet NRealisticCamerasFull(int nviews, int npoints,
 // Generates sparse projections (not all points are projected)
 NViewDataSet NRealisticCamerasSparse(int nviews, int npoints,
                                      float view_ratio = 0.6,
-                                     uint min_projections = 3,
+                                     unsigned min_projections = 3,
                                      const nViewDatasetConfigator
                                        config = nViewDatasetConfigator());
 

@@ -52,6 +52,7 @@ class LensDistortion {
  public:
   LensDistortion(const Vec &radial_distortion = Vec(), 
                  const Vec &tangential_distortion = Vec());
+  virtual ~LensDistortion() {};
 
   // Compute the distorted coordinates of a 2D point
   // \param[in] camera is a pinhole camera model
