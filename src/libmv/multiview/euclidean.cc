@@ -70,8 +70,9 @@ bool Euclidean2DFromCorrespondencesLinear(const Mat &x1, const Mat &x2,
     Eigen::JacobiSVD<Mat> svd(M->block<2,2>(0, 0), Eigen::ComputeThinU | 
                                                    Eigen::ComputeThinV);
     Mat2 I2 = Mat2::Identity();
-    M->block<2,2>(0, 0) = svd.matrixU() * I2 * svd.matrixV().transpose();  
-    
+    M->block<2,2>(0, 0) = svd.matrixU() * I2 * svd.matrixV().transpose();
+    if (M->block<2,2>(0, 0).determinant() < 0)
+      M->block<2,2>(0, 0) = -M->block<2,2>(0, 0);
     // TODO(julien) Implement this paper:
     // Polar decomposition algorithm proposed by [Higham 86]
     // SIAM J. Sci. Stat. Comput. Vol. 7, Num. 4, October 1986.

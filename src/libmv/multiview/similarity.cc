@@ -70,7 +70,9 @@ bool Similarity2DFromCorrespondencesLinear(const Mat &x1, const Mat &x2,
                                                    Eigen::ComputeThinV);
     double scale = std::sqrt(std::abs(M->block<2,2>(0, 0).determinant()));
     Mat2 sI2 = scale * Mat2::Identity();
-    M->block<2,2>(0, 0) = svd.matrixU() * sI2 * svd.matrixV().transpose();    
+    M->block<2,2>(0, 0) = svd.matrixU() * sI2 * svd.matrixV().transpose();  
+    if (M->block<2,2>(0, 0).determinant() < 0)
+      M->block<2,2>(0, 0) = -M->block<2,2>(0, 0);  
     
     // TODO(julien) Implement this paper:
     // Polar decomposition algorithm proposed by [Higham 86]
