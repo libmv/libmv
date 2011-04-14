@@ -344,7 +344,7 @@ int main(int argc, char **argv) {
       ComputeRelativeSimilarityMatrices(fg.matches_, &Hs);
     break;
     case AFFINE:
-      ComputeRelativeHomographyMatrices(fg.matches_, &Hs);
+      ComputeRelativeAffineMatrices(fg.matches_, &Hs);
     break;
     case HOMOGRAPHY:
       ComputeRelativeHomographyMatrices(fg.matches_, &Hs);
