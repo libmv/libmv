@@ -81,6 +81,7 @@ typedef Eigen::Matrix<float, 4, 4> Mat4f;
 typedef Eigen::Matrix<float, 4, 6> Mat46f;
 
 typedef Eigen::Matrix<double, 3, 3, Eigen::RowMajor> RMat3;
+typedef Eigen::Matrix<double, 4, 4, Eigen::RowMajor> RMat4;
 
 typedef Eigen::Matrix<double, 2, Eigen::Dynamic> Mat2X;
 typedef Eigen::Matrix<double, 3, Eigen::Dynamic> Mat3X;

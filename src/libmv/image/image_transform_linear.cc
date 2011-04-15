@@ -27,15 +27,15 @@
 namespace libmv {
 
 /**
- * Computes the bounding box of a image warp.
+ * Computes the bounding box of an image warp.
  */
 void ComputeBoundingBox(const Vec2u &image_size,
                         const Mat3 &H,
                         Vec4i *bbox) {
   Mat34 q_bounds;
-  q_bounds << 0, 0,              image_size(0), image_size(0),
-              0, image_size(1), image_size(1), 0,
-              1, 1,              1,              1;
+  q_bounds << 0,             0, image_size(0), image_size(0),
+              0, image_size(1), image_size(1),             0,
+              1,             1,             1,             1;
   
   (*bbox) << image_size(0), 0, image_size(1), 0;
   Vec3 q;
@@ -116,8 +116,8 @@ void RotateImage(const FloatImage &image_in,
   Hr << cos(angle), -sin(angle),  0,
         sin(angle),  cos(angle),  0,
                0,           0,    1;
-  Ht << 1, 0, -image_in.Height()/2,
-        0, 1, -image_in.Width()/2,
+  Ht << 1, 0, -image_in.Height()/2.0,
+        0, 1, -image_in.Width()/2.0,
         0, 0,  1;
   H = Ht.inverse() * Hr * Ht;
   if (adapt_img_size) {

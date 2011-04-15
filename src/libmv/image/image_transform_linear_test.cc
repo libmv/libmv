@@ -52,7 +52,7 @@ TEST(ImageTransform, RotateImage90) {
   //  |         |
   //  |_________|
   const int y = 5;
-  DrawLine(0, y, w-1, y, 255, &image);
+  DrawLine(0, y, w-1, y, 1.0, &image);
   //WriteImage(image, "i.png");
 
   FloatImage image_rot(h,w);
@@ -70,16 +70,16 @@ TEST(ImageTransform, RotateImage90) {
   //  |    r|   |
   //  |____e|___|
   for (int i = 0; i < h; ++i){
-    EXPECT_EQ(image_rot(i,y), 255);
+    EXPECT_EQ(image_rot(i,y), 1.0);
   }
   
   image_rot.Fill(0);
   angle90 = -M_PI/2.0;
   RotateImage(image, angle90, &image_rot, adapt_img_size);
-  WriteImage(image_rot, "r-90.png");
+  //WriteImage(image_rot, "r-90.png");
 
   for (int i = 0; i < h; ++i) {
-    EXPECT_EQ(image_rot(i,y), 255);
+    EXPECT_EQ(image_rot(i,y), 1.0);
   }
 }
 
@@ -95,7 +95,8 @@ TEST(ImageTransform, TranslateImage) {
   //  |\  |
   //  | \ |
   //  |__\|
-  DrawLine(0, 0, w-1, h-1, 255, &image);
+  DrawLine(0, 0, w-1, h-1, 1.0, &image);
+  //WriteImage(image, "i2.png");
 
   FloatImage image_trans(h,w);
   image_trans.Fill(0);
@@ -109,7 +110,7 @@ TEST(ImageTransform, TranslateImage) {
   for (int i = 2; i < w; ++i) {
     j = i-dx+dy;
     if (j < h)
-      EXPECT_EQ(image_trans(j,i), 255);
+      EXPECT_EQ(image_trans(j,i), 1.0);
   }
 }
 // Lines with a given angle +/-45°
@@ -127,7 +128,7 @@ TEST(ImageTransform, RotateImage45) {
   //  |         |
   //  |_________|
   const int y = 5;
-  DrawLine(0, y, w-1, y, 255, &image);
+  DrawLine(0, y, w-1, y, 1.0, &image);
 
   FloatImage image_rot(h,w);
   image_rot.Fill(0);
@@ -138,7 +139,7 @@ TEST(ImageTransform, RotateImage45) {
   //WriteImage(image_rot, "r45.png");
     
   for (int i = 1; i < w-1; ++i)
-    EXPECT_EQ(image_rot(i,i), 255);
+    EXPECT_EQ(image_rot(i,i), 1.0);
 }
 
 // Assert that the image size is good
@@ -154,7 +155,7 @@ TEST(ImageTransform, RescaleImageTranslation) {
   Mat3 Hreg;
   Vec4i bbox;
   
-  int dx = std::rand(), dy = std::rand();
+  const int dx = 2, dy = -7;
   H << 1, 0, dx,
        0, 1, dy,
        0, 0, 1;
@@ -165,9 +166,9 @@ TEST(ImageTransform, RescaleImageTranslation) {
   EXPECT_EQ(image_rs.Height(), h + dy);
   EXPECT_EQ(image_rs.Depth(), 1);
   
-  EXPECT_EQ(bbox(0), 0);
+  EXPECT_EQ(bbox(0), std::min(0, dx));
   EXPECT_EQ(bbox(1), w + dx);
-  EXPECT_EQ(bbox(2), 0);
+  EXPECT_EQ(bbox(2), std::min(0, dy));
   EXPECT_EQ(bbox(3), h + dy);
   
   EXPECT_MATRIX_EQ(Hreg, H);

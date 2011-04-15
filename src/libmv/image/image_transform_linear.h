@@ -47,14 +47,17 @@ void ComputeBoundingBox(const Vec2u &image_size,
  * \param H The 2D warp matrix
  * \param image The image to resize
  * \param Hreg The new warp matrix in that translates the original image.
- * \param bbox The bounding box (xmin, xmax, ymin, ymax)
+ * \param bbox The bounding box that contains all the image 
+ *             (xmin, xmax, ymin, ymax)
  *
  * A typical use is:
+ * \code
  *   FloatImage image_in, image_out;
  *   Mat3 H; // setup the warp matric here
  *   ResizeImage(image_size, H, &image_out, &H);
  *   image_out.fill(0); //fill with black pixels
  *   WarpImage(image_in, H,image_size, 0.5, &image_out);
+ * \endcode
  */
 void ResizeImage(const Vec2u &image_size,
                  const Mat3 &H,
