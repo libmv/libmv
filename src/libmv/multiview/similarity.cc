@@ -18,6 +18,9 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
+#include <Eigen/Geometry> 
+
+#include "libmv/multiview/affine.h"
 #include "libmv/multiview/similarity.h"
 
 namespace libmv {
@@ -68,7 +71,7 @@ bool Similarity2DFromCorrespondencesLinear(const Mat &x1, const Mat &x2,
     // Ensures that R is orthogonal (using SDV decomposition)
     Eigen::JacobiSVD<Mat> svd(M->block<2,2>(0, 0), Eigen::ComputeThinU | 
                                                    Eigen::ComputeThinV);
-    double scale = std::sqrt(std::abs(M->block<2,2>(0, 0).determinant()));
+    double scale = svd.singularValues()(0);
     Mat2 sI2 = scale * Mat2::Identity();
     M->block<2,2>(0, 0) = svd.matrixU() * sI2 * svd.matrixV().transpose();  
     if (M->block<2,2>(0, 0).determinant() < 0)
@@ -84,6 +87,26 @@ bool Similarity2DFromCorrespondencesLinear(const Mat &x1, const Mat &x2,
   } else {
     return false;
   }
+}
+
+bool Similarity3DFromCorrespondencesLinear(const Mat &x1,
+                                          const Mat &x2,
+                                          Mat4 *H,
+                                          double expected_precision) {
+   // TODO(julien) Compare to *H = umeyama (x1, x2, true);
+   // and keep the best one (quality&speed)   
+  if (Affine3DFromCorrespondencesLinear(x1, x2, H, expected_precision)) {
+    // Ensures that R is orthogonal (using SDV decomposition)
+    Eigen::JacobiSVD<Mat> svd(H->block<3,3>(0, 0), Eigen::ComputeThinU | 
+                                                   Eigen::ComputeThinV);
+    double scale = svd.singularValues()(0);
+    Mat3 sI3 = scale * Mat3::Identity();
+    H->block<3,3>(0, 0) = svd.matrixU() * sI3 * svd.matrixV().transpose();
+    if (H->block<3,3>(0, 0).determinant() < 0)
+      H->block<3,3>(0, 0) = -H->block<3,3>(0, 0);  
+    return true;
+  }
+  return false;
 }
 
 bool ExtractSimilarity2DCoefficients(const Mat3 &M,

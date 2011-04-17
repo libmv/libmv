@@ -27,6 +27,9 @@ namespace libmv {
 
 /** 2D Similarity transformation estimation
  * 
+ * This function can be used in order to estimate the similarity transformation
+ * between two sets of points with known 2D correspondences.
+ *
  * \param[in] x1 The first 2xN matrix of euclidean points
  * \param[in] x2 The second 2xN matrix of euclidean points
  * \param[out] M The 3x3 similarity transformation matrix (4 dof)
@@ -49,6 +52,36 @@ bool Similarity2DFromCorrespondencesLinear(const Mat &x1,
                                            Mat3 *M,
                                            double expected_precision = 
                                              EigenDouble::dummy_precision());
+
+/** 3D Similarity transformation estimation.
+ * 
+ * This function can be used in order to estimate the similarity transformation
+ * between two sets of points with known 3D correspondences.
+ * It relies on the affine transformation estimation first and SVD decomposition
+ * in order to have an orthogonal rotation part.
+ * 
+ * \param[in] x1 The first 3xN matrix of euclidean points
+ * \param[in] x2 The second 3xN matrix of euclidean points
+ * \param[out] H The 4x4 similarity transformation matrix  (7 dof)
+ *               with the following parametrization such that  x2 = H * x1
+ *            |      tx|
+ *        H = | s*R  ty|
+ *            |      tz|
+ *            |0 0 0 1 |
+ *          
+ * \param[in] expected_precision The expected precision in order for instance 
+ *        to accept almost similarity matrices.
+ * 
+ * \return true if the transformation estimation has succeeded
+ * 
+ * \note Need at least 4 non coplanar points 
+ * \note Points coordinates must be normalized (euclidean)
+ */
+bool Similarity3DFromCorrespondencesLinear(const Mat &x1,
+                                          const Mat &x2,
+                                          Mat4 *H,
+                                          double expected_precision = 
+                                            EigenDouble::dummy_precision());
 
 /** Extract the translation, rotation angle and scale from a 2D similarity 
  * matrix.

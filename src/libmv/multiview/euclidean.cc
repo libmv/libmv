@@ -17,7 +17,8 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
-
+ 
+#include "libmv/multiview/affine.h"
 #include "libmv/multiview/euclidean.h"
 #include "libmv/numeric/numeric.h"
 
@@ -37,6 +38,7 @@ namespace libmv {
 bool Euclidean2DFromCorrespondencesLinear(const Mat &x1, const Mat &x2,
                                           Mat3 *M,
                                           double expected_precision) {
+  // TODO(julien) make a test for aligned points
   assert(2 == x1.rows());
   assert(2 >= x1.cols());
   assert(x1.rows() == x2.rows());
@@ -85,28 +87,29 @@ bool Euclidean2DFromCorrespondencesLinear(const Mat &x1, const Mat &x2,
   }
 }
 
-bool ExtractEuclidean2DCoefficients(const Mat3 &M,
+bool Euclidean3DFromCorrespondencesLinear(const Mat &x1,
+                                          const Mat &x2,
+                                          Mat4 *H,
+                                          double expected_precision) {
+  // TODO(julien) Compare to *H = umeyama (x1, x2, false);
+  // TODO(julien) make a test for coplanar points
+  // and keep the best one (quality&speed)   
+  if (Affine3DFromCorrespondencesLinear(x1, x2, H, expected_precision)) {
+    // Ensures that R is orthogonal (using SDV decomposition)
+    Eigen::JacobiSVD<Mat> svd(H->block<3,3>(0, 0), Eigen::ComputeThinU | 
+                                                   Eigen::ComputeThinV);
+    Mat3 I3 = Mat3::Identity();
+    H->block<3,3>(0, 0) = svd.matrixU() * I3 * svd.matrixV().transpose();
+    return true;
+  }
+  return false;
+}
+
+bool ExtractEuclidean2DCoefficients(const Mat3 &H,
                                     Vec2   *tr,
                                     double *angle) {
-  //assert(M(1, 0) == -M(0, 1));
-  //assert(M(0, 0) == M(1, 1));
-  assert(M(2, 2) == 1);  
-  *angle = std::asin(M(1, 0));
-  
-  if (isnan(*angle)) { // NOTE strange isn't it?
-    *angle = M_PI / 2.0;
-    if (M(1, 0) < 0)
-      *angle = -*angle;
-  }
-  
-  if (*angle > 0) {
-    if (M(0, 0) < 0)
-      *angle += M_PI / 2.0;
-  } else {
-    if (M(0, 0) < 0)
-      *angle -= M_PI / 2.0;
-  }
-  *tr << M(0, 2), M(1, 2);
+  *tr = H.block<2,1>(0,2);
+  *angle = std::atan2(H.coeff(1,0), H.coeff(0,0));
   return true;
 }
 } // namespace libmv

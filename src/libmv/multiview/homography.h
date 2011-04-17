@@ -31,19 +31,20 @@ namespace libmv {
  * from a list of 2D correspondences which represents either
  * - 3D points on a plane (+ general moving camera)
  * - 3D points + rotating camera (pure rotation)
- * - 3D points + differents focal length (or plan projection)
+ * - 3D points + different plan projections
  * 
- * \param[in] x1 The first 2xN matrix of euclidean points
- * \param[in] x2 The second 2xN matrix of euclidean points
+ * \param[in] x1 The first 2xN or 3xN matrix of euclidean or homogeneous points 
+ * \param[in] x2 The second 2xN or 3xN matrix of euclidean or homogeneous points
  * \param[out] H The 3x3 homography transformation matrix (8 dof) such that
- *          x2 = H * x1
+ *               x2 = H * x1   with       |a b c| 
+ *                                    H = |e f g|
+ *                                        |i j 1| 
  * \param[in] expected_precision The expected precision in order for instance 
  *        to accept almost homography matrices.
  * 
  * \return true if the transformation estimation has succeeded
  * 
- * \note Need at least 4 points 
- * \note Points coordinates must be normalized (euclidean)
+ * \note Need at least 4 non aligned points 
  */
 bool Homography2DFromCorrespondencesLinear(const Mat &x1,
                                            const Mat &x2,
@@ -51,6 +52,31 @@ bool Homography2DFromCorrespondencesLinear(const Mat &x1,
                                            double expected_precision = 
                                              EigenDouble::dummy_precision());
 
+/** 3D Homography transformation estimation.
+ * 
+ * This function can be used in order to estimate the homography transformation
+ * from a list of 3D correspondences.
+ *
+ * \param[in] x1 The first 4xN matrix of homogeneous points
+ * \param[in] x2 The second 4xN matrix of homogeneous points
+ * \param[out] H The 4x4 homography transformation matrix (15 dof) such that
+ *               x2 = H * x1   with       |a b c d| 
+ *                                    H = |e f g h|
+ *                                        |i j k l|
+ *                                        |m n o 1| 
+ * \param[in] expected_precision The expected precision in order for instance 
+ *        to accept almost homography matrices.
+ * 
+ * \return true if the transformation estimation has succeeded
+ * 
+ * \note Need at least 5 non coplanar points 
+ * \note Points coordinates must be in homogeneous coordinates
+ */
+bool Homography3DFromCorrespondencesLinear(const Mat &x1,
+                                           const Mat &x2,
+                                           Mat4 *H,
+                                           double expected_precision = 
+                                             EigenDouble::dummy_precision());
 } // namespace libmv
 
 #endif  // LIBMV_MULTIVIEW_HOMOGRAPHY_H_

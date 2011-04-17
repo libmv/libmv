@@ -89,7 +89,13 @@ typedef Eigen::Matrix<double, 4, Eigen::Dynamic> Mat4X;
 typedef Eigen::Matrix<double, Eigen::Dynamic, 2> MatX2;
 typedef Eigen::Matrix<double, Eigen::Dynamic, 3> MatX3;
 typedef Eigen::Matrix<double, Eigen::Dynamic, 4> MatX4;
+typedef Eigen::Matrix<double, Eigen::Dynamic, 5> MatX5;
+typedef Eigen::Matrix<double, Eigen::Dynamic, 6> MatX6;
+typedef Eigen::Matrix<double, Eigen::Dynamic, 7> MatX7;
+typedef Eigen::Matrix<double, Eigen::Dynamic, 8> MatX8;
 typedef Eigen::Matrix<double, Eigen::Dynamic, 9> MatX9;
+typedef Eigen::Matrix<double, Eigen::Dynamic,15> MatX15;
+typedef Eigen::Matrix<double, Eigen::Dynamic,16> MatX16;
 
 typedef Eigen::Vector2d Vec2;
 typedef Eigen::Vector3d Vec3;

@@ -27,7 +27,8 @@ namespace libmv {
 
 /** 2D Euclidean transformation estimation.
  * 
- * This function can be used in order to estimate the Euclidean transformation
+ * This function can be used in order to estimate the euclidean transformation
+ * between two sets of points with known 2D correspondences.
  * 
  * \param[in] x1 The first 2xN matrix of euclidean points
  * \param[in] x2 The second 2xN matrix of euclidean points
@@ -44,7 +45,6 @@ namespace libmv {
  * 
  * \note Need at least 2 points 
  * \note Points coordinates must be normalized (euclidean)
- * \note This method ensures that the rotation matrix is orthogonal.
  */
 bool Euclidean2DFromCorrespondencesLinear(const Mat &x1,
                                           const Mat &x2,
@@ -52,16 +52,46 @@ bool Euclidean2DFromCorrespondencesLinear(const Mat &x1,
                                           double expected_precision = 
                                             EigenDouble::dummy_precision());
 
+/** 3D Euclidean transformation estimation.
+ * 
+ * This function can be used in order to estimate the euclidean transformation
+ * between two sets of points with known 3D correspondences.
+ * It relies on the affine transformation estimation first and SVD decomposition
+ * in order to have an orthogonal rotation part.
+ * 
+ * \param[in] x1 The first 3xN matrix of euclidean points
+ * \param[in] x2 The second 3xN matrix of euclidean points
+ * \param[out] H The 4x4 euclidean transformation matrix  (6 dof)
+ *               with the following parametrization such that  x2 = H * x1
+ *            |      tx|
+ *        H = |  R   ty|
+ *            |      tz|
+ *            |0 0 0 1 |
+ *          
+ * \param[in] expected_precision The expected precision in order for instance 
+ *        to accept almost euclidean matrices.
+ * 
+ * \return true if the transformation estimation has succeeded
+ * 
+ * \note Need at least 4 non coplanar points 
+ * \note Points coordinates must be normalized (euclidean)
+ */
+bool Euclidean3DFromCorrespondencesLinear(const Mat &x1,
+                                          const Mat &x2,
+                                          Mat4 *H,
+                                          double expected_precision = 
+                                            EigenDouble::dummy_precision());
+
 /** Extract the translation and rotation angle from a 2D euclidean 
  * matrix.
  * 
- * \param[in] M 2D euclidean matrix (3 dof)
+ * \param[in]  H 2D euclidean matrix
  * \param[out] tr extracted 2D translation (x, y)
  * \param[out] angle extracted rotation angle (radian)
  *
  * \return true if success
  */
-bool ExtractEuclidean2DCoefficients(const Mat3 &M,
+bool ExtractEuclidean2DCoefficients(const Mat3 &H,
                                     Vec2   *tr,
                                     double *angle);
 
