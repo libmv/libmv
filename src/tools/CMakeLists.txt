@@ -17,6 +17,7 @@ TARGET_LINK_LIBRARIES(interest_points
                       )
 LIBMV_INSTALL_EXE(interest_points)
 
+IF (BUILD_TESTS)
 ADD_EXECUTABLE(experimental experimental.cc)
 TARGET_LINK_LIBRARIES(experimental
                       multiview_test_data
@@ -27,6 +28,7 @@ TARGET_LINK_LIBRARIES(experimental
                       glog
                       )
 LIBMV_INSTALL_EXE(experimental)
+ENDIF (BUILD_TESTS)
 
 ADD_EXECUTABLE(points_detector points_detector.cc)
 TARGET_LINK_LIBRARIES(points_detector

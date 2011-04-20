@@ -20,7 +20,6 @@
 
 #include "libmv/logging/logging.h"
 #include "libmv/multiview/homography.h"
-#include <iostream>
 
 namespace libmv {
 // 2D Homography transformation estimation in the case that points are in 
@@ -250,7 +249,7 @@ bool Homography3DFromCorrespondencesLinear(const Mat &x1,
     (*H)<<h(0),  h(1),  h(2),  h(3),
           h(4),  h(5),  h(6),  h(7),
           h(8),  h(9),  h(10), h(11),
-          h(12), h(13), h(14),    1;
+          h(12), h(13), h(14), 1.0;
     return true;
   } else {
     return false;

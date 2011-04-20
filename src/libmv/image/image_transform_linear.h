@@ -103,7 +103,7 @@ void RotateImage(const FloatImage &image_in,
  * Warps an input image by a 3x3 matrix H and write the result in another image.
  *
  * \param image_in The input image
- * \param H The 2D warp matrix
+ * \param H The 2D warp matrix, x_warped_img = H * x_img
  * \param image_out The output image that will contains the warpped input image
  * \param adapt_img_size The output image will be resized to contain all 
  *                       the rotated input image

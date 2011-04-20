@@ -201,5 +201,45 @@ TEST(ImageDrawing, DrawLine_PointOutsideTheImage) {
     int y1 = sin(i) * radius;
     DrawLine( x, y, x+x1, y+y1, 255, &image);
   }
-  WriteImage( image, "toto.png");
+}
+
+// Horizontal / Vertical scanlines
+// Assert that pixels was drawn at the good place
+// and with the good color
+TEST(ImageDrawing, ScanlinesRGB) {
+
+  const int w = 10, h = 10;
+  Array3Du image(h,w, 3);
+  image.Fill(0);
+  unsigned char color[3] = {55, 255, 125};
+
+  // horizontal scanline
+  //  __________
+  //  |         |
+  //  |__here___|
+  //  |         |
+  //  |_________|
+  const int y = 5;
+  DrawLine<Array3Du, unsigned char[3]>( 0, y, w-1, y, color, &image);
+  for(int i=0; i < w; ++i) {
+    EXPECT_EQ( image(y,i,0), color[0]);
+    EXPECT_EQ( image(y,i,1), color[1]);
+    EXPECT_EQ( image(y,i,2), color[2]);
+  }
+
+  image.Fill(0);
+
+  // Vertical scanline
+  //  __________
+  //  |    h|   |
+  //  |    e|   |
+  //  |    r|   |
+  //  |____e|___|
+  const int x = 5;
+  DrawLine<Array3Du, unsigned char[3]>( x, 0, x, h-1, color, &image);
+  for (int i = 0; i < h; ++i) {
+    EXPECT_EQ( image(i,y,0), color[0]);
+    EXPECT_EQ( image(i,y,1), color[1]);
+    EXPECT_EQ( image(i,y,2), color[2]);
+  }
 }

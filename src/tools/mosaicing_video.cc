@@ -73,7 +73,7 @@ using namespace libmv;
  *
  * \param matches The 2D features matches
  * \param Ss Vector of relative similarity matrices such that 
- *        $q2 = S1 q1$ and $qi = Si-1 * ...* S1 q1$
+ *        $q2 = E1 q1$ and $qi = Ei-1 * ...* E1 q1$
  *        where qi is a point in the image i
  *        and q1 is its position in the image 1
  * \param outliers_prob The outliers probability [0, 1[
@@ -82,11 +82,11 @@ using namespace libmv;
  * TODO(julien) put this in reconstruction
  */
 void ComputeRelativeEuclideanMatrices(const Matches &matches,
-                                      vector<Mat3> *Ss,
+                                      vector<Mat3> *Es,
                                       double outliers_prob = 1e-2,
                                       double max_error_2d = 1) {
-  Ss->reserve(matches.NumImages() - 1);
-  Mat3 S;
+  Es->reserve(matches.NumImages() - 1);
+  Mat3 E;
   vector<Mat> xs2;
   std::set<Matches::ImageID>::const_iterator image_iter =
     matches.get_images().begin();
@@ -97,10 +97,10 @@ void ComputeRelativeEuclideanMatrices(const Matches &matches,
       if (xs2[0].cols() >= 2) {
         Euclidean2DFromCorrespondences2PointRobust(xs2[0], xs2[1], 
                                                    max_error_2d , 
-                                                   &S, NULL, 
+                                                   &E, NULL, 
                                                    outliers_prob);
-        Ss->push_back(S);
-        VLOG(2) << "S = " << std::endl << S << std::endl;
+        Es->push_back(E);
+        VLOG(2) << "E = " << std::endl << E << std::endl;
       } // TODO(julien) what to do when no enough points?
     ++prev_image_iter;
   }
@@ -242,8 +242,9 @@ void ComputeGlobalBoundingBox(const Vec2u &images_size,
   (*bbox) << images_size(0), 0, images_size(1), 0;
   Vec3 q;
   for (size_t i = 0; i < Hs.size(); ++i) {
-    H = Hs[i] * H;
-	VLOG(1) << "H = " << std::endl << H << std::endl;
+    H = Hs[i].inverse() * H;
+    H /= H(2, 2);
+    VLOG(1) << "H = " << std::endl << H << std::endl;
     for (int i = 0; i < 4; ++i) {
       q = H * q_bounds.col(i);
       q /= q(2);
@@ -259,6 +260,11 @@ void ComputeGlobalBoundingBox(const Vec2u &images_size,
         (*bbox)(3) = q(1);
     }
   }
+  // HACK to protect from huge memory allocation
+  (*bbox)(0) = std::max((int)-5e3, (*bbox)(0));
+  (*bbox)(2) = std::max((int)-5e3, (*bbox)(2));
+  (*bbox)(1) = std::min((int) 5e3, (*bbox)(1));
+  (*bbox)(3) = std::min((int) 5e3, (*bbox)(3));
 }
 
 /**
@@ -310,22 +316,30 @@ void BuildMosaic(const std::vector<std::string> &image_files,
   Hreg << 1, 0, -bbox(0),
           0, 1, -bbox(2),
           0, 0, 1;
+  //for (size_t i = 0; i < image_files.size() / 2; ++i)
+  //  Hreg = Hreg * Hs[i];
+  float lines_color[3] = {1, 1, 1};
   FloatImage *image = NULL;
   ImageCache cache;
   scoped_ptr<ImageSequence> source(ImageSequenceFromFiles(image_files, &cache));
   for (size_t i = 0; i < image_files.size(); ++i) {
     if (i > 0)
-      H = Hs[i - 1] * H;
+      H = Hs[i - 1].inverse() * H;
     image = source->GetFloatImage(i);
     if (image) {
-      //VLOG(1) << "H = \n" << H << "\n";
       if (draw_lines) {
-        DrawLine(0, 0, 0, images_size(1) - 1, 1, image);
-        DrawLine(0, 0, images_size(0) - 1, 0, 1, image);
-        DrawLine(0, images_size(1)-1, images_size(0)-1, images_size(1)-1, 1, image);
-        DrawLine(images_size(0)-1, 0, images_size(0)-1, images_size(1)-1, 1, image);
-      }        
-      WarpImageBlend(*image, Hreg * H, mosaic, blending_ratio);
+        DrawLine<FloatImage, float[3]>(0, 0, 0, images_size(1) - 1, 
+                                       lines_color, image);
+        DrawLine<FloatImage, float[3]>(0, 0, images_size(0) - 1, 0, 
+                                       lines_color, image);
+        DrawLine<FloatImage, float[3]>(               0, images_size(1)-1, 
+                                       images_size(0)-1, images_size(1)-1, 
+                                       lines_color, image);
+        DrawLine<FloatImage, float[3]>(images_size(0)-1,                0, 
+                                       images_size(0)-1, images_size(1)-1, 
+                                       lines_color, image); 
+      }
+      WarpImageBlend(*image, (Hreg * H), mosaic, blending_ratio);
     }
     source->Unpin(i);
   }
@@ -347,7 +361,7 @@ int main(int argc, char **argv) {
   for (int i = 1; i < argc; ++i) {
     files.push_back(argv[i]);
   }
-  //std::sort(files.begin(), files.end());
+  std::sort(files.begin(), files.end());
   if (files.size() < 2) {
     VLOG(0) << "Not enough files." << std::endl;
     return 1;
@@ -360,20 +374,21 @@ int main(int argc, char **argv) {
   VLOG(0) << "Loading Matches file...[DONE]." << std::endl;
     
   vector<Mat3> Hs;
+  double outliers_prob = 1e-2;
   VLOG(0) << "Estimating relative matrices..." << std::endl;
   switch (FLAGS_transformation) {
     // TODO(julien) add custom degree of freedom selection (e.g. x, y, x & y, ...)
     case EUCLIDEAN:
-      ComputeRelativeEuclideanMatrices(fg.matches_, &Hs);
+      ComputeRelativeEuclideanMatrices(fg.matches_, &Hs, outliers_prob);
     break;
     case SIMILARITY:
-      ComputeRelativeSimilarityMatrices(fg.matches_, &Hs);
+      ComputeRelativeSimilarityMatrices(fg.matches_, &Hs, outliers_prob);
     break;
     case AFFINE:
-      ComputeRelativeAffineMatrices(fg.matches_, &Hs);
+      ComputeRelativeAffineMatrices(fg.matches_, &Hs, outliers_prob);
     break;
     case HOMOGRAPHY:
-      ComputeRelativeHomographyMatrices(fg.matches_, &Hs);
+      ComputeRelativeHomographyMatrices(fg.matches_, &Hs, outliers_prob);
     break;
   }
   VLOG(0) << "Estimating relative matrices...[DONE]." << std::endl;

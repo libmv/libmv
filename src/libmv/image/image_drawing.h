@@ -32,15 +32,25 @@
 namespace libmv {
 
 /// Put the pixel in the image to the given color only if the point (xc,yc)
-///  is inside the image.
-/// /!\ Be careful at the order (Y,X).
+/// is inside the image.
 template <class Image, class Color>
-inline void safePutPixel(int yc, int xc, const Color & col, Image *pim)
-{
-  if (pim)
-  {
-    if (pim->Contains(yc, xc))
-      (*pim)(yc, xc) = col;
+inline void safePutPixel(int yc, int xc, const Color & col, Image *pim) {
+  if (!pim)
+     return;
+  if (pim->Contains(yc, xc)) {
+    (*pim)(yc, xc) = col;
+  }
+}
+/// Put the pixel in the image to the given color only if the point (xc,yc)
+/// is inside the image. This function support multi-channel color
+/// \note The color pointer col must have size as the image depth
+template <class Image, class Color>
+inline void safePutPixel(int yc, int xc, const Color *col, Image *pim) {
+  if (!pim)
+     return;
+  if (pim->Contains(yc, xc)) {
+    for (int i = 0; i < pim->Depth(); ++i)
+      (*pim)(yc, xc, i) = *(col + i);
   }
 }
 

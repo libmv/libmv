@@ -65,7 +65,7 @@ DEFINE_int32(transformation, HOMOGRAPHY, "Transformation type:\n\t 0: \
 Similarity\n\t 1:Affinity\n\t 2:Homography");
 DEFINE_bool(draw_lines, false, "Draw image bounds");
              
-DEFINE_string(of, "",         "Output folder.");
+DEFINE_string(of, "./",     "Output folder.");
 DEFINE_string(os, "_stab",  "Output file suffix.");
 
 using namespace libmv;
@@ -104,7 +104,7 @@ std::string ReplaceFolder(const std::string &s,
  *
  * \param matches The 2D features matches
  * \param Ss Vector of relative similarity matrices such that 
- *        $q2 = S1 q1$ and $qi = Si-1 * ...* S1 q1$
+ *        $q2 = E1 q1$ and $qi = Ei-1 * ...* E1 q1$
  *        where qi is a point in the image i
  *        and q1 is its position in the image 1
  * \param outliers_prob The outliers probability [0, 1[
@@ -113,11 +113,11 @@ std::string ReplaceFolder(const std::string &s,
  * TODO(julien) put this in reconstruction
  */
 void ComputeRelativeEuclideanMatrices(const Matches &matches,
-                                      vector<Mat3> *Ss,
+                                      vector<Mat3> *Es,
                                       double outliers_prob = 1e-2,
                                       double max_error_2d = 1) {
-  Ss->reserve(matches.NumImages() - 1);
-  Mat3 S;
+  Es->reserve(matches.NumImages() - 1);
+  Mat3 E;
   vector<Mat> xs2;
   std::set<Matches::ImageID>::const_iterator image_iter =
     matches.get_images().begin();
@@ -128,10 +128,10 @@ void ComputeRelativeEuclideanMatrices(const Matches &matches,
       if (xs2[0].cols() >= 2) {
         Euclidean2DFromCorrespondences2PointRobust(xs2[0], xs2[1], 
                                                    max_error_2d , 
-                                                   &S, NULL, 
+                                                   &E, NULL, 
                                                    outliers_prob);
-        Ss->push_back(S);
-        VLOG(2) << "S = " << std::endl << S << std::endl;
+        Es->push_back(E);
+        VLOG(2) << "E = " << std::endl << E << std::endl;
       } // TODO(julien) what to do when no enough points?
     ++prev_image_iter;
   }
@@ -278,24 +278,29 @@ void Stabilize(const std::vector<std::string> &image_files,
                         imageArrayBytes.Width(), 
                         imageArrayBytes.Depth());
   image_stab.Fill(0);
+  float lines_color[3] = {1, 1, 1};
   FloatImage *image = NULL;
   ImageCache cache;
   scoped_ptr<ImageSequence> source(ImageSequenceFromFiles(image_files, &cache));
   for (size_t i = 0; i < image_files.size(); ++i) {
     if (i > 0)
-      H = Hs[i - 1] * H;
+      H = Hs[i - 1].inverse() * H;
     image = source->GetFloatImage(i);
     if (image) {
       //VLOG(1) << "H = \n" << H << "\n";
       if (draw_lines) {
-        DrawLine(0, 0, 0, images_size(1) - 1, 1, image);
-        DrawLine(0, 0, images_size(0) - 1, 0, 1, image);
-        DrawLine(0, images_size(1)-1, images_size(0)-1, 
-                 images_size(1)-1, 1, image);
-        DrawLine(images_size(0)-1, 0, images_size(0)-1, 
-                 images_size(1)-1, 1, image);
+        DrawLine<FloatImage, float[3]>(0, 0, 0, images_size(1) - 1, 
+                                       lines_color, image);
+        DrawLine<FloatImage, float[3]>(0, 0, images_size(0) - 1, 0, 
+                                       lines_color, image);
+        DrawLine<FloatImage, float[3]>(               0, images_size(1)-1, 
+                                       images_size(0)-1, images_size(1)-1, 
+                                       lines_color, image);
+        DrawLine<FloatImage, float[3]>(images_size(0)-1,                0, 
+                                       images_size(0)-1, images_size(1)-1, 
+                                       lines_color, image); 
       }        
-      WarpImage(*image, H.inverse(), &image_stab);
+      WarpImage(*image, H, &image_stab);
       
       // Saves the stabilized image
       std::stringstream s;
@@ -325,7 +330,7 @@ int main(int argc, char **argv) {
   for (int i = 1; i < argc; ++i) {
     files.push_back(argv[i]);
   }
-  //std::sort(files.begin(), files.end());
+  std::sort(files.begin(), files.end());
   // Imports matches
   tracker::FeaturesGraph fg;
   FeatureSet *fs = fg.CreateNewFeatureSet();
