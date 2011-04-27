@@ -61,8 +61,8 @@ enum eGEOMETRIC_TRANSFORMATION  {
 };
 
 DEFINE_string(m, "matches.txt", "Matches input file");
-DEFINE_int32(transformation, HOMOGRAPHY, "Transformation type:\n\t 0: \
-Similarity\n\t 1:Affinity\n\t 2:Homography");
+DEFINE_int32 (transformation, SIMILARITY, "Transformation type:\n\t 0: \
+Euclidean\n\t 1:Similarity\n\t 2:Affinity\n\t 3:Homography");
 DEFINE_bool(draw_lines, false, "Draw image bounds");
              
 DEFINE_string(of, "./",     "Output folder.");

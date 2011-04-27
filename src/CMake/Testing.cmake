@@ -29,10 +29,16 @@ MACRO (LIBMV_TEST NAME EXTRA_LIBS)
                           glog
                           gflags
                           pthread)
-     SET_TARGET_PROPERTIES(${NAME}_test PROPERTIES 
+    SET_TARGET_PROPERTIES(${NAME}_test PROPERTIES 
        RUNTIME_OUTPUT_DIRECTORY         ${LIBMV_TESTS_OUTPUT_DIR}
        RUNTIME_OUTPUT_DIRECTORY_RELEASE ${LIBMV_TESTS_OUTPUT_DIR}
        RUNTIME_OUTPUT_DIRECTORY_DEBUG   ${LIBMV_TESTS_OUTPUT_DIR})
-    ADD_TEST(${NAME}_test ${LIBMV_TESTS_OUTPUT_DIR}/${NAME}_test)
+    # TODO(julien) make the name of debug libraries end in _d.
+    # SET_TARGET_PROPERTIES(${NAME}_test PROPERTIES DEBUG_POSTFIX "_d")
+    # IF (CMAKE_BUILD_TYPE STREQUAL "Debug")
+      # ADD_TEST(${NAME}_test ${LIBMV_TESTS_OUTPUT_DIR}/${NAME}_test_d)
+    # ELSE (CMAKE_BUILD_TYPE STREQUAL "Debug")
+       ADD_TEST(${NAME}_test ${LIBMV_TESTS_OUTPUT_DIR}/${NAME}_test)
+    # ENDIF (CMAKE_BUILD_TYPE STREQUAL "Debug")
   ENDIF (BUILD_TESTS)
 ENDMACRO (LIBMV_TEST)

@@ -1,15 +1,25 @@
-ADD_LIBRARY(correspondence 
-            klt.cc 
-            feature.cc 
-            matches.cc 
-            feature_matching.cc
-            feature_matching_FLANN.cc
-            tracker.cc
-            robust_tracker.cc
-            planar_tracker.cc
-            nRobustViewMatching.cc
-            export_matches_txt.cc
-            import_matches_txt.cc)
+# define the source files
+SET(CORRESPONDENCE_SRC klt.cc 
+                       feature.cc 
+                       matches.cc 
+                       feature_matching.cc
+                       feature_matching_FLANN.cc
+                       tracker.cc
+                       robust_tracker.cc
+                       planar_tracker.cc
+                       nRobustViewMatching.cc
+                       export_matches_txt.cc
+                       import_matches_txt.cc)
+
+# define the header files (make the headers appear in IDEs.)
+FILE(GLOB CORRESPONDENCE_HDRS *.h)
+
+ADD_LIBRARY(correspondence ${CORRESPONDENCE_SRC} ${CORRESPONDENCE_HDRS})
+
+# make the name of debug libraries end in _d.
+SET_TARGET_PROPERTIES(correspondence PROPERTIES DEBUG_POSTFIX "_d")
+
+# installation rules for the library
 LIBMV_INSTALL_LIB(correspondence)
             
 LIBMV_TEST(klt "correspondence;image;numeric")

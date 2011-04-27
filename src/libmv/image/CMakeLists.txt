@@ -1,3 +1,4 @@
+# TODO(julien) remove this line, what's that for?
 ADD_DEFINITIONS(-DTHIS_SOURCE_DIR="\\"${CMAKE_CURRENT_SOURCE_DIR}\\"")
 
 IF(WIN32)
@@ -8,12 +9,22 @@ IF(WIN32)
   )
 ENDIF(WIN32)
 
-ADD_LIBRARY(image image.cc image_io.cc convolve.cc image_pyramid.cc array_nd.cc
-            image_sequence.cc image_sequence_io.cc image_sequence_filters.cc
-            filtered_sequence.cc pyramid_sequence.cc image_transform_linear.cc)
+# define the source files
+SET(IMAGE_SRC image.cc image_io.cc convolve.cc image_pyramid.cc array_nd.cc
+              image_sequence.cc image_sequence_io.cc image_sequence_filters.cc
+              filtered_sequence.cc pyramid_sequence.cc image_transform_linear.cc)
+               
+# define the header files (make the headers appear in IDEs.)
+FILE(GLOB IMAGE_HDRS *.h)
+
+ADD_LIBRARY(image ${IMAGE_SRC} ${IMAGE_HDRS})
 
 TARGET_LINK_LIBRARIES(image png jpeg glog gflags ${PTHREAD})
 
+# make the name of debug libraries end in _d.
+SET_TARGET_PROPERTIES(image PROPERTIES DEBUG_POSTFIX "_d")
+
+# installation rules for the library
 LIBMV_INSTALL_LIB(image)
 
 MACRO (IMAGE_TEST NAME)

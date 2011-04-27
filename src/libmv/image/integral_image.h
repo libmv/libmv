@@ -81,10 +81,10 @@ inline typename TImage::Scalar BoxIntegral(const TImage &integral_image,
                                            int row, int col,
                                            int rows, int cols) {
   // The subtraction by one for row/col is because row/col is inclusive.
-  int r1 = std::min(row,          integral_image.rows()) - 1;
-  int c1 = std::min(col,          integral_image.cols()) - 1;
-  int r2 = std::min(row + rows,   integral_image.rows()) - 1;
-  int c2 = std::min(col + cols,   integral_image.cols()) - 1;
+  int r1 = std::min(row,        (int) integral_image.rows()) - 1;
+  int c1 = std::min(col,        (int) integral_image.cols()) - 1;
+  int r2 = std::min(row + rows, (int) integral_image.rows()) - 1;
+  int c2 = std::min(col + cols, (int) integral_image.cols()) - 1;
 
   typedef typename TImage::Scalar T;
   T A(0); if (r1 >= 0 && c1 >= 0) A = integral_image(r1, c1);
