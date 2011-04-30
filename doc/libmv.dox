@@ -1,0 +1,90 @@
+/** 
+ ** @mainpage Overview 
+ **
+ ** Libmv is a structure from motion library, which plans to one day take raw video footage or photographs, 
+ ** and produce full camera calibration information and dense 3D models. 
+ ** TODO describe me more!
+ **
+ ** @section Camera Camera - A high level Camera library
+ ** The Libmv Camera Libary is... TODO describe me!
+ ** 
+ ** @section Correspondence Correspondence - A high level Correspondence library
+ ** The Libmv Correspondence Libary is... TODO describe me!
+ **
+ ** @section Descriptor Descriptor - A high level Descriptor library
+ ** The Libmv Descriptor Libary is... TODO describe me!
+ **
+ ** @section Detector Detector - A high level Detector library
+ ** The Libmv Detector Libary is... TODO describe me!
+ **
+ ** @section Image Image - A high level Image library
+ ** The Libmv Image Libary is... TODO describe me!
+ **
+ ** @section Multiview Multiview - A high level Multiview library
+ ** The Libmv Multiview Libary is... TODO describe me!
+ **
+ ** @section Numeric Numeric - A high level Numeric library
+ ** The Libmv Numeric Libary is... TODO describe me!
+ **
+ ** @section Reconstruction Reconstruction - A high level Reconstruction library
+ ** The Libmv Reconstruction Libary is... TODO describe me!
+ **
+ ** @section Tools Tools - Libmv Tools
+ ** The Libmv Tools are... TODO describe me!
+ **
+ ** @section Applications Applications - Libmv Applications
+ ** The Libmv Applications (UI) are... TODO describe me!
+ **
+ **
+ ** 
+ ** @defgroup Camera  Libmv Camera API
+ ** @addtogroup Camera
+ ** @{
+ ** The Libmv Camera Libary provides ...  TODO describe me!
+ ** @}
+ ** @defgroup Correspondence  Libmv Correspondence API
+ ** @addtogroup Correspondence
+ ** @{
+ ** The Libmv Correspondence Library provides ...  TODO describe me!
+ ** @}
+ ** @defgroup Descriptor  Libmv Descriptor API
+ ** @addtogroup Descriptor
+ ** @{
+ ** The Libmv Image Library provides ...  TODO describe me!
+ ** @}
+ ** @defgroup Detector  Libmv Detector API
+ ** @addtogroup Detector
+ ** @{
+ ** The Libmv Detector Library provides ...  TODO describe me!
+ ** @}
+ ** @defgroup Image  Libmv Image API
+ ** @addtogroup Image
+ ** @{
+ ** The Libmv Image Library provides ...  TODO describe me!
+ ** @}
+ ** @defgroup Multiview  Libmv Multiview API
+ ** @addtogroup Multiview
+ ** @{
+ ** The Libmv Multiview Library provides ...  TODO describe me!
+ ** @}
+ ** @defgroup Numeric  Libmv Numeric API
+ ** @addtogroup Numeric
+ ** @{
+ ** The Libmv Numeric Library provides ...  TODO describe me!
+ ** @}
+ ** @defgroup Reconstruction  Libmv Reconstruction API
+ ** @addtogroup Reconstruction
+ ** @{
+ ** The Libmv Reconstruction Library provides ...  TODO describe me!
+ ** @}
+ ** @defgroup Tools  Libmv tools
+ ** @addtogroup Tools
+ ** @{
+ ** The libmv Tools are...  TODO describe me!
+ ** @}
+ ** @defgroup Applications  Libmv Applications
+ ** @addtogroup Tools
+ ** @{
+ ** The libmv Applications (UI) are...  TODO describe me!
+ ** @}
+ */
