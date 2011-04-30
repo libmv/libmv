@@ -60,12 +60,11 @@ TYPED_TEST(EuclideanKernelTest, Fitting) {
        0, 1, 2, 0, 1, 2, 0, 1, 2;
   EuclideanToHomogeneous(x, &xh);
 
-  for (int i = 2; i < 3/*H_gt.size()*/; ++i) {
+  for (int i = 2; i < H_gt.size(); ++i) {
     SCOPED_TRACE(i);
 
     // Transform points by the ground truth euclidean.
     Mat y, yh = H_gt[i] * xh;
-    std::cout << "yh = \n" << yh <<"\n";
     HomogeneousToEuclidean(yh, &y);
 
     TypeParam kernel(x, y);
@@ -79,7 +78,6 @@ TYPED_TEST(EuclideanKernelTest, Fitting) {
     for (int j = 4; samples.size() < x.cols(); samples.push_back(++j)) {
       SCOPED_TRACE(samples.size());
       vector<Mat3> Hs;
-    std::cout << "H = \n" << H_gt[i] <<"\n";
       kernel.Fit(samples, &Hs);
       ASSERT_EQ(1, Hs.size());
       EXPECT_MATRIX_PROP(H_gt[i], Hs[0], 5e-8);

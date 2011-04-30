@@ -23,7 +23,7 @@
 
 #include "libmv/base/vector.h"
 #include "libmv/multiview/two_view_kernel.h"
-#include "libmv/multiview/homography_kernel.h"
+#include "libmv/multiview/homography_error.h"
 #include "libmv/numeric/numeric.h"
 
 namespace libmv {
@@ -38,7 +38,7 @@ struct TwoPointSolver {
 
 typedef two_view::kernel::Kernel<
     euclidean2D::kernel::TwoPointSolver, 
-	  homography::homography2D::kernel::AsymmetricError, Mat3>
+	  homography::homography2D::AsymmetricError, Mat3>
   Kernel;
 
 // TODO(julien) make an isotropic but without the scale kernel

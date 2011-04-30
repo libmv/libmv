@@ -18,19 +18,33 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
+#include <Eigen/NonLinearOptimization>
+#include <Eigen/NumericalDiff>
+
 #include "libmv/logging/logging.h"
 #include "libmv/multiview/homography.h"
+#include "libmv/multiview/homography_error.h"
+#include "libmv/multiview/homography_parameterization.h"
+#include "libmv/multiview/projection.h"
+
+#include <iostream>
+
+using namespace libmv::homography::homography2D;
 
 namespace libmv {
-// 2D Homography transformation estimation in the case that points are in 
-// euclidean coordinates.
+/** 2D Homography transformation estimation in the case that points are in 
+ * euclidean coordinates.
+ * | 0 -1  x2|   |a b c|   |y1|     (-d+x2*g)*y1 + (-e+x2*h)*y2 + -f+x2              |0|
+ * | 1  0 -x1| * |d e f| * |y2| =   (a-x1*g)*y1  + (b-x1*h)*y2  + c-x1             = |0|
+ * |-x2  x1 0|   |g h 1|   |y3|    (-x2*a+x1*d)*y1 + (-x2*b+x1*e)*y2 + -x2*c+x1*f   |0|
+ */
 bool Homography2DFromCorrespondencesLinearEuc(
     const Mat &x1,
     const Mat &x2,
     Mat3 *H,
     double expected_precision) {
   assert(2 == x1.rows());
-  assert(4 >= x1.cols());
+  assert(4 <= x1.cols());
   assert(x1.rows() == x2.rows());
   assert(x1.cols() == x2.cols());
 
@@ -67,9 +81,7 @@ bool Homography2DFromCorrespondencesLinearEuc(
   // Solve Lx=B
   Vec h = L.fullPivLu().solve(b);
   if ((L * h).isApprox(b, expected_precision))  {
-    (*H)<<h(0), h(1), h(2),
-          h(3), h(4), h(5),
-          h(6), h(7), 1.0;
+    Homography2DNormalizedParameterization<double>::To(h, H);
     return true;
   } else {
     return false;
@@ -93,7 +105,7 @@ bool Homography2DFromCorrespondencesLinear(const Mat &x1,
                                                     expected_precision);
   }
   assert(3 == x1.rows());
-  assert(4 >= x1.cols());
+  assert(4 <= x1.cols());
   assert(x1.rows() == x2.rows());
   assert(x1.cols() == x2.cols());
 
@@ -132,9 +144,7 @@ bool Homography2DFromCorrespondencesLinear(const Mat &x1,
   // Solve Lx=B
   Vec h = L.fullPivLu().solve(b);
   if ((L * h).isApprox(b, expected_precision))  {
-    (*H)<<h(0), h(1), h(2),
-          h(3), h(4), h(5),
-          h(6), h(7), 1.0;
+    Homography2DNormalizedParameterization<double>::To(h, H);
     return true;
   } else {
     return false;
@@ -172,7 +182,7 @@ bool Homography3DFromCorrespondencesLinear(const Mat &x1,
                                            Mat4 *H,
                                            double expected_precision) {
   assert(4 == x1.rows());
-  assert(5 >= x1.cols());
+  assert(5 <= x1.cols());
   assert(x1.rows() == x2.rows());
   assert(x1.cols() == x2.cols());
   const int x = 0;
@@ -246,10 +256,7 @@ bool Homography3DFromCorrespondencesLinear(const Mat &x1,
   // Solve Lx=B
   Vec h = L.fullPivLu().solve(b);
   if ((L * h).isApprox(b, expected_precision))  {
-    (*H)<<h(0),  h(1),  h(2),  h(3),
-          h(4),  h(5),  h(6),  h(7),
-          h(8),  h(9),  h(10), h(11),
-          h(12), h(13), h(14), 1.0;
+    Homography3DNormalizedParameterization<double>::To(h, H);
     return true;
   } else {
     return false;

@@ -22,6 +22,7 @@
 
 #include "libmv/multiview/affine.h"
 #include "libmv/multiview/similarity.h"
+#include "libmv/multiview/similarity_parameterization.h"
 
 namespace libmv {
 
@@ -40,7 +41,7 @@ bool Similarity2DFromCorrespondencesLinear(const Mat &x1, const Mat &x2,
                                            Mat3 *M,
                                            double expected_precision) {
   assert(2 == x1.rows());
-  assert(2 >= x1.cols());
+  assert(2 <= x1.cols());
   assert(x1.rows() == x2.rows());
   assert(x1.cols() == x2.cols());
 
@@ -65,24 +66,7 @@ bool Similarity2DFromCorrespondencesLinear(const Mat &x1, const Mat &x2,
   // Solve Ax=B
   Vec x = A.fullPivLu().solve(b);
   if ((A * x).isApprox(b, expected_precision))  {
-    (*M)<<x(1),-x(0), x(2), // s*cos -s*sin tx
-          x(0), x(1), x(3), // s*sin s*cos ty
-          0.0,  0.0,  1.0;
-    // Ensures that R is orthogonal (using SDV decomposition)
-    Eigen::JacobiSVD<Mat> svd(M->block<2,2>(0, 0), Eigen::ComputeThinU | 
-                                                   Eigen::ComputeThinV);
-    double scale = svd.singularValues()(0);
-    Mat2 sI2 = scale * Mat2::Identity();
-    M->block<2,2>(0, 0) = svd.matrixU() * sI2 * svd.matrixV().transpose();  
-    if (M->block<2,2>(0, 0).determinant() < 0)
-      M->block<2,2>(0, 0) = -M->block<2,2>(0, 0);  
-    
-    // TODO(julien) Implement this paper:
-    // Polar decomposition algorithm proposed by [Higham 86]
-    // SIAM J. Sci. Stat. Comput. Vol. 7, Num. 4, October 1986.
-    // "Computing the Polar Decomposition - with Applications"
-    // by Nicholas Higham.
-    
+    Similarity2DSCParameterization<double>::To(x, M);    
     return true;
   } else {
     return false;
@@ -113,23 +97,11 @@ bool ExtractSimilarity2DCoefficients(const Mat3 &M,
                                      Vec2   *tr,
                                      double *angle,
                                      double *scale) {
-  //assert(M(1, 0) == -M(0, 1));
-  //assert(M(0, 0) == M(1, 1));
-  assert(M(2, 2) == 1);
-  *scale = std::sqrt(std::pow(M(0, 0),2) + std::pow(M(0, 1),2));
-  *scale = (*scale + std::sqrt(std::pow(M(0, 0),2) + std::pow(M(0, 1),2))) / 2.0;
-  if (*scale == 0)
-    return false;
-  
-  *angle = std::asin(M(1, 0)/(*scale));
-  if (*angle > 0) {
-    if (M(0, 0) < 0)
-      *angle += M_PI / 2.0;
-  } else {
-    if (M(0, 0) < 0)
-      *angle -= M_PI / 2.0;
-  }
-  *tr << M(0, 2), M(1, 2);
+  Vec4 p;
+  Similarity2DSAParameterization<double>::From(M, &p);  
+  *scale = p(0);
+  *angle = p(1);  
+  *tr << p(2), p(3);
   return true;
 }
 } // namespace libmv

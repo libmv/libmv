@@ -80,9 +80,13 @@ public:
         Scalar gtol;
         Scalar epsfcn;
     };
-
     typedef Matrix< Scalar, Dynamic, 1 > FVectorType;
     typedef Matrix< Scalar, Dynamic, Dynamic > JacobianType;
+    
+    /* TODO(julien) Why not this? 
+    typedef typename FunctorType::InputType FVectorType;
+    typedef typename FunctorType::JacobianType JacobianType;*/
+    
 
     LevenbergMarquardtSpace::Status lmder1(
             FVectorType &x,

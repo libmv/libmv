@@ -23,7 +23,7 @@
 
 #include "libmv/base/vector.h"
 #include "libmv/multiview/two_view_kernel.h"
-#include "libmv/multiview/homography_kernel.h"
+#include "libmv/multiview/homography_error.h"
 #include "libmv/numeric/numeric.h"
 
 namespace libmv {
@@ -38,13 +38,13 @@ struct ThreePointSolver {
 
 typedef two_view::kernel::Kernel<
         affine2D::kernel::ThreePointSolver, 
-        homography::homography2D::kernel::AsymmetricError, Mat3>
+        homography::homography2D::AsymmetricError, Mat3>
   UnnormalizedKernel;
 
 typedef two_view::kernel::Kernel<
         two_view::kernel::NormalizedSolver<affine2D::kernel::ThreePointSolver,
         UnnormalizerI>,
-        homography::homography2D::kernel::AsymmetricError,
+        homography::homography2D::AsymmetricError,
         Mat3>
   Kernel;
 

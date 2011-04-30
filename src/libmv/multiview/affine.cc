@@ -19,6 +19,7 @@
 // IN THE SOFTWARE.
 
 #include "libmv/multiview/affine.h"
+#include "libmv/multiview/affine_parameterization.h"
 
 namespace libmv {
 
@@ -38,7 +39,7 @@ bool Affine2DFromCorrespondencesLinear(const Mat &x1, const Mat &x2,
                                        Mat3 *M,
                                        double expected_precision) {
   assert(2 == x1.rows());
-  assert(3 >= x1.cols());
+  assert(3 <= x1.cols());
   assert(x1.rows() == x2.rows());
   assert(x1.cols() == x2.cols());
 
@@ -61,10 +62,7 @@ bool Affine2DFromCorrespondencesLinear(const Mat &x1, const Mat &x2,
   // Solve Ax=B
   Vec x = A.fullPivLu().solve(b);
   if ((A * x).isApprox(b, expected_precision))  {
-    // Configure output matrix
-    (*M)<<x(0), x(1), x(4), // a b x
-          x(2), x(3), x(5), // c d y
-          0.0,  0.0,  1.0;
+    Affine2DGenericParameterization<double>::To(x, M);
     return true;
   } else {
     return false;
@@ -95,7 +93,7 @@ bool Affine3DFromCorrespondencesLinear(const Mat &x1,
                                        Mat4 *M,
                                        double expected_precision) {
   assert(3 == x1.rows());
-  assert(4 >= x1.cols());
+  assert(4 <= x1.cols());
   assert(x1.rows() == x2.rows());
   assert(x1.cols() == x2.cols());
 
@@ -128,11 +126,7 @@ bool Affine3DFromCorrespondencesLinear(const Mat &x1,
   // Solve Ax=B
   Vec x = A.fullPivLu().solve(b);
   if ((A * x).isApprox(b, expected_precision))  {
-    // Configure output matrix :
-    (*M)<<x(0), x(1), x(2), x(9),  // a b c x
-          x(3), x(4), x(5), x(10), // d e f y
-          x(6), x(7), x(8), x(11), // g h i z
-          0.0,  0.0,  0.0,  1.0;
+    Affine3DGenericParameterization<double>::To(x, M);
     return true;
   } else {
     return false;

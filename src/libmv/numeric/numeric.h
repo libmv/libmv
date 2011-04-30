@@ -100,13 +100,22 @@ typedef Eigen::Matrix<double, Eigen::Dynamic,16> MatX16;
 typedef Eigen::Vector2d Vec2;
 typedef Eigen::Vector3d Vec3;
 typedef Eigen::Vector4d Vec4;
-typedef Eigen::Matrix<double, 5, 1> Vec5;
-typedef Eigen::Matrix<double, 6, 1> Vec6;
-typedef Eigen::Matrix<double, 7, 1> Vec7;
-typedef Eigen::Matrix<double, 8, 1> Vec8;
-typedef Eigen::Matrix<double, 9, 1> Vec9;
+typedef Eigen::Matrix<double, 5, 1>  Vec5;
+typedef Eigen::Matrix<double, 6, 1>  Vec6;
+typedef Eigen::Matrix<double, 7, 1>  Vec7;
+typedef Eigen::Matrix<double, 8, 1>  Vec8;
+typedef Eigen::Matrix<double, 9, 1>  Vec9;
 typedef Eigen::Matrix<double, 10, 1> Vec10;
+typedef Eigen::Matrix<double, 11, 1> Vec11;
+typedef Eigen::Matrix<double, 12, 1> Vec12;
 typedef Eigen::Matrix<double, 13, 1> Vec13;
+typedef Eigen::Matrix<double, 14, 1> Vec14;
+typedef Eigen::Matrix<double, 15, 1> Vec15;
+typedef Eigen::Matrix<double, 16, 1> Vec16;
+typedef Eigen::Matrix<double, 17, 1> Vec17;
+typedef Eigen::Matrix<double, 18, 1> Vec18;
+typedef Eigen::Matrix<double, 19, 1> Vec19;
+typedef Eigen::Matrix<double, 20, 1> Vec20;
 
 typedef Eigen::Vector2f Vec2f;
 typedef Eigen::Vector3f Vec3f;
@@ -447,6 +456,23 @@ template <typename FloatType>
 FloatType ceil0(const FloatType& value) {
     FloatType result = std::ceil( std::fabs( value ) );
     return (value < 0.0) ? -result : result;
+}
+
+/// Returns the skew anti-symmetric matrix of a vector
+inline Mat3 SkewMat(const Vec3 &x) {
+  Mat3 skew;
+  skew <<   0 ,-x(2), x(1),
+          x(2),   0 ,-x(0),
+         -x(1), x(0),    0;
+  return skew;
+}
+/// Returns the skew anti-symmetric matrix of a vector with only
+/// the first two (independent) lines
+inline Mat23 SkewMatMinimal(const Vec2 &x) {
+  Mat23 skew;
+  skew << 0,-1, x(1),
+          1, 0 -x(0);
+  return skew;
 }
 } // namespace libmv
 

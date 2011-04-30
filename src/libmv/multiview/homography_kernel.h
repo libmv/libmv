@@ -23,7 +23,7 @@
 
 #include "libmv/base/vector.h"
 #include "libmv/multiview/conditioning.h"
-#include "libmv/multiview/projection.h"
+#include "libmv/multiview/homography_error.h"
 #include "libmv/multiview/two_view_kernel.h"
 #include "libmv/numeric/numeric.h"
 
@@ -49,28 +49,6 @@ struct FourPointSolver {
   // TODO(keir): Fix \see above.
   static void Solve(const Mat &x, const Mat &y, vector<Mat3> *Hs);
 };
-
-// Should be distributed as Chi-squared with k = 2.
-struct AsymmetricError {
-  static double Error(const Mat &H, const Vec2 &x1, const Vec2 &x2) {
-    Vec3 x2h_est = H * EuclideanToHomogeneous(x1);
-    Vec2 x2_est = x2h_est.head<2>() / x2h_est[2];
-    return (x2 - x2_est).squaredNorm();
-  }
-};
-
-// Should be distributed as Chi-squared with k = 4.
-struct SymmetricError {
-  static double Error(const Mat &H, const Vec2 &x1, const Vec2 &x2) {
-    // TODO(keir): This is awesomely inefficient because it does a 3x3
-    // inversion for each evaluation.
-    Mat3 Hinv = H.inverse();
-    return AsymmetricError::Error(H,    x1, x2) +
-           AsymmetricError::Error(Hinv, x2, x1);
-  }
-};
-
-// TODO(keir): Add error based on ideal points.
 
 typedef two_view::kernel::Kernel<FourPointSolver, AsymmetricError, Mat3>
   UnnormalizedKernel;

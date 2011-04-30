@@ -31,25 +31,25 @@
 
 namespace libmv {
 
-// A parameterization of the fundamental matrix that uses 9 parameters, but is
-// constrained to have rank 2. The parameterization is a straigtforward SVD of
-// the F matrix into F = USV^T. S = diag(1 1/s^2 0) is one parameter. U and V
-// are 3x3 rotation matrices, and are parameterized by unnormalized
-// quaternions.
-//
-// The parameter vector breaks down into
-//
-//   u  - p[0..3]
-//   s  - p[4]
-//   vt - p[5..8]
-//
+/** A parameterization of the fundamental matrix that uses 9 parameters, but is
+ * constrained to have rank 2. The parameterization is a straigtforward SVD of
+ * the F matrix into F = USV^T. S = diag(1 1/s^2 0) is one parameter. U and V
+ * are 3x3 rotation matrices, and are parameterized by unnormalized
+ * quaternions.
+ *
+ * The parameter vector breaks down into
+ *
+ *   u  - p[0..3]
+ *   s  - p[4]
+ *   vt - p[5..8]
+ */
 template<typename T>
 class FundamentalRank2Parameterization {
  public:
   typedef Eigen::Matrix<T, 9, 1> Parameters;     // u, s, v
   typedef Eigen::Matrix<T, 3, 3> Parameterized;  // F = USV^T
 
-  // Convert from the 9 parameters to a F matrix.
+  /// Convert from the 9 parameters to a F matrix.
   static void To(const Parameters &p, Parameterized *f) {
     // TODO(keir): This is fantastically inefficient. Multiply through by the
     // zeros of S symbolically to speed this up.
@@ -70,7 +70,7 @@ class FundamentalRank2Parameterization {
     *f = u.toRotationMatrix() * S.asDiagonal() * vt.toRotationMatrix();
   }
 
-  // Convert from a F matrix to the 9 parameters.
+  /// Convert from a F matrix to the 9 parameters.
   static void From(const Parameterized &f, Parameters *p) {
     // This ignores the third singular value, which should be zero for a real F
     // matrix. If F is rank 3 rather than 2, the assumption that the third

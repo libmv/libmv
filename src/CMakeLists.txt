@@ -77,6 +77,7 @@ INCLUDE_DIRECTORIES(
   third_party/gtest
   third_party/gtest/include
   third_party/eigen
+  third_party/eigen/unsupported
   third_party/ssba
   third_party/glog/src
   third_party/OpenExif/src

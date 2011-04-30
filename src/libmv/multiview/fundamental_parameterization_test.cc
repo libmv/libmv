@@ -35,7 +35,7 @@ TEST(FundamentalParameterization, Roundtripping) {
   p.tail<4>().normalize();
   Vec9 p_roundtrip;
 
-  // Use tha parameterization to get some arbitrary F matrix which satisfies
+  // Use the parameterization to get some arbitrary F matrix which satisfies
   // the rank 2 constraint. The initial p is ignored.
   FundamentalRank2Parameterization<double>::To(p, &f);
 

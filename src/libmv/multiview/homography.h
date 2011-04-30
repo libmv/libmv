@@ -37,8 +37,8 @@ namespace libmv {
  * \param[in] x2 The second 2xN or 3xN matrix of euclidean or homogeneous points
  * \param[out] H The 3x3 homography transformation matrix (8 dof) such that
  *               x2 = H * x1   with       |a b c| 
- *                                    H = |e f g|
- *                                        |i j 1| 
+ *                                    H = |d e f|
+ *                                        |g h 1| 
  * \param[in] expected_precision The expected precision in order for instance 
  *        to accept almost homography matrices.
  * 

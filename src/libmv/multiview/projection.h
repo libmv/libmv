@@ -64,10 +64,22 @@ inline Mat2X HomogeneousToEuclidean(const Mat3X &h) {
 }
 
 void EuclideanToHomogeneous(const Mat &X, Mat *H);
+inline Mat3X EuclideanToHomogeneous(const Mat2X &x) {
+  Mat3X h(3, x.cols());
+  h.block(0, 0, 2, x.cols()) = x;
+  h.row(2).setOnes();
+  return h;
+}
 inline void EuclideanToHomogeneous(const Mat2X &x, Mat3X *h) {
   h->resize(3, x.cols());
   h->block(0, 0, 2, x.cols()) = x;
   h->row(2).setOnes();
+}
+inline Mat4X EuclideanToHomogeneous(const Mat3X &x) {
+  Mat4X h(4, x.cols());
+  h.block(0, 0, 3, x.cols()) = x;
+  h.row(3).setOnes();
+  return h;
 }
 inline void EuclideanToHomogeneous(const Mat3X &x, Mat4X *h) {
   h->resize(4, x.cols());
@@ -193,7 +205,7 @@ inline Vec2 ImageToNormImageCoordinates(Mat3 &Kinverse, Vec2 &x){
   return HomogeneousToEuclidean( x_h );
 }
 
-// Estimates the root mean square error (2D)
+/// Estimates the root mean square error (2D)
 inline double RootMeanSquareError(const Mat2X &x_image, 
                                   const Mat4X &X_world,               
                                   const Mat34 &P) {
@@ -202,12 +214,12 @@ inline double RootMeanSquareError(const Mat2X &x_image,
   return dx.norm() / num_points;
 }
 
-// Estimates the root mean square error (2D)
+/// Estimates the root mean square error (2D)
 inline double RootMeanSquareError(const Mat2X &x_image, 
-                           const Mat3X &X_world,               
-                           const Mat3 &K, 
-                           const Mat3 &R, 
-                           const Vec3 &t) {
+                                  const Mat3X &X_world,               
+                                  const Mat3 &K, 
+                                  const Mat3 &R, 
+                                  const Vec3 &t) {
   Mat34 P;
   P_From_KRt(K, R, t, &P);
   size_t num_points = x_image.cols();

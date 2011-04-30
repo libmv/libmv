@@ -68,11 +68,8 @@ void NViewTriangulateAlgebraic(const Matrix<T, 2, Dynamic> &x,
   assert(nviews == Ps.size());
 
   Matrix<T, Dynamic, 4> design(2*nviews, 4);
-  Mat23 mx;
   for (int i = 0; i < nviews; i++) {
-    mx << 0, -1, x(1, i),
-          1, 0, -x(0, i);
-    design.template block<2, 4>(2*i, 0) = mx * Ps[i];
+    design.template block<2, 4>(2*i, 0) = SkewMatMinimal(x.col(i)) * Ps[i];
   }
   X->resize(4);
   Nullspace(&design, X);
