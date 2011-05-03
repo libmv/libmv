@@ -27,7 +27,7 @@ namespace libmv {
 
 // This method selects an efficient order of images based on an image
 // criterion: median homography error x number of common matches
-// The oupout images_list contains a list of connected graphs
+// The outpout images_list contains a list of connected graphs
 // (vectors), each vector contains the ImageID ordered by the criterion.
 void SelectEfficientImageOrder(
   const Matches &matches, 
