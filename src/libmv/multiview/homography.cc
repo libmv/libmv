@@ -34,9 +34,20 @@ using namespace libmv::homography::homography2D;
 namespace libmv {
 /** 2D Homography transformation estimation in the case that points are in 
  * euclidean coordinates.
- * | 0 -1  x2|   |a b c|   |y1|     (-d+x2*g)*y1 + (-e+x2*h)*y2 + -f+x2              |0|
- * | 1  0 -x1| * |d e f| * |y2| =   (a-x1*g)*y1  + (b-x1*h)*y2  + c-x1             = |0|
- * |-x2  x1 0|   |g h 1|   |y3|    (-x2*a+x1*d)*y1 + (-x2*b+x1*e)*y2 + -x2*c+x1*f   |0|
+ *
+ * x = H y
+ * x and y vector must have the same direction, we could write
+ * crossproduct(|x|, * H * |y| ) = |0|
+ *
+ * | 0 -1  x2|   |a b c|   |y1|    |0|
+ * | 1  0 -x1| * |d e f| * |y2| =  |0|
+ * |-x2  x1 0|   |g h 1|   |y3|    |0|
+ *
+ * That gives :
+ *
+ * (-d+x2*g)*y1    + (-e+x2*h)*y2 + -f+x2          |0|
+ * (a-x1*g)*y1     + (b-x1*h)*y2  + c-x1         = |0|
+ * (-x2*a+x1*d)*y1 + (-x2*b+x1*e)*y2 + -x2*c+x1*f  |0|
  */
 bool Homography2DFromCorrespondencesLinearEuc(
     const Mat &x1,
