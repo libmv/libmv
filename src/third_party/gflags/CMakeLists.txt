@@ -5,7 +5,7 @@ IF(WIN32)
   )
 ENDIF(WIN32)
 
-ADD_LIBRARY(gflags gflags.cc gflags_reporting.cc)
+ADD_LIBRARY(gflags gflags.cc gflags_reporting.cc gflags_completions.cc)
 TARGET_LINK_LIBRARIES(gflags pthread)
 
 LIBMV_INSTALL_THIRD_PARTY_LIB(gflags)

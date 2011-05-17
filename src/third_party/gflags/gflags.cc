@@ -111,7 +111,7 @@
 #include <vector>
 #include <utility>     // for pair<>
 #include <algorithm>
-#include <gflags/gflags.h>
+#include "gflags.h"
 #include "mutex.h"
 
 #ifndef PATH_SEPARATOR
