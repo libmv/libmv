@@ -4,4 +4,6 @@ License: New BSD
 Upstream version: 1.5
 Local modifications:
 
-Flattened the tree and only included files needed for libmv.
+Flattened the tree and only included files needed for libmv. This involved
+changing some of the includes to point to the current directory instead of a
+nested gflags directory.
