@@ -1,0 +1,4 @@
+.*.swp
+bin-dbg
+bin-opt
+src/libmv/tools/revision.h
