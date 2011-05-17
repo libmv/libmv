@@ -55,14 +55,12 @@
 #include <assert.h>
 #include <string>
 #include <vector>
-#include "gflags.h"
+#include <gflags/gflags.h>
+#include <gflags/gflags_completions.h>
 
 #ifndef PATH_SEPARATOR
 #define PATH_SEPARATOR  '/'
 #endif
-
-using std::string;
-using std::vector;
 
 // The 'reporting' flags.  They all call exit().
 DEFINE_bool(help, false,
@@ -84,6 +82,9 @@ DEFINE_bool(version, false,
 
 _START_GOOGLE_NAMESPACE_
 
+using std::string;
+using std::vector;
+
 // --------------------------------------------------------------------
 // DescribeOneFlag()
 // DescribeOneFlagInXML()
@@ -96,7 +97,7 @@ static const int kLineLength = 80;
 
 static void AddString(const string& s,
                       string* final_string, int* chars_in_line) {
-  const int slen = s.length();
+  const int slen = static_cast<int>(s.length());
   if (*chars_in_line + 1 + slen >= kLineLength) {  // < 80 chars/line
     *final_string += "\n      ";
     *chars_in_line = 6;
@@ -108,17 +109,28 @@ static void AddString(const string& s,
   *chars_in_line += slen;
 }
 
+static string PrintStringFlagsWithQuotes(const CommandLineFlagInfo& flag,
+                                         const string& text, bool current) {
+  const char* c_string = (current ? flag.current_value.c_str() :
+                          flag.default_value.c_str());
+  if (strcmp(flag.type.c_str(), "string") == 0) {  // add quotes for strings
+    return text + ": \"" + c_string + "\"";
+  } else {
+    return text + ": " + c_string;
+  }
+}
+
 // Create a descriptive string for a flag.
 // Goes to some trouble to make pretty line breaks.
 string DescribeOneFlag(const CommandLineFlagInfo& flag) {
   string main_part = (string("    -") + flag.name +
                       " (" + flag.description + ')');
   const char* c_string = main_part.c_str();
-  int chars_left = main_part.length();
+  int chars_left = static_cast<int>(main_part.length());
   string final_string = "";
   int chars_in_line = 0;  // how many chars in current line so far?
   while (1) {
-    assert(size_t(chars_left) == strlen(c_string));  // Unless there's a \0 in there?
+    assert(chars_left == strlen(c_string));  // Unless there's a \0 in there?
     const char* newline = strchr(c_string, '\n');
     if (newline == NULL && chars_in_line+chars_left < kLineLength) {
       // The whole remainder of the string fits on this line
@@ -127,7 +139,7 @@ string DescribeOneFlag(const CommandLineFlagInfo& flag) {
       break;
     }
     if (newline != NULL && newline - c_string < kLineLength - chars_in_line) {
-      int n = newline - c_string;
+      int n = static_cast<int>(newline - c_string);
       final_string.append(c_string, n);
       chars_left -= n + 1;
       c_string += n + 1;
@@ -158,22 +170,14 @@ string DescribeOneFlag(const CommandLineFlagInfo& flag) {
 
   // Append data type
   AddString(string("type: ") + flag.type, &final_string, &chars_in_line);
-  // Append the effective default value (i.e., the value that the flag
-  // will have after the command line is parsed if the flag is not
-  // specified on the command line), which may be different from the
-  // stored default value. This would happen if the value of the flag
-  // was modified before the command line was parsed. (Unless the
-  // value was modified using SetCommandLineOptionWithMode() with mode
-  // SET_FLAGS_DEFAULT.)
-  // Note that we are assuming this code is being executed because a help
-  // request was just parsed from the command line, in which case the
-  // printed value is indeed the effective default, as long as no value
-  // for the flag was parsed from the command line before "--help".
-  if (strcmp(flag.type.c_str(), "string") == 0) {  // add quotes for strings
-    AddString(string("default: \"") + flag.current_value + string("\""),
-              &final_string, &chars_in_line);
-  } else {
-    AddString(string("default: ") + flag.current_value,
+  // The listed default value will be the actual default from the flag
+  // definition in the originating source file, unless the value has
+  // subsequently been modified using SetCommandLineOptionWithMode() with mode
+  // SET_FLAGS_DEFAULT, or by setting FLAGS_foo = bar before initializing.
+  AddString(PrintStringFlagsWithQuotes(flag, "default", false), &final_string,
+            &chars_in_line);
+  if (!flag.is_default) {
+    AddString(PrintStringFlagsWithQuotes(flag, "currently", true),
               &final_string, &chars_in_line);
   }
 
@@ -184,24 +188,36 @@ string DescribeOneFlag(const CommandLineFlagInfo& flag) {
 // Simple routine to xml-escape a string: escape & and < only.
 static string XMLText(const string& txt) {
   string ans = txt;
-  for (string::size_type pos = 0; (pos=ans.find("&", pos)) != string::npos; )
+  for (string::size_type pos = 0; (pos = ans.find("&", pos)) != string::npos; )
     ans.replace(pos++, 1, "&amp;");
-  for (string::size_type pos = 0; (pos=ans.find("<", pos)) != string::npos; )
+  for (string::size_type pos = 0; (pos = ans.find("<", pos)) != string::npos; )
     ans.replace(pos++, 1, "&lt;");
   return ans;
+}
+
+static void AddXMLTag(string* r, const char* tag, const string& txt) {
+  *r += ('<');
+  *r += (tag);
+  *r += ('>');
+  *r += (XMLText(txt));
+  *r += ("</");
+  *r += (tag);
+  *r += ('>');
 }
 
 static string DescribeOneFlagInXML(const CommandLineFlagInfo& flag) {
   // The file and flagname could have been attributes, but default
   // and meaning need to avoid attribute normalization.  This way it
   // can be parsed by simple programs, in addition to xml parsers.
-  return (string("<flag>") +
-          "<file>" + XMLText(flag.filename) + "</file>" +
-          "<name>" + XMLText(flag.name) + "</name>" +
-          "<meaning>" + XMLText(flag.description) + "</meaning>" +
-          "<default>" + XMLText(flag.default_value) + "</default>" +
-          "<type>" + XMLText(flag.type) + "</type>" +
-          string("</flag>"));
+  string r("<flag>");
+  AddXMLTag(&r, "file", flag.filename);
+  AddXMLTag(&r, "name", flag.name);
+  AddXMLTag(&r, "meaning", flag.description);
+  AddXMLTag(&r, "default", flag.default_value);
+  AddXMLTag(&r, "current", flag.current_value);
+  AddXMLTag(&r, "type", flag.type);
+  r += "</flag>";
+  return r;
 }
 
 // --------------------------------------------------------------------
@@ -233,9 +249,16 @@ static bool FileMatchesSubstring(const string& filename,
   for (vector<string>::const_iterator target = substrings.begin();
        target != substrings.end();
        ++target) {
-    if (strstr(filename.c_str(), target->c_str()) != NULL) {
+    if (strstr(filename.c_str(), target->c_str()) != NULL)
       return true;
-    }
+    // If the substring starts with a '/', that means that we want
+    // the string to be at the beginning of a directory component.
+    // That should match the first directory component as well, so
+    // we allow '/foo' to match a filename of 'foo'.
+    if (!target->empty() && (*target)[0] == '/' &&
+        strncmp(filename.c_str(), target->c_str() + 1,
+                strlen(target->c_str() + 1)) == 0)
+      return true;
   }
   return false;
 }
@@ -243,7 +266,7 @@ static bool FileMatchesSubstring(const string& filename,
 // Show help for every filename which matches any of the target substrings.
 // If substrings is empty, shows help for every file. If a flag's help message
 // has been stripped (e.g. by adding '#define STRIP_FLAG_HELP 1' before
-// including google/gflags.h), then this flag will not be displayed by
+// including gflags/gflags.h), then this flag will not be displayed by
 // '--help' and its variants.
 static void ShowUsageWithFlagsMatching(const char *argv0,
                                        const vector<string> &substrings) {
@@ -252,7 +275,7 @@ static void ShowUsageWithFlagsMatching(const char *argv0,
   vector<CommandLineFlagInfo> flags;
   GetAllFlags(&flags);           // flags are sorted by filename, then flagname
 
-  string last_filename = "";     // so we know when we're at a new file
+  string last_filename;          // so we know when we're at a new file
   bool first_directory = true;   // controls blank lines between dirs
   bool found_match = false;      // stays false iff no dir matches restrict
   for (vector<CommandLineFlagInfo>::const_iterator flag = flags.begin();
@@ -333,6 +356,15 @@ static void ShowVersion() {
 # endif
 }
 
+static void AppendPrognameStrings(vector<string>* substrings,
+                                  const char* progname) {
+  string r("/");
+  r += progname;
+  substrings->push_back(r + ".");
+  substrings->push_back(r + "-main.");
+  substrings->push_back(r + "_main.");
+}
+
 // --------------------------------------------------------------------
 // HandleCommandLineHelpFlags()
 //    Checks all the 'reporting' commandline flags to see if any
@@ -345,13 +377,14 @@ void HandleCommandLineHelpFlags() {
   const char* progname = ProgramInvocationShortName();
   extern void (*commandlineflags_exitfunc)(int);   // in gflags.cc
 
+  HandleCommandLineCompletions();
+
+  vector<string> substrings;
+  AppendPrognameStrings(&substrings, progname);
+
   if (FLAGS_helpshort) {
     // show only flags related to this binary:
     // E.g. for fileutil.cc, want flags containing   ... "/fileutil." cc
-    vector<string> substrings;
-    substrings.push_back(string("/") + progname + ".");
-    substrings.push_back(string("/") + progname + "-main.");
-    substrings.push_back(string("/") + progname + "_main.");
     ShowUsageWithFlagsMatching(progname, substrings);
     commandlineflags_exitfunc(1);   // almost certainly exit()
 
@@ -377,11 +410,7 @@ void HandleCommandLineHelpFlags() {
     // filename like "/progname.cc", and take the dirname of that.
     vector<CommandLineFlagInfo> flags;
     GetAllFlags(&flags);
-    vector<string> substrings;
-    substrings.push_back(string("/") + progname + ".");
-    substrings.push_back(string("/") + progname + "-main.");
-    substrings.push_back(string("/") + progname + "_main.");
-    string last_package = "";
+    string last_package;
     for (vector<CommandLineFlagInfo>::const_iterator flag = flags.begin();
          flag != flags.end();
          ++flag) {
@@ -390,14 +419,14 @@ void HandleCommandLineHelpFlags() {
       const string package = Dirname(flag->filename) + "/";
       if (package != last_package) {
         ShowUsageWithFlagsRestrict(progname, package.c_str());
-        if (last_package != "") {      // means this isn't our first pkg
+        if (!last_package.empty()) {      // means this isn't our first pkg
           fprintf(stderr, "WARNING: Multiple packages contain a file=%s\n",
                   progname);
         }
         last_package = package;
       }
     }
-    if (last_package == "") {   // never found a package to print
+    if (last_package.empty()) {   // never found a package to print
       fprintf(stderr, "WARNING: Unable to find a package for file=%s\n",
               progname);
     }
