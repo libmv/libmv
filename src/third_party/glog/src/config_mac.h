@@ -29,13 +29,13 @@
 #define HAVE_LIBUNWIND_H 1
 
 /* define if you have google gflags library */
-/* #undef HAVE_LIB_GFLAGS */
+#define HAVE_LIB_GFLAGS 1
 
 /* define if you have google gmock library */
 /* #undef HAVE_LIB_GMOCK */
 
 /* define if you have google gtest library */
-/* #undef HAVE_LIB_GTEST */
+//#define HAVE_LIB_GTEST 1
 
 /* define if you have libunwind */
 /* #undef HAVE_LIB_UNWIND */

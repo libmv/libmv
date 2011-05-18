@@ -78,8 +78,8 @@
 #include <inttypes.h>           // a third place for uint16_t or u_int16_t
 #endif
 
-#if 0
-#include <gflags/gflags.h>
+#if 1
+#include "third_party/gflags/gflags.h"
 #endif
 
 namespace google {

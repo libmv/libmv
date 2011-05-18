@@ -29,7 +29,7 @@
 /* #undef HAVE_LIBUNWIND_H */
 
 /* define if you have google gflags library */
-/* #undef HAVE_LIB_GFLAGS */
+#define HAVE_LIB_GFLAGS 1
 
 /* define if you have google gmock library */
 /* #undef HAVE_LIB_GMOCK */
@@ -143,6 +143,7 @@
 /* Define to 1 if you have the ANSI C header files. */
 /* #undef STDC_HEADERS */
 
+#define STDC_HEADERS 1
 /* the namespace where STL code like vector<> is defined */
 #define STL_NAMESPACE std
 
