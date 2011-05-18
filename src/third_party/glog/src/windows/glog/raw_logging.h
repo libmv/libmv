@@ -37,8 +37,10 @@
 // acquire any locks, and can therefore be used by low-level memory
 // allocation and synchronization code.
 
-#ifndef WIN_BASE_RAW_LOGGING_H_
-#define WIN_BASE_RAW_LOGGING_H_
+#ifndef BASE_RAW_LOGGING_H_
+#define BASE_RAW_LOGGING_H_
+
+#include <time.h>
 
 namespace google {
 
@@ -180,9 +182,8 @@ GOOGLE_GLOG_DLL_DECL void RawLog__(LogSeverity severity,
 // Hack to propagate time information into this module so that
 // this module does not have to directly call localtime_r(),
 // which could allocate memory.
-extern "C" struct ::tm;
-GOOGLE_GLOG_DLL_DECL void RawLog__SetLastTime(const struct ::tm& t, int usecs);
+GOOGLE_GLOG_DLL_DECL void RawLog__SetLastTime(const struct tm& t, int usecs);
 
 }
 
-#endif  // WIN_BASE_RAW_LOGGING_H_
+#endif  // BASE_RAW_LOGGING_H_

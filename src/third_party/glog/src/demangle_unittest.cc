@@ -31,6 +31,8 @@
 //
 // Unit tests for functions in demangle.c.
 
+#include "utilities.h"
+
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -39,7 +41,8 @@
 #include "googletest.h"
 #include "config.h"
 
-DEFINE_bool(demangle_filter, false, "Run demangle_unittest in filter mode");
+GLOG_DEFINE_bool(demangle_filter, false,
+                 "Run demangle_unittest in filter mode");
 
 using namespace std;
 using namespace GOOGLE_NAMESPACE;

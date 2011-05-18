@@ -31,8 +31,8 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef WIN_BASE_LOG_SEVERITY_H__
-#define WIN_BASE_LOG_SEVERITY_H__
+#ifndef BASE_LOG_SEVERITY_H__
+#define BASE_LOG_SEVERITY_H__
 
 // Annoying stuff for windows -- makes sure clients can import these functions
 #ifndef GOOGLE_GLOG_DLL_DECL
@@ -48,9 +48,6 @@
 // you ever need to change their values or add a new severity.
 typedef int LogSeverity;
 
-#ifdef ERROR
-#undef ERROR
-#endif
 const int INFO = 0, WARNING = 1, ERROR = 2, FATAL = 3, NUM_SEVERITIES = 4;
 
 // DFATAL is FATAL in debug mode, ERROR in normal mode
@@ -88,4 +85,4 @@ enum { DEBUG_MODE = 1 };
 #define IF_DEBUG_MODE(x) x
 #endif
 
-#endif  // WIN_BASE_LOG_SEVERITY_H__
+#endif  // BASE_LOG_SEVERITY_H__

@@ -29,9 +29,6 @@
 
 #ifndef BASE_LOG_SEVERITY_H__
 #define BASE_LOG_SEVERITY_H__
-#if defined(_MSC_VER)
-#  include "windows/glog/log_severity.h"
-#else
 
 // Annoying stuff for windows -- makes sure clients can import these functions
 #ifndef GOOGLE_GLOG_DLL_DECL
@@ -84,5 +81,4 @@ enum { DEBUG_MODE = 1 };
 #define IF_DEBUG_MODE(x) x
 #endif
 
-#endif  // defined(_MSC_VER)
 #endif  // BASE_LOG_SEVERITY_H__

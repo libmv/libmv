@@ -1,4 +1,32 @@
-// Copyright 1999, 2007 Google Inc. All Rights Reserved.
+// Copyright (c) 1999, 2007, Google Inc.
+// All rights reserved.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are
+// met:
+//
+//     * Redistributions of source code must retain the above copyright
+// notice, this list of conditions and the following disclaimer.
+//     * Redistributions in binary form must reproduce the above
+// copyright notice, this list of conditions and the following disclaimer
+// in the documentation and/or other materials provided with the
+// distribution.
+//     * Neither the name of Google Inc. nor the names of its
+// contributors may be used to endorse or promote products derived from
+// this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
 // Author: Ray Sidney and many others
 //
 // Defines the VLOG_IS_ON macro that controls the variable-verbosity
@@ -35,6 +63,15 @@
 
 #include "glog/log_severity.h"
 
+// Annoying stuff for windows -- makes sure clients can import these functions
+#ifndef GOOGLE_GLOG_DLL_DECL
+# if defined(_WIN32) && !defined(__CYGWIN__)
+#   define GOOGLE_GLOG_DLL_DECL  __declspec(dllimport)
+# else
+#   define GOOGLE_GLOG_DLL_DECL
+# endif
+#endif
+
 #if defined(__GNUC__)
 // We emit an anonymous static int* variable at every VLOG_IS_ON(n) site.
 // (Normally) the first time every VLOG_IS_ON(n) site is hit,
@@ -43,6 +80,7 @@
 // matching the current source file that represents results of
 // parsing of --vmodule flag and/or SetVLOGLevel calls.
 #define VLOG_IS_ON(verboselevel)                                \
+  __extension__  \
   ({ static @ac_google_namespace@::int32* vlocal__ = &@ac_google_namespace@::kLogSiteUninitialized;           \
      @ac_google_namespace@::int32 verbose_level__ = (verboselevel);                    \
      (*vlocal__ >= verbose_level__) &&                          \
@@ -63,7 +101,8 @@
 //	 one needs to supply the exact --vmodule pattern that applied to them.
 //       (If no --vmodule pattern applied to them
 //       the value of FLAGS_v will continue to control them.)
-extern int SetVLOGLevel(const char* module_pattern, int log_level);
+extern GOOGLE_GLOG_DLL_DECL int SetVLOGLevel(const char* module_pattern,
+                                             int log_level);
 
 // Various declarations needed for VLOG_IS_ON above: =========================
 
@@ -81,9 +120,10 @@ extern @ac_google_namespace@::int32 kLogSiteUninitialized;
 //   verbose_level is the argument to VLOG_IS_ON
 // We will return the return value for VLOG_IS_ON
 // and if possible set *site_flag appropriately.
-extern bool InitVLOG3__(@ac_google_namespace@::int32** site_flag,
-                        @ac_google_namespace@::int32* site_default,
-                        const char* fname,
-                        @ac_google_namespace@::int32 verbose_level);
+extern GOOGLE_GLOG_DLL_DECL bool InitVLOG3__(
+    @ac_google_namespace@::int32** site_flag,
+    @ac_google_namespace@::int32* site_default,
+    const char* fname,
+    @ac_google_namespace@::int32 verbose_level);
 
 #endif  // BASE_VLOG_IS_ON_H_

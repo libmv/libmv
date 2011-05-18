@@ -57,11 +57,7 @@
 #include <vector>
 #include <errno.h>                   // for errno
 #include <sstream>
-// TODO(keir): For some reason this include doesn't work; it gets some wrong
-// value. Figure out why and remove this to make us closer to upstream.
-//#include "base/commandlineflags.h"        // to get the program name
-#include "third_party/gflags/gflags.h"
-
+#include "base/commandlineflags.h"        // to get the program name
 #include "glog/logging.h"
 #include "glog/raw_logging.h"
 #include "base/googleinit.h"
@@ -93,15 +89,15 @@ static bool BoolFromEnv(const char *varname, bool defval) {
   return memchr("tTyY1\0", valstr[0], 6) != NULL;
 }
 
-DEFINE_bool(logtostderr, BoolFromEnv("GOOGLE_LOGTOSTDERR", false),
-            "log messages go to stderr instead of logfiles");
-DEFINE_bool(alsologtostderr, BoolFromEnv("GOOGLE_ALSOLOGTOSTDERR", false),
-            "log messages go to stderr in addition to logfiles");
+GLOG_DEFINE_bool(logtostderr, BoolFromEnv("GOOGLE_LOGTOSTDERR", false),
+                 "log messages go to stderr instead of logfiles");
+GLOG_DEFINE_bool(alsologtostderr, BoolFromEnv("GOOGLE_ALSOLOGTOSTDERR", false),
+                 "log messages go to stderr in addition to logfiles");
 #ifdef OS_LINUX
-DEFINE_bool(drop_log_memory, true, "Drop in-memory buffers of log contents. "
-            "Logs can grow very quickly and they are rarely read before they "
-            "need to be evicted from memory. Instead, drop them from memory "
-            "as soon as they are flushed to disk.");
+GLOG_DEFINE_bool(drop_log_memory, true, "Drop in-memory buffers of log contents. "
+                 "Logs can grow very quickly and they are rarely read before they "
+                 "need to be evicted from memory. Instead, drop them from memory "
+                 "as soon as they are flushed to disk.");
 _START_GOOGLE_NAMESPACE_
 namespace logging {
 static const int64 kPageSize = getpagesize();
@@ -119,25 +115,25 @@ DEFINE_int32(stderrthreshold,
              "log messages at or above this level are copied to stderr in "
              "addition to logfiles.  This flag obsoletes --alsologtostderr.");
 
-DEFINE_string(alsologtoemail, "",
-              "log messages go to these email addresses "
-              "in addition to logfiles");
-DEFINE_bool(log_prefix, true,
-            "Prepend the log prefix to the start of each log line");
-DEFINE_int32(minloglevel, 0, "Messages logged at a lower level than this don't "
-             "actually get logged anywhere");
-DEFINE_int32(logbuflevel, 0,
-             "Buffer log messages logged at this level or lower"
-             " (-1 means don't buffer; 0 means buffer INFO only;"
-             " ...)");
-DEFINE_int32(logbufsecs, 30,
-             "Buffer log messages for at most this many seconds");
-DEFINE_int32(logemaillevel, 999,
-             "Email log messages logged at this level or higher"
-             " (0 means email all; 3 means email FATAL only;"
-             " ...)");
-DEFINE_string(logmailer, "/bin/mail",
-              "Mailer used to send logging email");
+GLOG_DEFINE_string(alsologtoemail, "",
+                   "log messages go to these email addresses "
+                   "in addition to logfiles");
+GLOG_DEFINE_bool(log_prefix, true,
+                 "Prepend the log prefix to the start of each log line");
+GLOG_DEFINE_int32(minloglevel, 0, "Messages logged at a lower level than this don't "
+                  "actually get logged anywhere");
+GLOG_DEFINE_int32(logbuflevel, 0,
+                  "Buffer log messages logged at this level or lower"
+                  " (-1 means don't buffer; 0 means buffer INFO only;"
+                  " ...)");
+GLOG_DEFINE_int32(logbufsecs, 30,
+                  "Buffer log messages for at most this many seconds");
+GLOG_DEFINE_int32(logemaillevel, 999,
+                  "Email log messages logged at this level or higher"
+                  " (0 means email all; 3 means email FATAL only;"
+                  " ...)");
+GLOG_DEFINE_string(logmailer, "/bin/mail",
+                   "Mailer used to send logging email");
 
 // Compute the default value for --log_dir
 static const char* DefaultLogDir() {
@@ -153,21 +149,21 @@ static const char* DefaultLogDir() {
   return "";
 }
 
-DEFINE_string(log_dir, DefaultLogDir(),
-              "If specified, logfiles are written into this directory instead "
-              "of the default logging directory.");
-DEFINE_string(log_link, "", "Put additional links to the log "
-              "files in this directory");
+GLOG_DEFINE_string(log_dir, DefaultLogDir(),
+                   "If specified, logfiles are written into this directory instead "
+                   "of the default logging directory.");
+GLOG_DEFINE_string(log_link, "", "Put additional links to the log "
+                   "files in this directory");
 
-DEFINE_int32(max_log_size, 1800,
-             "approx. maximum log file size (in MB). A value of 0 will "
-             "be silently overridden to 1.");
+GLOG_DEFINE_int32(max_log_size, 1800,
+                  "approx. maximum log file size (in MB). A value of 0 will "
+                  "be silently overridden to 1.");
 
-DEFINE_bool(stop_logging_if_full_disk, false,
-            "Stop attempting to log to disk if the disk is full.");
+GLOG_DEFINE_bool(stop_logging_if_full_disk, false,
+                 "Stop attempting to log to disk if the disk is full.");
 
-DEFINE_string(log_backtrace_at, "",
-              "Emit a backtrace when logging at file:linenum.");
+GLOG_DEFINE_string(log_backtrace_at, "",
+                   "Emit a backtrace when logging at file:linenum.");
 
 // TODO(hamaji): consider windows
 #define PATH_SEPARATOR '/'
@@ -181,8 +177,8 @@ static void GetHostName(string* hostname) {
   }
   *hostname = buf.nodename;
 #elif defined(OS_WINDOWS)
-  char buf[256];
-  DWORD len;
+  char buf[MAX_COMPUTERNAME_LENGTH + 1];
+  DWORD len = MAX_COMPUTERNAME_LENGTH + 1;
   if (GetComputerNameA(buf, &len)) {
     *hostname = buf;
   } else {
@@ -534,7 +530,7 @@ inline void LogDestination::MaybeLogToEmail(LogSeverity severity,
       to += addresses_;
     }
     const string subject(string("[LOG] ") + LogSeverityNames[severity] + ": " +
-                         ProgramInvocationShortName());
+                         glog_internal_namespace_::ProgramInvocationShortName());
     string body(hostname());
     body += "\n\n";
     body.append(message, len);
@@ -617,7 +613,7 @@ LogFileObject::LogFileObject(LogSeverity severity,
                              const char* base_filename)
   : base_filename_selected_(base_filename != NULL),
     base_filename_((base_filename != NULL) ? base_filename : ""),
-    symlink_basename_(ProgramInvocationShortName()),
+    symlink_basename_(glog_internal_namespace_::ProgramInvocationShortName()),
     filename_extension_(),
     file_(NULL),
     severity_(severity),
@@ -800,7 +796,8 @@ void LogFileObject::Write(bool force_flush,
       //
       // Where does the file get put?  Successively try the directories
       // "/tmp", and "."
-      string stripped_filename(ProgramInvocationShortName());  // in cmdlineflag
+      string stripped_filename(
+          glog_internal_namespace_::ProgramInvocationShortName());
       string hostname;
       GetHostName(&hostname);
 
@@ -1238,7 +1235,7 @@ static void logging_fail() {
 #if defined(_DEBUG) && defined(_MSC_VER)
   // When debugging on windows, avoid the obnoxious dialog and make
   // it possible to continue past a LOG(FATAL) in the debugger
-   __debugbreak();
+  _asm int 3
 #else
   abort();
 #endif
@@ -1310,7 +1307,8 @@ void LogMessage::SendToSyslogAndLog() {
   // Before any calls to syslog(), make a single call to openlog()
   static bool openlog_already_called = false;
   if (!openlog_already_called) {
-    openlog(ProgramInvocationShortName(), LOG_CONS | LOG_NDELAY | LOG_PID,
+    openlog(glog_internal_namespace_::ProgramInvocationShortName(),
+            LOG_CONS | LOG_NDELAY | LOG_PID,
             LOG_USER);
     openlog_already_called = true;
   }
@@ -1756,8 +1754,8 @@ int posix_strerror_r(int err, char *buf, size_t len) {
       return 0;
     } else {
       buf[0] = '\000';
-#if defined(OS_MACOSX) || defined(OS_FREEBSD)
-      if (reinterpret_cast<int>(rc) < sys_nerr) {
+#if defined(OS_MACOSX) || defined(OS_FREEBSD) || defined(OS_OPENBSD)
+      if (reinterpret_cast<intptr_t>(rc) < sys_nerr) {
         // This means an error on MacOSX or FreeBSD.
         return -1;
       }
