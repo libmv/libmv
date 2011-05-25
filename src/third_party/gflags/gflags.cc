@@ -143,6 +143,19 @@
 # define PRIu64 "llu"
 #endif
 
+// Windows is missing random bits like strcasecmp, strtoll, strtoull, and
+// snprintf in the usual locations. Put them somewhere sensible.
+//
+// TODO(keir): Get the upstream Windows port and use that instead.
+#ifdef _MSC_VER
+# define snprintf _snprintf
+# undef strtoint64
+# define strtoint64 _strtoi64
+# undef strtouint64
+# define strtouint64 _strtoui64
+# define strcasecmp _stricmp
+#endif
+
 typedef signed char int8;
 typedef unsigned char uint8;
 
