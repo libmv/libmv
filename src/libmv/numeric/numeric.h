@@ -461,17 +461,17 @@ FloatType ceil0(const FloatType& value) {
 /// Returns the skew anti-symmetric matrix of a vector
 inline Mat3 SkewMat(const Vec3 &x) {
   Mat3 skew;
-  skew <<   0 ,-x(2), x(1),
-          x(2),   0 ,-x(0),
-         -x(1), x(0),    0;
+  skew <<   0 , -x(2),  x(1),
+          x(2),    0 , -x(0),
+         -x(1),  x(0),    0;
   return skew;
 }
 /// Returns the skew anti-symmetric matrix of a vector with only
 /// the first two (independent) lines
 inline Mat23 SkewMatMinimal(const Vec2 &x) {
   Mat23 skew;
-  skew << 0,-1, x(1),
-          1, 0,-x(0);
+  skew << 0,-1,  x(1),
+          1, 0, -x(0);
   return skew;
 }
 } // namespace libmv
