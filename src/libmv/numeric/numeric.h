@@ -27,7 +27,7 @@
 
 #include <Eigen/Cholesky>
 #include <Eigen/Core>
-#include <Eigen/Eigenvalues> 
+#include <Eigen/Eigenvalues>
 #include <Eigen/Geometry>
 #include <Eigen/LU>
 #include <Eigen/QR>
@@ -131,7 +131,7 @@ typedef Eigen::Matrix<float,
                       Eigen::Dynamic,
                       Eigen::Dynamic,
                       Eigen::RowMajor> RMatf;
-                      
+
 typedef Eigen::NumTraits<double> EigenDouble;
 
 using Eigen::Map;
@@ -450,7 +450,7 @@ inline bool isnan(double i) {
 #endif
 }
 
-/// Ceil function that has the same behaviour for positive 
+/// Ceil function that has the same behaviour for positive
 /// and negative values
 template <typename FloatType>
 FloatType ceil0(const FloatType& value) {
@@ -461,17 +461,17 @@ FloatType ceil0(const FloatType& value) {
 /// Returns the skew anti-symmetric matrix of a vector
 inline Mat3 SkewMat(const Vec3 &x) {
   Mat3 skew;
-  skew <<   0 ,-x(2), x(1),
-          x(2),   0 ,-x(0),
-         -x(1), x(0),    0;
+  skew <<   0 , -x(2),  x(1),
+          x(2),    0 , -x(0),
+         -x(1),  x(0),    0;
   return skew;
 }
 /// Returns the skew anti-symmetric matrix of a vector with only
 /// the first two (independent) lines
 inline Mat23 SkewMatMinimal(const Vec2 &x) {
   Mat23 skew;
-  skew << 0,-1, x(1),
-          1, 0 -x(0);
+  skew << 0,-1,  x(1),
+          1, 0, -x(0);
   return skew;
 }
 } // namespace libmv
