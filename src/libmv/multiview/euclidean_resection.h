@@ -27,55 +27,55 @@
 namespace libmv {
 namespace euclidean_resection {
   
-enum eLibmvResectionMethod
-{
-  eRESECTION_ANSAR_DANIILIDIS,
-  eRESECTION_EPNP,
+enum ResectionMethod {
+  RESECTION_ANSAR_DANIILIDIS,
+  RESECTION_EPNP,
 };
 
 /**
  * Computes the extrinsic parameters, R and t for a calibrated camera
- * from 4 or more 3D points and their images.
+ * from 4 or more 3D points and their normalized images.
  *
- * \param x_camera          Image points in normalized camera coordinates
- *                          e.g. x_camera=inv(K)*x_image
- * \param X_world           3D points in the world coordinate system
- * \param R                 Solution for the camera rotation matrix
- * \param t                 Solution for the camera translation vector
- * \param eResectionMethod  Resection method
+ * \param x_camera  Image points in normalized camera coordinates e.g. x_camera
+ *                   = inv(K) * x_image.
+ * \param X_world   3D points in the world coordinate system
+ * \param R         Solution for the camera rotation matrix
+ * \param t         Solution for the camera translation vector
+ * \param method    The resection method to use.
  */
 void EuclideanResection(const Mat2X &x_camera, 
                         const Mat3X &X_world,
                         Mat3 *R, Vec3 *t,
-                        eLibmvResectionMethod eResectionMethod = eRESECTION_EPNP
-                       );
+                        ResectionMethod method = RESECTION_EPNP);
 
 /**
  * Computes the extrinsic parameters, R and t for a calibrated camera
  * from 4 or more 3D points and their images.
  *
- * \param x_image           Image points in normalized camera coordinates
- * \param X_world           3D points in the world coordinate system
- * \param K                 Intrinsic parameters camera matrix
- * \param R                 Solution for the camera rotation matrix
- * \param t                 Solution for the camera translation vector
- * \param eResectionMethod  Resection method
+ * \param x_image   Image points in non-normalized image coordinates. The
+ *                  coordates are laid out one per row. The matrix can be Nx2
+ *                  or Nx3 for euclidean or homogenous 2D coordinates.
+ * \param X_world   3D points in the world coordinate system
+ * \param K         Intrinsic parameters camera matrix
+ * \param R         Solution for the camera rotation matrix
+ * \param t         Solution for the camera translation vector
+ * \param method    Resection method
  */
 void EuclideanResection(const Mat &x_image, 
                         const Mat3X &X_world,
-                        const Mat3 &K, Mat3 *R, Vec3 *t,
-                        eLibmvResectionMethod eResectionMethod = eRESECTION_EPNP
-                       );
+                        const Mat3 &K,
+                        Mat3 *R, Vec3 *t,
+                        ResectionMethod method = RESECTION_EPNP);
 
 /**
- * The absolute orientation algorithm recovers the transformation
- * between a set of 3D points, X and Xp such that:
+ * The absolute orientation algorithm recovers the transformation between a set
+ * of 3D points, X and Xp such that:
  *
  *           Xp = R*X + t
  *
- * The recovery of the absolute orientation is implemented after this
- * article: Horn, Hilden, "Closed-form solution of absolute
- * orientation using orthonormal matrices"
+ * The recovery of the absolute orientation is implemented after this article:
+ * Horn, Hilden, "Closed-form solution of absolute orientation using
+ * orthonormal matrices"
  */
 void AbsoluteOrientation(const Mat3X &X,
                          const Mat3X &Xp,
@@ -83,28 +83,27 @@ void AbsoluteOrientation(const Mat3X &X,
                          Vec3 *t);
 
 /**
- * Computes the extrinsic parameters, R and t for a calibrated camera
- * from 4 or more 3D points and their images.
+ * Computes the extrinsic parameters, R and t for a calibrated camera from 4 or
+ * more 3D points and their images.
  *
- * \param x_camera Image points in normalized camera coordinates,
- *       e.g. x_camera=inv(K)*x_image
- * \param X_world 3D points in the world coordinate system
- * \param R       Solution for the camera rotation matrix
- * \param t       Solution for the camera translation vector
+ * \param x_camera Image points in normalized camera coordinates, e.g.
+ *                 x_camera=inv(K)*x_image
+ * \param X_world  3D points in the world coordinate system
+ * \param R        Solution for the camera rotation matrix
+ * \param t        Solution for the camera translation vector
  *
- * This is the algorithm described in:
- * "Linear Pose Estimation from Points or Lines", by Ansar, A. and
- *  Daniilidis, PAMI 2003. vol. 25, no. 5
+ * This is the algorithm described in: "Linear Pose Estimation from Points or
+ * Lines", by Ansar, A. and Daniilidis, PAMI 2003. vol. 25, no. 5.
  */
 void EuclideanResectionAnsarDaniilidis(const Mat2X &x_camera, 
                                        const Mat3X &X_world,
                                        Mat3 *R, Vec3 *t);
 /**
- * Computes the extrinsic parameters, R and t for a calibrated camera
- * from 4 or more 3D points and their images.
+ * Computes the extrinsic parameters, R and t for a calibrated camera from 4 or
+ * more 3D points and their images.
  *
  * \param x_camera Image points in normalized camera coordinates,
- *       e.g. x_camera=inv(K)*x_image
+ *                 e.g. x_camera = inv(K) * x_image
  * \param X_world 3D points in the world coordinate system
  * \param R       Solution for the camera rotation matrix
  * \param t       Solution for the camera translation vector
@@ -114,7 +113,8 @@ void EuclideanResectionAnsarDaniilidis(const Mat2X &x_camera,
  * and F. Moreno-Noguer and P. Fua, IJCV 2009. vol. 81, no. 2
  * \note: the non-linear optimization is not implemented here.
  */
-void EuclideanResectionEPnP(const Mat2X &x_camera, const Mat3X &X_world, 
+void EuclideanResectionEPnP(const Mat2X &x_camera,
+                            const Mat3X &X_world, 
                             Mat3 *R, Vec3 *t);
 
 } // namespace euclidean_resection

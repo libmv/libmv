@@ -27,66 +27,71 @@
 using namespace libmv::euclidean_resection;
 using namespace libmv;
 
-// Generates all necessary inputs and desigred outputs for
-// the EuclideanResection.
+// Generates all necessary inputs and expected outputs for EuclideanResection.
 void CreateCameraSystem(const Mat3& KK,
                         const Mat3X& x_image,
                         const Vec& X_distances,
                         const Mat3& R_input,
                         const Vec3& T_input,
-                        Mat2X *x_cam,
+                        Mat2X *x_camera,
                         Mat3X *X_world,
                         Mat3  *R_expected,
                         Vec3  *T_expected) {
   int num_points = x_image.cols();
-  Mat3X x_unit_cam(3,num_points);
+
+  Mat3X x_unit_cam(3, num_points);
   x_unit_cam = KK.inverse() * x_image;
-  // Normalized camera coordinates to be used as an input to the PnP function.
-  *x_cam = x_unit_cam.block(0,0,2,num_points);
-  //instead of NormalizeColumnVectors(&x_unit_cam);
+
+  // Create normalized camera coordinates to be used as an input to the PnP
+  // function, instead of using NormalizeColumnVectors(&x_unit_cam).
+  *x_camera = x_unit_cam.block(0, 0, 2, num_points);
   for (int i = 0; i < num_points; ++i){
     x_unit_cam.col(i).normalize();
   }
 
-  // Create the 3D points int he camera system.
+  // Create the 3D points in the camera system.
   Mat X_camera(3, num_points);
-  for (int ii = 0; ii < num_points; ++ii) {
-    X_camera.col(ii) = X_distances(ii) * x_unit_cam.col(ii);
+  for (int i = 0; i < num_points; ++i) {
+    X_camera.col(i) = X_distances(i) * x_unit_cam.col(i);
   }
 
-  //Apply the transformation to the camera 3D points
+  // Apply the transformation to the camera 3D points
   Mat translation_matrix(3, num_points);
   translation_matrix.row(0).setConstant(T_input(0));
   translation_matrix.row(1).setConstant(T_input(1));
   translation_matrix.row(2).setConstant(T_input(2));
 
   *X_world = R_input * X_camera + translation_matrix;
-  // Expected variables for comparison.
+
+  // Create the expected result for comparison.
   *R_expected = R_input.transpose();
   *T_expected = *R_expected * ( - T_input);
 };
 
-
-TEST(AbsoluteOrientation, QuaternionSlution) {
-  srand((unsigned)time(0));
+TEST(AbsoluteOrientation, QuaternionSolution) {
   int num_points = 4;
   Mat X;
   Mat Xp;
-  X = 100 * Mat::Random(3,num_points);
-  // Create random translation and rotation.
+  X = 100 * Mat::Random(3, num_points);
+
+  // Create a random translation and rotation.
   Mat3 R_input;
   R_input = Eigen::AngleAxisd(rand(), Eigen::Vector3d::UnitZ())
           * Eigen::AngleAxisd(rand(), Eigen::Vector3d::UnitY())
           * Eigen::AngleAxisd(rand(), Eigen::Vector3d::UnitZ());
+
   Vec3 t_input;
   t_input.setRandom();
-  t_input=100*t_input;
+  t_input = 100 * t_input;
+
   Mat translation_matrix(3, num_points);
   translation_matrix.row(0).setConstant(t_input(0));
   translation_matrix.row(1).setConstant(t_input(1));
   translation_matrix.row(2).setConstant(t_input(2));
-  // Create Xp as Xp = R * X + t.
+
+  // Create the transformed 3D points Xp as Xp = R * X + t.
   Xp = R_input * X + translation_matrix;
+
   // Output variables.
   Mat3 R;
   Vec3 t;
@@ -95,135 +100,138 @@ TEST(AbsoluteOrientation, QuaternionSlution) {
 
   EXPECT_MATRIX_NEAR(t, t_input, 1e-6);
   EXPECT_MATRIX_NEAR(R, R_input, 1e-8);
-
 }
 
 TEST(EuclideanResection, Points4KnownImagePointsRandomTranslationRotation) {
-
-  // In this test only the translation and rottion are random.
-  // The image points are selected from a real case and are well conditioned.
+  // In this test only the translation and rotation are random. The image
+  // points are selected from a real case and are well conditioned.
   Vec2i image_dimensions;
   image_dimensions << 1600, 1200;
-  srand((unsigned)time(0));
 
   Mat3 KK;
-  KK << 2796.813000676695538, 0,                     804.489474977057966,
-        0 ,                   2796.483860262341295,  641.641715857649729,
-        0,                    0,                     1;
+  KK << 2796, 0,     804,
+        0 ,   2796,  641,
+        0,    0,     1;
 
+  // The real image points.
   int num_points = 4;
   Mat3X x_image(3, num_points);
-  // Image points.
   x_image << 1164.06, 734.948, 749.599, 430.727,
              681.386, 844.59, 496.315,  580.775,
              1,       1,      1,        1;
 
-  // Normalized camera coordinates to be used as an input to the PnP function.
-  Mat2X x_cam;
-  Vec X_distances(num_points); // a vector of the 4 distances to the 3D points
-  X_distances << 100 * Vec::Random(num_points).array().abs();
-  // Transformation variables
+
+  // A vector of the 4 distances to the 3D points.
+  Vec X_distances = 100 * Vec::Random(num_points).array().abs();
+
+  // Create the random camera motion R and t that resection should recover.
   Mat3 R_input;
   R_input = Eigen::AngleAxisd(rand(), Eigen::Vector3d::UnitZ())
           * Eigen::AngleAxisd(rand(), Eigen::Vector3d::UnitY())
           * Eigen::AngleAxisd(rand(), Eigen::Vector3d::UnitZ());
+
   Vec3 T_input;
   T_input.setRandom();
-  T_input=100 * T_input;
+  T_input = 100 * T_input;
 
+  // Create the camera system, also getting the expected result of the
+  // transformation.
   Mat3 R_expected;
   Vec3 T_expected;
   Mat3X X_world;
-  // Create the camera system.
+  Mat2X x_camera;
   CreateCameraSystem(KK, x_image, X_distances, R_input, T_input,
-                     &x_cam, &X_world, &R_expected, &T_expected);
+                     &x_camera, &X_world, &R_expected, &T_expected);
+
+  // Finally, run the code under test.
   Mat3 R_output;
   Vec3 T_output;
-  EuclideanResection(x_cam, X_world, 
+  EuclideanResection(x_camera, X_world, 
                      &R_output, &T_output,
-                     eRESECTION_ANSAR_DANIILIDIS);
+                     RESECTION_ANSAR_DANIILIDIS);
  
   EXPECT_MATRIX_NEAR(T_output, T_expected, 1e-5);
   EXPECT_MATRIX_NEAR(R_output, R_expected, 1e-7);
   
+  // For now, the EPnP doesn't have a non-linear optimization step and so is
+  // not precise enough with only 4 points.
+  //
+  // TODO(jmichot): Reenable this test when there is nonlinear refinement.
+#if 0
   R_output.setIdentity();
   T_output.setZero();
   
-  // For now, EPnP has no non-linear optimization and is not precise enough
-  // with only 4 points.
-  /*
-  EuclideanResection(x_cam, X_world, 
+  EuclideanResection(x_camera, X_world, 
                      &R_output, &T_output,
-                     eRESECTION_EPNP);
+                     RESECTION_EPNP);
 
   EXPECT_MATRIX_NEAR(T_output, T_expected, 1e-5);
   EXPECT_MATRIX_NEAR(R_output, R_expected, 1e-7);*/
+#endif
 }
 
+// TODO(jmichot): Reduce the code duplication here with the code above.
 TEST(EuclideanResection, Points6AllRandomInput) {
-
-  int num_points = 6;
-  Vec2i image_dimensions;
-  image_dimensions << 1600, 1200;
-  srand((unsigned)time(0));
-
   Mat3 KK;
-  KK << 2796.813000676695538, 0,                     804.489474977057966,
-        0 ,                   2796.483860262341295,  641.641715857649729,
-        0,                    0,                     1;
+  KK << 2796, 0,    804,
+        0 ,   2796, 641,
+        0,    0,    1;
 
+  // Create random image points for a 1600x1200 image.
+  int w = 1600;
+  int h = 1200;
+  int num_points = 6;
   Mat3X x_image(3, num_points);
-  // Randomly create the image points.
-  x_image.row(0) = image_dimensions(0) * Vec::Random(num_points).array().abs()
-                        + Vec::Random(num_points).array();
-  x_image.row(1) = image_dimensions(1) * Vec::Random(num_points).array().abs()
-                        + Vec::Random(num_points).array();
+  x_image.row(0) = w * Vec::Random(num_points).array().abs();
+  x_image.row(1) = h * Vec::Random(num_points).array().abs();
   x_image.row(2).setOnes();
 
   // Normalized camera coordinates to be used as an input to the PnP function.
-  Mat2X x_cam;
-  Vec X_distances(num_points); // a vector of the 4 distances to the 3D points
-  X_distances << 100 * Vec::Random(num_points).array().abs();
-  // Transformation variables.
+  Mat2X x_camera;
+  Vec X_distances = 100 * Vec::Random(num_points).array().abs();
+
+  // Create the random camera motion R and t that resection should recover.
   Mat3 R_input;
   R_input = Eigen::AngleAxisd(rand(), Eigen::Vector3d::UnitZ())
           * Eigen::AngleAxisd(rand(), Eigen::Vector3d::UnitY())
           * Eigen::AngleAxisd(rand(), Eigen::Vector3d::UnitZ());
+
   Vec3 T_input;
   T_input.setRandom();
-  T_input=100 * T_input;
+  T_input = 100 * T_input;
 
+  // Create the camera system.
   Mat3 R_expected;
   Vec3 T_expected;
   Mat3X X_world;
-  // Create the camera system.
   CreateCameraSystem(KK, x_image, X_distances, R_input, T_input,
-                     &x_cam, &X_world, &R_expected, &T_expected);
-  Mat3 R_output;
-  Vec3 T_output;
-  EuclideanResection(x_cam, X_world, 
-                     &R_output, &T_output,
-                     eRESECTION_ANSAR_DANIILIDIS);
- 
-  EXPECT_MATRIX_NEAR(T_output, T_expected, 1e-5);
-  EXPECT_MATRIX_NEAR(R_output, R_expected, 1e-7);
-  
-  R_output.setIdentity();
-  T_output.setZero();
-  
-  EuclideanResection(x_cam, X_world, 
-                     &R_output, &T_output,
-                     eRESECTION_EPNP);
- 
-  EXPECT_MATRIX_NEAR(T_output, T_expected, 1e-5);
-  EXPECT_MATRIX_NEAR(R_output, R_expected, 1e-7);
-  
-  R_output.setIdentity();
-  T_output.setZero();
-  
-  EuclideanResection(x_image, X_world, KK,
-                     &R_output, &T_output);
- 
-  EXPECT_MATRIX_NEAR(T_output, T_expected, 1e-5);
-  EXPECT_MATRIX_NEAR(R_output, R_expected, 1e-7);
+                     &x_camera, &X_world, &R_expected, &T_expected);
+
+  // Test each of the resection methods.
+  {
+    Mat3 R_output;
+    Vec3 T_output;
+    EuclideanResection(x_camera, X_world, 
+                       &R_output, &T_output,
+                       RESECTION_ANSAR_DANIILIDIS);
+    EXPECT_MATRIX_NEAR(T_output, T_expected, 1e-5);
+    EXPECT_MATRIX_NEAR(R_output, R_expected, 1e-7);
+  }
+  {
+    Mat3 R_output;
+    Vec3 T_output;
+    EuclideanResection(x_camera, X_world, 
+                       &R_output, &T_output,
+                       RESECTION_EPNP);
+    EXPECT_MATRIX_NEAR(T_output, T_expected, 1e-5);
+    EXPECT_MATRIX_NEAR(R_output, R_expected, 1e-7);
+  }
+  {
+    Mat3 R_output;
+    Vec3 T_output;
+    EuclideanResection(x_image, X_world, KK,
+                       &R_output, &T_output);
+    EXPECT_MATRIX_NEAR(T_output, T_expected, 1e-5);
+    EXPECT_MATRIX_NEAR(R_output, R_expected, 1e-7);
+  }
 }
