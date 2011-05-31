@@ -19,6 +19,7 @@
 // IN THE SOFTWARE.
 
 #include <cmath>
+#include <limits>
 
 #include <Eigen/SVD>
 #include <Eigen/Geometry>
@@ -523,40 +524,43 @@ void EuclideanResectionEPnP(const Mat2X &x_camera,
          (X_control_points.col(1) - X_control_points.col(3)).squaredNorm(),
          (X_control_points.col(2) - X_control_points.col(3)).squaredNorm();
  
-  // Estimates 3 solutions based on 3 approximations of L (betas).
+  // There are three possible solutions based on the three approximations of L
+  // (betas). Below, each one is solved for then the best one is chosen.
   Mat3X X_camera;
   Mat3 K; K.setIdentity();
   vector<Mat3> Rs(3);
   vector<Vec3> ts(3);
   Vec rmse(3);
 
-  // Estimates the betas, first approximation
+  // TODO(julien): Document where the "1e-3" magical constant comes from below.
+
+  // Find the first possible solution for R, t corresponding to:
   // Betas          = [b00 b01 b11 b02 b12 b22 b03 b13 b23 b33]
   // Betas_approx_1 = [b00 b01     b02         b03]
-  Vec4 betas; betas.setZero();
+  Vec4 betas = Vec4::Zero();
   Eigen::Matrix<double, 6, 4> l_6x4;
   for (size_t r = 0; r < 6; r++) {
     l_6x4.row(r) << L(r, 0), L(r, 1), L(r, 3), L(r, 6); 
   }
-  Eigen::JacobiSVD<Mat> svdOfL4(l_6x4, 
-                                Eigen::ComputeFullU | Eigen::ComputeFullV);
-  Vec4 b4 = svdOfL4.solve(rho);
+  Eigen::JacobiSVD<Mat> svd_of_l4(l_6x4, 
+                                  Eigen::ComputeFullU | Eigen::ComputeFullV);
+  Vec4 b4 = svd_of_l4.solve(rho);
   if ((l_6x4 * b4).isApprox(rho, 1e-3)) {
     if (b4(0) < 0) {
       b4 = -b4;
     } 
     b4(0) =  std::sqrt(b4(0));
-    betas <<  b4(0), b4(1)/b4(0), b4(2)/b4(0), b4(3)/b4(0);
+    betas << b4(0), b4(1) / b4(0), b4(2) / b4(0), b4(3) / b4(0);
     ComputePointsCoordinatesInCameraFrame(alphas, betas, u2, &X_camera);
     AbsoluteOrientation(X_world, X_camera, &Rs[0], &ts[0]);
     rmse(0) = RootMeanSquareError(x_camera, X_world, K, Rs[0], ts[0]);
   } else {
-   LOG(ERROR) << " Beta first approximation not good enough.";
-   ts[0].setZero();
-   rmse(0) = 1e10;
+    LOG(ERROR) << "First approximation of beta not good enough.";
+    ts[0].setZero();
+    rmse(0) = std::numeric_limits<double>::max();
   }
  
-  // Estimates the betas, second approximation
+  // Find the second possible solution for R, t corresponding to:
   // Betas          = [b00 b01 b11 b02 b12 b22 b03 b13 b23 b33]
   // Betas_approx_2 = [b00 b01 b11]
   betas.setZero();
@@ -570,31 +574,26 @@ void EuclideanResectionEPnP(const Mat2X &x_camera,
   if ((l_6x3 * b3).isApprox(rho, 1e-3)) {
     if (b3(0) < 0) {
       betas(0) = std::sqrt(-b3(0));
-      if (b3(2) < 0)
-        betas(1) = std::sqrt(-b3(2));
-      else 
-        betas(1) = 0;
+      betas(1) = (b3(2) < 0) ? std::sqrt(-b3(2)) : 0;
     } else {
       betas(0) = std::sqrt(b3(0));
-      if (b3(2) > 0)
-        betas(1) = std::sqrt(b3(2));
-      else 
-        betas(1) = 0;
+      betas(1) = (b3(2) > 0) ? std::sqrt(b3(2)) : 0;
     }
-    if (b3(1) < 0)
+    if (b3(1) < 0) {
       betas(0) = -betas(0);
+    }
     betas(2) = 0;
     betas(3) = 0;
     ComputePointsCoordinatesInCameraFrame(alphas, betas, u2, &X_camera);
     AbsoluteOrientation(X_world, X_camera, &Rs[1], &ts[1]);
     rmse(1) = RootMeanSquareError(x_camera, X_world, K, Rs[1], ts[1]);
   } else {
-   LOG(ERROR) << " Beta second approximation not good enough." << std::endl;
-   ts[1].setZero();
-   rmse(1) = 1e10;
+    LOG(ERROR) << "Second approximation of beta not good enough.";
+    ts[1].setZero();
+    rmse(1) = std::numeric_limits<double>::max();
   }
   
-  // Estimates the betas, third approximation
+  // Find the third possible solution for R, t corresponding to:
   // Betas          = [b00 b01 b11 b02 b12 b22 b03 b13 b23 b33]
   // Betas_approx_3 = [b00 b01 b11 b02 b12]
   betas.setZero();
@@ -606,39 +605,50 @@ void EuclideanResectionEPnP(const Mat2X &x_camera,
   if ((l_6x5 * b5).isApprox(rho, 1e-3)) {
     if (b5(0) < 0) {
       betas(0) = std::sqrt(-b5(0));
-      if (b5(2) < 0)
+      if (b5(2) < 0) {
         betas(1) = std::sqrt(-b5(2));
-      else
+      } else {
         b5(2) = 0;
+      }
     } else {
       betas(0) = std::sqrt(b5(0));
-      if (b5(2) > 0)
+      if (b5(2) > 0) {
         betas(1) = std::sqrt(b5(2));
-      else
+      } else {
         b5(2) = 0;
+      }
     }
-    if (b5(1) < 0)
+    if (b5(1) < 0) {
       betas(0) = -betas(0);
+    }
     betas(2) = b5(3) / betas(0);
     betas(3) = 0;
     ComputePointsCoordinatesInCameraFrame(alphas, betas, u2, &X_camera);
     AbsoluteOrientation(X_world, X_camera, &Rs[2], &ts[2]);
     rmse(2) = RootMeanSquareError(x_camera, X_world, K, Rs[2], ts[2]);
   } else {
-   LOG(ERROR) << " Beta third approximation not good enough." << std::endl;
-   ts[2].setZero();
-   rmse(2) = 1e10;
+    LOG(ERROR) << "Third approximation of beta not good enough.";
+    ts[2].setZero();
+    rmse(2) = std::numeric_limits<double>::max();
   }
   
-  // TODO(julien) do non-linear refinement (Gauss-Newton) for the 3 solutions
-  // maybe in a separate function.
-  
-  // Selects the solution (R,t) which has the RMSE minimum
+  // Finally, with all three solutions, select the (R, t) with the best RMSE.
+  VLOG(2) << "RMSE for solution 0: " << rmse(0);
+  VLOG(2) << "RMSE for solution 1: " << rmse(0);
+  VLOG(2) << "RMSE for solution 2: " << rmse(0);
   size_t n = 0;
-  if (rmse(1) < rmse(0)) n = 1;
-  if (rmse(2) < rmse(n)) n = 2;
+  if (rmse(1) < rmse(0)) {
+    n = 1;
+  }
+  if (rmse(2) < rmse(n)) {
+    n = 2;
+  }
+  VLOG(1) << "RMSE for best solution #" << n << ": " << rmse(n);
   *R = Rs[n];
   *t = ts[n];
+
+  // TODO(julien): Improve the solutions with non-linear refinement.
 }
+
 } // namespace resection
 } // namespace libmv
