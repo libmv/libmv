@@ -30,15 +30,13 @@ namespace libmv {
  * Computes the relative pose of two calibrated cameras from 5 correspondences.
  *
  * The algorithm assumes the image points are already normalized (i.e.
- * multiplied by K^-1).
- * The implementation uses Groebner basis, following the method in [1], applying
- * some optimization tweaks from [2].
+ * multiplied by K^-1). The implementation uses Groebner basis, following the
+ * method in [1], applying some optimization tweaks from [2].
  *
  * -# H. Stewénius, C. Engels and D. Nistér,  "Recent Developments on Direct
  *    Relative Orientation",  ISPRS 2006
  * -# D. Nistér,  "An Efficient Solution to the Five-Point Relative Pose",
  *    PAMI 2004
- *
  *
  * \param x1  Points in the first image, one per column.
  * \param x2  Corresponding points in the second image, one per column.
