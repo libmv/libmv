@@ -26,7 +26,6 @@
 #include "libmv/multiview/five_point.h"
 #include "libmv/numeric/numeric.h"
 
-
 namespace libmv {
 namespace essential {
 namespace kernel {
@@ -34,22 +33,17 @@ namespace kernel {
 struct FivePointSolver {
   enum { MINIMUM_SAMPLES = 5 };
   static void Solve(const Mat &x1, const Mat &x2, vector<Mat3> *Es) {
-    // TODO(keir): Eliminate this copying. The true solution is to go through
-    // the two-view solvers and switch them to use Mat2X rather than raw Mat.
-    // Mat2X is the right type, not Mat.
-    //Mat2X x1fixed = x1;
-    //Mat2X x2fixed = x2;
     FivePointsRelativePose(x1, x2, Es);
   }
 };
 
-//-- Usable solver for the 5pt Essential Matrix Estimation
+// Kernel for five point essential matrix estimation.
 typedef essential::kernel::EssentialKernel<FivePointSolver,
   fundamental::kernel::SampsonError, Mat3>  FivePointKernel;
 
-} // namespace kernel
-} //namespace essential
-} // namespace libmv
+}  // namespace kernel
+}  // namespace essential
+}  // namespace libmv
 
 #endif  // LIBMV_MULTIVIEW_FIVE_POINT_KERNEL_H_
 

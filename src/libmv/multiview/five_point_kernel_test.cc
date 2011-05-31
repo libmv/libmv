@@ -23,127 +23,99 @@
 #include "libmv/multiview/test_data_sets.h"
 #include "testing/testing.h"
 
+namespace libmv {
 namespace {
-using namespace libmv;
 
-/// Check that the E matrix fit the Essential Matrix properties
-/// Determinant is 0
-///
+// Check that the E matrix has the essential matrix properties; in other words,
+// the determinant is zero, and the other two singular values are the same.
 #define EXPECT_ESSENTIAL_MATRIX_PROPERTIES(E, expectedPrecision) { \
   EXPECT_NEAR(0, E.determinant(), expectedPrecision); \
   Mat3 O = 2 * E * E.transpose() * E - (E * E.transpose()).trace() * E; \
   Mat3 zero3x3 = Mat3::Zero(); \
-  EXPECT_MATRIX_NEAR(zero3x3, O, expectedPrecision);\
+  EXPECT_MATRIX_NEAR(zero3x3, O, expectedPrecision); \
 }
 
-/*TEST(FivePointKernelTest, EasyCase) {
-
-  Mat x1(2, 5), x2(2, 5);
-  x1 << 0,   0,  0, .8, .8,
-        0, -.5, .8,  0, .8;
-  x2 << 0,    0,  0, .8, .8,
-        .1, -.4, .9,  0, .9; // Y Translated camera.
-  typedef essential::kernel::FivePointKernel Kernel;
-  Kernel kernel(x1,x2, Mat3::Identity(), Mat3::Identity());
-
-  bool bOk = true;
-  vector<int> samples;
-  for (int i = 0; i < x1.cols(); ++i) {
-    samples.push_back(i);
-  }
-  vector<Mat3> Es;
-  kernel.Fit(samples, &Es);
-
-  bOk &= (Es.size() != 0);
-  for (int i = 0; i < Es.size(); ++i) {
-
-    EXPECT_ESSENTIAL_MATRIX_PROPERTIES(Es[i], 1e-4);
-
-    for(int j = 0; j < x1.cols(); ++j)
-      EXPECT_NEAR(0.0, kernel.Error(j,Es[i]), 1e-8);
-  }
-}*/
-
-TEST(FivePointsRelativePose_Kernel, test_data_sets) {
-
+TEST(FivePointsRelativePoseKernel, CircularCameraRig) {
   typedef essential::kernel::FivePointKernel Kernel;
 
+  // Create a realistic camera configuration.
   int focal = 1000;
-  int principal_Point = 500;
+  int principal_point = 500;
   Mat3 K;
-  K << focal,     0, principal_Point,
-           0, focal, principal_Point,
+  K << focal,     0, principal_point,
+           0, focal, principal_point,
            0,     0, 1;
 
+  // Create a circular camera rig and assert that five point relative pose works.
+  const int num_views = 5;
+  NViewDataSet d = NRealisticCamerasFull(
+      num_views,
+      Kernel::MINIMUM_SAMPLES,
+      nViewDatasetConfigator(focal,
+                             focal,
+                             principal_point,
+                             principal_point,
+                             5,
+                             0));
 
-  //int focal = 1;
-  //int principal_Point = 0;
-  //Mat3 K = Mat3::Identity();
-
-
-  //-- Setup a circular camera rig and assert that 5PT relative pose works.
-  const int iNviews = 5;
-  NViewDataSet d = NRealisticCamerasFull(iNviews, Kernel::MINIMUM_SAMPLES,
-    nViewDatasetConfigator(focal,focal,principal_Point,principal_Point,5,0));
-
-  for (int i=0; i <iNviews; ++i)  {
-
-    vector<Mat3> Es, Rs;  // Essential, Rotation matrix.
-    vector<Vec3> ts;      // Translation matrix.
+  for (int i = 0; i < num_views; ++i)  {
+    vector<Mat3> Es, Rs;  // Essential and rotation matrices.
+    vector<Vec3> ts;      // Translation matrices.
    
-    // Direct value do not work.
-    // As we use reference, it cannot convert Mat2X& to Mat&
+    // Use a copy, since d.x[n] is a Mat2x&.
     Mat x0 = d.x[0];
     Mat x1 = d.x[1];
 
-    Kernel kernel( x0, x1, K, K);
+    Kernel kernel(x0, x1, K, K);
     vector<int> samples;
     for (int k = 0; k < Kernel::MINIMUM_SAMPLES; ++k) {
       samples.push_back(k);
     }
     kernel.Fit(samples, &Es);
 
-    // Recover rotation and translation from E.
+    // Recover rotation and translation frm E.
     Rs.resize(Es.size());
     ts.resize(Es.size());
     for (int s = 0; s < Es.size(); ++s) {
       Vec2 x1Col, x2Col;
-      x1Col << d.x[0].col(i)(0), d.x[0].col((i+1)%iNviews)(1);
-      x2Col << d.x[1].col(i)(0), d.x[1].col((i+1)%iNviews)(1);
-      CHECK(
-        MotionFromEssentialAndCorrespondence(Es[s],
-        d.K[0],
-        x1Col,
-        d.K[1],
-        x2Col,
-        &Rs[s],
-        &ts[s]));
+      x1Col << d.x[0].col(i)(0), d.x[0].col((i + 1) % num_views)(1);
+      x2Col << d.x[1].col(i)(0), d.x[1].col((i + 1) % num_views)(1);
+      CHECK(MotionFromEssentialAndCorrespondence(Es[s],
+            d.K[0], x1Col,
+            d.K[1], x2Col,
+            &Rs[s],
+            &ts[s]));
     }
-    //-- Compute Ground Truth motion
+
+    // Compute the ground truth motion.
     Mat3 R;
     Vec3 t, t0 = Vec3::Zero(), t1 = Vec3::Zero();
-    RelativeCameraMotion(d.R[i], d.t[i], d.R[(i+1)%iNviews], d.t[(i+1)%iNviews], &R, &t);
+    RelativeCameraMotion(d.R[i],
+                         d.t[i],
+                         d.R[(i + 1) % num_views],
+                         d.t[(i + 1) % num_views],
+                         &R, &t);
 
-    // Assert that found relative motion is correct for almost one model.
-    bool bsolution_found = false;
-    for (size_t nModel = 0; nModel < Es.size(); ++nModel) {
-
+    // Assert that found relative motion is correct for at least one model.
+    bool solution_found = false;
+    for (size_t j = 0; j < Es.size(); ++j) {
       // Check that E holds the essential matrix constraints.
-      EXPECT_ESSENTIAL_MATRIX_PROPERTIES(Es[nModel], 1e-8);
+      EXPECT_ESSENTIAL_MATRIX_PROPERTIES(Es[j], 1e-8);
 
       // Check residuals
-      for(int j = 0; j < x1.cols(); ++j)
-        EXPECT_NEAR(0.0, kernel.Error(j,Es[nModel]), 1e-8);
+      for(int k = 0; k < x1.cols(); ++k) {
+        EXPECT_NEAR(0.0, kernel.Error(k, Es[j]), 1e-8);
+      }
 
       // Check that we find the correct relative orientation.
-      if (FrobeniusDistance(R, Rs[nModel]) < 1e-3
-        && (t / t.norm() - ts[nModel] / ts[nModel].norm()).norm() < 1e-3 ) {
-          bsolution_found = true;
+      if (FrobeniusDistance(R, Rs[j]) < 1e-3
+        && (t / t.norm() - ts[j] / ts[j].norm()).norm() < 1e-3 ) {
+          solution_found = true;
       }
     }
-    //-- Almost one solution must find the correct relative orientation
-    CHECK(bsolution_found);
+    CHECK(solution_found);
   }
 }
 
-}
+}  // namespace
+}  // namespace libmv
