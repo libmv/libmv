@@ -90,10 +90,11 @@ typename Kernel::Model Estimate(const Kernel &kernel,
   double best_inlier_ratio = 0.0;
   typename Kernel::Model best_model;
 
-  // Test if the kernel get sufficient point in order to perform estimations.
+  // Test if we have sufficient points to for the kernel.
   if (total_samples < min_samples)  {
-    if (best_inliers)
+    if (best_inliers) {
       best_inliers->resize(0);
+    }
     return best_model;
   }
 
@@ -123,7 +124,7 @@ typename Kernel::Model Estimate(const Kernel &kernel,
 
       if (cost < best_cost) {
         best_cost = cost;
-        best_inlier_ratio = inliers.size() / float(total_samples);
+        best_inlier_ratio = inliers.size() / double(total_samples);
         best_num_inliers = inliers.size();
         best_model = models[i];
         if (best_inliers) {
@@ -133,10 +134,11 @@ typename Kernel::Model Estimate(const Kernel &kernel,
                 << best_num_inliers << " inlying of "
                 << total_samples << " total samples.";
       }
-      if (best_inlier_ratio)
+      if (best_inlier_ratio) {
         max_iterations = IterationsRequired(min_samples, 
                                             outliers_probability,
                                             best_inlier_ratio);
+      }
 
       VLOG(5) << "Max iterations needed given best inlier ratio: "
         << max_iterations << "; best inlier ratio: " << best_inlier_ratio;
