@@ -23,6 +23,7 @@
 #include "libmv/multiview/fundamental.h"
 #include "libmv/multiview/fundamental_kernel.h"
 #include "libmv/multiview/five_point.h"
+#include "libmv/multiview/five_point_internal.h"
 
 namespace libmv {
 
@@ -104,6 +105,7 @@ Vec o2(const Vec &a, const Vec &b) {
   return res;
 }
 
+// Builds the polynomial constraint matrix M.
 Mat FivePointsPolynomialConstraints(const Mat &E_basis) {
   // Build the polynomial form of E (equation (8) in Stewenius et al. [1])
   Vec E[3][3];
@@ -161,6 +163,7 @@ Mat FivePointsPolynomialConstraints(const Mat &E_basis) {
   return M;
 }
 
+// Gauss--Jordan elimination for the constraint matrix.
 void FivePointsGaussJordan(Mat *Mp) {
   Mat &M = *Mp;
 
@@ -183,18 +186,18 @@ void FivePointsGaussJordan(Mat *Mp) {
 void FivePointsRelativePose(const Mat2X &x1,
                             const Mat2X &x2,
                             vector<Mat3> *Es) {
-  // Step 1: Nullspace Exrtraction.
+  // Step 1: Nullspace exrtraction.
   Mat E_basis = FivePointsNullspaceBasis(x1, x2);
 
-  // Step 2: Constraint Expansion.
+  // Step 2: Constraint expansion.
   Mat M = FivePointsPolynomialConstraints(E_basis);
 
-  // Step 3: Gauss-Jordan Elimination.
+  // Step 3: Gauss-Jordan elimination.
   FivePointsGaussJordan(&M);
 
-  // For next steps we follow the matlab code given in Stewenius et al [1].
+  // For the next steps, follow the matlab code given in Stewenius et al [1].
 
-  // Build action matrix.
+  // Build the action matrix.
   Mat B = M.topRightCorner<10,10>();
   Mat At = Mat::Zero(10,10);
   At.row(0) = -B.row(0);
@@ -208,26 +211,26 @@ void FivePointsRelativePose(const Mat2X &x1,
   At(8,3) = 1;
   At(9,6) = 1;
 
-  // Compute solutions from action matrix's eigenvectors.
+  // Compute the solutions from action matrix's eigenvectors.
   Eigen::EigenSolver<Mat> es(At);
   typedef Eigen::EigenSolver<Mat>::EigenvectorsType Matc;
   Matc V = es.eigenvectors();
-  Matc SOLS(4, 10);
-  SOLS.row(0) = V.row(6).array() / V.row(9).array();
-  SOLS.row(1) = V.row(7).array() / V.row(9).array();
-  SOLS.row(2) = V.row(8).array() / V.row(9).array();
-  SOLS.row(3).setOnes();
+  Matc solutions(4, 10);
+  solutions.row(0) = V.row(6).array() / V.row(9).array();
+  solutions.row(1) = V.row(7).array() / V.row(9).array();
+  solutions.row(2) = V.row(8).array() / V.row(9).array();
+  solutions.row(3).setOnes();
 
   // Get the ten candidate E matrices in vector form.
-  Matc Evec = E_basis * SOLS;
+  Matc Evec = E_basis * solutions;
 
-  // Build essential matrices for the real solutions.
+  // Build the essential matrices for the real solutions.
   Es->reserve(10);
   for (int s = 0; s < 10; ++s) {
     Evec.col(s) /= Evec.col(s).norm();
     bool is_real = true;
     for (int i = 0; i < 9; ++i) {
-      if (Evec(i,s).imag() != 0) {
+      if (Evec(i, s).imag() != 0) {
         is_real = false;
         break;
       }
