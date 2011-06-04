@@ -27,6 +27,11 @@
 
 namespace libmv {
 
+// TODO(keir): Fix this file which has become a big pile of broken.
+double NormalizedEightPointSolver(const Mat &x1,
+                                  const Mat &x2,
+                                  Mat3 *F);
+
 void FundamentalFromProjections(const Mat34 &P1, const Mat34 &P2, Mat3 *F);
 void ProjectionsFromFundamental(const Mat3 &F, Mat34 *P1, Mat34 *P2);
 
