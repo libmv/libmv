@@ -25,26 +25,27 @@
 
 namespace libmv {
 
-/** 2D Homography transformation estimation.
+/**
+ * 2D homography transformation estimation.
  * 
- * This function can be used in order to estimate the homography transformation
- * from a list of 2D correspondences which represents either
- * - 3D points on a plane (+ general moving camera)
- * - 3D points + rotating camera (pure rotation)
- * - 3D points + different plan projections
+ * This function estimates the homography transformation from a list of 2D
+ * correspondences which represents either:
+ *
+ * - 3D points on a plane, with a general moving camera.
+ * - 3D points with a rotating camera (pure rotation).
+ * - 3D points + different planar projections
  * 
- * \param[in] x1 The first 2xN or 3xN matrix of euclidean or homogeneous points 
- * \param[in] x2 The second 2xN or 3xN matrix of euclidean or homogeneous points
- * \param[out] H The 3x3 homography transformation matrix (8 dof) such that
+ * \param x1 The first 2xN or 3xN matrix of euclidean or homogeneous points.
+ * \param x2 The second 2xN or 3xN matrix of euclidean or homogeneous points.
+ * \param  H The 3x3 homography transformation matrix (8 dof) such that
  *               x2 = H * x1   with       |a b c| 
  *                                    H = |d e f|
  *                                        |g h 1| 
- * \param[in] expected_precision The expected precision in order for instance 
- *        to accept almost homography matrices.
- * 
- * \return true if the transformation estimation has succeeded
- * 
- * \note Need at least 4 non aligned points 
+ * \param expected_precision The expected precision in order for instance 
+ *                           to accept almost homography matrices.
+ *
+ * \return True if the transformation estimation has succeeded.
+ * \note There must be at least 4 non-colinear points.
  */
 bool Homography2DFromCorrespondencesLinear(const Mat &x1,
                                            const Mat &x2,
@@ -52,7 +53,8 @@ bool Homography2DFromCorrespondencesLinear(const Mat &x1,
                                            double expected_precision = 
                                              EigenDouble::dummy_precision());
 
-/** 3D Homography transformation estimation.
+/**
+ * 3D Homography transformation estimation.
  * 
  * This function can be used in order to estimate the homography transformation
  * from a list of 3D correspondences.
