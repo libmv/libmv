@@ -1,0 +1,3 @@
+# This file is used by git-cl in order to connect to the remote code review tool
+# at http://codereview.appspot.com
+CODE_REVIEW_SERVER: codereview.appspot.com
