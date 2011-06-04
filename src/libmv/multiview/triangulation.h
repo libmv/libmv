@@ -28,6 +28,7 @@ namespace libmv {
 void TriangulateDLT(const Mat34 &P1, const Vec2 &x1,
                     const Mat34 &P2, const Vec2 &x2,
                     Vec4 *X_homogeneous);
+
 void TriangulateDLT(const Mat34 &P1, const Vec2 &x1,
                     const Mat34 &P2, const Vec2 &x2,
                     Vec3 *X_euclidean);
