@@ -44,7 +44,7 @@ PinholeCamera::PinholeCamera(const Mat3 &R, const Vec3 &t) {
 PinholeCamera::PinholeCamera(const Mat3 &K,
                              const Mat3 &R,
                              const Vec3 &t) {
-  intrinsic_matrix_  = K;
+  intrinsic_matrix_ = K;
   orientation_matrix_ = R;
   position_ = t;
   UpdateProjectionMatrix();

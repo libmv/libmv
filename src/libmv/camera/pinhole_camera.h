@@ -70,9 +70,9 @@ class PinholeCamera : public Camera {
   // TODO(julien) A visibility test for a structure
 
   // The function returns the ray direction of a pixel
-  virtual Vec3 Ray(const Vec2f &pixel) { return Vec3(pixel.x(),
-                                                   pixel.y(),
-                                                   -focal_x_); }
+  virtual Vec3 Ray(const Vec2f &pixel) {
+    return Vec3(pixel.x(), pixel.y(), -focal_x_);
+  }
 
   PinholeCamera(const PinholeCamera &camera);
 
@@ -215,12 +215,12 @@ class PinholeCamera : public Camera {
 class PinholeCameraDistortion : public PinholeCamera {
  public:
   PinholeCameraDistortion(LensDistortion *lens_distortion = NULL);
-  PinholeCameraDistortion(const Mat3  &K,
-                          const Mat3  &R,
-                          const Vec3  &t,
+  PinholeCameraDistortion(const Mat3 &K,
+                          const Mat3 &R,
+                          const Vec3 &t,
                           LensDistortion *lens_distortion);
-  PinholeCameraDistortion(const Mat3  &R,
-                          const Vec3  &t,
+  PinholeCameraDistortion(const Mat3 &R,
+                          const Vec3 &t,
                           LensDistortion *lens_distortion);
 
   PinholeCameraDistortion(const PinholeCameraDistortion &camera);
@@ -231,9 +231,8 @@ class PinholeCameraDistortion : public PinholeCamera {
 
   // The function computes the undistorted feature using the camera distorsion
   // model
-  virtual void ComputeUndistortedFeature(
-    const Feature &feature,
-    Feature *undistorted_feature) const;
+  virtual void ComputeUndistortedFeature(const Feature &feature,
+                                         Feature *undistorted_feature) const;
 
   // The function undistort the feature using the camera distorsion model
   virtual void UndistortFeature(Feature *feature) const;
@@ -246,6 +245,7 @@ class PinholeCameraDistortion : public PinholeCamera {
   const LensDistortion *lens_distortion() const {
     return lens_distortion_;
   }
+
   void set_lens_distortion(LensDistortion *lens_distortion) {
     lens_distortion_ = lens_distortion;
   }

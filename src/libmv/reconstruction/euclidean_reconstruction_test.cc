@@ -182,5 +182,6 @@ TEST(CalibratedReconstruction, TestSynthetic6FullViews) {
     delete *features_iter;
   list_features.clear();
 }
-}
+
+}  // namespace
 }  // namespace libmv
