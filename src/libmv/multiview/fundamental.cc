@@ -18,6 +18,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
+#include "libmv/logging/logging.h"
 #include "libmv/numeric/numeric.h"
 #include "libmv/numeric/poly.h"
 #include "libmv/multiview/conditioning.h"
@@ -28,18 +29,30 @@
 namespace libmv {
 
 void EliminateRow(const Mat34 &P, int row, Mat *X) {
-  X->resize(2,4);
+  X->resize(2, 4);
+
   int first_row = (row + 1) % 3;
   int second_row = (row + 2) % 3;
+
   for (int i = 0; i < 4; ++i) {
     (*X)(0, i) = P(first_row, i);
     (*X)(1, i) = P(second_row, i);
   }
 }
 
+void ProjectionsFromFundamental(const Mat3 &F, Mat34 *P1, Mat34 *P2) {
+  *P1 << Mat3::Identity(), Vec3::Zero();
+  Vec3 e2;
+  Mat3 Ft = F.transpose();
+  Nullspace(&Ft, &e2);
+  *P2 << CrossProductMatrix(e2) * F, e2;
+}
+
 // Addapted from vgg_F_from_P.
 void FundamentalFromProjections(const Mat34 &P1, const Mat34 &P2, Mat3 *F) {
-  Mat X[3], Y[3], XY;
+  Mat X[3];
+  Mat Y[3];
+  Mat XY;
 
   for (int i = 0; i < 3; ++i) {
     EliminateRow(P1, i, X + i);
@@ -54,21 +67,13 @@ void FundamentalFromProjections(const Mat34 &P1, const Mat34 &P2, Mat3 *F) {
   }
 }
 
-void ProjectionsFromFundamental(const Mat3 &F, Mat34 *P1, Mat34 *P2) {
-  *P1 << Mat3::Identity(), Vec3::Zero();
-  Vec3 e2;
-  Mat3 Ft = F.transpose();
-  Nullspace(&Ft, &e2);
-  *P2 << CrossProductMatrix(e2) * F, e2;
-}
-
 // HZ 11.1 pag.279 (x1 = x, x2 = x')
 // http://www.cs.unc.edu/~marc/tutorial/node54.html
 double EightPointSolver(const Mat &x1, const Mat &x2, Mat3 *F) {
-  assert(2 == x1.rows());
-  assert(8 <= x1.cols());
-  assert(x1.rows() == x2.rows());
-  assert(x1.cols() == x2.cols());
+  CHECK_EQ(x1.rows(), 2);
+  CHECK_GE(x1.cols(), 8);
+  CHECK_EQ(x1.rows(), x2.rows());
+  CHECK_EQ(x1.cols(), x2.cols());
 
   int n = x1.cols();
   Mat A(n, 9);
@@ -102,10 +107,10 @@ void EnforceFundamentalRank2Constraint(Mat3 *F) {
 double NormalizedEightPointSolver(const Mat &x1,
                                   const Mat &x2,
                                   Mat3 *F) {
-  assert(2 == x1.rows());
-  assert(8 <= x1.cols());
-  assert(x1.rows() == x2.rows());
-  assert(x1.cols() == x2.cols());
+  CHECK_EQ(x1.rows(), 2);
+  CHECK_GE(x1.cols(), 8);
+  CHECK_EQ(x1.rows(), x2.rows());
+  CHECK_EQ(x1.cols(), x2.cols());
 
   // Normalize the data.
   Mat3 T1, T2;
@@ -129,12 +134,12 @@ double NormalizedEightPointSolver(const Mat &x1,
 // Seven-point algorithm.
 // http://www.cs.unc.edu/~marc/tutorial/node55.html
 double FundamentalFrom7CorrespondencesLinear(const Mat &x1,
-                              const Mat &x2,
-                              std::vector<Mat3> *F) {
-  assert(2 == x1.rows());
-  assert(7 == x1.cols());
-  assert(x1.rows() == x2.rows());
-  assert(x1.cols() == x2.cols());
+                                             const Mat &x2,
+                                             std::vector<Mat3> *F) {
+  CHECK_EQ(x1.rows(), 2);
+  CHECK_EQ(x1.cols(), 7);
+  CHECK_EQ(x1.rows(), x2.rows());
+  CHECK_EQ(x2.cols(), x2.cols());
 
   // Build a 9 x n matrix from point matches, where each row is equivalent to
   // the equation x'T*F*x = 0 for a single correspondence pair (x', x). The
@@ -197,10 +202,10 @@ double FundamentalFrom7CorrespondencesLinear(const Mat &x1,
 double FundamentalFromCorrespondences7Point(const Mat &x1,
                                             const Mat &x2,
                                             std::vector<Mat3> *F) {
-  assert(2 == x1.rows());
-  assert(7 <= x1.cols());
-  assert(x1.rows() == x2.rows());
-  assert(x1.cols() == x2.cols());
+  CHECK_EQ(x1.rows(), 2);
+  CHECK_GE(x1.cols(), 7);
+  CHECK_EQ(x1.rows(), x2.rows());
+  CHECK_EQ(x1.cols(), x2.cols());
 
   // Normalize the data.
   Mat3 T1, T2;
@@ -214,7 +219,7 @@ double FundamentalFromCorrespondences7Point(const Mat &x1,
   double smaller_singular_value =
     FundamentalFrom7CorrespondencesLinear(x1_normalized, x2_normalized, &(*F));
 
-  for(int k=0; k < F->size(); ++k) {
+  for (int k = 0; k < F->size(); ++k) {
     Mat3 & Fmat = (*F)[k];
     // Denormalize the fundamental matrix.
     Fmat = T2.transpose() * Fmat * T1;
@@ -224,14 +229,12 @@ double FundamentalFromCorrespondences7Point(const Mat &x1,
 
 void NormalizeFundamental(const Mat3 &F, Mat3 *F_normalized) {
   *F_normalized = F / FrobeniusNorm(F);
-  if((*F_normalized)(2,2) < 0) {
+  if ((*F_normalized)(2, 2) < 0) {
     *F_normalized *= -1;
   }
 }
 
-// Approximation of reprojection error; page 287 of HZ equation 11.9. This
-// avoids triangulating the point, relying only on the entries in F.
-double SampsonDistance2(const Mat &F, const Vec2 &x1, const Vec2 &x2) {
+double SampsonDistance(const Mat &F, const Vec2 &x1, const Vec2 &x2) {
   Vec3 x(x1(0), x1(1), 1.0);
   Vec3 y(x2(0), x2(1), 1.0);
 
@@ -243,11 +246,7 @@ double SampsonDistance2(const Mat &F, const Vec2 &x1, const Vec2 &x2) {
                           + Ft_y.head<2>().squaredNorm());
 }
 
-// Sum of the squared distances from the points to the epipolar lines; page 288
-// of HZ equation 11.10.
-double SymmetricEpipolarDistance2(const Mat &F,
-                                  const Vec2 &x1,
-                                  const Vec2 &x2) {
+double SymmetricEpipolarDistance(const Mat &F, const Vec2 &x1, const Vec2 &x2) {
   Vec3 x(x1(0), x1(1), 1.0);
   Vec3 y(x2(0), x2(1), 1.0);
 
@@ -326,22 +325,26 @@ void MotionFromEssential(const Mat3 &E,
   Mat3 U_Wt_Vt = U * W.transpose() * Vt;
 
   Rs->resize(4);
+  (*Rs)[0] = U_W_Vt;
+  (*Rs)[1] = U_W_Vt;
+  (*Rs)[2] = U_Wt_Vt;
+  (*Rs)[3] = U_Wt_Vt;
+
   ts->resize(4);
-  (*Rs)[0] = U_W_Vt;  (*ts)[0] =  U.col(2);
-  (*Rs)[1] = U_W_Vt;  (*ts)[1] = -U.col(2);
-  (*Rs)[2] = U_Wt_Vt; (*ts)[2] =  U.col(2);
-  (*Rs)[3] = U_Wt_Vt; (*ts)[3] = -U.col(2);
+  (*ts)[0] = U.col(2);
+  (*ts)[1] = -U.col(2);
+  (*ts)[2] =  U.col(2);
+  (*ts)[3] = -U.col(2);
 }
 
-// HZ 9.6 pag 259 (9.6.3 Geometrical interpretation of the 4 solutions)
 int MotionFromEssentialChooseSolution(const std::vector<Mat3> &Rs,
                                       const std::vector<Vec3> &ts,
                                       const Mat3 &K1,
                                       const Vec2 &x1,
                                       const Mat3 &K2,
                                       const Vec2 &x2) {
-  assert(Rs.size() == 4);
-  assert(ts.size() == 4);
+  CHECK_EQ(4, Rs.size());
+  CHECK_EQ(4, ts.size());
 
   Mat34 P1, P2;
   Mat3 R1;

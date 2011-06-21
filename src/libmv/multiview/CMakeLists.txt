@@ -30,7 +30,7 @@ SET(MULTIVIEW_SRC projection.cc
                   euclidean.cc
                   euclidean_kernel.cc
                   robust_euclidean.cc)
-               
+
 # define the header files (make the headers appear in IDEs.)
 FILE(GLOB MULTIVIEW_HDRS *.h)
 
@@ -99,4 +99,3 @@ MULTIVIEW_TEST(rotation_parameterization)
 
 # TODO(keir): Make tests that depend on generated.cc to use generated sources.
 #ADD_GENERATED_SOURCE(generated.cc generator.py)
-

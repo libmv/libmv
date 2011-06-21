@@ -29,26 +29,27 @@ PinholeCamera::PinholeCamera() {
   UpdateProjectionMatrix();
 }
 
-PinholeCamera::PinholeCamera(const Mat34  &P) {
+PinholeCamera::PinholeCamera(const Mat34 &P) {
   projection_matrix_ = P;
   // TODO(julien) when the reconstruction is metric, we can call KRt_From_P();
   // but whent it is projective, what to do? add a boolean?
 }
 
-PinholeCamera::PinholeCamera(const Mat3  &R, const Vec3  &t) {
+PinholeCamera::PinholeCamera(const Mat3 &R, const Vec3 &t) {
   orientation_matrix_ = R;
   position_ = t;
   UpdateProjectionMatrix();
 }
 
-PinholeCamera::PinholeCamera(const Mat3  &K,
-                             const Mat3  &R,
-                             const Vec3  &t){
-  intrinsic_matrix_   = K;
+PinholeCamera::PinholeCamera(const Mat3 &K,
+                             const Mat3 &R,
+                             const Vec3 &t) {
+  intrinsic_matrix_ = K;
   orientation_matrix_ = R;
   position_ = t;
   UpdateProjectionMatrix();
 }
+
 PinholeCamera::PinholeCamera(double focal,
                              const Vec2 &principal_point) {
   orientation_matrix_.setIdentity();
@@ -58,7 +59,7 @@ PinholeCamera::PinholeCamera(double focal,
 PinholeCamera::~PinholeCamera() {
 }
 
-PinholeCamera::PinholeCamera(const PinholeCamera &camera){
+PinholeCamera::PinholeCamera(const PinholeCamera &camera) {
   this->set_intrinsic_matrix(camera.intrinsic_matrix());
 }
 
@@ -89,6 +90,7 @@ bool PinholeCamera::ProjectPointStructure(
   feature->coords << q2.cast<float>();
   return true;
 }
+
 // The function computes the projection of a 3D point.
 bool PinholeCamera::ProjectPointStructure(
     const PointStructure &point_structure,
@@ -103,17 +105,17 @@ PinholeCameraDistortion::PinholeCameraDistortion(
 }
 
 PinholeCameraDistortion::PinholeCameraDistortion(
-    const Mat3  &K,
-    const Mat3  &R,
-    const Vec3  &t,
+    const Mat3 &K,
+    const Mat3 &R,
+    const Vec3 &t,
     LensDistortion *lens_distortion) :
     PinholeCamera(K,R,t) {
   lens_distortion_ = lens_distortion;
 }
 
 PinholeCameraDistortion::PinholeCameraDistortion(
-    const Mat3  &R,
-    const Vec3  &t,
+    const Mat3 &R,
+    const Vec3 &t,
     LensDistortion *lens_distortion) :
     PinholeCamera(R,t) {
   lens_distortion_ = lens_distortion;
@@ -175,4 +177,5 @@ void PinholeCameraDistortion::ComputeDistortedCoordinates(
                                                   distorted_point);
   }
 }
+
 }  // namespace libmv

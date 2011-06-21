@@ -116,16 +116,22 @@ LensDistortionField::LensDistortionField(const Vec &radial_distortion,
     LensDistortion(radial_distortion, tangential_distortion) {
   is_precomputed_grid_done_ = false;
 }
+
 void LensDistortionField::ComputeUndistortedCoordinates(
     const PinholeCamera &camera,
     const Vec2 &point,
     Vec2 *undistorted_point) const {
   // TODO(julien) Computes the undistorted coordinates of a point using the
   // look-up table
+  (void) camera;
+  (void) point;
+  (void) undistorted_point;
 }
+
 void LensDistortionField::ComputeDistortionMap(
     const PinholeCamera &camera) {
   // TODO(julien) add a look-up table with precomputed radius for instance
+  (void) camera;
 }
 
 }  // namespace libmv
