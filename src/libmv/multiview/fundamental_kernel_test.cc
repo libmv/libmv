@@ -1,4 +1,4 @@
-// Copyright (c) 2009 libmv authors.
+// Copyright (c) 2009, 2011 libmv authors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
@@ -51,7 +51,6 @@ bool Colinear(const A &a, const B &b, double tolerance) {
 //
 //   1. The determinant is 0 (rank deficient)
 //   2. The condition x'T*F*x = 0 is satisfied to precision.
-//
 template<typename TMat>
 void ExpectFundamentalProperties(const TMat &F,
                                  const Mat &ptsA,
@@ -94,6 +93,7 @@ struct SevenPointTest : public testing::Test {
     }
   }
 };
+
 typedef Types<SevenPointKernel,
               NormalizedSevenPointKernel,
               Kernel>
@@ -102,7 +102,8 @@ typedef Types<SevenPointKernel,
 TYPED_TEST_CASE(SevenPointTest, SevenPointImplementations);
 
 TYPED_TEST(SevenPointTest, EasyCase) {
-  Mat x1(2, 7), x2(2, 7);
+  Mat x1(2, 7);
+  Mat x2(2, 7);
   x1 << 0, 0, 0, 1, 1, 1, 2,
         0, 1, 2, 0, 1, 2, 0;
   x2 << 0, 0, 0, 1, 1, 1, 2,
@@ -143,7 +144,8 @@ typedef Types<EightPointKernel,
 
 TYPED_TEST_CASE(EightPointTest, EightPointImplementations);
 TYPED_TEST(EightPointTest, EasyCase) {
-  Mat x1(2, 8), x2(2, 8);
+  Mat x1(2, 8);
+  Mat x2(2, 8);
   x1 << 0, 0, 0, 1, 1, 1, 2, 2,
         0, 1, 2, 0, 1, 2, 0, 1;
   x2 << 0, 0, 0, 1, 1, 1, 2, 2,
@@ -186,7 +188,7 @@ TYPED_TEST(FundamentalErrorTest, FundamentalErrorTest2) {
            TypeParam::Error(F, x4, y4),
            TypeParam::Error(F, x5, y5);
 
-  VLOG(1) << "SampsonDistance2: " << dists.transpose();
+  VLOG(1) << "SampsonDistance: " << dists.transpose();
 
   // The expected distance are two times (one per image) the distance from the
   // point to the reprojection of the best triangulated point.  For this
@@ -200,4 +202,4 @@ TYPED_TEST(FundamentalErrorTest, FundamentalErrorTest2) {
   EXPECT_EQ(2 * Square(10. / 2), dists[5]);
 }
 
-} // namespace
+}  // namespace

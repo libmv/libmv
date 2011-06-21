@@ -73,7 +73,6 @@ TEST(Fundamental, PreconditionerFromPoints) {
   EXPECT_NEAR(2, variance(1), 1e-8);
 }
 
-
 TEST(Fundamental, EssentialFromFundamental) {
   TwoViewDataSet d = TwoRealisticCameras();
 

@@ -39,7 +39,9 @@ namespace libmv {
  * \param samples       num_samples of numbers in [0, total_samples) is placed
  *                      here on return.
  */
-static void UniformSample(int num_samples, int total_samples, vector<int> *samples) {
+static void UniformSample(int num_samples,
+                          int total_samples,
+                          vector<int> *samples) {
   samples->resize(0);
   while (samples->size() < num_samples) {
     int sample = rand() % total_samples;

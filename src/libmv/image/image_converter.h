@@ -25,33 +25,35 @@
 
 namespace libmv{
 
-template<typename T>
 // The factor comes from http://www.easyrgb.com/
 // RGB to XYZ : Y is the luminance channel
 // var_R * 0.2126 + var_G * 0.7152 + var_B * 0.0722
-inline T RGB2GRAY(const T r,const T g, const T b)
-{
+template<typename T>
+inline T RGB2GRAY(const T r,const T g, const T b) {
   return static_cast<T>(r * 0.2126 + g * 0.7152 + b * 0.0722);
 }
+
 /*
 // Specialization for the uchar type. (that do not want to work...)
 template<>
-inline unsigned char RGB2GRAY<unsigned char>(const unsigned char r,const unsigned char g, const unsigned char b)
-{
+inline unsigned char RGB2GRAY<unsigned char>(const unsigned char r,
+                                             const unsigned char g,
+                                             const unsigned char b) {
   return (unsigned char)(r * 0.2126 + g * 0.7152 + b * 0.0722 +0.5);
 }*/
 
 template<class ImageIn, class ImageOut>
-void Rgb2Gray(const ImageIn & imaIn, ImageOut * imaOut) {
+void Rgb2Gray(const ImageIn &imaIn, ImageOut *imaOut) {
 
   assert( imaIn.Depth() == 3 );
 
   imaOut->Resize(imaIn.Height(), imaIn.Width(), 1);
   // Convert each RGB pixel into Gray value (luminance)
 
-  for(int j = 0; j < imaIn.Height(); ++j)
-  for(int i = 0; i < imaIn.Width(); ++i)  {
-    (*imaOut)(j,i) = RGB2GRAY(imaIn(j,i,0) , imaIn(j,i,1), imaIn(j,i,2));
+  for(int j = 0; j < imaIn.Height(); ++j) {
+    for(int i = 0; i < imaIn.Width(); ++i)  {
+      (*imaOut)(j,i) = RGB2GRAY(imaIn(j,i,0) , imaIn(j,i,1), imaIn(j,i,2));
+    }
   }
 }
 

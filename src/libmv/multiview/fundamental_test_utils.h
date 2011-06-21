@@ -1,4 +1,4 @@
-// Copyright (c) 2007, 2009 libmv authors.
+// Copyright (c) 2007, 2009, 2011 libmv authors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
@@ -18,7 +18,6 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
-
 #ifndef LIBMV_MULTIVIEW_FUNDAMENTAL_TEST_UTILS_H
 #define LIBMV_MULTIVIEW_FUNDAMENTAL_TEST_UTILS_H
 
@@ -28,18 +27,19 @@
 
 namespace libmv {
 
-// Check the properties of a fundamental matrix:
-//
-//   1. The determinant is 0 (rank deficient)
-//   2. The condition x'T*F*x = 0 is satisfied to precision.
-//
+/** Check the properties of a fundamental matrix:
+ *
+ *   1. The determinant is 0 (rank deficient)
+ *   2. The condition x'T*F*x = 0 is satisfied to precision.
+ */
 template<typename TMat>
 void ExpectFundamentalProperties(const TMat &F,
                                  const Mat &ptsA,
                                  const Mat &ptsB,
                                  double precision) {
   EXPECT_NEAR(0, F.determinant(), precision);
-  assert(ptsA.cols() == ptsB.cols());
+  EXPECT_EQ(ptsA.cols(), ptsB.cols());
+
   Mat hptsA, hptsB;
   EuclideanToHomogeneous(ptsA, &hptsA);
   EuclideanToHomogeneous(ptsB, &hptsB);
@@ -49,6 +49,6 @@ void ExpectFundamentalProperties(const TMat &F,
   }
 }
 
-}
+}  // namespace libmv
 
 #endif
