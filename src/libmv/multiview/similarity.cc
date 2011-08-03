@@ -86,8 +86,6 @@ bool Similarity3DFromCorrespondencesLinear(const Mat &x1,
     double scale = svd.singularValues()(0);
     Mat3 sI3 = scale * Mat3::Identity();
     H->block<3,3>(0, 0) = svd.matrixU() * sI3 * svd.matrixV().transpose();
-    if (H->block<3,3>(0, 0).determinant() < 0)
-      H->block<3,3>(0, 0) = -H->block<3,3>(0, 0);  
     return true;
   }
   return false;
