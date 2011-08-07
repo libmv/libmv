@@ -83,12 +83,12 @@ void LensDistortion::ComputeUndistortedCoordinates(
 
   double u = point_centered.x() / camera.focal_x();
   double v = point_centered.y() / camera.focal_y();
-  double radius = u * u + v * v;
+  double radius_squared = u * u + v * v;
 
   double coef_radial = 0;
   if (radial_distortion_.size() > 0) {
     for (int i = radial_distortion_.size() - 1; i >= 0; --i) {
-      coef_radial = (coef_radial + radial_distortion_[i]) * radius;
+      coef_radial = (coef_radial + radial_distortion_[i]) * radius_squared;
     }
   }
 
@@ -96,7 +96,6 @@ void LensDistortion::ComputeUndistortedCoordinates(
   undistorted_point->y() = point.y() + point_centered.y() * coef_radial;
 
   if (tangential_distortion_.size() >= 2) {
-    double radius_squared = radius * radius;
     double coef_tangential = 1;
 
     for (size_t i = 2; i < tangential_distortion_.size(); ++i) {
