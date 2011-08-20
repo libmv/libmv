@@ -31,92 +31,42 @@ void P_From_KRt(const Mat3 &K, const Mat3 &R, const Vec3 &t, Mat34 *P) {
 
 void KRt_From_P(const Mat34 &P, Mat3 *Kp, Mat3 *Rp, Vec3 *tp) {
   // Decompose using the RQ decomposition HZ A4.1.1 pag.579.
-  Mat3 K = P.block(0, 0, 3, 3);
-
-  Mat3 Q;
-  Q.setIdentity();
-
-  // Set K(2,1) to zero.
-  if (K(2,1) != 0) {
-    double c = -K(2,2);
-    double s = K(2,1);
-    double l = sqrt(c * c + s * s);
-    c /= l; s /= l;
-    Mat3 Qx;
-    Qx << 1, 0, 0,
-         0, c, -s,
-         0, s, c;
-    K = K * Qx;
-    Q = Qx.transpose() * Q;
+  Mat3 H = P.block(0, 0, 3, 3).transpose()
+      .colwise().reverse().rowwise().reverse();
+  // RQ decomposition
+  Eigen::HouseholderQR<Mat3> qr(H);
+  *Kp = qr.matrixQR().triangularView<Eigen::Upper>();
+  *Rp = qr.householderQ();
+  
+  *Rp = (Rp->transpose().colwise().reverse().rowwise().reverse()).eval();
+  *Kp = (Kp->transpose().colwise().reverse().rowwise().reverse()).eval();
+  
+  if (Rp->determinant() < 0) {
+    Kp->col(0) = -Kp->col(0);
+    Rp->row(0) = -Rp->row(0);
   }
-  // Set K(2,0) to zero.
-  if (K(2,0) != 0) {
-    double c = K(2,2);
-    double s = K(2,0);
-    double l = sqrt(c * c + s * s);
-    c /= l; s /= l;
-    Mat3 Qy;
-    Qy << c, 0, s,
+  *Kp /= (*Kp)(2,2);
+  if ((*Kp)(0,0) < 0) {
+    Mat3 D;
+    D << -1,  0, 0,
+          0, -1, 0,
+          0,  0, 1;
+    *Kp = *Kp * D;
+    *Rp =   D * *Rp;
+  }
+  if ((*Kp)(1,1) < 0) {
+    (*Kp)(1,1) = -(*Kp)(1,1);
+    Mat3 D;
+    D << -1, 0, 0,
           0, 1, 0,
-         -s, 0, c;
-    K = K * Qy;
-    Q = Qy.transpose() * Q;
+          0, 0,-1;
+    *Rp =   D * *Rp;
   }
-  // Set K(1,0) to zero.
-  if (K(1,0) != 0) {
-    double c = -K(1,1);
-    double s = K(1,0);
-    double l = sqrt(c * c + s * s);
-    c /= l; s /= l;
-    Mat3 Qz;
-    Qz << c,-s, 0,
-          s, c, 0,
-          0, 0, 1;
-    K = K * Qz;
-    Q = Qz.transpose() * Q;
+  Eigen::PartialPivLU<Mat3> lu(*Kp);//P.block(0, 0, 3, 3));
+  *tp = lu.solve(P.col(3));
+  if (!P.col(3).isApprox((*Kp)*(*tp))) {
+  //TODO(julien) If the solution doesn't exist, do something
   }
-
-  Mat3 R = Q;
-
-  // Ensure that the diagonal is positive.
-  // TODO(pau) Change this to ensure that:
-  //  - K(0,0) > 0
-  //  - K(2,2) = 1
-  //  - det(R) = 1
-  if (K(2,2) < 0) {
-    K = -K;
-    R = -R;
-  }
-  if (K(1,1) < 0) {
-    Mat3 S;
-    S << 1, 0, 0,
-         0,-1, 0,
-         0, 0, 1;
-    K = K * S;
-    R = S * R;
-  }
-  if (K(0,0) < 0) {
-    Mat3 S;
-    S << -1, 0, 0,
-          0, 1, 0,
-          0, 0, 1;
-    K = K * S;
-    R = S * R;
-  }
-
-  // Compute translation.
-  Vec p(3);
-  p << P(0,3), P(1,3), P(2,3);
-  // TODO(pau) This sould be done by a SolveLinearSystem(A, b, &x) call.
-  // TODO(keir) use the eigen LU solver syntax...
-  Vec3 t = K.inverse() * p;
-
-  // scale K so that K(2,2) = 1
-  K = K / K(2,2);
-
-  *Kp = K;
-  *Rp = R;
-  *tp = t;
 }
 
 void ProjectionShiftPrincipalPoint(const Mat34 &P,

@@ -20,7 +20,9 @@
 
 #include "testing/testing.h"
 #include "libmv/logging/logging.h"
+#include "libmv/multiview/projection.h"
 #include "libmv/multiview/similarity.h"
+
 namespace {
 using namespace libmv;
 
@@ -322,15 +324,15 @@ TEST(Similarity3DTest, TranslationX) {
          0, 5, 1, 3,
          1, 2, 8, 4;
 
-  Mat4 euc_mat;
-  EXPECT_TRUE(Similarity3DFromCorrespondencesLinear(x1, x2, &euc_mat));
-  VLOG(1) << "Mat Euclidean3D "<< std::endl <<euc_mat;
+  Mat4 sim_mat;
+  EXPECT_TRUE(Similarity3DFromCorrespondencesLinear(x1, x2, &sim_mat));
+  VLOG(1) << "Mat Similitude3D "<< std::endl <<sim_mat;
   Mat4 ground_truth;
   ground_truth << 1,0,0,0,
                   0,1,0,0,
                   0,0,1,1,
                   0,0,0,1;
-  EXPECT_MATRIX_NEAR(euc_mat, ground_truth,1e-8);
+  EXPECT_MATRIX_NEAR(sim_mat, ground_truth,1e-8);
 }
 
 TEST(Similarity3DTest, TranslationXYZ) {
@@ -344,15 +346,15 @@ TEST(Similarity3DTest, TranslationXYZ) {
         -1, 4, 0, 2,
          1, 2, 8, 4;
 
-  Mat4 euc_mat;
-  EXPECT_TRUE(Similarity3DFromCorrespondencesLinear(x1, x2, &euc_mat));
-  VLOG(1) << "Mat Euclidean3D "<< std::endl << euc_mat;
+  Mat4 sim_mat;
+  EXPECT_TRUE(Similarity3DFromCorrespondencesLinear(x1, x2, &sim_mat));
+  VLOG(1) << "Mat Similitude3D "<< std::endl << sim_mat;
   Mat4 ground_truth;
   ground_truth << 1,0,0, 2,
                   0,1,0,-1,
                   0,0,1, 1,
                   0,0,0, 1;
-  EXPECT_MATRIX_NEAR(euc_mat, ground_truth,1e-8);
+  EXPECT_MATRIX_NEAR(sim_mat, ground_truth,1e-8);
 }
 
 TEST(Similarity3DTest, Rotation90Z) {
@@ -376,10 +378,10 @@ TEST(Similarity3DTest, Rotation90Z) {
     x2.block<3,1>(0,i) =  M.block<3,3>(0,0) * x1.col(i) ;
   }
 
-  Mat4 euc_mat;
-  EXPECT_TRUE(Similarity3DFromCorrespondencesLinear(x1, x2, &euc_mat));
-  VLOG(1) << "Mat Euclidean3D "<< std::endl << euc_mat;
-  EXPECT_MATRIX_NEAR(euc_mat, M, 1e-8);;
+  Mat4 sim_mat;
+  EXPECT_TRUE(Similarity3DFromCorrespondencesLinear(x1, x2, &sim_mat));
+  VLOG(1) << "Mat Similitude3D "<< std::endl << sim_mat;
+  EXPECT_MATRIX_NEAR(sim_mat, M, 1e-8);;
 }
 
 TEST(Similarity3DTest, Rotation45AndTranslationXY) {
@@ -422,10 +424,10 @@ TEST(Similarity3DTest, Rotation45AndTranslationXY) {
     x2.block<3,1>(0,i) = M.block<3,3>(0,0) * x1.col(i);
     x2.block<3,1>(0,i) += M.block<3,1>(0,3); // translation
   }
-  Mat4 euc_mat;
-  EXPECT_TRUE(Similarity3DFromCorrespondencesLinear(x1, x2, &euc_mat));
-  VLOG(1) << "Mat Euclidean3D "<< std::endl << euc_mat;
-  EXPECT_MATRIX_NEAR(euc_mat, M, 1e-8);
+  Mat4 sim_mat;
+  EXPECT_TRUE(Similarity3DFromCorrespondencesLinear(x1, x2, &sim_mat));
+  VLOG(1) << "Mat Similitude3D "<< std::endl << sim_mat;
+  EXPECT_MATRIX_NEAR(sim_mat, M, 1e-8);
 }
 
 TEST(Similarity3DTest, Scale3) {
@@ -492,9 +494,38 @@ TEST(Similarity3DTest, RotationTranslationScale) {
     x2.block<3,1>(0,i) = M.block<3,3>(0,0) * x1.col(i);
     x2.block<3,1>(0,i) += M.block<3,1>(0,3); // translation
   }
-  Mat4 euc_mat;
-  EXPECT_TRUE(Similarity3DFromCorrespondencesLinear(x1, x2, &euc_mat));
-  VLOG(1) << "Mat Euclidean3D "<< std::endl << euc_mat;
-  EXPECT_MATRIX_NEAR(euc_mat, M, 1e-8);
+  Mat4 sim_mat;
+  EXPECT_TRUE(Similarity3DFromCorrespondencesLinear(x1, x2, &sim_mat));
+  VLOG(1) << "Mat Similitude3D "<< std::endl << sim_mat;
+  EXPECT_MATRIX_NEAR(sim_mat, M, 1e-8);
+}
+
+TEST(Similarity3DTest, CoplanarRealCase) {
+  Mat x1(3, 4);
+  x1 <<  0, 0, 0, 0.28,
+         0, 0, 0, 0,
+         0, 0.15, 0.34, 0;
+ 
+  Mat x2t(4, 3);
+  x2t << 
+    -1.19925, -0.332088 , -1.82672,
+    -1.18777, -0.268836, -1.58292,
+    -1.17311, -0.193347, -1.28043,
+    -1.13389, 0.172132, -1.93862;
+  
+  const double precision = 2e-2;
+  
+  Mat x2(3, 4);
+  x2 = x2t.transpose();
+  Mat4 sim_mat; 
+  EXPECT_TRUE(Similarity3DFromCorrespondencesLinear(x1, x2, 
+                                                    &sim_mat,
+                                                    precision));
+  VLOG(1) << "Mat Similitude3D "<< std::endl << sim_mat;
+  
+  Mat x2h(4,4), x1p;
+  EuclideanToHomogeneous(x2, &x2h);
+  HomogeneousToEuclidean(sim_mat.inverse() * x2h, &x1p);
+  EXPECT_MATRIX_NEAR(x1, x1p, precision);
 }
 }

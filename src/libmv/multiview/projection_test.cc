@@ -48,9 +48,24 @@ TEST(Projection, P_From_KRt) {
   EXPECT_MATRIX_NEAR(K, Kp, 1e-8);
   EXPECT_MATRIX_NEAR(R, Rp, 1e-8);
   EXPECT_MATRIX_NEAR(t, tp, 1e-8);
+  EXPECT_NEAR(1, Rp.determinant(), 1e-8);
+}
 
-  // TODO(keir): Change the code to ensure det(R) == 1, which is not currently
-  // the case. Also add a test for that here.
+TEST(Projection, P_From_KRt_RealCase) {
+  Mat34 P;
+  P << -667.1324398703851557, 15.186601706999681483,
+       -399.12216996267011382, -64.171047371437467177, 
+        0.26127780106302650465, -664.13069781367391897, 
+       -289.01467806003762462, -0.76296166656404640349,
+       -0.00013667887261007119113, 0.034010281383445604975,
+       -1.0006416157197026706, 0.016977709775627819466;
+
+	Mat3 Kp;
+  Mat3 Rp;
+  Vec3 tp;
+  KRt_From_P(P, &Kp, &Rp, &tp);
+  EXPECT_NEAR(1, Rp.determinant(), 1e-8);
+  //TODO(julien) Do some other tests
 }
 
 Vec4 GetRandomPoint() {

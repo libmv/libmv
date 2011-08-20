@@ -21,6 +21,7 @@
 #include <Eigen/Geometry> 
 
 #include "libmv/multiview/affine.h"
+#include "libmv/multiview/projection.h"
 #include "libmv/multiview/similarity.h"
 #include "libmv/multiview/similarity_parameterization.h"
 
@@ -74,21 +75,14 @@ bool Similarity2DFromCorrespondencesLinear(const Mat &x1, const Mat &x2,
 }
 
 bool Similarity3DFromCorrespondencesLinear(const Mat &x1,
-                                          const Mat &x2,
-                                          Mat4 *H,
-                                          double expected_precision) {
-   // TODO(julien) Compare to *H = umeyama (x1, x2, true);
-   // and keep the best one (quality&speed)   
-  if (Affine3DFromCorrespondencesLinear(x1, x2, H, expected_precision)) {
-    // Ensures that R is orthogonal (using SDV decomposition)
-    Eigen::JacobiSVD<Mat> svd(H->block<3,3>(0, 0), Eigen::ComputeThinU | 
-                                                   Eigen::ComputeThinV);
-    double scale = svd.singularValues()(0);
-    Mat3 sI3 = scale * Mat3::Identity();
-    H->block<3,3>(0, 0) = svd.matrixU() * sI3 * svd.matrixV().transpose();
-    return true;
-  }
-  return false;
+                                           const Mat &x2,
+                                           Mat4 *H,
+                                           double expected_precision) {
+  *H = Eigen::umeyama (x1, x2, true);
+  Mat x1p, x2h;
+  EuclideanToHomogeneous(x2, &x2h);
+  HomogeneousToEuclidean(H->inverse() * x2h, &x1p);
+  return (x1-x1p).norm() <= expected_precision;
 }
 
 bool ExtractSimilarity2DCoefficients(const Mat3 &M,

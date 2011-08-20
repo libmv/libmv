@@ -21,6 +21,7 @@
 #include "libmv/multiview/affine.h"
 #include "libmv/multiview/euclidean.h"
 #include "libmv/multiview/euclidean_parameterization.h"
+#include "libmv/multiview/projection.h"
 #include "libmv/numeric/numeric.h"
 
 namespace libmv {
@@ -77,18 +78,11 @@ bool Euclidean3DFromCorrespondencesLinear(const Mat &x1,
                                           const Mat &x2,
                                           Mat4 *H,
                                           double expected_precision) {
-  // TODO(julien) Compare to *H = umeyama (x1, x2, false);
-  // TODO(julien) make a test for coplanar points
-  // and keep the best one (quality&speed)   
-  if (Affine3DFromCorrespondencesLinear(x1, x2, H, expected_precision)) {
-    // Ensures that R is orthogonal (using SDV decomposition)
-    Eigen::JacobiSVD<Mat> svd(H->block<3,3>(0, 0), Eigen::ComputeThinU | 
-                                                   Eigen::ComputeThinV);
-    Mat3 I3 = Mat3::Identity();
-    H->block<3,3>(0, 0) = svd.matrixU() * I3 * svd.matrixV().transpose();
-    return true;
-  }
-  return false;
+  *H = Eigen::umeyama (x1, x2, false);
+  Mat x1p, x2h;
+  EuclideanToHomogeneous(x2, &x2h);
+  HomogeneousToEuclidean(H->inverse() * x2h, &x1p);
+  return (x1-x1p).norm() <= expected_precision;
 }
 
 bool ExtractEuclidean2DCoefficients(const Mat3 &H,
