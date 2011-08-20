@@ -43,8 +43,8 @@ namespace libmv {
  * 
  * \return true if the transformation estimation has succeeded
  * 
- * \note Need at least 3 non aligned points 
- * \note Points coordinates must be normalized (euclidean)
+ * \note Need at least 3 non colinear points 
+ * \note Points coordinates must be in euclidean coordinates
  */
 bool Affine2DFromCorrespondencesLinear(const Mat &x1,
                                        const Mat &x2,
@@ -72,7 +72,7 @@ bool Affine2DFromCorrespondencesLinear(const Mat &x1,
  * \return true if the transformation estimation has succeeded
  * 
  * \note Need at least 4 non coplanar points 
- * \note Points coordinates must be normalized (euclidean)
+ * \note Points coordinates must be in euclidean coordinates
  */
 bool Affine3DFromCorrespondencesLinear(const Mat &x1,
                                        const Mat &x2,

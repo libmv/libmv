@@ -56,8 +56,7 @@ bool Euclidean2DFromCorrespondencesLinear(const Mat &x1,
  * 
  * This function can be used in order to estimate the euclidean transformation
  * between two sets of points with known 3D correspondences.
- * It relies on the affine transformation estimation first and SVD decomposition
- * in order to have an orthogonal rotation part.
+ * It relies on the Eigen's Umeyama method.
  * 
  * \param[in] x1 The first 3xN matrix of euclidean points
  * \param[in] x2 The second 3xN matrix of euclidean points
@@ -73,8 +72,8 @@ bool Euclidean2DFromCorrespondencesLinear(const Mat &x1,
  * 
  * \return true if the transformation estimation has succeeded
  * 
- * \note Need at least 4 non coplanar points 
- * \note Points coordinates must be normalized (euclidean)
+ * \note Need at least 2 points 
+ * \note Points coordinates must be in euclidean coordinates
  */
 bool Euclidean3DFromCorrespondencesLinear(const Mat &x1,
                                           const Mat &x2,
