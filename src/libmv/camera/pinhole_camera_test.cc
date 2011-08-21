@@ -53,6 +53,7 @@ TEST(CameraModel, PinholeCameraProjection) {
     EXPECT_MATRIX_NEAR(d.K[i], cameras[i].intrinsic_matrix(), 1e-8);
     EXPECT_MATRIX_NEAR(d.R[i], cameras[i].orientation_matrix(), 1e-8);
     EXPECT_MATRIX_NEAR(d.t[i], cameras[i].position(), 1e-8);
+    EXPECT_MATRIX_NEAR(d.P(i), cameras[i].projection_matrix(), 1e-8);
   }
   
   PointStructure point_3d;

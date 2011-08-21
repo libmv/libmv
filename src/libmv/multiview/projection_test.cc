@@ -64,8 +64,13 @@ TEST(Projection, P_From_KRt_RealCase) {
   Mat3 Rp;
   Vec3 tp;
   KRt_From_P(P, &Kp, &Rp, &tp);
+  Mat34 Pp;
+  P_From_KRt(Kp, Rp, tp, &Pp);
   EXPECT_NEAR(1, Rp.determinant(), 1e-8);
-  //TODO(julien) Do some other tests
+  // This test is failing (problem with signs on R). This is due to
+  // the if ((*Kp)(1,1) < 0) condition in KRt_From_P.
+  // TODO(julien) Fix this.
+  EXPECT_MATRIX_NEAR(P, Pp, 1e0);
 }
 
 Vec4 GetRandomPoint() {
