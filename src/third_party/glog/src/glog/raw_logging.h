@@ -32,6 +32,9 @@
 // Thread-safe logging routines that do not allocate any memory or
 // acquire any locks, and can therefore be used by low-level memory
 // allocation and synchronization code.
+#ifdef WIN32
+#include "windows/glog/raw_logging.h"
+#endif
 
 #ifndef BASE_RAW_LOGGING_H_
 #define BASE_RAW_LOGGING_H_

@@ -33,6 +33,10 @@
 // Pretty much everybody needs to #include this file so that they can
 // log various happenings.
 //
+#ifdef WIN32
+#include "windows/glog/logging.h"
+#endif
+
 #ifndef _LOGGING_H_
 #define _LOGGING_H_
 
