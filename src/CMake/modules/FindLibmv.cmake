@@ -19,6 +19,7 @@ find_path(LIBMV_INCLUDE_DIR libmv/camera/camera.h
     HINTS
     $ENV{LIBMV_ROOT}/include
     ${LIBMV_ROOT}/include
+    ${LIBMV_ROOT}/src # for source only (libmv not installed)
     PATH_SUFFIXES
     libmv
 )
@@ -52,6 +53,7 @@ FIND_LIBRARY(LIBMV_LIBRARY NAMES ${LIBMV_LIBRARIES_NAMES}
     HINTS
     $ENV{LIBMV_ROOT}/lib
     ${LIBMV_ROOT}/lib
+    ${LIBMV_ROOT}/build/lib # for source only (libmv not installed)
     PATH_SUFFIXES
     libmv
 )
@@ -93,6 +95,7 @@ IF(LIBMV_FOUND)
                          ${LIBMV_INCLUDE_DIR}/third_party/gtest/include
                          ${LIBMV_INCLUDE_DIR}/third_party/eigen
                          ${LIBMV_INCLUDE_DIR}/third_party/ssba
+                         ${LIBMV_INCLUDE_DIR}/third_party/gflags
                          ${LIBMV_INCLUDE_DIR}/third_party/glog/src
                          ${LIBMV_INCLUDE_DIR}/third_party/OpenExif/src
                          ${LIBMV_INCLUDE_DIR}/third_party/OpenExif/src/OpenExifJpeg
