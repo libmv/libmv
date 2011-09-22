@@ -37,7 +37,7 @@ void ComputeBoundingBox(const Vec2u &image_size,
               0, image_size(1), image_size(1),             0,
               1,             1,             1,             1;
   
-  (*bbox) << image_size(0), 0, image_size(1), 0;
+  (*bbox) << 0, image_size(0), 0, image_size(1);
   Vec3 q;
   for (int i = 0; i < 4; ++i) {
     q = H * q_bounds.col(i);
@@ -56,7 +56,7 @@ void ComputeBoundingBox(const Vec2u &image_size,
 }
 
 /**
- * Resize an image so that all the warpped image will be kept.
+ * Resize an image so that all the warped image will be kept.
  */
 void ResizeImage(const Vec2u &image_size,
                  const Mat3 &H,
@@ -70,13 +70,13 @@ void ResizeImage(const Vec2u &image_size,
     bbox_ptr = &bbox_loc;
   
   ComputeBoundingBox(image_size, H, bbox_ptr);
-  assert((*bbox_ptr)(1) < (*bbox_ptr)(0));
-  assert((*bbox_ptr)(3) < (*bbox_ptr)(2));
+  assert((*bbox_ptr)(1) >= (*bbox_ptr)(0));
+  assert((*bbox_ptr)(3) >= (*bbox_ptr)(2));
   
   const unsigned int w = (*bbox_ptr)(1) - (*bbox_ptr)(0);
   const unsigned int h = (*bbox_ptr)(3) - (*bbox_ptr)(2);
   image_out->Resize(h, w, image_out->Depth());
-  // Register the image so that the min (x, y) are (0, 0)
+  // Register the image so that the min (x, y) is (0, 0)
   if (Hreg) {
     (*Hreg) << 1, 0, -(*bbox_ptr)(0),
                0, 1, -(*bbox_ptr)(2),
@@ -116,8 +116,8 @@ void RotateImage(const FloatImage &image_in,
   Hr << cos(angle), -sin(angle),  0,
         sin(angle),  cos(angle),  0,
                0,           0,    1;
-  Ht << 1, 0, -image_in.Height()/2.0,
-        0, 1, -image_in.Width()/2.0,
+  Ht << 1, 0, -(image_in.Height()-1.0)/2.0,
+        0, 1, -(image_in.Width()-1.0)/2.0,
         0, 0,  1;
   H = Ht.inverse() * Hr * Ht;
   if (adapt_img_size) {

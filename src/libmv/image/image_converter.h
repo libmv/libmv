@@ -31,7 +31,9 @@ template<typename T>
 // var_R * 0.2126 + var_G * 0.7152 + var_B * 0.0722
 inline T RGB2GRAY(const T r,const T g, const T b)
 {
-  return static_cast<T>(r * 0.2126 + g * 0.7152 + b * 0.0722);
+  const double d = r * 0.2126 + g * 0.7152 + b * 0.0722;
+  // NOTE still doesn't work on linux...
+  return static_cast<T>(d);
 }
 /*
 // Specialization for the uchar type. (that do not want to work...)

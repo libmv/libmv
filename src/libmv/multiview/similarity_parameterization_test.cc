@@ -60,7 +60,7 @@ TEST(Similarity2DSAParameterization, Roundtripping) {
   Similarity2DSAParameterization<double>::To(p_roundtrip, &h_roundtrip);
 
   // Check that going from H to p and back to H goes in a circle.
-  EXPECT_MATRIX_PROP(h, h_roundtrip, 1.5e-8);
+  EXPECT_MATRIX_PROP(h, h_roundtrip, 2.5e-8);
 }
 
 TEST(Similarity3DEulerParameterization, Roundtripping) {

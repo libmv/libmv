@@ -70,7 +70,7 @@ TEST(ImageTransform, RotateImage90) {
   //  |    r|   |
   //  |____e|___|
   for (int i = 0; i < h; ++i){
-    EXPECT_EQ(image_rot(i,y), 1.0);
+    EXPECT_EQ(image_rot(i,h-1-y), 1.0);
   }
   
   image_rot.Fill(0);
@@ -117,7 +117,7 @@ TEST(ImageTransform, TranslateImage) {
 // Assert that pixels was drawn at the good place
 TEST(ImageTransform, RotateImage45) {
 
-  const int w = 10, h = 10;
+  const int w = 11, h = 11;
   FloatImage image(h,w);
   image.Fill(0);
 
@@ -162,14 +162,18 @@ TEST(ImageTransform, RescaleImageTranslation) {
   // TODO(julien) Test with random affine transformations
   ResizeImage(image_size, H, &image_rs, &Hreg, &bbox);
   
-  EXPECT_EQ(image_rs.Width(),  w + dx);
-  EXPECT_EQ(image_rs.Height(), h + dy);
+  EXPECT_EQ(image_rs.Width(),  w + abs(dx));
+  EXPECT_EQ(image_rs.Height(), h + abs(dy));
   EXPECT_EQ(image_rs.Depth(), 1);
   
   EXPECT_EQ(bbox(0), std::min(0, dx));
-  EXPECT_EQ(bbox(1), w + dx);
+  EXPECT_EQ(bbox(1), std::max(w, w+dx));
   EXPECT_EQ(bbox(2), std::min(0, dy));
-  EXPECT_EQ(bbox(3), h + dy);
+  EXPECT_EQ(bbox(3), std::max(h, h+dy));
   
-  EXPECT_MATRIX_EQ(Hreg, H);
+  Mat3 Hn;
+  Hn << 1, 0, std::max(0, dx),
+        0, 1, std::max(0, dy),
+        0, 0, 1;
+  EXPECT_MATRIX_EQ(Hreg, Hn);
 }

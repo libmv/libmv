@@ -30,7 +30,8 @@ namespace libmv {
 // TODO(julien) SquezeImage
 
 /**
- * Computes the bounding box of a image warp.
+ * Computes the bounding box of a image warp with the current
+ * image.
  *
  * \param image_size The image size (width, height)
  * \param H The 2D warp matrix
