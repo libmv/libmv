@@ -133,7 +133,7 @@ private :
   descriptor::Describer * m_pDescriber;
 };
 
-} // using namespace correspondence
-} // using namespace libmv
+} // namespace correspondence
+} // namespace libmv
 
 #endif  // LIBMV_CORRESPONDENCE_N_ROBUST_VIEW_MATCHING_INTERFACE_H_

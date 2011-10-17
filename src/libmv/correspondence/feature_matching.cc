@@ -25,6 +25,8 @@
 #include "libmv/correspondence/ArrayMatcher_Kdtree_Flann.h"
 #include "libmv/correspondence/ArrayMatcher_Kdtree.h"
 
+namespace libmv {
+
 // Compute candidate matches between 2 sets of features.  Two features A and B
 // are a candidate match if A is the nearest neighbor of B and B is the nearest
 // neighbor of A.
@@ -291,3 +293,5 @@ void FindCorrespondences(const FeatureSet &left,
     LOG(INFO) << "[FindCandidateMatches_Ratio] Unknow input match method.";
   }
 }
+
+} // namespace libmv

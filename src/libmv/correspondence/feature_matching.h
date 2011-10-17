@@ -29,12 +29,12 @@
 #include "libmv/descriptor/descriptor.h"
 #include "libmv/descriptor/vector_descriptor.h"
 
-using namespace libmv;
+namespace libmv {
 
 /// Define the description of a feature described by :
 /// A PointFeature (x,y,scale,orientation),
 /// And a descriptor (a vector of floats).
-struct KeypointFeature : public ::PointFeature {
+struct KeypointFeature : public PointFeature {
   descriptor::VecfDescriptor descriptor;
   // Match kdtree traits: with this, the Feature can act as a kdtree point.
   float operator[](int i) const { return descriptor.coords(i); }
@@ -87,5 +87,7 @@ void FindCorrespondences(const FeatureSet &left,
                          std::map<size_t, size_t> *correspondences,
                          eLibmvMatchMethod eMatchMethod = eMATCH_KDTREE_FLANN,
                          float fRatio = 0.8f);
+
+} // namespace libmv
 
 #endif //LIBMV_CORRESPONDENCE_FEATURE_MATCHING_H_

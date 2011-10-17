@@ -26,6 +26,8 @@
 // http://www.cs.ubc.ca/~mariusm/index.php/FLANN/FLANN
 // David G. Lowe and Marius Muja
 
+namespace libmv {
+
 bool FLANN_Wrapper_LINEAR(const FLANN_Data & testSet,const FLANN_Data & dataSet,
                   vector<int> * resultIndices, vector<float> * resultDistances,
                   int NumberOfNeighbours)
@@ -186,3 +188,5 @@ void FindCandidateMatchesDistanceRatio_FLANN( const FeatureSet &left,
     }
   }
 }
+
+} // namespace libmv

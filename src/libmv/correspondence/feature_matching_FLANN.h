@@ -29,7 +29,7 @@
 #include "libmv/descriptor/descriptor.h"
 #include "libmv/descriptor/vector_descriptor.h"
 
-using namespace libmv;
+namespace libmv {
 
 
 // Compute candidate matches between 2 sets of features.  Two features A and B
@@ -69,5 +69,5 @@ bool FLANN_Wrapper(const FLANN_Data & testSet,const FLANN_Data & dataSet,
                   vector<int> * resultIndices, vector<float> * resultDistances,
                   int NumberOfNeighbours);
 
-
+} // namespace libmv
 #endif //LIBMV_CORRESPONDENCE_FEATURE_MATCHING_FLANN_H_

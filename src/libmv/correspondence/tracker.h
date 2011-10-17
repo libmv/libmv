@@ -108,7 +108,7 @@ class Tracker {
    scoped_ptr<correspondence::ArrayMatcher<float> > matcher_;
 };
 
-} // using namespace tracker
-} // using namespace libmv
+} // namespace tracker
+} // namespace libmv
 
 #endif  // LIBMV_CORRESPONDENCE_TRACKER_H_
