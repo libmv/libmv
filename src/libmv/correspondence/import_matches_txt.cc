@@ -26,7 +26,7 @@ namespace libmv {
 
 void ImportMatchesFromTxt(const std::string &input_file, 
                           Matches *matches,
-                          FeatureSet *feature_set) {
+                          KeypointFeatureSet *feature_set) {
   Matches::ImageID image_id = 0;
   Matches::TrackID track_id = 0;
   float x = 0, y = 0;

@@ -31,7 +31,7 @@ namespace libmv {
 // <ImageID> <TrackID> <x> <y>
 void ImportMatchesFromTxt(const std::string &input_file, 
                           Matches *matches,
-                          FeatureSet *feature_set);
+                          KeypointFeatureSet *feature_set);
 }  // namespace libmv
 
 #endif  // LIBMV_CORRESPONDENCE_IMPORT_MATCHES_TXT_H_

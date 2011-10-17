@@ -80,8 +80,8 @@ bool nRobustViewMatching::computeData(const string & filename)
     m_pDescriber->Describe(features, im, NULL, &descriptors);
 
     // Copy data.
-    m_ViewData.insert( make_pair(filename,FeatureSet()) );
-    FeatureSet & KeypointData = m_ViewData[filename];
+    m_ViewData.insert( make_pair(filename,KeypointFeatureSet()) );
+    KeypointFeatureSet & KeypointData = m_ViewData[filename];
     KeypointData.features.resize(descriptors.size());
     for(int i = 0;i < descriptors.size(); ++i)
     {

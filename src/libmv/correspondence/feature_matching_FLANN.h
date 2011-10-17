@@ -35,8 +35,8 @@ namespace libmv {
 // Compute candidate matches between 2 sets of features.  Two features A and B
 // are a candidate match if A is the nearest neighbor of B and B is the nearest
 // neighbor of A.
-void FindSymmetricCandidateMatches_FLANN( const FeatureSet &left,
-                                          const FeatureSet &right,
+void FindSymmetricCandidateMatches_FLANN( const KeypointFeatureSet &left,
+                                          const KeypointFeatureSet &right,
                                           Matches *matches);
 
 // Compute 2 nearest matches of featureSet left in featureSet right.
@@ -47,8 +47,8 @@ void FindSymmetricCandidateMatches_FLANN( const FeatureSet &left,
 // You can use David Lowe's magic ratio (0.6 or 0.8).
 // 0.8 allow to remove 90% of the false matches while discarding less than 5%
 // of the correct matches.
-void FindCandidateMatchesDistanceRatio_FLANN( const FeatureSet &left,
-                                              const FeatureSet &right,
+void FindCandidateMatchesDistanceRatio_FLANN( const KeypointFeatureSet &left,
+                                              const KeypointFeatureSet &right,
                                               Matches *matches,
                                               float fRatio = 0.8f);
 

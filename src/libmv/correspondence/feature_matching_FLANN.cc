@@ -96,8 +96,8 @@ bool FLANN_Wrapper_KDTREE(const FLANN_Data & testSet,const FLANN_Data & dataSet,
 // Compute candidate matches between 2 sets of features.  Two features A and B
 // are a candidate match if A is the nearest neighbor of B and B is the nearest
 // neighbor of A.
-void FindSymmetricCandidateMatches_FLANN(const FeatureSet &left,
-                          const FeatureSet &right,
+void FindSymmetricCandidateMatches_FLANN(const KeypointFeatureSet &left,
+                          const KeypointFeatureSet &right,
                           Matches *matches) {
   // --
   // TODO(pmoulon) template on feature type.
@@ -108,8 +108,8 @@ void FindSymmetricCandidateMatches_FLANN(const FeatureSet &left,
   int descriptorSize = left.features[0].descriptor.coords.size();
 
   // Paste the necessary data in contiguous arrays.
-  float * arrayA = FeatureSet::FeatureSetDescriptorsToContiguousArray(left);
-  float * arrayB = FeatureSet::FeatureSetDescriptorsToContiguousArray(right);
+  float * arrayA = KeypointFeatureSet::KeypointFeatureSetDescriptorsToContiguousArray(left);
+  float * arrayB = KeypointFeatureSet::KeypointFeatureSetDescriptorsToContiguousArray(right);
 
   FLANN_Data dataA={arrayA,left.features.size(),descriptorSize};
   FLANN_Data dataB={arrayB,right.features.size(),descriptorSize};
@@ -147,8 +147,8 @@ void FindSymmetricCandidateMatches_FLANN(const FeatureSet &left,
   }
 }
 
-void FindCandidateMatchesDistanceRatio_FLANN( const FeatureSet &left,
-                                              const FeatureSet &right,
+void FindCandidateMatchesDistanceRatio_FLANN( const KeypointFeatureSet &left,
+                                              const KeypointFeatureSet &right,
                                               Matches *matches,
                                               float fRatio) {
 
@@ -157,8 +157,8 @@ void FindCandidateMatchesDistanceRatio_FLANN( const FeatureSet &left,
   }
   int descriptorSize = left.features[0].descriptor.coords.size();
   // Paste the necessary data in contiguous arrays.
-  float * arrayA = FeatureSet::FeatureSetDescriptorsToContiguousArray(left);
-  float * arrayB = FeatureSet::FeatureSetDescriptorsToContiguousArray(right);
+  float * arrayA = KeypointFeatureSet::KeypointFeatureSetDescriptorsToContiguousArray(left);
+  float * arrayB = KeypointFeatureSet::KeypointFeatureSetDescriptorsToContiguousArray(right);
 
   FLANN_Data dataA={arrayA,left.features.size(),descriptorSize};
   FLANN_Data dataB={arrayB,right.features.size(),descriptorSize};

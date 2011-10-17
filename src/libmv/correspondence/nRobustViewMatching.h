@@ -21,7 +21,7 @@
 #ifndef LIBMV_CORRESPONDENCE_N_ROBUST_VIEW_MATCHING_INTERFACE_H_
 #define LIBMV_CORRESPONDENCE_N_ROBUST_VIEW_MATCHING_INTERFACE_H_
 
-struct FeatureSet;
+struct KeypointFeatureSet;
 #include <map>
 #include "libmv/detector/detector.h"
 #include "libmv/descriptor/descriptor.h"
@@ -106,7 +106,7 @@ class nRobustViewMatching :public nViewMatchingInterface  {
   const map< pair<string,string>, Matches> & getSharedData() const
     { return m_sharedData;  }
   /// Return extracted feature over the given image.
-  const map<string,FeatureSet> & getViewData() const
+  const map<string,KeypointFeatureSet> & getViewData() const
     { return m_ViewData;  }
   /// Return detected geometrical consistent matches
   const Matches & getMatches()  const
@@ -116,7 +116,7 @@ private :
   /// Input data names
   libmv::vector<string> m_vec_InputNames;
   /// Data that represent each named element.
-  map<string,FeatureSet> m_ViewData;
+  map<string,KeypointFeatureSet> m_ViewData;
   /// Matches between element named element <A,B>.
   map< pair<string,string>, Matches> m_sharedData;
 
