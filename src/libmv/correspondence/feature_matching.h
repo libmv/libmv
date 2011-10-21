@@ -29,25 +29,25 @@
 #include "libmv/descriptor/descriptor.h"
 #include "libmv/descriptor/vector_descriptor.h"
 
-using namespace libmv;
+namespace libmv {
 
 /// Define the description of a feature described by :
 /// A PointFeature (x,y,scale,orientation),
 /// And a descriptor (a vector of floats).
-struct KeypointFeature : public ::PointFeature {
+struct KeypointFeature : public PointFeature {
   descriptor::VecfDescriptor descriptor;
   // Match kdtree traits: with this, the Feature can act as a kdtree point.
   float operator[](int i) const { return descriptor.coords(i); }
 };
 
-/// FeatureSet : Store an array of KeypointFeature ( Keypoint and descriptor).
-struct FeatureSet {
+/// KeypointFeatureSet : Store an array of KeypointFeature ( Keypoint and descriptor).
+struct KeypointFeatureSet {
   libmv::vector<KeypointFeature> features;
 
   /// return a float * containing the concatenation of descriptor data.
   /// Must be deleted with []
-  static float *FeatureSetDescriptorsToContiguousArray
-    ( const FeatureSet & featureSet );
+  static float *KeypointFeatureSetDescriptorsToContiguousArray
+    ( const KeypointFeatureSet & featureSet );
 };
 
 enum eLibmvMatchMethod
@@ -60,8 +60,8 @@ enum eLibmvMatchMethod
 // Compute candidate matches between 2 sets of features.  Two features a and b
 // are a candidate match if a is the nearest neighbor of b and b is the nearest
 // neighbor of a.
-void FindCandidateMatches(const FeatureSet &left,
-                          const FeatureSet &right,
+void FindCandidateMatches(const KeypointFeatureSet &left,
+                          const KeypointFeatureSet &right,
                           Matches *matches,
                           eLibmvMatchMethod eMatchMethod = eMATCH_KDTREE_FLANN);
 
@@ -74,18 +74,20 @@ void FindCandidateMatches(const FeatureSet &left,
 // You can use David Lowe's magic ratio (0.6 or 0.8).
 // 0.8 allow to remove 90% of the false matches while discarding less than 5%
 // of the correct matches.
-void FindCandidateMatches_Ratio(const FeatureSet &left,
-                          const FeatureSet &right,
+void FindCandidateMatches_Ratio(const KeypointFeatureSet &left,
+                          const KeypointFeatureSet &right,
                           Matches *matches,
                           eLibmvMatchMethod eMatchMethod = eMATCH_KDTREE_FLANN,
                           float fRatio = 0.8f);
 // TODO(pmoulon) Add Lowe's ratio symmetric match method.
 // Compute correspondences that match between 2 sets of features with a ratio.
 
-void FindCorrespondences(const FeatureSet &left,
-                         const FeatureSet &right,
+void FindCorrespondences(const KeypointFeatureSet &left,
+                         const KeypointFeatureSet &right,
                          std::map<size_t, size_t> *correspondences,
                          eLibmvMatchMethod eMatchMethod = eMATCH_KDTREE_FLANN,
                          float fRatio = 0.8f);
+
+} // namespace libmv
 
 #endif //LIBMV_CORRESPONDENCE_FEATURE_MATCHING_H_

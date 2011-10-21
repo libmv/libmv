@@ -25,11 +25,13 @@
 #include "libmv/correspondence/ArrayMatcher_Kdtree_Flann.h"
 #include "libmv/correspondence/ArrayMatcher_Kdtree.h"
 
+namespace libmv {
+
 // Compute candidate matches between 2 sets of features.  Two features A and B
 // are a candidate match if A is the nearest neighbor of B and B is the nearest
 // neighbor of A.
-void FindCandidateMatches(const FeatureSet &left,
-                          const FeatureSet &right,
+void FindCandidateMatches(const KeypointFeatureSet &left,
+                          const KeypointFeatureSet &right,
                           Matches *matches,
                           eLibmvMatchMethod eMatchMethod) {
   if (left.features.size() == 0 ||
@@ -68,8 +70,8 @@ void FindCandidateMatches(const FeatureSet &left,
   if (pArrayMatcherA != NULL && pArrayMatcherB != NULL) {
 
     // Paste the necessary data in contiguous arrays.
-    float * arrayA = FeatureSet::FeatureSetDescriptorsToContiguousArray(left);
-    float * arrayB = FeatureSet::FeatureSetDescriptorsToContiguousArray(right);
+    float * arrayA = KeypointFeatureSet::KeypointFeatureSetDescriptorsToContiguousArray(left);
+    float * arrayB = KeypointFeatureSet::KeypointFeatureSetDescriptorsToContiguousArray(right);
 
     libmv::vector<int> indices, indicesReverse;
     libmv::vector<float> distances, distancesReverse;
@@ -113,8 +115,8 @@ void FindCandidateMatches(const FeatureSet &left,
   }
 }
 
-float * FeatureSet::FeatureSetDescriptorsToContiguousArray
-  ( const FeatureSet & featureSet ) {
+float * KeypointFeatureSet::KeypointFeatureSetDescriptorsToContiguousArray
+  ( const KeypointFeatureSet & featureSet ) {
 
   if (featureSet.features.size() == 0)  {
     return NULL;
@@ -132,8 +134,8 @@ float * FeatureSet::FeatureSetDescriptorsToContiguousArray
 }
 
 // Compute candidate matches between 2 sets of features with a ratio.
-void FindCandidateMatches_Ratio(const FeatureSet &left,
-                          const FeatureSet &right,
+void FindCandidateMatches_Ratio(const KeypointFeatureSet &left,
+                          const KeypointFeatureSet &right,
                           Matches *matches,
                           eLibmvMatchMethod eMatchMethod,
                           float fRatio) {
@@ -172,8 +174,8 @@ void FindCandidateMatches_Ratio(const FeatureSet &left,
   if (pArrayMatcherA != NULL) {
 
     // Paste the necessary data in contiguous arrays.
-    float * arrayA = FeatureSet::FeatureSetDescriptorsToContiguousArray(left);
-    float * arrayB = FeatureSet::FeatureSetDescriptorsToContiguousArray(right);
+    float * arrayA = KeypointFeatureSet::KeypointFeatureSetDescriptorsToContiguousArray(left);
+    float * arrayB = KeypointFeatureSet::KeypointFeatureSetDescriptorsToContiguousArray(right);
 
     libmv::vector<int> indices;
     libmv::vector<float> distances;
@@ -216,8 +218,8 @@ void FindCandidateMatches_Ratio(const FeatureSet &left,
 
 
 // Compute correspondences that match between 2 sets of features with a ratio.
-void FindCorrespondences(const FeatureSet &left,
-                         const FeatureSet &right,
+void FindCorrespondences(const KeypointFeatureSet &left,
+                         const KeypointFeatureSet &right,
                          std::map<size_t, size_t> *correspondences,
                          eLibmvMatchMethod eMatchMethod,
                          float fRatio) {
@@ -255,8 +257,8 @@ void FindCorrespondences(const FeatureSet &left,
   if (pArrayMatcherA != NULL) {
 
     // Paste the necessary data in contiguous arrays.
-    float * arrayA = FeatureSet::FeatureSetDescriptorsToContiguousArray(left);
-    float * arrayB = FeatureSet::FeatureSetDescriptorsToContiguousArray(right);
+    float * arrayA = KeypointFeatureSet::KeypointFeatureSetDescriptorsToContiguousArray(left);
+    float * arrayB = KeypointFeatureSet::KeypointFeatureSetDescriptorsToContiguousArray(right);
 
     libmv::vector<int> indices;
     libmv::vector<float> distances;
@@ -291,3 +293,5 @@ void FindCorrespondences(const FeatureSet &left,
     LOG(INFO) << "[FindCandidateMatches_Ratio] Unknow input match method.";
   }
 }
+
+} // namespace libmv

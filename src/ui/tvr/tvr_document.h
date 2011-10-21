@@ -31,7 +31,7 @@ using libmv::vector;
 
 struct TvrDocument {
   QImage images[2];
-  FeatureSet feature_sets[2];
+  libmv::KeypointFeatureSet feature_sets[2];
   libmv::Matches matches;
   libmv::Mat3 F;
   double focal_distance[2];

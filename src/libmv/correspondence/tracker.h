@@ -38,8 +38,8 @@ namespace tracker {
 // FeaturesGraph : Store a list of featureSet and its matches.
 struct FeaturesGraph {
  public:
-  FeatureSet * CreateNewFeatureSet() {
-    features_sets_.push_back(new FeatureSet());
+  KeypointFeatureSet * CreateNewKeypointFeatureSet() {
+    features_sets_.push_back(new KeypointFeatureSet());
     return features_sets_.back();
   }
   
@@ -50,7 +50,7 @@ struct FeaturesGraph {
                           feature_graph.features_sets_.end());
   }
   // Erases all the elements.  
-  // Note that this function does not desallocate FeatureSets
+  // Note that this function does not desallocate KeypointFeatureSets
   void Clear() {
     matches_.Clear();
     features_sets_.clear();
@@ -58,7 +58,7 @@ struct FeaturesGraph {
   
   void DeleteAndClear() {
     matches_.Clear();
-    std::list<FeatureSet *>::iterator iter = features_sets_.begin();
+    std::list<KeypointFeatureSet *>::iterator iter = features_sets_.begin();
     for (; iter != features_sets_.end(); ++iter) {
       delete *iter;
     }
@@ -66,7 +66,7 @@ struct FeaturesGraph {
   }
   
   Matches matches_;
-  std::list<FeatureSet *> features_sets_;
+  std::list<KeypointFeatureSet *> features_sets_;
 };
 
 // A tracker is the output of a tracking algorithm, which converts a track into
@@ -108,7 +108,7 @@ class Tracker {
    scoped_ptr<correspondence::ArrayMatcher<float> > matcher_;
 };
 
-} // using namespace tracker
-} // using namespace libmv
+} // namespace tracker
+} // namespace libmv
 
 #endif  // LIBMV_CORRESPONDENCE_TRACKER_H_

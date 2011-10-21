@@ -61,7 +61,7 @@ class PlanarTracker : public Tracker {
   double  rms_threshold_inlier_;
 };
 
-} // using namespace tracker
-} // using namespace libmv
+} // namespace tracker
+} // namespace libmv
 
 #endif  // LIBMV_CORRESPONDENCE_PLANAR_TRACKER_H_
