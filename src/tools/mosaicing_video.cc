@@ -368,7 +368,7 @@ int main(int argc, char **argv) {
   }
   // Imports matches
   tracker::FeaturesGraph fg;
-  FeatureSet *fs = fg.CreateNewFeatureSet();
+  KeypointFeatureSet *fs = fg.CreateNewKeypointFeatureSet();
   VLOG(0) << "Loading Matches file..." << std::endl;
   ImportMatchesFromTxt(FLAGS_m, &fg.matches_, fs);
   VLOG(0) << "Loading Matches file...[DONE]." << std::endl;

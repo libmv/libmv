@@ -420,7 +420,7 @@ void MainWindow::LoadMatches() {
   if (s.isEmpty()) return;
  
   // Imports matches
-  FeatureSet *fs = new FeatureSet();
+  libmv::KeypointFeatureSet *fs = new libmv::KeypointFeatureSet();
   ImportMatchesFromTxt(s.toStdString(), &matches_, fs);
   UpdateGraph();
   is_video_sequence_ = true;

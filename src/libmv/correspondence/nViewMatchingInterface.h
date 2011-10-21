@@ -65,7 +65,7 @@ class nViewMatchingInterface {
   virtual bool computeCrossMatch( const libmv::vector<string> & vec_data)=0;
 };
 
-} // using namespace correspondence
-} // using namespace libmv
+} // namespace correspondence
+} // namespace libmv
 
 #endif  // LIBMV_CORRESPONDENCE_N_VIEW_MATCHING_INTERFACE_H_

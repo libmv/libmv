@@ -106,8 +106,8 @@ int main(int argc, char **argv) {
   scoped_ptr<detector::Detector> detector(detector::CreateFastDetector(9, 20));
   //scoped_ptr<detector::Detector> detector(detector::CreateSURFDetector(4,4));
 
-  FeatureSet KeypointImgA;
-  FeatureSet KeypointImgB;
+  KeypointFeatureSet KeypointImgA;
+  KeypointFeatureSet KeypointImgB;
   {
     Array3Du imageTemp;
     Rgb2Gray( imageA, &imageTemp);
