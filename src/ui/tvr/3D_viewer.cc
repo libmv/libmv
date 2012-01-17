@@ -21,6 +21,7 @@
 #include "ui/tvr/3D_viewer.h"
 
 #include <QtGui>
+#include <GL/glu.h>
 #include <QtOpenGL>
 
 using namespace libmv::scene;
