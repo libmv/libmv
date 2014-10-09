@@ -23,6 +23,7 @@
 #endif //_WIN32
 
 #include <QtGui>
+#include <GL/glu.h>
 #include <QtOpenGL>
 #include <cmath>
 
