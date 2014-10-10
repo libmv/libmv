@@ -47,7 +47,7 @@ bool Tracker::Track(const Image &image1,
   
   // Copy data form generic feature to Keypoints since the matcher is
   // a point matcher
-  FeatureSet *feature_set1 = new_features_graph->CreateNewFeatureSet();
+  KeypointFeatureSet *feature_set1 = new_features_graph->CreateNewKeypointFeatureSet();
   feature_set1->features.resize(descriptors1.size());
   for (size_t i = 0; i < descriptors1.size(); i++) {
     KeypointFeature& feature = feature_set1->features[i];
@@ -55,7 +55,7 @@ bool Tracker::Track(const Image &image1,
     *(PointFeature*)(&feature) = *(PointFeature*)features1[i];
   }
   
-  FeatureSet *feature_set2 = new_features_graph->CreateNewFeatureSet();
+  KeypointFeatureSet *feature_set2 = new_features_graph->CreateNewKeypointFeatureSet();
   feature_set2->features.resize(descriptors2.size());
   for (size_t i = 0; i < descriptors2.size(); i++) {
     KeypointFeature& feature = feature_set2->features[i];
@@ -134,7 +134,7 @@ bool Tracker::Track(const Image &image,
   
   // Copy data form generic feature to Keypoints since the matcher is
   // a point matcher
-  FeatureSet *feature_set = new_features_graph->CreateNewFeatureSet();
+  KeypointFeatureSet *feature_set = new_features_graph->CreateNewKeypointFeatureSet();
   feature_set->features.resize(descriptors.size());
   for (size_t i = 0; i < descriptors.size(); i++) {
     KeypointFeature& feature = feature_set->features[i];
@@ -157,7 +157,7 @@ bool Tracker::Track(const Image &image,
       && *iter_image != *image_id; ++iter_image) {
     Matches::Features<KeypointFeature> known_features =
      known_features_graph.matches_.InImage<KeypointFeature>(*iter_image);
-    FeatureSet feature_set_known;
+    KeypointFeatureSet feature_set_known;
     while(known_features) {
       feature_set_known.features.push_back(*known_features.feature());
       known_features.operator++();

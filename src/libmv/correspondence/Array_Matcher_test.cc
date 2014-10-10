@@ -53,7 +53,7 @@ TYPED_TEST(MatchingKernelTest, MatcherInterfaceSymmetry)
 {
   int descriptorSize = 2;
   // Build one feature set.
-  FeatureSet featureSet;
+  KeypointFeatureSet featureSet;
   for (int i=0; i < 4; ++i)
   {
     KeypointFeature feat;
@@ -65,7 +65,7 @@ TYPED_TEST(MatchingKernelTest, MatcherInterfaceSymmetry)
 
   // Match feature set between same feature set and assert the result.
   float * data =
-    FeatureSet::FeatureSetDescriptorsToContiguousArray(featureSet);
+    KeypointFeatureSet::KeypointFeatureSetDescriptorsToContiguousArray(featureSet);
 
   // Build the array matcher in order to compute matches pair.
   libmv::correspondence::ArrayMatcher<float> * pArrayMatcher =
@@ -100,7 +100,7 @@ TYPED_TEST(MatchingKernelTest, MatcherInterface)
 {
   int descriptorSize = 2;
   // Build two feature set.
-  FeatureSet featureSetA;
+  KeypointFeatureSet featureSetA;
   for (int i=0; i < 4; ++i)
   {
     KeypointFeature feat;
@@ -111,7 +111,7 @@ TYPED_TEST(MatchingKernelTest, MatcherInterface)
   }
 
   // Build two feature set.
-  FeatureSet featureSetB;
+  KeypointFeatureSet featureSetB;
   for (int i=0; i < 5; ++i)
   {
     KeypointFeature feat;
@@ -123,9 +123,9 @@ TYPED_TEST(MatchingKernelTest, MatcherInterface)
 
   // Match feature set between same feature set and assert the result.
   float * dataA =
-    FeatureSet::FeatureSetDescriptorsToContiguousArray(featureSetA);
+    KeypointFeatureSet::KeypointFeatureSetDescriptorsToContiguousArray(featureSetA);
   float * dataB =
-    FeatureSet::FeatureSetDescriptorsToContiguousArray(featureSetB);
+    KeypointFeatureSet::KeypointFeatureSetDescriptorsToContiguousArray(featureSetB);
 
   // Build the array matcher in order to compute matches pair.
   libmv::correspondence::ArrayMatcher<float> * pArrayMatcherA =

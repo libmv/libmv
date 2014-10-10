@@ -284,7 +284,7 @@ void TvrMainWindow::ComputeFeatures(int image_index) {
 
   QImage &qimage = document_.images[image_index];
   int width = qimage.width(), height = qimage.height();
-  FeatureSet &fs = document_.feature_sets[image_index];
+  KeypointFeatureSet &fs = document_.feature_sets[image_index];
 
   // Convert to gray-scale.
   // TODO(keir): Make a libmv image <-> QImage interop library inside libmv for
